@@ -8,6 +8,15 @@ class CustomUser(AbstractUser):
         return self.username
 
 
+class Theme(models.Model):
+    category = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=254, unique=True)
+    use_num = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.name} - {self.category}"
+
+
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.PROTECT)
     theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=models.PROTECT)
@@ -22,13 +31,7 @@ class Profile(models.Model):
         return self.user.username
 
 
-class Theme(models.Model):
-    category = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=254, unique=True)
-    use_num = models.IntegerField(default=0)
 
-    def __str__(self):
-        return f"{self.name} - {self.category}"
 
 class Experience(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
@@ -63,8 +66,8 @@ class Skill(models.Model):
 
 class Project(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
-    title = models.CharField(max_legnth=500)
-    url = models.URLField(max_legnth=500)
+    title = models.CharField(max_length=500)
+    url = models.URLField(max_length=500)
     details = models.TextField(null=True, blank=True)
 
     def __str__(self):
@@ -74,7 +77,7 @@ class Project(models.Model):
 class Link(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     platform = models.CharField(max_length=254)
-    url = models.URLField(max_legnth=500)
+    url = models.URLField(max_length=500)
 
     def __str__(self):
         return f"{self.platform} - {self.user}"
