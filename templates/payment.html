@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Skillifly – Payment{% endblock %}
+
+{% block content %}
+<section class="payment-section">
+    <div class="payment-container">
+        <div class="payment-header">
+            <h1>Extend Your Subscription</h1>
+            <p>Choose a plan to keep your portfolio live</p>
+        </div>
+
+        <div class="payment-grid">
+            <!-- Pricing Cards -->
+            <div class="pricing-cards">
+                <form method="get" action="{% url 'payment' %}">
+                    <input type="hidden" name="plan" value="monthly">
+                    <div class="pricing-option {% if selected_plan == 'monthly' %}selected{% endif %}">
+                        <div class="pricing-header">
+                            <h3>1 Month</h3>
+                            <div class="price-tag">
+                                <span class="amount">50</span>
+                                <span class="currency">EGP</span>
+                            </div>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ 1 month of hosting</li>
+                            <li>✓ All themes included</li>
+                            <li>✓ Unlimited updates</li>
+                        </ul>
+                        <button type="submit" class="select-plan-btn">Select Plan</button>
+                    </div>
+                </form>
+
+                <form method="get" action="{% url 'payment' %}">
+                    <input type="hidden" name="plan" value="semiannual">
+                    <div class="pricing-option featured {% if selected_plan == 'semiannual' %}selected{% endif %}">
+                        <div class="badge">Popular</div>
+                        <div class="pricing-header">
+                            <h3>6 Months</h3>
+                            <div class="price-tag">
+                                <span class="amount">250</span>
+                                <span class="currency">EGP</span>
+                            </div>
+                            <div class="save-badge">Save 16%</div>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ 6 months of hosting</li>
+                            <li>✓ All themes included</li>
+                            <li>✓ Unlimited updates</li>
+                            <li>✓ Priority support</li>
+                        </ul>
+                        <button type="submit" class="select-plan-btn">Select Plan</button>
+                    </div>
+                </form>
+
+                <form method="get" action="{% url 'payment' %}">
+                    <input type="hidden" name="plan" value="annual">
+                    <div class="pricing-option {% if selected_plan == 'annual' %}selected{% endif %}">
+                        <div class="badge best-value">Best Value</div>
+                        <div class="pricing-header">
+                            <h3>1 Year</h3>
+                            <div class="price-tag">
+                                <span class="amount">360</span>
+                                <span class="currency">EGP</span>
+                            </div>
+                            <div class="save-badge">Save 40%</div>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ 12 months of hosting</li>
+                            <li>✓ All themes included</li>
+                            <li>✓ Unlimited updates</li>
+                            <li>✓ Priority support</li>
+                            <li>✓ Free domain setup</li>
+                        </ul>
+                        <button type="submit" class="select-plan-btn">Select Plan</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="payment-form-card">
+                <h2>Payment Details</h2>
+                <form id="paymentForm" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="{{ selected_plan|default:'monthly' }}">
+
+                    <div class="form-group">
+                        <label>Selected Plan</label>
+                        <div class="selected-plan-display">
+                            <span id="planName">{{ plan_name|default:"1 Month" }}</span>
+                            <span id="planPrice">{{ plan_price|default:"50" }} EGP</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cardName">Cardholder Name</label>
+                        <input type="text" id="cardName" name="card_name" placeholder="John Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cardNumber">Card Number</label>
+                        <input type="text" id="cardNumber" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiry">Expiry Date</label>
+                            <input type="text" id="expiry" name="expiry" placeholder="MM/YY" maxlength="5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cvv">CVV</label>
+                            <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="3" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-payment-btn">
+                        Pay {{ plan_price|default:"50" }} EGP →
+                    </button>
+
+                    <p class="payment-notice">
+                        🔒 Your payment is secure and encrypted
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.payment-section {
+    background: linear-gradient(135deg, #eaf3ff 0%, #f7d7e3 45%, #fff4db 100%);
+    min-height: 100vh;
+    padding: 60px 20px;
+}
+
+.payment-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.payment-header h1 {
+    font-size: 42px;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.payment-header p {
+    font-size: 16px;
+    color: #666;
+}
+
+.payment-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.pricing-option {
+    background: white;
+    border-radius: 16px;
+    padding: 28px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+    cursor: pointer;
+}
+
+.pricing-option:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.pricing-option.featured {
+    border-color: #667eea;
+}
+
+.pricing-option.selected {
+    border-color: #764ba2;
+    box-shadow: 0 12px 32px rgba(118, 75, 162, 0.2);
+}
+
+.badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: linear-gradient(135deg, #FF5E9D 0%, #E81E63 100%);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.badge.best-value {
+    background: linear-gradient(135deg, #FFE01B 0%, #FFD700 100%);
+    color: #333;
+}
+
+.pricing-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.pricing-header h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.price-tag {
+    margin-bottom: 8px;
+}
+
+.price-tag .amount {
+    font-size: 42px;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.price-tag .currency {
+    font-size: 18px;
+    color: #666;
+    margin-left: 4px;
+}
+
+.save-badge {
+    display: inline-block;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pricing-features {
+    list-style: none;
+    margin-bottom: 24px;
+}
+
+.pricing-features li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.select-plan-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.select-plan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.payment-form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 20px;
+}
+
+.payment-form-card h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.selected-plan-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 10px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.submit-payment-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 24px;
+}
+
+.submit-payment-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+}
+
+.payment-notice {
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+    margin-top: 16px;
+}
+
+@media (max-width: 968px) {
+    .payment-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-cards {
+        order: 2;
+    }
+
+    .payment-form-card {
+        position: static;
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .payment-header h1 {
+        font-size: 32px;
+    }
+
+    .pricing-cards {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Only keep client-side formatting for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    // Card number formatting
+    const cardNumber = document.getElementById('cardNumber');
+    if (cardNumber) {
+        cardNumber.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+    }
+
+    // Expiry formatting
+    const expiry = document.getElementById('expiry');
+    if (expiry) {
+        expiry.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2, 4);
+            }
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}
