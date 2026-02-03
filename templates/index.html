@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Skillifly{% endblock %}
+
+{% block header %}
+{% include 'components/header.html' with label="✨ Launch Your Portfolio in Minutes" title="Build Your Perfect Portfolio" subtitle="Create a stunning professional portfolio in minutes. Choose a template, add your details, and publish for just <span>50 EGP</span>." cta_link="" cta_text="Get Started Now ⭢" %}
+{% endblock %}
+
+{% block content %}
+<section class="pros">
+    <div class="pro">
+        <img class="pro_icon" src="{% static 'palette.svg' %}" alt="">
+        <h3>Beautiful Templates</h3>
+        <p>Choose from Modern, Creative, and Minimal designs</p>
+    </div>
+    <div class="pro">
+        <img class="pro_icon" src="{% static 'stars.svg' %}" alt="">
+        <h3>Easy to Use</h3>
+        <p>Simple forms to fill in your information</p>
+    </div>
+    <div class="pro">
+        <img class="pro_icon" src="{% static 'eye-fill.svg' %}" alt="">
+        <h3>Quick Publishing</h3>
+        <p>Go live with just 50 EGP</p>
+    </div>
+    <div class="pro">
+        <img class="pro_icon" src="{% static 'rocket-takeoff-fill.svg' %}" alt="">
+        <h3>Beautiful Templates</h3>
+        <p>Choose from Modern, Creative, and Minimal designs</p>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="steps-container">
+        <h2>How It Works</h2>
+        <div class="steps-wrapper">
+            <div class="step">
+                <div class="step-box" style="background: linear-gradient(135deg, #5BA3F5 0%, #3B7FEB 100%);">1</div>
+                <h3>Sign Up</h3>
+                <p>Create your account</p>
+            </div>
+            <div class="step">
+                <div class="step-box" style="background: linear-gradient(135deg, #FF5E9D 0%, #E81E63 100%);">2</div>
+                <h3>Pick Template</h3>
+                <p>Choose your style</p>
+            </div>
+            <div class="step">
+                <div class="step-box" style="background: linear-gradient(135deg, #FFE01B 0%, #FFD700 100%);">3</div>
+                <h3>Fill Data</h3>
+                <p>Add your info</p>
+            </div>
+            <div class="step">
+                <div class="step-box" style="background: linear-gradient(135deg, #FFE01B 0%, #FFD700 100%);">4</div>
+                <h3>Preview</h3>
+                <p>See the result</p>
+            </div>
+            <div class="step">
+                <div class="step-box" style="background: linear-gradient(135deg, #B896D1 0%, #9D6BA2 100%);">5</div>
+                <h3>Publish</h3>
+                <p>Go live!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pricing">
+    <div class="pricing-container">
+        <div class="pricing-tabs">
+            <button class="pricing-tab active" data-plan="monthly" data-price="50">1 Month</button>
+            <button class="pricing-tab" data-plan="semiannual" data-price="250">6 Months</button>
+            <button class="pricing-tab" data-plan="annual" data-price="360">1 Year</button>
+        </div>
+        <div class="pricing-card">
+            <div class="best-value-badge" id="badgeText">Best Value</div>
+            <h2>Simple Pricing</h2>
+            <div class="price">
+                <span class="amount" id="priceAmount">50</span>
+                <span class="currency">EGP</span>
+            </div>
+            <p class="price-subtitle" id="priceDescription">One-time payment for 1 month access.</p>
+            <div class="features-list">
+                <div class="feature">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    <span>Professional portfolio templates</span>
+                </div>
+                <div class="feature">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    <span>Custom domain-ready URLs</span>
+                </div>
+                <div class="feature">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    <span>Mobile responsive design</span>
+                </div>
+                <div class="feature">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    <span>Quick setup in minutes</span>
+                </div>
+                <div class="feature">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    <span>Affordable pricing plans</span>
+                </div>
+                <div class="feature">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    <span>Flexible subscription options</span>
+                </div>
+            </div>
+            <a href="" class="cta-button">Start Building Now →</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Pricing plan data
+    const pricingPlans = {
+        monthly: {
+            price: 50,
+            description: 'One-time payment for 1 month access.',
+            badge: 'Start Now'
+        },
+        semiannual: {
+            price: 250,
+            description: 'One-time payment for 6 months access. Save 16%!',
+            badge: 'Popular'
+        },
+        annual: {
+            price: 360,
+            description: 'One-time payment for 1 year access. Save 40%!',
+            badge: 'Best Value'
+        }
+    };
+
+    // Handle pricing tab clicks
+    document.querySelectorAll('.pricing-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            document.querySelectorAll('.pricing-tab').forEach(t => t.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Get the plan data
+            const plan = this.dataset.plan;
+            const planData = pricingPlans[plan];
+            
+            // Update pricing information
+            document.getElementById('priceAmount').textContent = planData.price;
+            document.getElementById('priceDescription').textContent = planData.description;
+            document.getElementById('badgeText').textContent = planData.badge;
+        });
+    });
+</script>
+{% endblock %}

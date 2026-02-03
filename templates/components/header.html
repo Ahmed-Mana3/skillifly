@@ -1,0 +1,8 @@
+<header>
+    <div class="label">
+        <h2>{{ label|default:"✨ Create Your Portfolio Today" }}</h2>
+    </div>
+    <h1>{{ title|default:"Build Your Perfect Portfolio" }}</h1>
+    <h2>{{ subtitle|safe|default:"Create a stunning professional portfolio in minutes." }}</h2>
+    <a href="{{ cta_link|default:'#' }}" class="header-cta">{{ cta_text|default:"Get Started →" }}</a>
+</header>

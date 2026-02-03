@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Skillifly{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'logo.png' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Macondo&display=swap"
+        rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    {% include 'components/nav.html' %}
+
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <style>
+        .messages-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .alert {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease-out;
+            background-color: #e2e3e5;
+            /* default/info */
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+    <script>
+        setTimeout(function () {
+            const alerts = document.querySelectorAll('.messages-container .alert');
+            alerts.forEach(function (alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s ease';
+                setTimeout(function () { alert.remove(); }, 500);
+            });
+        }, 5000);
+    </script>
+    {% endif %}
+
+    {% block header %}{% endblock %}
+
+    {% block content %}{% endblock %}
+
+    {% block footer %}{% include 'components/footer.html' %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

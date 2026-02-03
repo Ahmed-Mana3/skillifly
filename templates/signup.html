@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Skillifly — Sign Up{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container">
+        <!-- Logo and Tagline -->
+        <div class="auth-header">
+            <div class="auth-logo">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="100" height="100" rx="20" fill="url(#logoGrad)" />
+                    <text x="50" y="62" font-size="26" font-weight="700" fill="white" text-anchor="middle"
+                        font-family="Amiri, serif">Skillifly</text>
+                </svg>
+            </div>
+            <h1>Skillifly - Portfolio Builder</h1>
+            <p class="auth-tagline">Create your stunning portfolio in minutes</p>
+        </div>
+
+        <!-- Auth Card -->
+        <div class="auth-card">
+            <!-- Tab Navigation -->
+            <div class="auth-tabs">
+                <a href="{% url 'signin' %}" class="auth-tab">Sign In</a>
+                <a href="{% url 'signup' %}" class="auth-tab active">Sign Up</a>
+            </div>
+            <form class="auth-form" id="signupForm" method="post">
+                {% csrf_token %}
+
+                <!-- First Name -->
+                <div class="form-group">
+                    {{ form.first_name.label_tag }}
+                    {{ form.first_name }}
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-group">
+                    {{ form.last_name.label_tag }}
+                    {{ form.last_name }}
+                </div>
+
+                <!-- Username -->
+                <div class="form-group">
+                    {{ form.username.label_tag }}
+                    {{ form.username }}
+                    {% if form.username.help_text %}
+                    <p class="form-helper">{{ form.username.help_text }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    {{ form.password1.label_tag }}
+                    {{ form.password1 }}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    {{ form.password2.label_tag }}
+                    {{ form.password2 }}
+                </div>
+
+                <!-- Sign Up Button -->
+                <button type="submit" class="auth-button">Sign Up</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

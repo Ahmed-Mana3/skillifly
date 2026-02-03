@@ -1,0 +1,14 @@
+{% load static %}
+<nav>
+    <a href="#" class="logo"><h1>Skillifly</h1></a>
+    <div class="nav-actions">
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="sign_btn">Dashboard</a>
+            <a href="{% url 'logout' %}" class="sign_btn">Sign Out</a>
+        {% else %}
+            <a href="{% url 'signin' %}" class="sign_btn">Sign In</a>
+            <a href="{% url 'signup' %}" class="sign_btn">Sign Up</a>
+        {% endif %}
+    </div>
+</nav>
+

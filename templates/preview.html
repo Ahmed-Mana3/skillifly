@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Skillifly – Portfolio Preview{% endblock %}
+
+{% block content %}
+<section class="preview-section">
+    <div class="preview-container">
+        <div class="preview-header">
+            <h1>Portfolio Preview</h1>
+            <p>This is how your portfolio will look</p>
+            <div class="preview-actions">
+                <form method="get" action="{% url 'builder' %}" style="display: inline;">
+                    <button type="submit" class="btn-secondary">← Back to Edit</button>
+                </form>
+                <form method="post" action="{% url 'builder' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary">Publish Portfolio →</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Portfolio Preview -->
+        <div class="portfolio-preview">
+            <!-- Personal Info -->
+            <div class="preview-personal">
+                <h2>{{ portfolio.personal.fullname|default:"Your Name" }}</h2>
+                <h3>{{ portfolio.personal.title|default:"Your Professional Title" }}</h3>
+                <p>{{ portfolio.personal.bio|default:"Your bio will appear here..." }}</p>
+                <div class="contact-info">
+                    <p>Email: {{ portfolio.personal.email|default:"your.email@example.com" }}</p>
+                    <p>Phone: {{ portfolio.personal.phone|default:"Your Phone Number" }}</p>
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="preview-section">
+                <h3>Skills</h3>
+                <div class="skills-preview">
+                    {% for skill in portfolio.skills %}
+                        <span class="skill-tag">{{ skill }}</span>
+                    {% empty %}
+                        <span class="skill-tag">Your skills will appear here</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Experience -->
+            <div class="preview-section">
+                <h3>Experience</h3>
+                {% for exp in portfolio.experience %}
+                <div class="experience-item">
+                    <h4>{{ exp.title }} at {{ exp.company }}</h4>
+                    <p>{{ exp.start }} - {{ exp.end|default:"Present" }}</p>
+                    <p>{{ exp.description }}</p>
+                </div>
+                {% empty %}
+                <div class="experience-item">
+                    <h4>Your job title at Company Name</h4>
+                    <p>Start Date - End Date</p>
+                    <p>Your job description will appear here...</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Education -->
+            <div class="preview-section">
+                <h3>Education</h3>
+                {% for edu in portfolio.education %}
+                <div class="education-item">
+                    <h4>{{ edu.degree }} in {{ edu.field }}</h4>
+                    <p>{{ edu.school }}, {{ edu.year }}</p>
+                </div>
+                {% empty %}
+                <div class="education-item">
+                    <h4>Degree in Field of Study</h4>
+                    <p>School/University, Graduation Year</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Projects -->
+            <div class="preview-section">
+                <h3>Projects</h3>
+                {% for project in portfolio.projects %}
+                <div class="project-item">
+                    <h4>{{ project.name }}</h4>
+                    {% if project.url %}
+                        <p><a href="{{ project.url }}" target="_blank">{{ project.url }}</a></p>
+                    {% endif %}
+                    <p>{{ project.description }}</p>
+                </div>
+                {% empty %}
+                <div class="project-item">
+                    <h4>Project Name</h4>
+                    <p>Project URL (optional)</p>
+                    <p>Project description will appear here...</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Links -->
+            <div class="preview-section">
+                <h3>Links</h3>
+                <div class="links-preview">
+                    {% for link in portfolio.links %}
+                        <a href="{{ link.url }}" target="_blank" class="link-item">{{ link.name }}</a>
+                    {% empty %}
+                        <a href="#" class="link-item">Your links will appear here</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.preview-section {
+    background: linear-gradient(135deg, #eaf3ff 0%, #f7d7e3 45%, #fff4db 100%);
+    min-height: 100vh;
+    padding: 60px 20px;
+}
+
+.preview-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.preview-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.preview-header h1 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.preview-header p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 14px;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-2px);
+}
+
+.portfolio-preview {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.preview-personal {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.preview-personal h2 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.preview-personal h3 {
+    font-size: 18px;
+    color: #667eea;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.preview-personal p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.contact-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.preview-section {
+    margin-bottom: 32px;
+}
+
+.preview-section h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 16px;
+    font-weight: 600;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 8px;
+}
+
+.skills-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-tag {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.experience-item, .education-item, .project-item {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8f8f8;
+    border-radius: 8px;
+}
+
+.experience-item h4, .education-item h4, .project-item h4 {
+    color: #333;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.experience-item p, .education-item p, .project-item p {
+    color: #666;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.links-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.link-item {
+    color: #667eea;
+    text-decoration: none;
+    padding: 8px 16px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.link-item:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .preview-container {
+        padding: 24px;
+    }
+
+    .preview-header h1 {
+        font-size: 24px;
+    }
+
+    .preview-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
