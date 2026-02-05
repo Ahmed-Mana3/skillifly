@@ -1,7 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
-from .models import Profile, Experience, Education, Skill, Project, Link
+from .models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link
+from django import forms
+from django.forms import formset_factory, BaseFormSet
+from django.core.validators import RegexValidator
+from datetime import datetime
 
 User = get_user_model()  
 
@@ -133,3 +137,216 @@ class LoginForm(AuthenticationForm):
                     pass
         
         return super().clean()
+
+
+# =========================
+# Personal Info (Single Form)
+# =========================
+class PersonalInfoForm(forms.Form):
+    fullname = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "id": "fullname",
+            "placeholder": "John Doe",
+            "required": True,
+            "class": "form-control",
+        })
+    )
+
+    title = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "id": "title",
+            "placeholder": "Full Stack Developer",
+            "required": True,
+            "class": "form-control",
+        })
+    )
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            "id": "email",
+            "placeholder": "john@example.com",
+            "required": True,
+            "class": "form-control",
+        })
+    )
+
+    phone = forms.CharField(
+        required=False,
+        validators=[
+            RegexValidator(
+                regex=r"^[0-9+\-\s()]{7,20}$",
+                message="Enter a valid phone number."
+            )
+        ],
+        widget=forms.TextInput(attrs={
+            "id": "phone",
+            "type": "tel",
+            "placeholder": "+1 (555) 123-4567",
+            "class": "form-control",
+        })
+    )
+
+    bio = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            "id": "bio",
+            "rows": 5,
+            "placeholder": "Tell us about yourself...",
+            "class": "form-control",
+        })
+    )
+
+
+# =========================
+# Skills (Formset)
+# =========================
+class SkillForm(forms.Form):
+    skill = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "class": "skill-input",
+            "placeholder": "e.g., Python, JavaScript, UI Design",
+            "required": True,
+        })
+    )
+
+
+# =========================
+# Education (Formset)
+# =========================
+class EducationForm(forms.Form):
+    school = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Port Said University",
+            "required": True,
+        })
+    )
+    degree = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Bachelor's Degree",
+            "required": True,
+        })
+    )
+    field = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Computer Science",
+            "required": True,
+        })
+    )
+    year = forms.IntegerField(
+        required=True,
+        widget=forms.NumberInput(attrs={
+            "placeholder": "2024",
+            "required": True,
+        })
+    )
+
+    def clean_year(self):
+        year = self.cleaned_data["year"]
+        current_year = datetime.now().year + 10  # allow future a bit
+        if year < 1950 or year > current_year:
+            raise forms.ValidationError("Enter a valid graduation year.")
+        return year
+
+
+# =========================
+# Experience (Formset)
+# =========================
+class ExperienceForm(forms.Form):
+    title = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Full Stack Developer",
+            "required": True,
+        })
+    )
+    company = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Tech Company",
+            "required": True,
+        })
+    )
+    start = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "type": "month",
+            "required": True,
+        })
+    )
+    end = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            "type": "month",
+            "placeholder": "Leave blank if current",
+        })
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            "rows": 3,
+            "placeholder": "Describe your role and achievements...",
+        })
+    )
+
+
+# =========================
+# Projects (Formset)
+# =========================
+class ProjectForm(forms.Form):
+    name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "e.g., Portfolio Builder",
+            "required": True,
+        })
+    )
+    url = forms.URLField(
+        required=False,
+        widget=forms.URLInput(attrs={
+            "placeholder": "https://example.com",
+        })
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            "rows": 3,
+            "placeholder": "What did you build? What impact did it have?",
+        })
+    )
+
+
+# =========================
+# Links (Formset)
+# =========================
+class LinkForm(forms.Form):
+    name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "e.g., GitHub, LinkedIn, Portfolio",
+            "required": True,
+        })
+    )
+    url = forms.URLField(
+        required=True,
+        widget=forms.URLInput(attrs={
+            "placeholder": "https://example.com",
+            "required": True,
+        })
+    )
+
+
+# =========================
+# Formset factories
+# =========================
+SkillFormSet = formset_factory(SkillForm, extra=1, can_delete=True)
+EducationFormSet = formset_factory(EducationForm, extra=1, can_delete=True)
+ExperienceFormSet = formset_factory(ExperienceForm, extra=1, can_delete=True)
+ProjectFormSet = formset_factory(ProjectForm, extra=1, can_delete=True)
+LinkFormSet = formset_factory(LinkForm, extra=1, can_delete=True)

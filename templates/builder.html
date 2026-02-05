@@ -12,279 +12,301 @@
 <div class="builder-container">
     <form class="builder-form" id="portfolioForm" method="post" action="{% url 'builder' %}">
         {% csrf_token %}
-        
-        <!-- Personal Information Section -->
+
+        <!-- ========================= -->
+        <!-- Personal Information -->
+        <!-- ========================= -->
         <section class="form-section">
             <h2>Personal Information</h2>
-            
+
             <div class="form-group">
                 <label for="fullname">Full Name</label>
-                <input type="text" id="fullname" name="fullname" value="{{ portfolio.personal.fullname|default:'' }}" placeholder="John Doe" required>
+                {{ personal_form.fullname }}
+                {% if personal_form.fullname.errors %}
+                    <div class="field-errors">{{ personal_form.fullname.errors }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label for="title">Professional Title</label>
-                <input type="text" id="title" name="title" value="{{ portfolio.personal.title|default:'' }}" placeholder="Full Stack Developer" required>
+                {{ personal_form.title }}
+                {% if personal_form.title.errors %}
+                    <div class="field-errors">{{ personal_form.title.errors }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="{{ portfolio.personal.email|default:'' }}" placeholder="john@example.com" required>
+                {{ personal_form.email }}
+                {% if personal_form.email.errors %}
+                    <div class="field-errors">{{ personal_form.email.errors }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label for="phone">Phone</label>
-                <input type="tel" id="phone" name="phone" value="{{ portfolio.personal.phone|default:'' }}" placeholder="+1 (555) 123-4567">
+                {{ personal_form.phone }}
+                {% if personal_form.phone.errors %}
+                    <div class="field-errors">{{ personal_form.phone.errors }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label for="bio">Bio</label>
-                <textarea id="bio" name="bio" rows="5" placeholder="Tell us about yourself...">{{ portfolio.personal.bio|default:'' }}</textarea>
+                {{ personal_form.bio }}
+                {% if personal_form.bio.errors %}
+                    <div class="field-errors">{{ personal_form.bio.errors }}</div>
+                {% endif %}
             </div>
         </section>
 
-        <!-- Skills Section -->
+
+        <!-- ========================= -->
+        <!-- Skills -->
+        <!-- ========================= -->
         <section class="form-section">
             <div class="section-header">
                 <h2>Skills</h2>
                 <button type="button" class="btn-add" id="addSkillBtn">+ Add Skill</button>
             </div>
-            
+
             <div class="skills-list" id="skillsList">
-                {% for skill in portfolio.skills %}
+                {{ skill_formset.management_form }}
+
+                {% for form in skill_formset %}
                 <div class="skill-item">
-                    <input type="text" class="skill-input" name="skills[]" value="{{ skill }}" placeholder="e.g., Python, JavaScript, UI Design" required>
+                    {{ form.skill }}
+                    {{ form.DELETE }}
                     <button type="button" class="btn-remove">Remove</button>
-                </div>
-                {% empty %}
-                <div class="skill-item">
-                    <input type="text" class="skill-input" name="skills[]" placeholder="e.g., Python, JavaScript, UI Design" required>
-                    <button type="button" class="btn-remove">Remove</button>
+
+                    {% if form.skill.errors %}
+                        <div class="field-errors">{{ form.skill.errors }}</div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
         </section>
 
-        <!-- Education Section -->
+
+        <!-- ========================= -->
+        <!-- Education -->
+        <!-- ========================= -->
         <section class="form-section">
             <div class="section-header">
                 <h2>Education</h2>
                 <button type="button" class="btn-add" id="addEducationBtn">+ Add Education</button>
             </div>
-            
+
             <div class="education-list" id="educationList">
-                {% for edu in portfolio.education %}
+                {{ education_formset.management_form }}
+
+                {% for form in education_formset %}
                 <div class="education-item">
                     <div class="form-row">
                         <div class="form-group">
                             <label>School/University</label>
-                            <input type="text" name="education_school[]" value="{{ edu.school }}" placeholder="Port Said University" required>
+                            {{ form.school }}
+                            {% if form.school.errors %}
+                                <div class="field-errors">{{ form.school.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label>Degree</label>
-                            <input type="text" name="education_degree[]" value="{{ edu.degree }}" placeholder="Bachelor's Degree" required>
+                            {{ form.degree }}
+                            {% if form.degree.errors %}
+                                <div class="field-errors">{{ form.degree.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Field of Study</label>
-                            <input type="text" name="education_field[]" value="{{ edu.field }}" placeholder="Computer Science" required>
+                            {{ form.field }}
+                            {% if form.field.errors %}
+                                <div class="field-errors">{{ form.field.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label>Graduation Year</label>
-                            <input type="number" name="education_year[]" value="{{ edu.year }}" placeholder="2024" required>
+                            {{ form.year }}
+                            {% if form.year.errors %}
+                                <div class="field-errors">{{ form.year.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
-                    <button type="button" class="btn-remove">Remove</button>
-                </div>
-                {% empty %}
-                <div class="education-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>School/University</label>
-                            <input type="text" name="education_school[]" placeholder="Port Said University" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Degree</label>
-                            <input type="text" name="education_degree[]" placeholder="Bachelor's Degree" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Field of Study</label>
-                            <input type="text" name="education_field[]" placeholder="Computer Science" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Graduation Year</label>
-                            <input type="number" name="education_year[]" placeholder="2024" required>
-                        </div>
-                    </div>
+
+                    {{ form.DELETE }}
                     <button type="button" class="btn-remove">Remove</button>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
-        <!-- Experience Section -->
+
+        <!-- ========================= -->
+        <!-- Experience -->
+        <!-- ========================= -->
         <section class="form-section">
             <div class="section-header">
                 <h2>Experience</h2>
                 <button type="button" class="btn-add" id="addExperienceBtn">+ Add Experience</button>
             </div>
-            
+
             <div class="experience-list" id="experienceList">
-                {% for exp in portfolio.experience %}
+                {{ experience_formset.management_form }}
+
+                {% for form in experience_formset %}
                 <div class="experience-item">
                     <div class="form-row">
                         <div class="form-group">
                             <label>Job Title</label>
-                            <input type="text" name="experience_title[]" value="{{ exp.title }}" placeholder="Full Stack Developer" required>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="field-errors">{{ form.title.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label>Company</label>
-                            <input type="text" name="experience_company[]" value="{{ exp.company }}" placeholder="Tech Company" required>
+                            {{ form.company }}
+                            {% if form.company.errors %}
+                                <div class="field-errors">{{ form.company.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Start Date</label>
-                            <input type="month" name="experience_start[]" value="{{ exp.start }}" required>
+                            {{ form.start }}
+                            {% if form.start.errors %}
+                                <div class="field-errors">{{ form.start.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label>End Date</label>
-                            <input type="month" name="experience_end[]" value="{{ exp.end }}" placeholder="Leave blank if current">
+                            {{ form.end }}
+                            {% if form.end.errors %}
+                                <div class="field-errors">{{ form.end.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea name="experience_description[]" rows="3" placeholder="Describe your role and achievements...">{{ exp.description }}</textarea>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="field-errors">{{ form.description.errors }}</div>
+                        {% endif %}
                     </div>
-                    <button type="button" class="btn-remove">Remove</button>
-                </div>
-                {% empty %}
-                <div class="experience-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Job Title</label>
-                            <input type="text" name="experience_title[]" placeholder="Full Stack Developer" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Company</label>
-                            <input type="text" name="experience_company[]" placeholder="Tech Company" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Start Date</label>
-                            <input type="month" name="experience_start[]" required>
-                        </div>
-                        <div class="form-group">
-                            <label>End Date</label>
-                            <input type="month" name="experience_end[]" placeholder="Leave blank if current">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea name="experience_description[]" rows="3" placeholder="Describe your role and achievements..."></textarea>
-                    </div>
+
+                    {{ form.DELETE }}
                     <button type="button" class="btn-remove">Remove</button>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
-        <!-- Projects Section -->
+
+        <!-- ========================= -->
+        <!-- Projects -->
+        <!-- ========================= -->
         <section class="form-section">
             <div class="section-header">
                 <h2>Projects</h2>
                 <button type="button" class="btn-add" id="addProjectBtn">+ Add Project</button>
             </div>
-            
+
             <div class="projects-list" id="projectsList">
-                {% for project in portfolio.projects %}
+                {{ project_formset.management_form }}
+
+                {% for form in project_formset %}
                 <div class="project-item">
                     <div class="form-row">
                         <div class="form-group">
                             <label>Project Name</label>
-                            <input type="text" name="project_name[]" value="{{ project.name }}" placeholder="e.g., Portfolio Builder" required>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="field-errors">{{ form.name.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label>Project URL (optional)</label>
-                            <input type="url" name="project_url[]" value="{{ project.url }}" placeholder="https://example.com">
+                            {{ form.url }}
+                            {% if form.url.errors %}
+                                <div class="field-errors">{{ form.url.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea name="project_description[]" rows="3" placeholder="What did you build? What impact did it have?">{{ project.description }}</textarea>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="field-errors">{{ form.description.errors }}</div>
+                        {% endif %}
                     </div>
-                    <button type="button" class="btn-remove">Remove</button>
-                </div>
-                {% empty %}
-                <div class="project-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Project Name</label>
-                            <input type="text" name="project_name[]" placeholder="e.g., Portfolio Builder" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Project URL (optional)</label>
-                            <input type="url" name="project_url[]" placeholder="https://example.com">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea name="project_description[]" rows="3" placeholder="What did you build? What impact did it have?"></textarea>
-                    </div>
+
+                    {{ form.DELETE }}
                     <button type="button" class="btn-remove">Remove</button>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
-        <!-- Communication Links Section -->
+
+        <!-- ========================= -->
+        <!-- Communication & Links -->
+        <!-- ========================= -->
         <section class="form-section">
             <div class="section-header">
                 <h2>Communication & Links</h2>
                 <button type="button" class="btn-add" id="addLinkBtn">+ Add Link</button>
             </div>
-            
+
             <div class="links-list" id="linksList">
-                {% for link in portfolio.links %}
+                {{ link_formset.management_form }}
+
+                {% for form in link_formset %}
                 <div class="link-item">
                     <div class="form-row">
                         <div class="form-group">
                             <label>Link Name</label>
-                            <input type="text" name="link_name[]" value="{{ link.name }}" placeholder="e.g., GitHub, LinkedIn, Portfolio" required>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="field-errors">{{ form.name.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label>URL</label>
-                            <input type="url" name="link_url[]" value="{{ link.url }}" placeholder="https://example.com" required>
+                            {{ form.url }}
+                            {% if form.url.errors %}
+                                <div class="field-errors">{{ form.url.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
-                    <button type="button" class="btn-remove">Remove</button>
-                </div>
-                {% empty %}
-                <div class="link-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Link Name</label>
-                            <input type="text" name="link_name[]" placeholder="e.g., GitHub, LinkedIn, Portfolio" required>
-                        </div>
-                        <div class="form-group">
-                            <label>URL</label>
-                            <input type="url" name="link_url[]" placeholder="https://example.com" required>
-                        </div>
-                    </div>
+
+                    {{ form.DELETE }}
                     <button type="button" class="btn-remove">Remove</button>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
+
+        <!-- ========================= -->
         <!-- Action Buttons -->
+        <!-- ========================= -->
         <div class="form-actions">
             <button type="submit" class="btn-preview">Preview & Publish →</button>
         </div>
+
     </form>
 </div>
 {% endblock %}
