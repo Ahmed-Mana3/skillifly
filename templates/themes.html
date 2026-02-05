@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Skillifly — Choose Template{% endblock %}
+
+{% block nav %}
+<nav>
+    <a href="{% url 'index' %}" class="logo">
+        <h1>Skillifly</h1>
+    </a>
+    <div class="nav-actions">
+        <a href="#" class="sign_btn">{{ user.username|default:"John Doe"|title }}</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block header %}
+<header class="themes-header">
+    <div class="step-pill">Step 2 of 5</div>
+    <h1>Choose Your Template</h1>
+    <p class="sub">Select a design that represents your style</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Categories Section -->
+<section class="categories-section">
+    <div class="categories-container">
+        <h2>Who Are You?</h2>
+        <p class="categories-intro">Select your profession to see recommended templates</p>
+
+        <div class="categories-tabs">
+            {% for category in categories %}
+            <button class="category-tab {% if forloop.first %}active{% endif %}" data-category="{{ category.id }}">
+                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    {% if category.name == "Video Editor" %}
+                    <path d="M23 7l-7 5 7 5V7z"></path>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    {% elif category.name == "Graphic Designer" %}
+                    <path d="M12 19l7 4-7-4-7 4 7-4z"></path>
+                    <path d="M12 2v17"></path>
+                    <path d="M5 9l7-7 7 7"></path>
+                    {% else %}
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                    {% endif %}
+                </svg>
+                {{ category.name }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="templates-grid">
+    {% for theme in themes %}
+    <article class="template-card" data-theme="{{ theme.id }}" data-category="{{ theme.category.id }}">
+        <div class="template-preview {% if not theme.preview_image %}generic-gradient{% endif %}">
+            {% if theme.preview_image %}
+            <img src="{{ theme.preview_image.url }}" alt="{{ theme.name }} Preview" class="preview-img">
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z" />
+            </svg>
+            {% endif %}
+        </div>
+        <h3>{{ theme.name }}</h3>
+        <p>{{ theme.category.name }} template</p>
+    </article>
+    {% empty %}
+    <p>No themes available at the moment.</p>
+    {% endfor %}
+</section>
+
+<div class="continue-wrap">
+    <a class="continue-btn preview-btn disabled" href="#" target="_blank" rel="noreferrer">Preview Theme →</a>
+
+    <form method="POST" action="{% url 'themes' %}" id="theme-selection-form" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="theme" id="selectedTheme">
+        <input type="hidden" name="category" id="selectedCategory">
+        <button type="submit" class="continue-btn builder-btn disabled">Continue with Template →</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'index.js' %}"></script>
+{% endblock %}

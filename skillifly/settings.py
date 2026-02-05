@@ -10,11 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-from django.conf.global_settings import AUTH_USER_MODEL
-from django.conf.global_settings import MEDIA_ROOT
-from django.conf.global_settings import STATICFILES_DIRS
 import os
-from django.conf.global_settings import STATIC_ROOT
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
