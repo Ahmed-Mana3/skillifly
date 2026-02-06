@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ personal_info.full_name|default:"Portfolio" }} — Theme 1</title>
+  <link rel="icon" type="image/png" href="{% static 'logo.png' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'theme_1.css' %}" />
+</head>
+
+<body>
+  <header class="theme-nav" aria-label="Portfolio preview navigation">
+    <div class="theme-nav__inner">
+      <a class="nav-pill nav-pill--ghost" href="{% url 'builder' %}" aria-label="Back to editor">
+        <span class="nav-pill__icon" aria-hidden="true">←</span>
+        <span>Back to Editor</span>
+      </a>
+
+      <div class="theme-nav__right">
+        <div class="nav-mode" aria-label="Preview mode status">
+          <span class="nav-mode__label">Preview Mode</span>
+        </div>
+
+        <a class="nav-pill nav-pill--primary" href="{% url 'payment' %}">Publish Portfolio (100 EGP)</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero" aria-label="Intro">
+      <div class="hero__card">
+        <div class="hero__left">
+          <div class="avatar" aria-hidden="true">
+            <div class="avatar__ring"></div>
+            <div class="avatar__core">
+              {% if personal_info.full_name %}
+              {{ personal_info.full_name|slice:":2"|upper }}
+              {% else %}
+              JD
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__identity">
+          <p class="kicker">Available for freelance</p>
+          <h1 class="hero__name">{{ personal_info.full_name|default:"Your Name" }}</h1>
+          <p class="hero__title">{{ personal_info.title|default:"Your Professional Title" }}</p>
+          <p class="hero__bio">
+            {{ personal_info.bio|default:"Add a short bio in the builder to introduce yourself." }}
+          </p>
+
+          <div class="meta">
+            {% if personal_info.email %}
+            <a class="meta__item" href="mailto:{{ personal_info.email }}">
+              <span class="meta__label">Email</span>
+              <span class="meta__value">{{ personal_info.email }}</span>
+            </a>
+            {% else %}
+            <span class="meta__item is-disabled">
+              <span class="meta__label">Email</span>
+              <span class="meta__value">Add your email</span>
+            </span>
+            {% endif %}
+
+            {% if personal_info.phone %}
+            <a class="meta__item" href="tel:{{ personal_info.phone }}">
+              <span class="meta__label">Phone</span>
+              <span class="meta__value">{{ personal_info.phone }}</span>
+            </a>
+            {% else %}
+            <span class="meta__item is-disabled">
+              <span class="meta__label">Phone</span>
+              <span class="meta__value">Add your phone</span>
+            </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="hero__right" aria-label="Highlights">
+        <div class="stat stat--years">
+          <div class="stat__num">
+            {% if experiences %}
+            {% with earliest=experiences|first %}
+            {% now "Y" as current_year %}
+            {% widthratio earliest.start_date.year 1 1 as start_year %}
+            {{ current_year|add:"-"|add:start_year|default:"0" }}
+            {% endwith %}
+            {% else %}
+            0
+            {% endif %}
+          </div>
+          <div class="stat__label">Years of Experience</div>
+        </div>
+        <div class="card card--accent">
+          <h2 class="card__title">Links</h2>
+          <div class="links">
+            {% if links %}
+            {% for link in links %}
+            <a class="link" href="{{ link.url }}" target="_blank" rel="noreferrer">
+              <span class="link__name">{{ link.platform }}</span>
+              <span class="link__arrow" aria-hidden="true">↗</span>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="empty">Add links (GitHub, LinkedIn, …) in the builder.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Portfolio sections">
+      <section class="card" aria-label="Skills">
+        <div class="card__header">
+          <h2 class="card__title">Skills</h2>
+          <p class="card__sub">What I use to build and ship</p>
+        </div>
+        <div class="chips">
+          {% if skills %}
+          {% for skill in skills %}
+          <span class="chip">{{ skill.name }}</span>
+          {% endfor %}
+          {% else %}
+          <div class="empty">No skills yet — add a few in the builder.</div>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="card" aria-label="Experience">
+        <div class="card__header">
+          <h2 class="card__title">Experience</h2>
+          <p class="card__sub">Recent roles and impact</p>
+        </div>
+        <div class="timeline">
+          {% if experiences %}
+          {% for exp in experiences %}
+          <article class="timeline__item">
+            <div class="timeline__dot" aria-hidden="true"></div>
+            <div class="timeline__content">
+              <div class="timeline__top">
+                <div class="timeline__role">{{ exp.title }}</div>
+                <div class="timeline__when">
+                  {{ exp.start_date|date:"M Y" }} ·
+                  {% if exp.end_date %}
+                  {{ exp.end_date|date:"M Y" }}
+                  {% else %}
+                  Present
+                  {% endif %}
+                </div>
+              </div>
+              <div class="timeline__company">{{ exp.company }}</div>
+              {% if exp.details %}
+              <p class="timeline__desc">{{ exp.details }}</p>
+              {% else %}
+              <p class="timeline__desc timeline__desc--muted">Add a short description of your achievements.</p>
+              {% endif %}
+            </div>
+          </article>
+          {% endfor %}
+          {% else %}
+          <div class="empty">No experience added yet.</div>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="card" aria-label="Education">
+        <div class="card__header">
+          <h2 class="card__title">Education</h2>
+          <p class="card__sub">Academic background</p>
+        </div>
+        <div class="stack">
+          {% if education %}
+          {% for edu in education %}
+          <article class="stack__item">
+            <div class="stack__title">{{ edu.school }}</div>
+            <div class="stack__meta">
+              <span>{{ edu.degree }}</span>
+              <span class="dot">•</span>
+              <span>{{ edu.field }}</span>
+              <span class="dot">•</span>
+              <span>{{ edu.grade_year|date:"Y" }}</span>
+            </div>
+          </article>
+          {% endfor %}
+          {% else %}
+          <div class="empty">No education added yet.</div>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="card card--projects" aria-label="Projects">
+        <div class="card__header">
+          <h2 class="card__title">Projects</h2>
+          <p class="card__sub">Selected work</p>
+        </div>
+        <div class="projects">
+          {% if projects %}
+          {% for project in projects %}
+          <article class="project-card">
+            <div class="project-card__top">
+              <div class="project-card__name">{{ project.title }}</div>
+              {% if project.url %}
+              <a class="project-card__link" href="{{ project.url }}" target="_blank" rel="noreferrer">View ↗</a>
+              {% endif %}
+            </div>
+            {% if project.details %}
+            <p class="project-card__desc">{{ project.details }}</p>
+            {% else %}
+            <p class="project-card__desc project-card__desc--muted">Add a short project description in the builder.</p>
+            {% endif %}
+          </article>
+          {% endfor %}
+          {% else %}
+          <div class="empty">No projects yet — add a few in the builder.</div>
+          {% endif %}
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <div>
+        <div class="footer__brand">Skillifly</div>
+        <div class="footer__muted">Theme 1 — Professional Portfolio Template</div>
+      </div>
+      <div class="footer__muted">© {% now "Y" %}</div>
+    </div>
+  </footer>
+</body>
+
+</html>

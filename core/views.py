@@ -1,8 +1,9 @@
+from multiprocessing import context
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import RegisterForm, LoginForm
 from django.contrib.auth import login, logout
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser
 from .forms import (
     PersonalInfoForm,
     SkillFormSet,
@@ -208,7 +209,7 @@ def builder_view(request):
                     url=link_data["url"],
                 )
 
-            return redirect("preview")
+            return redirect("preview", username=request.user.username)
 
     else:
  
@@ -231,9 +232,32 @@ def builder_view(request):
     return render(request, "builder.html", context)
 
 
-def preview_view(request):
-    """Render the preview page"""
-    return render(request, 'preview.html')
+def preview_view(request, username):
+    if CustomUser.objects.get(username=username):
+        if CustomUser.objects.get(username=username) == request.user:
+            user = CustomUser.objects.get(username=username)
+            personal_info = PersonalInfo.objects.get(user=user.id)
+            experiences = Experience.objects.filter(user=user.id)
+            education = Education.objects.filter(user=user.id)
+            skills = Skill.objects.filter(user=user.id)
+            projects = Project.objects.filter(user=user.id)
+            links = Link.objects.filter(user=user.id)
+
+            context = {
+                'personal_info': personal_info,
+                'experiences': experiences,
+                'education': education,
+                'skills': skills,
+                'projects': projects,
+                'links': links,
+            }
+
+            return render(request, 'theme_1.html', context=context)
+
+        else:
+            return render(request, "404.html")
+
+    return render(request, "404.html")
 
 
 def payment_view(request):
