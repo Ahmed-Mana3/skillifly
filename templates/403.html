@@ -1,16 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}404 - Page Not Found | Skillifly{% endblock %}
+{% block title %}403 - Access Forbidden | Skillifly{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'error_pages.css' %}">
-=======
-
-
-{% block content %}
-<h1>404 - complete the payment to get public access</h1>
-
 {% endblock %}
 
 {% block content %}
@@ -19,22 +13,23 @@
         <div class="error-content">
             <div class="error-illustration">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="error-svg">
-                    <circle cx="100" cy="100" r="80" fill="none" stroke="url(#gradient1)" stroke-width="4" />
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="url(#gradient3)" stroke-width="4" />
                     <text x="100" y="120" font-size="80" font-weight="bold" text-anchor="middle"
-                        fill="url(#gradient1)">404</text>
+                        fill="url(#gradient3)">403</text>
                     <defs>
-                        <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#FFE01B;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
                         </linearGradient>
                     </defs>
                 </svg>
             </div>
 
-            <h1 class="error-title">Page Not Found</h1>
+            <h1 class="error-title">Access Forbidden</h1>
             <p class="error-description">
-                Oops! The page you're looking for seems to have wandered off.
-                It might have been moved, deleted, or never existed in the first place.
+                You don't have permission to access this page.
+                This could be because you need to sign in, upgrade your subscription, or you're trying to access a
+                restricted area.
             </p>
 
             <div class="error-actions">
@@ -46,22 +41,23 @@
                     </svg>
                     Go Home
                 </a>
-                <button onclick="history.back()" class="btn-secondary">
+                <a href="{% url 'signin' %}" class="btn-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
                     </svg>
-                    Go Back
-                </button>
+                    Sign In
+                </a>
             </div>
 
             <div class="error-suggestions">
-                <h3>Here are some helpful links:</h3>
+                <h3>Need help?</h3>
                 <ul>
-                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'themes' %}">Browse Themes</a></li>
-                    <li><a href="{% url 'index' %}">Home Page</a></li>
+                    <li><a href="{% url 'signin' %}">Sign in to your account</a></li>
+                    <li><a href="{% url 'payment' %}">Upgrade your subscription</a></li>
+                    <li><a href="{% url 'dashboard' %}">Go to Dashboard</a></li>
                 </ul>
             </div>
         </div>

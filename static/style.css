@@ -37,15 +37,36 @@ nav {
     background-color: white;
     border-bottom: 5px solid #ffd700;
     width: 100%;
+    height: 100px;
+    position: relative;
 }
 
 .logo {
-    width: 40px;
-    height: 40px;
+    display: flex;
+    align-items: center;
     font-family: "Amiri", serif;
     font-weight: 700;
     font-style: normal;
     color: #764ba2;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.logo-img {
+    height: 60px;
+    max-height: 60px;
+    width: auto;
+    max-width: 150px;
+    object-fit: contain;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
 .sign_btn {
@@ -465,7 +486,22 @@ header button:hover {
 
 @media (max-width: 768px) {
     nav {
-        padding: 15px 20px;
+        padding: 10px 15px;
+        flex-wrap: wrap;
+    }
+
+    .logo-img {
+        height: 45px;
+    }
+
+    .nav-actions {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .sign_btn {
+        padding: 8px 18px;
+        font-size: 14px;
     }
 
     header {

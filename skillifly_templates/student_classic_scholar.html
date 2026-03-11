@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ personal_info.full_name }} — Academic Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Source+Sans+Pro:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background: #F9FAFB;
+            color: #1F2937;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .serif-font {
+            font-family: 'Merriweather', serif;
+        }
+
+        .accent-color {
+            color: #1E3A8A;
+            /* Deep blue */
+        }
+
+        .accent-bg {
+            background-color: #1E3A8A;
+        }
+
+        .card {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border-radius: 8px;
+        }
+
+        .section-divider {
+            width: 60px;
+            height: 4px;
+            background-color: #1E3A8A;
+            margin-top: 12px;
+            margin-bottom: 24px;
+            border-radius: 2px;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #EFF6FF;
+            color: #1E3A8A;
+            border: 1px solid #BFDBFE;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 4px;
+        }
+
+        .contact-link {
+            color: #4B5563;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .contact-link:hover {
+            color: #1E3A8A;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header / Hero -->
+    <header class="accent-bg text-white py-20 px-6 mb-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ personal_info.full_name }}</h1>
+            <p class="text-xl md:text-2xl font-light text-blue-100 mb-6 font-serif">{{ personal_info.title }}</p>
+
+            {% if personal_info.bio %}
+            <p class="max-w-2xl mx-auto text-blue-50 leading-relaxed mb-8">
+                {{ personal_info.bio }}
+            </p>
+            {% endif %}
+
+            <div class="flex flex-wrap justify-center gap-6 mt-6">
+                {% if personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}"
+                    class="text-white hover:text-blue-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {{ personal_info.email }}
+                </a>
+                {% endif %}
+                {% if personal_info.phone %}
+                <a href="tel:{{ personal_info.phone }}" class="text-white hover:text-blue-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    {{ personal_info.phone }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 pb-24">
+
+        <!-- Education (Prioritized for students) -->
+        {% if education %}
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold accent-color">Education</h2>
+            <div class="section-divider"></div>
+            <div class="space-y-6">
+                {% for edu in education %}
+                <div class="card p-6 border-l-4 border-blue-800">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-baseline gap-2 mb-2">
+                        <h3 class="text-xl font-bold">{{ edu.school }}</h3>
+                        <span class="text-gray-600 font-semibold px-3 py-1 bg-gray-100 rounded-full text-sm">Class of {{
+                            edu.grade_year|date:"Y" }}</span>
+                    </div>
+                    <p class="text-lg text-gray-800 font-serif">{{ edu.degree }} {% if edu.field %}in {{ edu.field }}{%
+                        endif %}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Skills -->
+        {% if skills %}
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold accent-color">Academic & Technical Skills</h2>
+            <div class="section-divider"></div>
+            <div class="flex flex-wrap -m-1">
+                {% for skill in skills %}
+                <span class="skill-tag">{{ skill.name }}</span>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Projects -->
+        {% if projects %}
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold accent-color">Academic Projects & Research</h2>
+            <div class="section-divider"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for project in projects %}
+                <div class="card p-6 flex flex-col h-full">
+                    {% if project.image %}
+                    <div class="aspect-video w-full overflow-hidden rounded mb-4">
+                        <img src="{{ project.image.url }}" alt="{{ project.title }}"
+                            class="object-cover w-full h-full" />
+                    </div>
+                    {% endif %}
+                    <h3 class="text-xl font-bold mb-2">{{ project.title }}</h3>
+                    {% if project.details %}
+                    <p class="text-gray-600 flex-grow mb-4">{{ project.details }}</p>
+                    {% endif %}
+                    {% if project.url %}
+                    <a href="{{ project.url }}" target="_blank"
+                        class="accent-color font-semibold hover:underline mt-auto inline-flex items-center gap-1">
+                        View Project
+                        <svg class="w-4 h-4" transform="rotate(-45)" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Experience / Extracurriculars -->
+        {% if experiences %}
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold accent-color">Experience & Extracurriculars</h2>
+            <div class="section-divider"></div>
+            <div
+                class="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-300 before:to-transparent">
+                {% for exp in experiences %}
+                <div
+                    class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <!-- Icon -->
+                    <div
+                        class="flex items-center justify-center w-5 h-5 rounded-full border border-white accent-bg text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                    </div>
+
+                    <div class="w-[calc(100%-2rem)] md:w-[calc(50%-2rem)] card p-6 hover:shadow-md transition-shadow">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                            <h3 class="font-bold text-lg text-gray-900 leading-tight">{{ exp.title }}</h3>
+                            <span
+                                class="text-xs font-bold text-blue-800 bg-blue-50 px-2 py-1 rounded whitespace-nowrap">{{
+                                exp.start_date|date:"Y" }} - {% if exp.still_working %}Present{% elif exp.end_date %}{{
+                                exp.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
+                        </div>
+                        <h4 class="font-serif text-gray-700 font-medium mb-3">{{ exp.company }}</h4>
+                        {% if exp.details %}
+                        <p class="text-gray-600 text-sm leading-relaxed">{{ exp.details }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Links -->
+        {% if links %}
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold accent-color">Connect</h2>
+            <div class="section-divider"></div>
+            <div class="flex flex-wrap gap-4">
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank"
+                    class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded hover:border-blue-800 hover:bg-blue-50 transition-colors">
+                    <span class="font-semibold text-gray-700">{{ link.platform }}</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+    <footer class="bg-gray-100 py-8 text-center text-gray-500 border-t border-gray-200">
+        <div class="max-w-4xl mx-auto px-6 flex justify-between items-center">
+            <p>&copy; {% now "Y" %} {{ personal_info.full_name }}</p>
+            <a href="/" class="flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
+                <img src="{% static 'bird.png' %}" alt="Skillifly" class="h-4 w-4 grayscale">
+                <span class="text-xs font-bold uppercase tracking-widest text-gray-800">Skillifly</span>
+            </a>
+        </div>
+    </footer>
+
+</body>
+
+</html>

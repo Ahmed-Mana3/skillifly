@@ -1,3 +1,4 @@
+from django.template.defaultfilters import title
 import email
 from django.db.models import CharField
 from unicodedata import decimal
@@ -25,7 +26,7 @@ class Category(models.Model):
 # 3. Themes available for the Portfolio
 class Theme(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
-    name = models.CharField(max_length=254, unique=True)
+    name = models.CharField(max_length=254)
     use_num = models.IntegerField(default=0)
     preview_image = models.ImageField(upload_to='themes/', blank=True, null=True)
 
@@ -40,6 +41,8 @@ class Profile(models.Model):
     bio = models.TextField(blank=True, null=True)
     picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True)
+    visits = models.PositiveIntegerField(default=0)
+    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -110,3 +113,24 @@ class Link(models.Model):
 
     def __str__(self):
         return f"{self.platform}: {self.user.username}"
+
+class Subscription(models.Model):
+    duration = models.IntegerField()
+    days = models.IntegerField()
+    name = models.CharField(max_length=254)
+
+    def __str__(self):
+        return f"{self.name}: {self.duration}"
+
+class UserPayment(models.Model):
+    user = models.ForeignKey(CustomUser, null=True, on_delete=models.SET_NULL)
+    subscription = models.ForeignKey(Subscription, blank=True, null=True, on_delete=models.SET_NULL)
+    status = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        user_name = self.user.username if self.user else "Unknown User"
+        sub_duration = self.subscription.duration if self.subscription else "No Subscription"
+        return f"{user_name} - {sub_duration}"
+
+

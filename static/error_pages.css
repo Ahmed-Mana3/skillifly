@@ -1,0 +1,229 @@
+/* Error Pages Styles */
+
+.error-section {
+    background: linear-gradient(135deg, #eaf3ff 0%, #f7d7e3 45%, #fff4db 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.error-container {
+    max-width: 700px;
+    width: 100%;
+}
+
+.error-content {
+    background: white;
+    border-radius: 24px;
+    padding: 60px 48px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Error Illustration */
+.error-illustration {
+    margin-bottom: 40px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.error-svg {
+    width: 200px;
+    height: 200px;
+    filter: drop-shadow(0 8px 16px rgba(102, 126, 234, 0.2));
+}
+
+/* Error Title */
+.error-title {
+    font-size: 42px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+}
+
+/* Error Description */
+.error-description {
+    font-size: 18px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Error Actions */
+.error-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+}
+
+/* Error Suggestions */
+.error-suggestions {
+    padding-top: 32px;
+    border-top: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.error-suggestions h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.error-suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error-suggestions li {
+    padding: 12px 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.error-suggestions a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.error-suggestions a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .error-content {
+        padding: 48px 32px;
+    }
+
+    .error-title {
+        font-size: 32px;
+    }
+
+    .error-description {
+        font-size: 16px;
+    }
+
+    .error-svg {
+        width: 150px;
+        height: 150px;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .error-section {
+        padding: 40px 16px;
+    }
+
+    .error-content {
+        padding: 40px 24px;
+    }
+
+    .error-title {
+        font-size: 28px;
+    }
+
+    .error-description {
+        font-size: 15px;
+    }
+
+    .error-svg {
+        width: 120px;
+        height: 120px;
+    }
+
+    .error-suggestions h3 {
+        font-size: 18px;
+    }
+
+    .error-suggestions li {
+        font-size: 14px;
+    }
+}
