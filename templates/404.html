@@ -25,10 +25,14 @@
                 </svg>
             </div>
 
-            <h1 class="error-title">Page Not Found</h1>
+            <h1 class="error-title">{% if exception %}404 - {{ exception }}{% else %}Page Not Found{% endif %}</h1>
             <p class="error-description">
-                Oops! The page you're looking for seems to have wandered off.
-                It might have been moved, deleted, or never existed in the first place.
+                {% if exception %}
+                    Please ensure your account is active and payments are complete to view this page.
+                {% else %}
+                    Oops! The page you're looking for seems to have wandered off.
+                    It might have been moved, deleted, or never existed in the first place.
+                {% endif %}
             </p>
 
             <div class="error-actions">
