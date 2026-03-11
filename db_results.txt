@@ -1,0 +1,15 @@
+CATEGORIES:
+ID: 1 | Name: 'Video Editor'
+ID: 2 | Name: 'Graphic Designer'
+ID: 3 | Name: 'Developer'
+
+THEMES:
+Name: 'Modern' | Category: 'Video Editor'
+Name: 'Creative' | Category: 'Video Editor'
+Name: 'Minimal' | Category: 'Video Editor'
+Name: 'Minimal' | Category: 'Graphic Designer'
+Name: 'Creative' | Category: 'Graphic Designer'
+Name: 'Modern' | Category: 'Graphic Designer'
+Name: 'Minimal' | Category: 'Developer'
+Name: 'Creative' | Category: 'Developer'
+Name: 'Modern' | Category: 'Developer'

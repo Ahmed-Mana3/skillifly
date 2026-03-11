@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Choose a Theme — Skillifly{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <!-- Header -->
+  <div class="mb-10 animate-fadeInUp">
+    <p class="text-sm text-purple-400 font-medium uppercase tracking-widest mb-2">Step 1 of 2</p>
+    <h1 class="text-4xl md:text-5xl font-bold mb-3" style="font-family: 'Syne', sans-serif;">
+      Pick your <span class="gradient-text">theme</span>
+    </h1>
+    <p class="text-gray-500 max-w-xl">Choose a design that represents your professional identity. You can always change
+      it later.</p>
+  </div>
+
+  {% if themes %}
+  <form method="POST" id="theme-form">
+    {% csrf_token %}
+    <input type="hidden" name="theme" id="selected-theme">
+    <input type="hidden" name="category" id="selected-category">
+
+    <!-- Category filter -->
+    {% if categories %}
+    <div class="flex flex-wrap gap-2 mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
+      <button type="button" onclick="filterCategory('all')" data-cat="all"
+        class="cat-filter px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 border-purple-500/40 bg-purple-500/10 text-purple-300">
+        All themes
+      </button>
+      {% for category in categories %}
+      <button type="button" onclick="filterCategory('{{ category.id }}')" data-cat="{{ category.id }}"
+        class="cat-filter px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 border-white/10 text-gray-400 hover:border-purple-500/40 hover:text-gray-200">
+        {{ category.name }}
+      </button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Themes grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeInUp" style="animation-delay: 0.2s"
+      id="themes-grid">
+      {% for theme in themes %}
+      <div class="theme-card group cursor-pointer" data-category-id="{{ theme.category.id }}"
+        onclick="selectTheme('{{ theme.id }}', '{{ theme.category.id }}', this)">
+        <div
+          class="gradient-border rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+          id="theme-card-{{ theme.id }}">
+
+          <!-- Preview image -->
+          <div class="relative aspect-video overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
+            {% if theme.preview_image %}
+            <img src="{{ theme.preview_image.url }}" alt="Preview of {{ theme.name }} theme" loading="lazy"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            {% else %}
+            <!-- Placeholder preview -->
+            <div class="w-full h-full flex items-center justify-center"
+              style="background: linear-gradient(135deg, #0F1523 0%, #1E293B 100%);">
+              <div class="text-center">
+                <div class="w-12 h-12 gradient-brand rounded-xl mx-auto mb-2 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                  </svg>
+                </div>
+                <p class="text-xs text-gray-500">{{ theme.name }}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Selected overlay -->
+            <div
+              class="selected-overlay absolute inset-0 bg-purple-600/20 border-2 border-purple-500 rounded-none opacity-0 transition-opacity duration-200 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card info -->
+          <div class="p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-semibold text-sm mb-0.5" style="font-family: 'Syne', sans-serif;">{{ theme.name }}</h3>
+                <p class="text-xs text-gray-500">{{ theme.category.name|default:"Theme" }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-gray-600">{{ theme.use_num }} uses</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Submit -->
+    <div class="mt-10 flex items-center justify-between border-t border-white/5 pt-8 animate-fadeInUp"
+      style="animation-delay: 0.3s">
+      <p id="selection-msg" class="text-sm text-gray-500">Select a theme to continue</p>
+      <button type="submit" id="apply-btn" disabled class="btn-primary opacity-50 cursor-not-allowed"
+        style="min-width: 160px;">
+        Apply theme
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </button>
+    </div>
+
+  </form>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="text-center py-24">
+    <div class="w-16 h-16 gradient-brand rounded-2xl mx-auto mb-4 flex items-center justify-center">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-semibold mb-2" style="font-family: 'Syne', sans-serif;">No themes available yet</h3>
+    <p class="text-gray-500 text-sm">Check back soon — we're adding beautiful themes regularly.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let selectedThemeId = null;
+  let selectedCategoryId = null;
+
+  function selectTheme(themeId, categoryId, el) {
+    // Reset previous
+    document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('opacity-0'));
+
+    // Set new
+    selectedThemeId = themeId;
+    selectedCategoryId = categoryId;
+    document.getElementById('selected-theme').value = themeId;
+    document.getElementById('selected-category').value = categoryId;
+    el.querySelector('.selected-overlay').classList.remove('opacity-0');
+
+    // Enable button
+    const btn = document.getElementById('apply-btn');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    // Update message
+    document.getElementById('selection-msg').textContent = 'Theme selected — click to apply';
+    document.getElementById('selection-msg').classList.add('text-purple-400');
+    document.getElementById('selection-msg').classList.remove('text-gray-500');
+  }
+
+  function filterCategory(catId) {
+    // Update button styles
+    document.querySelectorAll('.cat-filter').forEach(btn => {
+      if (btn.dataset.cat === catId) {
+        btn.classList.add('border-purple-500/40', 'bg-purple-500/10', 'text-purple-300');
+        btn.classList.remove('border-white/10', 'text-gray-400');
+      } else {
+        btn.classList.remove('border-purple-500/40', 'bg-purple-500/10', 'text-purple-300');
+        btn.classList.add('border-white/10', 'text-gray-400');
+      }
+    });
+
+    // Show/hide themes
+    document.querySelectorAll('.theme-card').forEach(card => {
+      if (catId === 'all' || card.dataset.categoryId === catId) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}

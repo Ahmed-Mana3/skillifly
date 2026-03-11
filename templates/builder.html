@@ -10,7 +10,7 @@
 </div>
 
 <div class="builder-container">
-    <form class="builder-form" id="portfolioForm" method="post" action="{% url 'builder' %}">
+    <form class="builder-form" id="portfolioForm" method="post" action="">
         {% csrf_token %}
 
         <!-- ========================= -->
@@ -23,7 +23,7 @@
                 <label for="fullname">Full Name</label>
                 {{ personal_form.fullname }}
                 {% if personal_form.fullname.errors %}
-                    <div class="field-errors">{{ personal_form.fullname.errors }}</div>
+                <div class="field-errors">{{ personal_form.fullname.errors }}</div>
                 {% endif %}
             </div>
 
@@ -31,7 +31,7 @@
                 <label for="title">Professional Title</label>
                 {{ personal_form.title }}
                 {% if personal_form.title.errors %}
-                    <div class="field-errors">{{ personal_form.title.errors }}</div>
+                <div class="field-errors">{{ personal_form.title.errors }}</div>
                 {% endif %}
             </div>
 
@@ -39,7 +39,7 @@
                 <label for="email">Email</label>
                 {{ personal_form.email }}
                 {% if personal_form.email.errors %}
-                    <div class="field-errors">{{ personal_form.email.errors }}</div>
+                <div class="field-errors">{{ personal_form.email.errors }}</div>
                 {% endif %}
             </div>
 
@@ -47,7 +47,7 @@
                 <label for="phone">Phone</label>
                 {{ personal_form.phone }}
                 {% if personal_form.phone.errors %}
-                    <div class="field-errors">{{ personal_form.phone.errors }}</div>
+                <div class="field-errors">{{ personal_form.phone.errors }}</div>
                 {% endif %}
             </div>
 
@@ -55,7 +55,7 @@
                 <label for="bio">Bio</label>
                 {{ personal_form.bio }}
                 {% if personal_form.bio.errors %}
-                    <div class="field-errors">{{ personal_form.bio.errors }}</div>
+                <div class="field-errors">{{ personal_form.bio.errors }}</div>
                 {% endif %}
             </div>
         </section>
@@ -80,7 +80,7 @@
                     <button type="button" class="btn-remove">Remove</button>
 
                     {% if form.skill.errors %}
-                        <div class="field-errors">{{ form.skill.errors }}</div>
+                    <div class="field-errors">{{ form.skill.errors }}</div>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -107,7 +107,7 @@
                             <label>School/University</label>
                             {{ form.school }}
                             {% if form.school.errors %}
-                                <div class="field-errors">{{ form.school.errors }}</div>
+                            <div class="field-errors">{{ form.school.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -115,7 +115,7 @@
                             <label>Degree</label>
                             {{ form.degree }}
                             {% if form.degree.errors %}
-                                <div class="field-errors">{{ form.degree.errors }}</div>
+                            <div class="field-errors">{{ form.degree.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -125,7 +125,7 @@
                             <label>Field of Study</label>
                             {{ form.field }}
                             {% if form.field.errors %}
-                                <div class="field-errors">{{ form.field.errors }}</div>
+                            <div class="field-errors">{{ form.field.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -133,7 +133,7 @@
                             <label>Graduation Year</label>
                             {{ form.year }}
                             {% if form.year.errors %}
-                                <div class="field-errors">{{ form.year.errors }}</div>
+                            <div class="field-errors">{{ form.year.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -165,7 +165,7 @@
                             <label>Job Title</label>
                             {{ form.title }}
                             {% if form.title.errors %}
-                                <div class="field-errors">{{ form.title.errors }}</div>
+                            <div class="field-errors">{{ form.title.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -173,7 +173,7 @@
                             <label>Company</label>
                             {{ form.company }}
                             {% if form.company.errors %}
-                                <div class="field-errors">{{ form.company.errors }}</div>
+                            <div class="field-errors">{{ form.company.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -183,7 +183,7 @@
                             <label>Start Date</label>
                             {{ form.start }}
                             {% if form.start.errors %}
-                                <div class="field-errors">{{ form.start.errors }}</div>
+                            <div class="field-errors">{{ form.start.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -191,7 +191,7 @@
                             <label>End Date</label>
                             {{ form.end }}
                             {% if form.end.errors %}
-                                <div class="field-errors">{{ form.end.errors }}</div>
+                            <div class="field-errors">{{ form.end.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -200,7 +200,7 @@
                         <label>Description</label>
                         {{ form.description }}
                         {% if form.description.errors %}
-                            <div class="field-errors">{{ form.description.errors }}</div>
+                        <div class="field-errors">{{ form.description.errors }}</div>
                         {% endif %}
                     </div>
 
@@ -231,7 +231,7 @@
                             <label>Project Name</label>
                             {{ form.name }}
                             {% if form.name.errors %}
-                                <div class="field-errors">{{ form.name.errors }}</div>
+                            <div class="field-errors">{{ form.name.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -239,7 +239,7 @@
                             <label>Project URL (optional)</label>
                             {{ form.url }}
                             {% if form.url.errors %}
-                                <div class="field-errors">{{ form.url.errors }}</div>
+                            <div class="field-errors">{{ form.url.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -248,7 +248,7 @@
                         <label>Description</label>
                         {{ form.description }}
                         {% if form.description.errors %}
-                            <div class="field-errors">{{ form.description.errors }}</div>
+                        <div class="field-errors">{{ form.description.errors }}</div>
                         {% endif %}
                     </div>
 
@@ -279,7 +279,7 @@
                             <label>Link Name</label>
                             {{ form.name }}
                             {% if form.name.errors %}
-                                <div class="field-errors">{{ form.name.errors }}</div>
+                            <div class="field-errors">{{ form.name.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -287,7 +287,7 @@
                             <label>URL</label>
                             {{ form.url }}
                             {% if form.url.errors %}
-                                <div class="field-errors">{{ form.url.errors }}</div>
+                            <div class="field-errors">{{ form.url.errors }}</div>
                             {% endif %}
                         </div>
                     </div>

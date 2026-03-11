@@ -8,7 +8,11 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('themes/', views.themes, name='themes'),
     path('builder/', views.builder_view, name='builder'),
-    path('preview/<str:username>/', views.preview_view, name='preview'),
+    path('update_portfolio/', views.update_portfolio_view, name='update_portfolio'),
     path('payment/', views.payment_view, name='payment'),
     path('logout/', views.logout_view, name='logout'),
+    path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
+    path('sitemap.xml', views.sitemap_view, name='sitemap'),
+    path('robots.txt', views.robots_txt_view, name='robots_txt'),
+    path('<str:username>/', views.preview_view, name='preview'),
 ]
