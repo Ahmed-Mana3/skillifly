@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
-from .models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link
+from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link
 from django import forms
 from django.forms import formset_factory, BaseFormSet
 from django.core.validators import RegexValidator
@@ -164,11 +164,10 @@ class PersonalInfoForm(forms.Form):
     )
 
     email = forms.EmailField(
-        required=True,
+        required=False,
         widget=forms.EmailInput(attrs={
             "id": "email",
             "placeholder": "john@example.com",
-            "required": True,
             "class": "form-control",
         })
     )
@@ -198,6 +197,16 @@ class PersonalInfoForm(forms.Form):
             "class": "form-control",
         })
     )
+    booking_url = forms.URLField(
+        required=False,
+        widget=forms.URLInput(attrs={
+            "id": "booking_url",
+            "placeholder": "https://wa.me/1234567890",
+            "class": "form-control",
+        }),
+        help_text="Direct link for bookings (e.g., WhatsApp, Calendly, Contra)"
+    )
+
 
 
 # =========================
@@ -233,10 +242,10 @@ class EducationForm(forms.Form):
         })
     )
     field = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
-            "placeholder": "Computer Science",
-            "required": True,
+            "placeholder": "Computer Science / Visual Arts",
+            "required": False,
         })
     )
     year = forms.IntegerField(
@@ -300,6 +309,7 @@ class ExperienceForm(forms.Form):
 # Projects (Formset)
 # =========================
 class ProjectForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={"class": "project-id-input"}))
     name = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
@@ -319,6 +329,18 @@ class ProjectForm(forms.Form):
             "rows": 3,
             "placeholder": "What did you build? What impact did it have?",
         })
+    )
+    thumbnail = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            "accept": "image/*",
+            "class": "thumbnail-input",
+        })
+    )
+    video_type = forms.ChoiceField(
+        choices=[('long', 'Long Video'), ('reel', 'Short/Reel')],
+        initial='long',
+        widget=forms.Select(attrs={"class": "sf-input"})
     )
 
 

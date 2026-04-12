@@ -1,0 +1,177 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Upgrade to Pro — Skillifly{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-16">
+
+  <!-- Messages for Payment Status -->
+  {% if messages %}
+    <div class="w-full max-w-2xl mx-auto mb-8 animate-fadeInUp">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl {% if message.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %} flex items-center gap-3">
+          {% if message.tags == 'error' %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {% else %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {% endif %}
+          <span class="text-sm font-medium">{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="text-center mb-16 animate-fadeInUp">
+    <div
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/20 text-sm mb-6">
+      <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+      <span class="text-gray-400">Simple, transparent pricing</span>
+    </div>
+    <h1 class="text-5xl md:text-6xl font-bold mb-4" style="font-family: 'Syne', sans-serif;">
+      Invest in your <span class="gradient-text">career</span>
+    </h1>
+    <p class="text-gray-500 text-lg max-w-xl mx-auto">Unlock premium features and make a lasting impression on every
+      recruiter and client.</p>
+  </div>
+
+  <!-- Pricing cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+
+    <!-- Free -->
+    <div class="gradient-border rounded-3xl p-7 animate-fadeInUp" style="animation-delay: 0.1s">
+      <div class="mb-6">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-widest mb-2">Monthly</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span class="text-4xl font-bold" style="font-family: 'Syne', sans-serif;">50</span>
+          <span class="text-gray-400 mb-1.5">EGP/month</span>
+        </div>
+        <p class="text-sm text-gray-500">Billed monthly.</p>
+      </div>
+
+
+
+      <button class="btn-ghost w-full justify-center" onclick="handleCheckout('monthly')">Get monthly plan</button>
+    </div>
+
+    <!-- 6 Months -->
+    <div class="gradient-border rounded-3xl p-7 animate-fadeInUp" style="animation-delay: 0.2s">
+      <div class="mb-6">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-widest mb-2">6 Months</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span class="text-4xl font-bold" style="font-family: 'Syne', sans-serif;">250</span>
+          <span class="text-gray-400 mb-1.5">EGP/6 months</span>
+        </div>
+        <p class="text-sm text-emerald-400 font-medium">Save 50 EGP vs monthly</p>
+      </div>
+
+
+
+      <button class="btn-ghost w-full justify-center" onclick="handleCheckout('pro_monthly')">Upgrade to Pro</button>
+    </div>
+
+    <!-- Annual (highlighted) -->
+    <div class="rounded-3xl p-7 relative overflow-hidden animate-fadeInUp"
+      style="animation-delay: 0.3s; background: linear-gradient(160deg, rgba(59,130,246,0.12), rgba(139,92,246,0.18)); border: 1px solid rgba(139,92,246,0.35); box-shadow: 0 0 60px rgba(139,92,246,0.1);">
+
+      <div class="absolute top-4 right-4">
+        <span class="px-3 py-1 rounded-full text-xs font-semibold"
+          style="background: linear-gradient(135deg, #3B82F6, #8B5CF6); color: white;">Most popular</span>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-sm font-medium text-purple-400 uppercase tracking-widest mb-2">Annual</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span class="text-4xl font-bold" style="font-family: 'Syne', sans-serif;">360</span>
+          <span class="text-gray-400 mb-1.5">EGP/year</span>
+        </div>
+        <p class="text-sm text-emerald-400 font-medium">Save 240 EGP vs monthly</p>
+      </div>
+
+
+
+      <button class="btn-primary w-full justify-center py-3.5" onclick="handleCheckout('pro_annual')">
+        Get annual plan
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Coupon Code -->
+  <div class="max-w-md mx-auto mb-16 text-center animate-fadeInUp" style="animation-delay: 0.35s">
+    <div class="relative max-w-xs mx-auto">
+      <input type="text" id="couponCode" placeholder="Enter Coupon Code" class="w-full bg-gray-900/50 border border-gray-700/80 rounded-full px-6 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors uppercase tracking-widest text-center text-sm font-semibold shadow-inner" />
+      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-3">Promo codes and discounts are automatically applied during checkout.</p>
+  </div>
+
+  <!-- Trust row -->
+  <div class="text-center animate-fadeInUp" style="animation-delay: 0.4s">
+    <div class="flex flex-wrap items-center justify-center gap-8">
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+            clip-rule="evenodd" />
+        </svg>
+        Secure checkout
+      </div>
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        14-day cancellation
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return "";
+  }
+
+  function handleCheckout(plan) {
+     const form = document.createElement('form');
+     form.method = 'POST';
+     // Replace placeholder dynamically in JS avoiding Django template restrictions
+     form.action = `/pay/${plan}/`;
+     
+     const csrfField = document.createElement('input');
+     csrfField.type = 'hidden';
+     csrfField.name = 'csrfmiddlewaretoken';
+     csrfField.value = getCookie('csrftoken');
+     form.appendChild(csrfField);
+     
+     const couponInput = document.getElementById('couponCode');
+     if(couponInput && couponInput.value.trim() !== '') {
+        const couponField = document.createElement('input');
+        couponField.type = 'hidden';
+        couponField.name = 'coupon';
+        couponField.value = couponInput.value.trim();
+        form.appendChild(couponField);
+     }
+     
+     // add visual loading feedback
+     document.body.style.cursor = 'wait';
+     
+     document.body.appendChild(form);
+     form.submit();
+  }
+</script>
+{% endblock %}

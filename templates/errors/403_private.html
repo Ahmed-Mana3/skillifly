@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Private Portfolio — Skillifly{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-6">
+    <div class="max-w-md w-full text-center animate-fadeInUp">
+        <div class="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+            <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m0 0v2m0-2h2m-2 0H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-bold mb-4 font-display">Portfolio Private</h1>
+        <p class="text-gray-400 mb-10 leading-relaxed text-lg">
+            This portfolio for <span class="text-white font-medium">@{{ username }}</span> is currently set to private
+            by the owner.
+        </p>
+
+        <a href="{% url 'index' %}" class="btn-primary w-full">
+            Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

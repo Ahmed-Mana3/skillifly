@@ -1,0 +1,520 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal_info.full_name }} — Video Editor Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000;
+            --surface: #0a0a0a;
+            --accent: #00d9ff;
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --border: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* ─── Hero Section ─── */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 0 5%;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 217, 255, 0.05) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .name-badge {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .main-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800;
+            line-height: 0.9;
+            margin-bottom: 30px;
+            letter-spacing: -2px;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
+        }
+
+        /* ─── CTA Cards ─── */
+        .cta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .cta-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.03));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .cta-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 217, 255, 0.3);
+            box-shadow: 0 30px 60px -12px rgba(0, 217, 255, 0.1);
+        }
+
+        .cta-card:hover::before {
+            opacity: 1;
+        }
+
+        .cta-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 217, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            transition: transform 0.4s;
+        }
+
+        .cta-card:hover .cta-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .cta-text h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .cta-text p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        .cta-arrow {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            opacity: 0.5;
+            transition: opacity 0.3s, gap 0.3s;
+        }
+
+        .cta-card:hover .cta-arrow {
+            opacity: 1;
+            gap: 15px;
+        }
+
+        /* ─── Contact Section ─── */
+        .contact-section {
+            padding: 120px 5%;
+            background: linear-gradient(to bottom, var(--bg), #050505);
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .contact-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 60px;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #fff 0%, var(--text-dim) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .contact-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .contact-value {
+            font-size: 1.1rem;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .contact-value:hover { color: var(--accent); }
+
+        .social-links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 80px;
+        }
+
+        .social-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 100px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .social-chip:hover {
+            background: rgba(0, 217, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .contact-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--accent);
+            color: #000;
+            padding: 20px 48px;
+            border-radius: 100px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 20px 50px rgba(0, 217, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .contact-cta:hover {
+            transform: scale(1.05);
+            background: #fff;
+            box-shadow: 0 30px 60px rgba(0, 217, 255, 0.4);
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.3), transparent);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row-reverse;
+                justify-content: space-between;
+            }
+        }
+
+        .skillifly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skillifly-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(138, 43, 226, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+        }
+
+        .skillifly-badge:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(0, 217, 255, 0.4);
+            box-shadow: 0 15px 35px -10px rgba(0, 217, 255, 0.3), 0 0 0 1px rgba(0, 217, 255, 0.1) inset;
+        }
+
+        .skillifly-badge:hover::before {
+            opacity: 1;
+        }
+
+        .skillifly-badge>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .skillifly-badge .powered-text {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+        }
+
+        .skillifly-badge img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+        }
+
+        .skillifly-badge .brand-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #00d9ff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .cta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-title {
+                font-size: 3.5rem;
+            }
+
+            .hero {
+                height: auto;
+                padding: 100px 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="name-badge">{{ personal_info.full_name }}</div>
+            <h1 class="main-title">STORYTELLING<br>THROUGH VIDEO.</h1>
+            <p class="hero-subtitle">Visual director & video editor specialized in high-energy short-form content and
+                cinematic professional productions.</p>
+        </div>
+
+        <div class="cta-grid">
+            <a href="/{{ personal_info.user.username }}/reels/" class="cta-card">
+                <div class="cta-icon">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div class="cta-text">
+                    <h3>Reels & Shorts</h3>
+                    <p>Vertical storytelling for social media platforms.</p>
+                </div>
+                <div class="cta-arrow">Experience <svg width="16" height="16" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg></div>
+            </a>
+
+            <a href="/{{ personal_info.user.username }}/long-videos/" class="cta-card">
+                <div class="cta-icon">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div class="cta-text">
+                    <h3>Professional Work</h3>
+                    <p>Corporate, cinematic, and long-form productions.</p>
+                </div>
+                <div class="cta-arrow">Discover <svg width="16" height="16" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg></div>
+            </a>
+        </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+        <div class="contact-container">
+            <h2 class="contact-title">GET IN TOUCH</h2>
+            
+            <div class="contact-details">
+                <div class="contact-item">
+                    <span class="contact-label">Direct Inbox</span>
+                    <a href="mailto:{{ personal_info.email }}" class="contact-value">{{ personal_info.email }}</a>
+                </div>
+                {% if personal_info.phone %}
+                <div class="contact-item">
+                    <span class="contact-label">Studio Connect</span>
+                    <span class="contact-value">{{ personal_info.phone }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="social-links-grid">
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" class="social-chip">
+                    {{ link.platform }}
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                {% endfor %}
+            </div>
+
+            {% if personal_info.booking_url %}
+            <a href="{{ personal_info.booking_url }}" class="contact-cta" target="_blank" rel="noopener">
+                Get In Touch
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% elif personal_info.email %}
+            <a href="mailto:{{ personal_info.email }}" class="contact-cta">
+                Get In Touch
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="powered-text">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly Logo">
+                <span class="brand-name">Skillifly</span>
+            </a>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <a href="#contact" style="color:var(--accent); text-decoration:none; font-weight:800; letter-spacing:2px; font-size:0.7rem; text-transform:uppercase;">Connect</a>
+                <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: center; letter-spacing: 1.5px; margin: 0; text-transform: uppercase; font-weight: 500;">
+                    © {% now "Y" %} {{ personal_info.full_name }}.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,413 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal_info.full_name }} — Professional Work</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #04040a;
+            --surface:  #0c0c18;
+            --glass:    rgba(255,255,255,0.03);
+            --border:   rgba(255,255,255,0.06);
+            --accent:   #ff3d6b;
+            --accent2:  #ff8c00;
+            --text:     #f0f0f8;
+            --dim:      rgba(240,240,248,0.4);
+            --dimmer:   rgba(240,240,248,0.15);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ─── Noise Overlay ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 1000; opacity: 0.35;
+        }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+        /* ─── Header ─── */
+        header {
+            padding: 20px 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(4, 4, 10, 0.85);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: 0.1em;
+            color: #fff;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--text), var(--dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-pill {
+            text-decoration: none;
+            color: var(--dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 8px 18px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .nav-pill:hover, .nav-pill.active {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(255, 61, 107, 0.08);
+        }
+
+        /* ─── Main Content ─── */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 5% 100px;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 7vw, 6rem);
+            line-height: 0.9;
+            margin-bottom: 60px;
+            background: linear-gradient(135deg, #fff, var(--dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ─── Video Grid ─── */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 30px;
+        }
+
+        .video-card {
+            background: var(--surface);
+            text-decoration: none;
+            color: inherit;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s;
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 61, 107, 0.3);
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            filter: brightness(0.8);
+        }
+
+        .video-card:hover .thumbnail-wrapper img {
+            transform: scale(1.08);
+            filter: brightness(1);
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(4, 4, 10, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(255, 61, 107, 0.4);
+        }
+
+        .video-card:hover .play-btn {
+            transform: scale(1);
+        }
+
+        .video-info {
+            padding: 24px;
+        }
+
+        .video-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-weight: 600;
+            font-size: 1.6rem;
+            letter-spacing: 0.03em;
+            margin-bottom: 8px;
+            line-height: 1.1;
+        }
+
+        .video-meta {
+            color: var(--dim);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--dimmer);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* ─── Contact Section ─── */
+        .contact-cta-section {
+            padding: 120px 5%;
+            background: radial-gradient(circle at 50% 100%, rgba(255, 61, 107, 0.1), transparent 70%);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .cta-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 6vw, 5rem);
+            margin-bottom: 40px;
+        }
+
+        .cta-title span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .big-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            padding: 22px 50px;
+            border-radius: 6px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            box-shadow: 0 20px 50px rgba(255, 61, 107, 0.3);
+            transition: all 0.3s;
+        }
+
+        .big-cta-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 30px 70px rgba(255, 61, 107, 0.5);
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            padding: 60px 5% 40px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .skillifly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .skillifly-badge:hover {
+            border-color: rgba(255, 61, 107, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .skillifly-badge .s-powered { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+        .skillifly-badge img { width: 20px; height: 20px; }
+        .skillifly-badge .s-brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-copy {
+            font-size: 0.75rem;
+            color: var(--dimmer);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid { grid-template-columns: 1fr; }
+            header { padding: 15px 5%; }
+            .nav-links { gap: 8px; }
+            .nav-pill { padding: 6px 12px; font-size: 0.65rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/{{ personal_info.user.username }}/" class="logo">
+            {{ personal_info.full_name|upper }}
+        </a>
+        <nav class="nav-links">
+            <a href="/{{ personal_info.user.username }}/reels/" class="nav-pill">Reels</a>
+            <a href="#" class="nav-pill active">Work</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">Professional Work</h1>
+
+        <div class="video-grid">
+            {% for project in projects %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
+                <div class="thumbnail-wrapper" data-url="{{ project.url }}">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <img class="yt-thumb" src="" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="play-overlay">
+                        <div class="play-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">{{ project.title }}</h3>
+                    <p class="video-meta">{{ project.details|truncatechars:120 }}</p>
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <p>No professional work videos added yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <section class="contact-cta-section">
+        <h2 class="cta-title">READY TO START YOUR <span>NEXT PROJECT?</span></h2>
+        {% if personal_info.booking_url %}
+        <a href="{{ personal_info.booking_url }}" class="big-cta-btn" target="_blank" rel="noopener">
+            Request Similar Work
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4-4 4M3 12h18"/></svg>
+        </a>
+        {% elif personal_info.email %}
+        <a href="mailto:{{ personal_info.email }}" class="big-cta-btn">
+            Get In Touch
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4-4 4M3 12h18"/></svg>
+        </a>
+        {% endif %}
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="s-powered">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                <span class="s-brand">Skillifly</span>
+            </a>
+            <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. Creative Portfolio.</p>
+        </div>
+    </footer>
+
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        document.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
+            const url = wrapper.dataset.url;
+            const img = wrapper.querySelector('.yt-thumb');
+            if (img && url) {
+                const id = getYouTubeId(url);
+                if (id) {
+                    img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+                    img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+                }
+            }
+        });
+    </script>
+</body>
+</html>

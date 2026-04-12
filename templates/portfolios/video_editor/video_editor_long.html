@@ -1,0 +1,526 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal_info.full_name }} — Professional Work</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #151515;
+            --surface-hover: #1e1e1e;
+            --accent: #00d9ff;
+            --text: #ffffff;
+            --text-dim: #999;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* ─── Header ─── */
+        header {
+            padding: 40px 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent);
+        }
+
+        /* ─── Main Content ─── */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 5%;
+        }
+
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+        }
+
+        /* ─── Video Grid ─── */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .video-card {
+            background: transparent;
+            text-decoration: none;
+            color: inherit;
+            group: ;
+            transition: transform 0.3s;
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #222;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .video-card:hover .thumbnail-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .video-card:hover .play-btn {
+            transform: scale(1);
+        }
+
+        .video-info {
+            padding: 0 4px;
+        }
+
+        .video-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--text-dim);
+        }
+
+        /* ─── Contact Section ─── */
+        .contact-section {
+            padding: 120px 5%;
+            background: linear-gradient(to bottom, var(--bg), #050505);
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .contact-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 60px;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #fff 0%, var(--text-dim) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .contact-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .contact-value {
+            font-size: 1.1rem;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .contact-value:hover { color: var(--accent); }
+
+        .social-links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 80px;
+        }
+
+        .social-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 100px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .social-chip:hover {
+            background: rgba(0, 217, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .contact-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--accent);
+            color: #000;
+            padding: 20px 48px;
+            border-radius: 100px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 20px 50px rgba(0, 217, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .contact-cta:hover {
+            transform: scale(1.05);
+            background: #fff;
+            box-shadow: 0 30px 60px rgba(0, 217, 255, 0.4);
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.3), transparent);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row-reverse;
+                justify-content: space-between;
+            }
+        }
+
+        .skillifly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skillifly-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(138, 43, 226, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+        }
+
+        .skillifly-badge:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(0, 217, 255, 0.4);
+            box-shadow: 0 15px 35px -10px rgba(0, 217, 255, 0.3), 0 0 0 1px rgba(0, 217, 255, 0.1) inset;
+        }
+
+        .skillifly-badge:hover::before {
+            opacity: 1;
+        }
+
+        .skillifly-badge>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .skillifly-badge .powered-text {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+        }
+
+        .skillifly-badge img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+        }
+
+        .skillifly-badge .brand-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #00d9ff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .page-title { font-size: 2rem; }
+            header { padding: 20px 5%; }
+            .nav-links { gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/{{ personal_info.user.username }}/" class="logo">
+            {{ personal_info.full_name|upper }}
+        </a>
+        <nav class="nav-links">
+            <a href="/{{ personal_info.user.username }}/reels/" class="nav-link">Reels</a>
+            <a href="#" class="nav-link active">Work</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">Professional Work</h1>
+
+        <div class="video-grid">
+            {% for project in projects %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
+                <div class="thumbnail-wrapper" data-url="{{ project.url }}">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <!-- Fallback is handled by JS -->
+                    <img class="yt-thumb" src="" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="play-overlay">
+                        <div class="play-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">{{ project.title }}</h3>
+                    <p class="video-meta">{{ project.details|truncatechars:60 }}</p>
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <p>No professional work videos added yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <section class="contact-section" id="contact">
+        <div class="contact-container">
+            <h2 class="contact-title">GET IN TOUCH</h2>
+            
+            <div class="contact-details">
+                <div class="contact-item">
+                    <span class="contact-label">Direct Inbox</span>
+                    <a href="mailto:{{ personal_info.email }}" class="contact-value">{{ personal_info.email }}</a>
+                </div>
+                {% if personal_info.phone %}
+                <div class="contact-item">
+                    <span class="contact-label">Studio Connect</span>
+                    <span class="contact-value">{{ personal_info.phone }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="social-links-grid">
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" class="social-chip">
+                    {{ link.platform }}
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                {% endfor %}
+            </div>
+
+            {% if personal_info.booking_url %}
+            <a href="{{ personal_info.booking_url }}" class="contact-cta" target="_blank" rel="noopener">
+                Request Similar Work
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% elif personal_info.email %}
+            <a href="mailto:{{ personal_info.email }}" class="contact-cta">
+                Request Similar Work
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="powered-text">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly Logo">
+                <span class="brand-name">Skillifly</span>
+            </a>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <a href="#contact" style="color:var(--accent); text-decoration:none; font-weight:800; letter-spacing:2px; font-size:0.7rem; text-transform:uppercase;">Connect</a>
+                <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: center; letter-spacing: 1.5px; margin: 0; text-transform: uppercase; font-weight: 500;">
+                    &copy; {% now "Y" %} {{ personal_info.full_name }}. Powered by Skillifly.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        document.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
+            const url = wrapper.dataset.url;
+            const img = wrapper.querySelector('.yt-thumb');
+            if (img && url) {
+                const id = getYouTubeId(url);
+                if (id) {
+                    img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+                    // Fallback if maxres is missing
+                    img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

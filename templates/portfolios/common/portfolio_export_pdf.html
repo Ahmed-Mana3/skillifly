@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{{ user_obj.username }} — Portfolio</title>
+    <style>
+      @page { size: A4; margin: 12mm; }
+      html, body { font-family: Arial, Helvetica, sans-serif; color: #111827; }
+      body { font-size: 12px; }
+      h1 { font-size: 22px; margin: 0 0 6px 0; }
+      h2 { font-size: 14px; margin: 18px 0 8px 0; text-transform: uppercase; letter-spacing: 0.08em; color: #4B5563; }
+      .muted { color: #6B7280; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; }
+      .chip { display: inline-block; border: 1px solid #E5E7EB; padding: 4px 8px; border-radius: 999px; margin: 0 6px 6px 0; }
+      .card { border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; margin: 0 0 10px 0; }
+      .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      a { color: #111827; text-decoration: none; }
+      .divider { height: 1px; background: #E5E7EB; margin: 12px 0; }
+      .meta { font-size: 10px; color: #6B7280; margin-top: 18px; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>
+        {% if personal_info and personal_info.full_name %}{{ personal_info.full_name }}{% else %}{{ user_obj.username }}{% endif %}
+      </h1>
+      {% if personal_info and personal_info.title %}
+        <div class="muted">{{ personal_info.title }}</div>
+      {% endif %}
+      <div class="row muted" style="margin-top: 6px;">
+        {% if personal_info and personal_info.email %}<div>{{ personal_info.email }}</div>{% endif %}
+        {% if personal_info and personal_info.phone %}<div>{{ personal_info.phone }}</div>{% endif %}
+      </div>
+      {% if personal_info and personal_info.bio %}
+        <div class="divider"></div>
+        <div>{{ personal_info.bio }}</div>
+      {% endif %}
+
+      {% if skills %}
+        <h2>Skills</h2>
+        <div>
+          {% for s in skills %}
+            <span class="chip">{{ s.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="two-col">
+        <div>
+          {% if experiences %}
+            <h2>Experience</h2>
+            {% for e in experiences %}
+              <div class="card">
+                <div><strong>{{ e.title }}</strong>{% if e.company %} — {{ e.company }}{% endif %}</div>
+                <div class="muted" style="margin-top: 2px;">
+                  {{ e.start_date }}{% if e.still_working %} – Present{% else %}{% if e.end_date %} – {{ e.end_date }}{% endif %}{% endif %}
+                </div>
+                {% if e.details %}<div style="margin-top: 6px;">{{ e.details }}</div>{% endif %}
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div>
+          {% if education %}
+            <h2>Education</h2>
+            {% for ed in education %}
+              <div class="card">
+                <div><strong>{{ ed.degree }}</strong>{% if ed.school %} — {{ ed.school }}{% endif %}</div>
+                <div class="muted" style="margin-top: 2px;">{{ ed.field }}{% if ed.grade_year %} • {{ ed.grade_year }}{% endif %}</div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+
+      {% if projects %}
+        <h2>Projects</h2>
+        {% for p in projects %}
+          <div class="card">
+            <div><strong>{{ p.title }}</strong></div>
+            {% if p.url %}<div class="muted"><a href="{{ p.url }}">{{ p.url }}</a></div>{% endif %}
+            {% if p.details %}<div style="margin-top: 6px;">{{ p.details }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if links %}
+        <h2>Links</h2>
+        {% for l in links %}
+          <div class="card">
+            <div><strong>{{ l.platform }}</strong></div>
+            <div class="muted"><a href="{{ l.url }}">{{ l.url }}</a></div>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="meta">
+        Generated {{ generated_at|date:"Y-m-d H:i" }}
+      </div>
+    </div>
+  </body>
+</html>
+

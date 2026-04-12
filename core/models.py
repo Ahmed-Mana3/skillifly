@@ -1,10 +1,8 @@
-from django.template.defaultfilters import title
-import email
-from django.db.models import CharField
-from unicodedata import decimal
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date
+from django.utils.text import slugify
+import uuid
 
 # 1. Custom User Model
 class CustomUser(AbstractUser):
@@ -56,6 +54,7 @@ class PersonalInfo(models.Model):
     email = models.EmailField()
     phone =  models.CharField(max_length=20)
     bio = models.TextField()
+    booking_url = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f"PersonalInfo: {self.full_name}"
@@ -89,7 +88,7 @@ class Education(models.Model):
 class Skill(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="skills")
     name = models.CharField(max_length=254)
-    level = models.IntegerField(default=100) 
+
 
     def __str__(self):
         return self.name
@@ -101,9 +100,27 @@ class Project(models.Model):
     url = models.URLField(max_length=500, blank=True, null=True)
     details = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to='projects/', blank=True, null=True)
+    video_type = models.CharField(
+        max_length=10, 
+        choices=[('long', 'Long Video'), ('reel', 'Short/Reel')], 
+        default='long'
+    )
+    slug = models.SlugField(max_length=550, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or "video"
+            # Ensure slug is unique per user
+            unique_slug = base_slug
+            counter = 1
+            while Project.objects.filter(user=self.user, slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.get_video_type_display()})"
 
 # 9. Social/External Links
 class Link(models.Model):
@@ -125,12 +142,58 @@ class Subscription(models.Model):
 class UserPayment(models.Model):
     user = models.ForeignKey(CustomUser, null=True, on_delete=models.SET_NULL)
     subscription = models.ForeignKey(Subscription, blank=True, null=True, on_delete=models.SET_NULL)
-    status = models.BooleanField(default=False)
+    amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=20, default='pending')
+    kashier_order_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    kashier_session_id = models.CharField(max_length=255, null=True, blank=True)
+    discount_code_used = models.CharField(max_length=50, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         user_name = self.user.username if self.user else "Unknown User"
         sub_duration = self.subscription.duration if self.subscription else "No Subscription"
-        return f"{user_name} - {sub_duration}"
+        return f"{user_name} - {sub_duration} - {self.status}"
+
+    @property
+    def is_active(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        if self.status == 'paid' and self.subscription:
+            expiration_date = self.date + timedelta(days=self.subscription.days)
+            return expiration_date > timezone.now()
+        return False
+        
+class DiscountCode(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    discount_percentage = models.PositiveIntegerField(default=0, help_text="Percentage discount (0-100)")
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="owned_coupons", help_text="The user who owns/generated this coupon")
+    usage_count = models.PositiveIntegerField(default=0, help_text="Number of times this coupon has been used successfully")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        self.code = self.code.upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percentage}%) - Owner: {self.owner.username}"
 
 
+
+class PdfExportJob(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Running"
+        SUCCEEDED = "succeeded", "Succeeded"
+        FAILED = "failed", "Failed"
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="pdf_exports")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.QUEUED)
+    source_hash = models.CharField(max_length=64, db_index=True)
+    pdf_file = models.FileField(upload_to="exports/pdfs/", blank=True, null=True)
+    error = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"PDF export {self.id} for {self.user.username} ({self.status})"

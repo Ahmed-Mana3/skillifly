@@ -1,0 +1,48 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Payment Successful — Skillifly{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-6 py-12">
+    <div class="max-w-xl w-full">
+        <!-- Main Card -->
+        <div class="glass-card rounded-[2.5rem] p-8 md:p-12 text-center animate-fadeInUp relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 blur-[80px] rounded-full"></div>
+
+            <!-- Icon -->
+            <div class="relative mb-8 inline-flex">
+                <div class="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full animate-pulse"></div>
+                <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Text Content -->
+            <h1 class="text-4xl font-bold mb-4 tracking-tight" style="font-family: 'Syne', sans-serif;">
+                Payment <span class="text-emerald-400">Successful!</span>
+            </h1>
+            <p class="text-gray-400 text-lg mb-10 leading-relaxed max-w-sm mx-auto">
+                Welcome to the premium tier! Your subscription is now active and you've unlocked all Pro features.
+            </p>
+
+            <!-- Actions -->
+            <a href="{% url 'dashboard' %}" class="btn-primary w-full justify-center py-4 text-lg">
+                Go to Dashboard
+                <svg class="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Feedback -->
+        <p class="mt-8 text-center text-gray-500 text-sm italic">
+            "Your career deserves the best presentation."
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}Sign In — Skillifly{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-20">
+
+  <div class="absolute top-1/3 left-1/4 w-72 h-72 rounded-full opacity-[0.05]"
+    style="background: radial-gradient(circle, #8B5CF6, transparent 70%); filter: blur(60px);"></div>
+
+  <div class="w-full max-w-md relative z-10">
+
+    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <a href="{% url 'index' %}" class="inline-flex items-center gap-2 mb-6">
+          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
+          <span class="text-xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">Skillifly</span>
+        </a>
+        <h1 class="text-2xl font-bold mb-1" style="font-family: 'Syne', sans-serif;">Welcome back</h1>
+        <p class="text-gray-500 text-sm">Sign in to continue building your portfolio.</p>
+      </div>
+
+      <!-- Error messages -->
+      {% if message %}
+      <div class="alert-error mb-6 flex items-start gap-2">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd" />
+        </svg>
+        <div>{{ message }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Form -->
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {% if google_oauth_button_visible %}
+        <div class="mb-6">
+          {% if not google_oauth_configured and debug %}
+          <div class="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs">
+            <div class="flex gap-2">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span><strong>Developer Hint:</strong> Google Auth credentials are missing or set to placeholders in your
+                <code>.env</code> file. Sign-in will not work until real keys are provided.</span>
+            </div>
+          </div>
+          {% endif %}
+
+          <button type="button" disabled
+            title="Google authentication is currently disabled"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/70 text-gray-500 rounded-xl border border-white/30 font-semibold text-sm cursor-not-allowed">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z"
+                fill="#4285F4" />
+              <path
+                d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z"
+                fill="#34A853" />
+              <path
+                d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z"
+                fill="#FBBC05" />
+              <path
+                d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z"
+                fill="#EA4335" />
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+          <div class="relative flex items-center justify-center my-5">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-white/10"></div>
+            </div>
+            <div class="relative px-4 bg-[#0F1523] text-sm text-gray-500">Or sign in with email</div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+          <label class="sf-label">Email or Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="sf-label mb-0">Password</label>
+            <!-- <a href="#" class="text-xs text-purple-400 hover:text-purple-300 transition-colors">Forgot password?</a> -->
+          </div>
+          {{ form.password }}
+          {% if form.password.errors %}
+          {% for error in form.password.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Remember me -->
+        <div class="flex items-center gap-2.5 mb-6">
+          <input type="checkbox" id="remember" name="remember"
+            class="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 accent-purple-500 cursor-pointer">
+          <label for="remember" class="text-sm text-gray-400 cursor-pointer">Remember me for 30 days</label>
+        </div>
+
+        <!-- Google auth coming soon
+        <div class="mb-6">
+          <button type="button"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 font-medium text-sm group">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M23.766 12.2764C23.766 11.4607 23.6999 10.6406 23.5588 9.83807H12.24V14.4591H18.7217C18.4528 15.9494 17.5885 17.2678 16.323 18.1056V21.1039H20.19C22.4608 19.0139 23.766 15.9274 23.766 12.2764Z"
+                fill="#4285F4" />
+              <path
+                d="M12.2401 24.0008C15.4766 24.0008 18.2059 22.9382 20.1901 21.1039L16.3231 18.1055C15.2517 18.8375 13.8627 19.252 12.2445 19.252C9.11388 19.252 6.45946 17.1399 5.50705 14.3003H1.5166V17.3912C3.55371 21.4434 7.7029 24.0008 12.2401 24.0008Z"
+                fill="#34A853" />
+              <path
+                d="M5.50253 14.3003C5.00236 12.8099 5.00236 11.1961 5.50253 9.70575V6.61481H1.51649C-0.18551 10.0056 -0.18551 14.0004 1.51649 17.3912L5.50253 14.3003Z"
+                fill="#FBBC05" />
+              <path
+                d="M12.2401 4.74966C13.9509 4.7232 15.6044 5.36697 16.8434 6.54867L20.2695 3.12262C18.1001 1.0855 15.2208 -0.0344664 12.2401 0.000808666C7.7029 0.000808666 3.55371 2.55822 1.5166 6.61481L5.50264 9.70575C6.45064 6.86173 9.10947 4.74966 12.2401 4.74966Z"
+                fill="#EA4335" />
+            </svg>
+            <span>Sign in with Google</span>
+          </button>
+        </div>
+
+        <div class="relative flex items-center justify-center mb-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-white/10"></div>
+          </div>
+          <div class="relative px-4 bg-[#0F1523] text-sm text-gray-500">Or continue with email</div>
+        </div>
+        -->
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-base">
+          Sign in
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+        </button>
+
+        <p class="text-center text-sm text-gray-500 mt-5">
+          Don't have an account?
+          <a href="{% url 'signup' %}"
+            class="text-purple-400 hover:text-purple-300 transition-colors font-medium">Create one for free</a>
+        </p>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
+    el.classList.add('sf-input');
+  });
+</script>
+{% endblock %}

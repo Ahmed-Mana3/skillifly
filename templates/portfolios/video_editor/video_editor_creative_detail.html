@@ -1,0 +1,487 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{{ project.title }} — {{ personal_info.full_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #04040a;
+            --surface: #0c0c18;
+            --glass:   rgba(255,255,255,0.03);
+            --border:  rgba(255,255,255,0.06);
+            --accent:  #ff3d6b;
+            --accent2: #ff8c00;
+            --text:    #f0f0f8;
+            --dim:     rgba(240,240,248,0.45);
+            --dimmer:  rgba(240,240,248,0.18);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── Noise Overlay ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 1000; opacity: 0.35;
+        }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+        /* ─── Top Nav ─── */
+        .top-nav {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(4,4,10,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 5%;
+            display: flex; align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            letter-spacing: 0.12em;
+            color: var(--text);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--text), var(--dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: opacity 0.3s;
+        }
+        .nav-logo:hover { opacity: 0.7; }
+
+        .nav-links {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 20px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--dim);
+            text-decoration: none;
+            transition: border-color 0.3s, color 0.3s, background 0.3s;
+        }
+        .nav-pill:hover, .nav-pill.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(255,61,107,0.08);
+        }
+
+        /* ─── Main Layout ─── */
+        .page-wrap {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 48px 5% 80px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 48px;
+        }
+
+        /* ─── Player ─── */
+        .player-col {}
+
+        .player-box {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
+            margin-bottom: 28px;
+        }
+
+        .player-box iframe {
+            width: 100%; height: 100%; border: none;
+        }
+
+        /* Red accent glow under player */
+        .player-box::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: 10%; right: 10%;
+            height: 60px;
+            background: radial-gradient(ellipse, rgba(255,61,107,0.25), transparent 70%);
+            filter: blur(20px);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .player-fallback {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--surface);
+        }
+        .player-fallback a {
+            display: inline-flex; align-items: center; gap: 12px;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; font-weight: 700; font-size: 0.9rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none; border-radius: 6px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .player-fallback a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(255,61,107,0.4);
+        }
+
+        /* ─── Info Section ─── */
+        .video-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            letter-spacing: 0.03em;
+            line-height: 1;
+            margin-bottom: 20px;
+            word-break: break-word;
+        }
+
+        .meta-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+
+        .creator-info {
+            display: flex; align-items: center; gap: 14px;
+        }
+        .creator-avatar {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem; color: #fff;
+            flex-shrink: 0;
+        }
+        .creator-name {
+            font-weight: 700; font-size: 1rem; color: var(--text);
+        }
+        .creator-role {
+            font-size: 0.8rem; color: var(--dim); margin-top: 2px;
+        }
+
+        .cta-request {
+            display: inline-flex; align-items: center; gap: 12px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; font-weight: 700; font-size: 0.8rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none; border-radius: 4px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .cta-request:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(255,61,107,0.4);
+        }
+
+        .desc-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 28px 32px;
+        }
+        .desc-label {
+            font-size: 0.65rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent);
+            font-weight: 700; margin-bottom: 14px;
+        }
+        .desc-text {
+            font-size: 0.95rem; line-height: 1.8;
+            color: var(--dim); white-space: pre-line;
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar-col {
+            display: flex; flex-direction: column; gap: 0;
+        }
+
+        .sidebar-header {
+            font-size: 0.65rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent);
+            font-weight: 700; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-header::after {
+            content: ''; flex: 1; height: 1px;
+            background: var(--accent); opacity: 0.3;
+        }
+
+        .related-card {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 14px;
+            text-decoration: none; color: inherit;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.25s;
+            border-radius: 6px;
+        }
+        .related-card:last-child { border-bottom: none; }
+        .related-card:hover { opacity: 0.8; }
+
+        .related-thumb {
+            aspect-ratio: 16/9;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--surface);
+            position: relative;
+        }
+        .related-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .related-card:hover .related-thumb img { transform: scale(1.06); }
+
+        .related-thumb-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1a0a1e, #0a0a2e);
+            font-size: 1.8rem; color: rgba(255,61,107,0.25);
+        }
+
+        /* Play icon on thumb */
+        .thumb-play {
+            position: absolute;
+            inset: 0; display: flex;
+            align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .related-card:hover .thumb-play { opacity: 1; }
+        .thumb-play-icon {
+            width: 32px; height: 32px;
+            background: rgba(255,61,107,0.85);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .related-info { display: flex; flex-direction: column; justify-content: center; }
+        .related-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.05rem; letter-spacing: 0.04em;
+            line-height: 1.1; margin-bottom: 6px;
+        }
+        .related-creator {
+            font-size: 0.75rem; color: var(--dim); font-weight: 500;
+        }
+
+        /* Empty state */
+        .no-related {
+            padding: 40px 20px; text-align: center;
+            color: var(--dimmer); font-size: 0.9rem;
+            border: 1px dashed var(--border); border-radius: 10px;
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 5%;
+        }
+        .footer-inner {
+            max-width: 1440px; margin: 0 auto;
+            display: flex; align-items: center;
+            justify-content: space-between; flex-wrap: wrap; gap: 16px;
+        }
+        .skillifly-badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 10px 22px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 100px; text-decoration: none;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .skillifly-badge:hover { border-color: rgba(255,61,107,0.4); transform: translateY(-2px); }
+        .skillifly-badge .s-powered { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+        .skillifly-badge img { width: 18px; height: 18px; object-fit: contain; }
+        .skillifly-badge .s-brand {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+            letter-spacing: 0.15em;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .footer-copy { font-size: 0.72rem; color: var(--dimmer); letter-spacing: 0.12em; text-transform: uppercase; }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1100px) {
+            .page-wrap { grid-template-columns: 1fr; }
+            .sidebar-col { margin-top: 0; border-top: 1px solid var(--border); padding-top: 40px; }
+        }
+        @media (max-width: 600px) {
+            .page-wrap { padding: 24px 4% 60px; }
+            .video-title { font-size: 2rem; }
+            .top-nav { height: 56px; }
+            .nav-logo { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── Top Nav ─── -->
+    <nav class="top-nav">
+        <a href="/{{ personal_info.user.username }}/" class="nav-logo">{{ personal_info.full_name }}</a>
+        <div class="nav-links">
+            <a href="/{{ personal_info.user.username }}/reels/" class="nav-pill">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                Reels
+            </a>
+            <a href="/{{ personal_info.user.username }}/long-videos/" class="nav-pill active">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Work
+            </a>
+            <a href="/{{ personal_info.user.username }}/#contact" class="nav-pill">Contact</a>
+        </div>
+    </nav>
+
+    <!-- ─── Content ─── -->
+    <div class="page-wrap">
+
+        <!-- Player Column -->
+        <div class="player-col">
+            <div class="player-box">
+                <iframe id="mainPlayer" src="" allow="autoplay; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+
+            <h1 class="video-title">{{ project.title }}</h1>
+
+            <div class="meta-bar">
+                <div class="creator-info">
+                    <div class="creator-avatar">{{ personal_info.full_name|first }}</div>
+                    <div>
+                        <div class="creator-name">{{ personal_info.full_name }}</div>
+                        <div class="creator-role">{{ personal_info.title }}</div>
+                    </div>
+                </div>
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="cta-request" target="_blank" rel="noopener">
+                    Request Similar Work
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="cta-request">
+                    Request Similar Work
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% endif %}
+            </div>
+
+            {% if project.details %}
+            <div class="desc-box">
+                <div class="desc-label">About This Project</div>
+                <p class="desc-text">{{ project.details }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar-col">
+            <div class="sidebar-header">More From {{ personal_info.full_name }}</div>
+
+            {% if other_videos %}
+                {% for other in other_videos %}
+                <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card">
+                    <div class="related-thumb">
+                        {% if other.image %}
+                            <img src="{{ other.image.url }}" alt="{{ other.title }}">
+                        {% else %}
+                            <div class="related-thumb-placeholder">▶</div>
+                        {% endif %}
+                        <div class="thumb-play">
+                            <div class="thumb-play-icon">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="related-info">
+                        <div class="related-title">{{ other.title }}</div>
+                        <div class="related-creator">{{ personal_info.full_name }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="no-related">No other videos yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ─── Footer ─── -->
+    <footer>
+        <div class="footer-inner">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="s-powered">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                <span class="s-brand">Skillifly</span>
+            </a>
+            <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+        function getTikTokId(url) {
+            const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+            return m ? m[1] : null;
+        }
+        function getInstagramId(url) {
+            const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
+            return m ? m[1] : null;
+        }
+
+        const videoUrl = "{{ project.url|default:'' }}";
+        const player   = document.getElementById('mainPlayer');
+        const ytId     = getYouTubeId(videoUrl);
+        const ttId     = getTikTokId(videoUrl);
+        const igId     = getInstagramId(videoUrl);
+
+        if (ytId) {
+            player.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&origin=${window.location.origin}`;
+        } else if (ttId) {
+            player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
+        } else if (igId) {
+            player.src = `https://www.instagram.com/reels/${igId}/embed/`;
+        } else if (videoUrl) {
+            player.parentElement.innerHTML = `
+                <div class="player-fallback">
+                    <a href="${videoUrl}" target="_blank">
+                        Watch on Source
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>`;
+        }
+    </script>
+</body>
+</html>

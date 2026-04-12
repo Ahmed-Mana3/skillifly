@@ -1,0 +1,493 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{{ personal_info.full_name }} — Reels</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg:      #04040a;
+            --surface: #0c0c18;
+            --glass:   rgba(255,255,255,0.04);
+            --border:  rgba(255,255,255,0.08);
+            --accent:  #ff3d6b;
+            --accent2: #ff8c00;
+            --text:    #f0f0f8;
+            --dim:     rgba(240,240,248,0.5);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+        }
+
+        /* ─── Noise Overlay ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 1000; opacity: 0.35;
+        }
+
+        /* ─── Reels Container ─── */
+        .reels-container {
+            height: 100dvh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            overscroll-behavior-y: contain;
+        }
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel-slide {
+            height: 100dvh;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        /* ─── Ambient background glow ─── */
+        .ambient-glow {
+            position: absolute; inset: -100px;
+            background-size: cover; background-position: center;
+            filter: blur(90px) brightness(0.25) saturate(1.5);
+            opacity: 0.6;
+            z-index: 0; pointer-events: none;
+        }
+
+        /* Red orb accent for slides without image */
+        .ambient-solid {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 40%, rgba(255,61,107,0.18), transparent 60%),
+                        radial-gradient(circle at 70% 70%, rgba(255,140,0,0.12), transparent 60%);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* ─── Video Wrapper ─── */
+        .video-wrapper {
+            position: relative;
+            width: 100%; height: 100%;
+            max-width: 440px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .video-content {
+            width: 100%; height: 100%;
+            position: relative; z-index: 1;
+        }
+        .video-content iframe {
+            width: 100%; height: 100%;
+            border: none; pointer-events: auto;
+        }
+
+        /* Loading shimmer */
+        .loading-shimmer {
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, #0a0a18 25%, #12122a 50%, #0a0a18 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ─── UI Overlays ─── */
+        /* Bottom info */
+        .reel-overlay {
+            position: absolute;
+            bottom: 32px; left: 20px; right: 80px;
+            z-index: 20; pointer-events: none;
+        }
+        .reel-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem; letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+            line-height: 1.1;
+        }
+        .reel-desc {
+            font-size: 0.85rem; color: var(--dim);
+            line-height: 1.45; max-height: 55px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Request btn */
+        .reel-cta {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            padding: 11px 22px; border-radius: 4px;
+            font-weight: 700; font-size: 0.78rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none;
+            margin-top: 14px; pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(255,61,107,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .reel-cta:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(255,61,107,0.5); }
+
+        /* Right action buttons */
+        .reel-actions {
+            position: absolute;
+            right: 18px; bottom: 110px;
+            z-index: 20;
+            display: flex; flex-direction: column; gap: 18px;
+        }
+        .action-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; pointer-events: auto;
+            transition: transform 0.2s, background 0.2s;
+            color: var(--text); text-decoration: none;
+        }
+        .action-btn:hover { transform: scale(1.12); background: rgba(255,61,107,0.3); border-color: var(--accent); }
+
+        /* Progress dots */
+        .progress-dots {
+            position: fixed;
+            right: 20px; top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .dot {
+            width: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.2);
+            transition: height 0.3s, background 0.3s;
+            height: 4px;
+        }
+        .dot.active {
+            background: var(--accent); height: 20px;
+        }
+
+        /* ─── Fixed Top Nav ─── */
+        .top-nav {
+            position: fixed;
+            top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+            display: flex; gap: 6px; align-items: center;
+            background: rgba(4,4,10,0.7);
+            backdrop-filter: blur(16px);
+            padding: 8px 16px; border-radius: 100px;
+            border: 1px solid var(--border);
+        }
+        .nav-link {
+            text-decoration: none; color: var(--dim);
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.15em;
+            padding: 6px 14px; border-radius: 100px;
+            transition: color 0.3s, background 0.3s;
+        }
+        .nav-link:hover { color: var(--text); }
+        .nav-link.active { color: var(--accent); background: rgba(255,61,107,0.12); }
+
+        .close-btn {
+            position: fixed;
+            top: 22px; left: 22px;
+            z-index: 100;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(4,4,10,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; color: var(--text);
+            font-size: 1.1rem;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .close-btn:hover { border-color: var(--accent); background: rgba(255,61,107,0.15); color: var(--accent); }
+
+        /* ─── Contact Slide ─── */
+        .contact-slide-inner {
+            text-align: center;
+            padding: 40px 32px;
+            max-width: 500px; width: 100%;
+            pointer-events: auto;
+            z-index: 10; position: relative;
+        }
+        .contact-big {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 8vw, 5rem);
+            line-height: 0.9; letter-spacing: 0.03em;
+            margin-bottom: 40px;
+        }
+        .contact-big .grad {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .contact-list { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
+        .c-item { display: flex; flex-direction: column; gap: 4px; }
+        .c-label {
+            font-size: 0.62rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent); font-weight: 700;
+        }
+        .c-val {
+            font-size: 1.05rem; font-weight: 700;
+            color: var(--text); text-decoration: none;
+            transition: color 0.3s; word-break: break-all;
+        }
+        .c-val:hover { color: var(--accent); }
+        .social-row {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-bottom: 40px;
+        }
+        .social-chip {
+            background: var(--glass); border: 1px solid var(--border);
+            padding: 9px 18px; border-radius: 100px;
+            color: var(--text); text-decoration: none;
+            font-size: 0.78rem; font-weight: 600;
+            transition: border-color 0.3s, background 0.3s, color 0.3s;
+        }
+        .social-chip:hover { background: rgba(255,61,107,0.15); border-color: var(--accent); color: var(--accent); }
+        .contact-big-cta {
+            display: inline-flex; align-items: center; gap: 14px;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; font-weight: 800; font-size: 0.95rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none; border-radius: 6px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .contact-big-cta:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(255,61,107,0.5); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .video-wrapper { max-width: 100%; height: 100dvh; }
+            .reel-overlay { bottom: 100px; left: 16px; right: 72px; }
+            .reel-actions { right: 12px; bottom: 120px; }
+            .progress-dots { display: none; }
+        }
+
+        @media (min-width: 769px) {
+            /* Desktop: constrained width, desktop feel */
+            .video-wrapper { max-width: 440px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Close / Back -->
+    <a href="/{{ personal_info.user.username }}/" class="close-btn" title="Back to Portfolio">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </a>
+
+    <!-- Top Nav -->
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/" class="nav-link active">Reels</a>
+        <a href="/{{ username }}/long-videos/" class="nav-link">Work</a>
+        <a href="#contactSlide" class="nav-link">Contact</a>
+    </nav>
+
+    <!-- Progress Dots -->
+    <div class="progress-dots" id="progressDots">
+        {% for project in projects %}
+        <div class="dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}"></div>
+        {% endfor %}
+        <div class="dot" data-index="{{ projects|length }}"></div><!-- contact dot -->
+    </div>
+
+    <!-- Reels Container -->
+    <div class="reels-container" id="reelsContainer">
+
+        {% for project in projects %}
+        <div class="reel-slide" data-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
+            <div class="ambient-glow" id="glow-{{ project.id }}"></div>
+            <div class="ambient-solid"></div>
+
+            <div class="video-wrapper">
+                <div class="loading-shimmer"></div>
+                <div id="player-{{ project.id }}" class="video-content"></div>
+            </div>
+
+            <!-- Info Overlay -->
+            <div class="reel-overlay">
+                <div class="reel-title">{{ project.title }}</div>
+                {% if project.details %}
+                <p class="reel-desc">{{ project.details }}</p>
+                {% endif %}
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="reel-cta" target="_blank" rel="noopener">
+                    Request Similar Reel
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="reel-cta">
+                    Request Similar Reel
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="reel-actions">
+                {% if project.url %}
+                <a href="{{ project.url }}" target="_blank" class="action-btn" title="Open on source">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="reel-slide">
+            <div class="contact-slide-inner">
+                <p style="color:var(--dim); font-size:1rem;">No reels added yet.</p>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Contact Slide -->
+        <div class="reel-slide" id="contactSlide" data-index="{{ projects|length }}">
+            <div class="ambient-solid"></div>
+            <div class="contact-slide-inner">
+                <div class="contact-big">
+                    LET'S<br>CREATE<br><span class="grad">MAGIC.</span>
+                </div>
+
+                <div class="contact-list">
+                    {% if personal_info.email %}
+                    <div class="c-item">
+                        <span class="c-label">Email</span>
+                        <a href="mailto:{{ personal_info.email }}" class="c-val">{{ personal_info.email }}</a>
+                    </div>
+                    {% endif %}
+                    {% if personal_info.phone %}
+                    <div class="c-item">
+                        <span class="c-label">Phone</span>
+                        <a href="tel:{{ personal_info.phone }}" class="c-val">{{ personal_info.phone }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if links %}
+                <div class="social-row">
+                    {% for link in links %}
+                    <a href="{{ link.url }}" target="_blank" class="social-chip">{{ link.platform }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="contact-big-cta" target="_blank" rel="noopener">
+                    Get In Touch
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="contact-big-cta">
+                    Get In Touch
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+    </div><!-- /reels-container -->
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const players = {};
+
+        function onYouTubeIframeAPIReady() { /* YT API Ready */ }
+
+        function getYouTubeId(url) {
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        function getTikTokId(url) {
+            const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+            return m ? m[1] : null;
+        }
+        function getInstagramId(url) {
+            const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
+            return m ? m[1] : null;
+        }
+
+        /* ─── IntersectionObserver for lazy-load + autoplay ─── */
+        const container = document.getElementById('reelsContainer');
+        const dots      = document.querySelectorAll('.dot');
+
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const slide = entry.target;
+                const id    = slide.dataset.id;
+                const url   = slide.dataset.url || '';
+                const idx   = parseInt(slide.dataset.index ?? -1, 10);
+
+                const playerEl = id ? document.getElementById(`player-${id}`) : null;
+                const shimmer  = slide.querySelector('.loading-shimmer');
+                const glow     = id ? document.getElementById(`glow-${id}`) : null;
+
+                const ytId  = getYouTubeId(url);
+                const ttId  = getTikTokId(url);
+                const igId  = getInstagramId(url);
+
+                if (entry.isIntersecting) {
+                    // Activate dot
+                    dots.forEach(d => d.classList.remove('active'));
+                    if (idx >= 0 && dots[idx]) dots[idx].classList.add('active');
+
+                    if (!id || !playerEl) return;
+
+                    if (ytId) {
+                        if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
+                        if (!players[id]) {
+                            players[id] = new YT.Player(`player-${id}`, {
+                                height: '100%', width: '100%', videoId: ytId,
+                                playerVars: { autoplay:1, mute:1, loop:1, playlist:ytId, controls:1, modestbranding:1, rel:0, origin:window.location.origin },
+                                events: { onReady(e) { e.target.playVideo(); if (shimmer) shimmer.style.display = 'none'; } }
+                            });
+                        } else if (players[id].playVideo) { players[id].playVideo(); }
+                    } else if (ttId) {
+                        playerEl.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+                        if (shimmer) shimmer.style.display = 'none';
+                    } else if (igId) {
+                        playerEl.innerHTML = `<iframe src="https://www.instagram.com/p/${igId}/embed/" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen></iframe>`;
+                        if (shimmer) shimmer.style.display = 'none';
+                    }
+                } else {
+                    if (players[id] && players[id].pauseVideo) {
+                        players[id].pauseVideo();
+                    } else if ((ttId || igId) && playerEl) {
+                        playerEl.innerHTML = '';
+                        if (shimmer) shimmer.style.display = 'block';
+                    }
+                }
+            });
+        }, { root: container, threshold: 0.75 });
+
+        document.querySelectorAll('.reel-slide').forEach(s => obs.observe(s));
+
+        /* ─── Dot click to jump ─── */
+        dots.forEach((dot, i) => {
+            dot.style.cursor = 'pointer';
+            dot.addEventListener('click', () => {
+                const slides = document.querySelectorAll('.reel-slide');
+                if (slides[i]) slides[i].scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>

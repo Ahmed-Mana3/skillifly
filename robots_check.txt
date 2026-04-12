@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: /admin/
-Disallow: /builder/
-Sitemap: http://testserver/sitemap.xml

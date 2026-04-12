@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from core import views
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -9,10 +9,24 @@ urlpatterns = [
     path('themes/', views.themes, name='themes'),
     path('builder/', views.builder_view, name='builder'),
     path('update_portfolio/', views.update_portfolio_view, name='update_portfolio'),
-    path('payment/', views.payment_view, name='payment'),
+    path('payment/', views.pricing_view, name='payment'),
+    path('pay/<str:plan_type>/', views.create_payment, name='create_payment'),
+    path('payment/success/', views.payment_success, name='payment_success'),
+    path('payment/failure/', views.payment_failure, name='payment_failure'),
+    path('payment/callback/', views.payment_callback, name='payment_callback'),
+    path('webhook/kashier/', views.kashier_webhook, name='kashier_webhook'),
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
     path('sitemap.xml', views.sitemap_view, name='sitemap'),
     path('robots.txt', views.robots_txt_view, name='robots_txt'),
+    path('export/pdf/start/', views.export_pdf_start, name='export_pdf_start'),
+    path('export/pdf/status/<int:job_id>/', views.export_pdf_status, name='export_pdf_status'),
+    path('export/pdf/download/<int:job_id>/', views.export_pdf_download, name='export_pdf_download'),
+    path('terms/', views.terms_view, name='terms'),
+    path('privacy/', views.privacy_view, name='privacy'),
+    path('contact/', views.contact_view, name='contact'),
+    path('<str:username>/reels/', views.portfolio_reels, name='portfolio_reels'),
+    path('<str:username>/long-videos/', views.portfolio_long_videos, name='portfolio_long_videos'),
+    path('<str:username>/long-videos/<slug:slug>/', views.portfolio_video_detail, name='portfolio_video_detail'),
     path('<str:username>/', views.preview_view, name='preview'),
 ]

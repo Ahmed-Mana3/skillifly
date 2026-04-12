@@ -1,0 +1,1220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal_info.full_name }} — Creative Video Portfolio</title>
+    <meta name="description" content="{{ personal_info.bio|truncatechars:160 }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ─── Reset & Root ─── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:       #04040a;
+            --surface:  #0c0c18;
+            --glass:    rgba(255,255,255,0.03);
+            --border:   rgba(255,255,255,0.06);
+            --accent:   #ff3d6b;
+            --accent2:  #ff8c00;
+            --gold:     #ffd700;
+            --text:     #f0f0f8;
+            --dim:      rgba(240,240,248,0.4);
+            --dimmer:   rgba(240,240,248,0.15);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* ─── Custom Cursor ─── */
+        #cursor {
+            position: fixed;
+            width: 12px; height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+            mix-blend-mode: difference;
+        }
+        #cursor-ring {
+            position: fixed;
+            width: 40px; height: 40px;
+            border: 1px solid rgba(255,61,107,0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: transform 0.15s ease-out, width 0.3s, height 0.3s, opacity 0.3s;
+        }
+        body:hover #cursor { opacity: 1; }
+
+        /* ─── Noise Texture Overlay ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.4;
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+        /* ─── HERO ─── */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 12vh 8vw;
+            overflow: hidden;
+        }
+
+        /* Animated gradient orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            pointer-events: none;
+            animation: orbFloat 8s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, #ff3d6b, transparent); top: -20%; left: -10%; animation-delay: 0s; }
+        .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, #ff8c00, transparent); bottom: -10%; right: 5%; animation-delay: -3s; }
+        .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, #7b2fff, transparent); top: 30%; right: 20%; animation-delay: -6s; }
+
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -40px) scale(1.08); }
+        }
+
+        /* Grid lines background */
+        .hero::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 80px 80px;
+            pointer-events: none;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative; z-index: 2;
+        }
+        .hero-eyebrow::before {
+            content: '';
+            display: block;
+            width: 40px; height: 2px;
+            background: var(--accent);
+        }
+
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(5rem, 14vw, 13rem);
+            line-height: 0.88;
+            letter-spacing: -0.01em;
+            position: relative; z-index: 2;
+            margin-bottom: 32px;
+        }
+
+        .hero-title .line {
+            display: block;
+            overflow: hidden;
+        }
+        .hero-title .line span {
+            display: block;
+            animation: slideUp 1s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .hero-title .line:nth-child(2) span { animation-delay: 0.1s; }
+        .hero-title .line:nth-child(3) span { animation-delay: 0.2s; }
+
+        @keyframes slideUp {
+            from { transform: translateY(110%); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        .hero-title .outline-text {
+            -webkit-text-stroke: 2px rgba(255,255,255,0.15);
+            color: transparent;
+        }
+        .hero-title .accent-text {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-bio {
+            max-width: 520px;
+            font-size: 1.1rem;
+            line-height: 1.75;
+            color: var(--dim);
+            position: relative; z-index: 2;
+            margin-bottom: 48px;
+            animation: fadeIn 1.2s 0.5s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            position: relative; z-index: 2;
+            animation: fadeIn 1.2s 0.7s both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, #ff3d6b, #ff8c00);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(255,61,107,0.4); }
+        .btn-primary:hover::before { opacity: 1; }
+        .btn-primary > * { position: relative; z-index: 1; }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: border-color 0.3s, background 0.3s, transform 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover { border-color: var(--accent); background: rgba(255,61,107,0.08); transform: translateY(-3px); }
+
+        /* ─── Marquee Strip ─── */
+        .marquee-strip {
+            width: 100%;
+            overflow: hidden;
+            background: var(--accent);
+            padding: 14px 0;
+            position: relative;
+            z-index: 10;
+        }
+        .marquee-track {
+            display: flex;
+            gap: 60px;
+            white-space: nowrap;
+            animation: marquee 20s linear infinite;
+        }
+        .marquee-item {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.2em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+        .marquee-item::before { content: '◆'; font-size: 0.5rem; opacity: 0.7; }
+
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+        }
+
+        /* ─── Stats Bar ─── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .stat-cell {
+            background: var(--surface);
+            padding: 40px 32px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .stat-cell:hover { background: var(--glass); }
+        .stat-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.5rem;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--dim);
+            font-weight: 600;
+        }
+
+        /* ─── Section Commons ─── */
+        section { position: relative; }
+
+        .section-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 120px 8vw;
+        }
+
+        .section-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            max-width: 60px;
+            height: 1px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .section-heading {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 6vw, 6rem);
+            line-height: 0.9;
+            margin-bottom: 60px;
+        }
+
+        /* ─── Projects Section ─── */
+        .projects-section { background: var(--bg); }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+
+        .project-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: none;
+            transition: transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.5s;
+            grid-column: span 6;
+        }
+        .project-card:nth-child(1) { grid-column: span 8; }
+        .project-card:nth-child(2) { grid-column: span 4; }
+        .project-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,61,107,0.3);
+        }
+
+        .project-thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            position: relative;
+        }
+        .project-thumb img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.16,1,0.3,1);
+            filter: brightness(0.8) saturate(1.2);
+        }
+        .project-card:hover .project-thumb img { transform: scale(1.07); }
+
+        .project-thumb-placeholder {
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a0a1e, #0a0a2e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4rem;
+            color: rgba(255,61,107,0.2);
+        }
+
+        .project-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(4,4,10,0.95) 0%, rgba(4,4,10,0.3) 50%, transparent 100%);
+        }
+
+        /* Play button */
+        .play-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: rgba(255,61,107,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        .project-card:hover .play-btn { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        .project-badge {
+            position: absolute;
+            top: 16px; left: 16px;
+            padding: 5px 12px;
+            border-radius: 2px;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .badge-reel { background: var(--accent); color: #fff; }
+        .badge-long { background: rgba(255,215,0,0.2); color: var(--gold); border: 1px solid rgba(255,215,0,0.4); }
+
+        .project-body {
+            padding: 24px 28px 28px;
+        }
+        .project-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 0.03em;
+            margin-bottom: 10px;
+            line-height: 1.1;
+            word-break: break-word;
+        }
+        .project-desc {
+            font-size: 0.9rem;
+            color: var(--dim);
+            line-height: 1.65;
+            margin-bottom: 20px;
+        }
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-decoration: none;
+            transition: gap 0.3s;
+        }
+        .project-link:hover { gap: 16px; }
+
+        /* ─── Skills Section ─── */
+        .skills-section { background: var(--surface); }
+
+        .skills-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: start;
+        }
+
+        .skills-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .skill-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text);
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s, background 0.3s, transform 0.3s, color 0.3s;
+            cursor: none;
+        }
+        .skill-pill:hover {
+            border-color: var(--accent);
+            background: rgba(255,61,107,0.1);
+            color: var(--accent);
+            transform: translateY(-3px);
+        }
+        .skill-pill::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        /* ─── Experience Section ─── */
+        .exp-section { background: var(--bg); }
+
+        .timeline { display: flex; flex-direction: column; gap: 0; }
+
+        .timeline-item {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 40px;
+            border-bottom: 1px solid var(--border);
+            padding: 40px 0;
+            transition: background 0.3s;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0; bottom: -1px;
+            width: 0; height: 1px;
+            background: var(--accent);
+            transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .timeline-item:hover::before { width: 100%; }
+
+        .timeline-date {
+            padding-top: 4px;
+        }
+        .timeline-year {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            line-height: 1;
+            color: var(--dimmer);
+            margin-bottom: 6px;
+        }
+        .timeline-period {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .timeline-content {}
+        .timeline-role {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .timeline-company {
+            font-size: 0.85rem;
+            color: var(--dim);
+            margin-bottom: 16px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        .timeline-desc {
+            font-size: 0.9rem;
+            color: var(--dimmer);
+            line-height: 1.7;
+        }
+
+        /* ─── Education Section ─── */
+        .edu-section { background: var(--surface); }
+
+        .edu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .edu-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .edu-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 0;
+            background: linear-gradient(to bottom, var(--accent), var(--accent2));
+            transition: height 0.5s;
+        }
+        .edu-card:hover { border-color: rgba(255,61,107,0.3); transform: translateY(-6px); }
+        .edu-card:hover::before { height: 100%; }
+
+        .edu-year {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+        .edu-degree {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .edu-field {
+            font-size: 0.85rem;
+            color: var(--dim);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .edu-school {
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--dimmer);
+            font-weight: 700;
+        }
+
+        /* ─── Contact Section ─── */
+        .contact-section {
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(255,61,107,0.12), transparent);
+            pointer-events: none;
+        }
+
+        .contact-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 120px 8vw;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative; z-index: 1;
+        }
+
+        .contact-big-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(4rem, 8vw, 8rem);
+            line-height: 0.85;
+            margin-bottom: 40px;
+        }
+        .contact-big-text .gradient-word {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-items { display: flex; flex-direction: column; gap: 32px; }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--border);
+        }
+        .contact-item:last-child { border-bottom: none; }
+
+        .c-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .c-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.3s;
+            word-break: break-all;
+        }
+        .c-value:hover { color: var(--accent); }
+
+        .social-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 40px;
+        }
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.05em;
+            transition: border-color 0.3s, background 0.3s, transform 0.3s;
+        }
+        .social-btn:hover {
+            border-color: var(--accent);
+            background: rgba(255,61,107,0.08);
+            transform: translateY(-3px);
+            color: var(--accent);
+        }
+
+        .contact-cta-block { display: flex; flex-direction: column; gap: 20px; }
+
+        .big-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 24px 52px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .big-cta::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, #fff2, transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .big-cta:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 30px 80px rgba(255,61,107,0.5); }
+        .big-cta:hover::after { opacity: 1; }
+
+        /* Animated border card */
+        .contact-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+        .contact-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2), transparent, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: borderRotate 4s linear infinite;
+        }
+        @keyframes borderRotate {
+            from { background: linear-gradient(0deg, var(--accent), var(--accent2), transparent, transparent); }
+            to   { background: linear-gradient(360deg, var(--accent), var(--accent2), transparent, transparent); }
+        }
+
+        .cta-tagline {
+            font-size: 0.85rem;
+            color: var(--dim);
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 48px 8vw;
+        }
+        .footer-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+        @media (min-width: 768px) {
+            .footer-inner { flex-direction: row; }
+        }
+
+        .skillifly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.4s;
+        }
+        .skillifly-badge:hover {
+            border-color: rgba(255,61,107,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255,61,107,0.2);
+        }
+        .skillifly-badge .powered { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--dim); }
+        .skillifly-badge img { width: 22px; height: 22px; object-fit: contain; }
+        .skillifly-badge .brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.15em;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .footer-copy {
+            font-size: 0.72rem;
+            color: var(--dimmer);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        /* ─── Scroll Reveal ─── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal.visible { opacity: 1; transform: none; }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 900px) {
+            .projects-grid { grid-template-columns: 1fr; }
+            .project-card,
+            .project-card:nth-child(1),
+            .project-card:nth-child(2) { grid-column: span 1; }
+            .skills-split { grid-template-columns: 1fr; gap: 40px; }
+            .timeline-item { grid-template-columns: 1fr; gap: 8px; }
+            .contact-inner { grid-template-columns: 1fr; gap: 60px; }
+            body { cursor: auto; }
+            #cursor, #cursor-ring { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .hero-title { font-size: 4.5rem; }
+            .section-heading { font-size: 3rem; }
+            .hero { padding: 10vh 6vw; }
+            .section-inner { padding: 80px 6vw; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Custom Cursor -->
+    <div id="cursor"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- ─── HERO ─── -->
+    <section class="hero">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+
+        <div class="hero-eyebrow">
+            {{ personal_info.full_name }}
+        </div>
+
+        <h1 class="hero-title">
+            <span class="line"><span>VISUAL</span></span>
+            <span class="line"><span class="outline-text">STORY</span></span>
+            <span class="line"><span class="accent-text">TELLER.</span></span>
+        </h1>
+
+        {% if personal_info.bio %}
+        <p class="hero-bio">{{ personal_info.bio }}</p>
+        {% endif %}
+
+        <div class="hero-actions">
+            <a href="#projects" class="btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Watch My Work
+            </a>
+            {% if personal_info.booking_url %}
+            <a href="{{ personal_info.booking_url }}" target="_blank" rel="noopener" class="btn-secondary">
+                Get In Touch
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+            </a>
+            {% elif personal_info.email %}
+            <a href="mailto:{{ personal_info.email }}" class="btn-secondary">
+                Get In Touch
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+            </a>
+            {% else %}
+            <a href="#contact" class="btn-secondary">
+                Get In Touch
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+            </a>
+            {% endif %}        </div>
+    </section>
+
+    <!-- ─── MARQUEE ─── -->
+    <div class="marquee-strip">
+        <div class="marquee-track">
+            {% for i in "1234567" %}
+            <div class="marquee-item">Video Editing</div>
+            <div class="marquee-item">Color Grading</div>
+            <div class="marquee-item">Motion Graphics</div>
+            <div class="marquee-item">Sound Design</div>
+            <div class="marquee-item">Visual Effects</div>
+            <div class="marquee-item">Documentary</div>
+            <div class="marquee-item">Short Films</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ─── STATS ─── -->
+    {% if experiences or projects or skills %}
+    <div class="stats-bar">
+
+        {% if projects %}
+        <div class="stat-cell">
+            <div class="stat-number">{{ projects|length }}+</div>
+            <div class="stat-label">Projects Delivered</div>
+        </div>
+        {% endif %}
+        {% if skills %}
+        <div class="stat-cell">
+            <div class="stat-number">{{ skills|length }}+</div>
+            <div class="stat-label">Tools Mastered</div>
+        </div>
+        {% endif %}
+        <div class="stat-cell">
+            <div class="stat-number">∞</div>
+            <div class="stat-label">Creative Vision</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ─── PROJECTS ─── -->
+    {% if projects %}
+    <section class="projects-section" id="projects">
+        <div class="section-inner">
+            <div class="section-label reveal">Selected Work</div>
+            <h2 class="section-heading reveal">PROJECTS &<br>PRODUCTIONS</h2>
+
+            <div class="projects-grid">
+                {% for project in projects %}
+                {% if project.video_type == 'reel' %}
+                <a href="/{{ personal_info.user.username }}/reels/"
+                   class="project-card reveal" style="transition-delay: {{ forloop.counter0 }}00ms; text-decoration:none; color:inherit; display:block;">
+                {% else %}
+                <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/"
+                   class="project-card reveal" style="transition-delay: {{ forloop.counter0 }}00ms; text-decoration:none; color:inherit; display:block;">
+                {% endif %}
+                    <div class="project-thumb">
+                        {% if project.image %}
+                        <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                        {% else %}
+                        <div class="project-thumb-placeholder">▶</div>
+                        {% endif %}
+                        <div class="project-overlay"></div>
+                        <div class="play-btn">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </div>
+                        <span class="project-badge {% if project.video_type == 'reel' %}badge-reel{% else %}badge-long{% endif %}">
+                            {% if project.video_type == 'reel' %}Reel{% else %}Long Form{% endif %}
+                        </span>
+                    </div>
+                    <div class="project-body">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        {% if project.details %}
+                        <p class="project-desc">{{ project.details }}</p>
+                        {% endif %}
+                        <span class="project-link">
+                            {% if project.video_type == 'reel' %}Watch Reels{% else %}Watch Film{% endif %}
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                        </span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── SKILLS ─── -->
+    {% if skills %}
+    <section class="skills-section" id="skills">
+        <div class="section-inner">
+            <div class="skills-split">
+                <div class="reveal">
+                    <div class="section-label">Arsenal</div>
+                    <h2 class="section-heading">MY<br>TOOLKIT</h2>
+                    <p style="color: var(--dim); font-size: 0.95rem; line-height: 1.8; max-width: 380px;">
+                        Every frame, every cut, every color — crafted with industry-leading tools and obsessive attention to detail.
+                    </p>
+                </div>
+                <div class="skills-cloud reveal" style="padding-top: 80px;">
+                    {% for skill in skills %}
+                    <span class="skill-pill">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── EXPERIENCE ─── -->
+    {% if experiences %}
+    <section class="exp-section" id="experience">
+        <div class="section-inner">
+            <div class="section-label reveal">Career</div>
+            <h2 class="section-heading reveal">WORK<br>EXPERIENCE</h2>
+
+            <div class="timeline">
+                {% for exp in experiences %}
+                <div class="timeline-item reveal">
+                    <div class="timeline-date">
+                        <div class="timeline-year">{{ exp.start_date|date:"Y" }}</div>
+                        <div class="timeline-period">
+                            {{ exp.start_date|date:"M Y" }} —
+                            {% if exp.still_working %}Now
+                            {% elif exp.end_date %}{{ exp.end_date|date:"M Y" }}
+                            {% else %}Present{% endif %}
+                        </div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-role">{{ exp.title }}</div>
+                        <div class="timeline-company">@ {{ exp.company }}</div>
+                        {% if exp.details %}
+                        <p class="timeline-desc">{{ exp.details }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── EDUCATION ─── -->
+    {% if education %}
+    <section class="edu-section" id="education">
+        <div class="section-inner">
+            <div class="section-label reveal">Education</div>
+            <h2 class="section-heading reveal">WHERE IT<br>ALL STARTED</h2>
+
+            <div class="edu-grid">
+                {% for edu in education %}
+                <div class="edu-card reveal">
+                    <div class="edu-year">{{ edu.grade_year|date:"Y" }}</div>
+                    <div class="edu-degree">{{ edu.degree }}</div>
+                    {% if edu.field %}
+                    <div class="edu-field">{{ edu.field }}</div>
+                    {% endif %}
+                    <div class="edu-school">{{ edu.school }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── CONTACT ─── -->
+    <section class="contact-section" id="contact">
+        <div class="contact-inner">
+            <div>
+                <div class="section-label reveal" style="margin-bottom: 20px;">Let's Collaborate</div>
+                <div class="contact-big-text reveal">
+                    LET'S<br>CREATE<br><span class="gradient-word">MAGIC.</span>
+                </div>
+
+                <div class="contact-items reveal">
+                    {% if personal_info.email %}
+                    <div class="contact-item">
+                        <span class="c-label">Email</span>
+                        <a href="mailto:{{ personal_info.email }}" class="c-value">{{ personal_info.email }}</a>
+                    </div>
+                    {% endif %}
+                    {% if personal_info.phone %}
+                    <div class="contact-item">
+                        <span class="c-label">Phone / WhatsApp</span>
+                        <a href="tel:{{ personal_info.phone }}" class="c-value">{{ personal_info.phone }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if links %}
+                <div class="social-row reveal">
+                    {% for link in links %}
+                    <a href="{{ link.url }}" target="_blank" class="social-btn">
+                        {{ link.platform }}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="reveal">
+                <div class="contact-card">
+                    <div class="section-label" style="margin-bottom: 24px;">Ready To Work Together?</div>
+                    <p class="cta-tagline">
+                        Whether it's a high-energy reel, a cinematic short film, or a full brand campaign — I deliver stories that stop the scroll and move the audience.
+                    </p>
+                    <div class="contact-cta-block">
+                        {% if personal_info.contact_link %}
+                        <a href="{{ personal_info.contact_link }}" class="big-cta" target="_blank" rel="noopener">
+                            Get In Touch
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                        </a>
+                        {% elif personal_info.email %}
+                        <a href="mailto:{{ personal_info.email }}" class="big-cta">
+                            Get In Touch
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer>
+        <div class="footer-inner">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="powered">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                <span class="brand">Skillifly</span>
+            </a>
+            <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        /* ─── Custom Cursor ─── */
+        const cursor = document.getElementById('cursor');
+        const ring = document.getElementById('cursor-ring');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top  = mouseY + 'px';
+        });
+
+        // Smooth ring follow
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.12;
+            ringY += (mouseY - ringY) * 0.12;
+            ring.style.left = ringX + 'px';
+            ring.style.top  = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        // Cursor grow on interactive elements
+        document.querySelectorAll('a, button, .skill-pill, .project-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.width  = '24px';
+                cursor.style.height = '24px';
+                ring.style.width  = '70px';
+                ring.style.height = '70px';
+                ring.style.opacity = '0.5';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.width  = '12px';
+                cursor.style.height = '12px';
+                ring.style.width  = '40px';
+                ring.style.height = '40px';
+                ring.style.opacity = '1';
+            });
+        });
+
+        /* ─── Scroll Reveal ─── */
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        /* ─── Parallax Orbs ─── */
+        document.addEventListener('mousemove', e => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 30;
+            const y = (e.clientY / window.innerHeight - 0.5) * 30;
+            document.querySelectorAll('.orb').forEach((orb, i) => {
+                const factor = (i + 1) * 0.5;
+                orb.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+            });
+        });
+
+        /* ─── Smooth anchor scroll ─── */
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

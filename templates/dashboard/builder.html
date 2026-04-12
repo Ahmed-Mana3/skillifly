@@ -1,0 +1,454 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Build Your Portfolio — Skillifly{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/builder_theme.css' %}">
+<style>
+  /* Skillifly Brand Accents */
+  :root {
+    --accent: #8B5CF6; /* Purple */
+    --accent-glow: rgba(139, 92, 246, 0.2);
+  }
+
+  .builder-container {
+    padding-top: 6rem;
+    padding-bottom: 10rem;
+    position: relative;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Syne', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #A78BFA 0%, #E879F9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Ambient Orbs */
+  .orb-1 {
+    top: -10%;
+    left: -5%;
+    width: 500px;
+    height: 500px;
+    background: #8B5CF6;
+  }
+
+  .orb-2 {
+    bottom: 10%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: #3B82F6;
+  }
+
+  /* Wizard Flow Visibility */
+  .section-panel {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .section-panel.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<body class="builder-body">
+  <div class="ambient-glow orb-1"></div>
+  <div class="ambient-glow orb-2"></div>
+
+  <div class="max-w-5xl mx-auto px-6 builder-container">
+
+    <!-- Header -->
+    <form method="POST" id="portfolio-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+        <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6"
+           style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: #A78BFA;">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        Portfolio infrastructure active
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tight">
+        Design Your <span class="gradient-text">Identity</span>
+      </h1>
+        <p class="text-zinc-500 max-w-xl text-lg leading-relaxed">
+          Configuring your professional digital presence. Every detail here architecturally transforms your brand showcase.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <button type="submit" form="portfolio-form" id="submit-btn-top" class="btn-premium btn-premium-shimmer px-8 py-3.5 shadow-xl shadow-blue-500/20 group">
+          <span class="flex items-center gap-3">
+            Launch & Preview
+            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4-4 4M3 12h18"/></svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Tracking -->
+    <div class="flex items-center gap-2 md:gap-3 mb-8 md:mb-12 overflow-x-auto pb-4 scrollbar-hide w-full" style="scrollbar-width: none; -ms-overflow-style: none;">
+      {% for i in "012345" %}
+      <div class="flex items-center gap-2 md:gap-3 shrink-0">
+        <div class="progress-dot {% if forloop.first %}filled{% endif %}" data-section="{{ forloop.counter0 }}"></div>
+        {% if not forloop.last %}<div class="w-6 md:w-10 h-[1px] bg-zinc-800/50"></div>{% endif %}
+      </div>
+      {% endfor %}
+      <span class="text-[10px] text-zinc-600 ml-4 font-black uppercase tracking-widest whitespace-nowrap" id="progress-label">Personal Identity</span>
+    </div>
+
+
+      <!-- SECTION 0: PERSONAL -->
+      <div class="section-panel active" id="section-0">
+        <div class="glass-panel">
+          <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+            <h2 class="text-2xl font-bold tracking-tight">Personal Identity</h2>
+            <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500">Step 1 of 6</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="md:col-span-2">
+              <label class="sf-label">Full Name</label>
+              <input type="text" name="fullname" value="{{ personal_form.fullname.value|default:'' }}" class="sf-input" placeholder="e.g. Liam Devlin" required>
+              {% for error in personal_form.fullname.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="md:col-span-2">
+              <label class="sf-label">Professional Role</label>
+              <input type="text" name="title" value="{{ personal_form.title.value|default:'' }}" class="sf-input" placeholder="e.g. Senior Visual Designer" required>
+              {% for error in personal_form.title.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+              <label class="sf-label">Email Access</label>
+              <input type="email" name="email" value="{{ personal_form.email.value|default:'' }}" class="sf-input" placeholder="e.g. you@example.com">
+            </div>
+            <div>
+              <label class="sf-label">Phone Number</label>
+              <input type="text" name="phone" value="{{ personal_form.phone.value|default:'' }}" class="sf-input" placeholder="e.g. +1 (555) 123-4567">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="sf-label">Booking / Hire URL</label>
+              <input type="url" name="booking_url" value="{{ personal_form.booking_url.value|default:'' }}" class="sf-input" placeholder="e.g. https://wa.me/1234567890 (or Calendly / Contra)">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="sf-label">Identity Narrative (Bio)</label>
+              <textarea name="bio" class="sf-input" rows="4" placeholder="Brief and impactful summary of your work profile...">{{ personal_form.bio.value|default:'' }}</textarea>
+            </div>
+          </div>
+          <div class="flex justify-end mt-12">
+            <button type="button" onclick="Builder.switchSection(1)" class="btn-premium">Next: Expertise Catalog →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1: SKILLS -->
+      <div class="section-panel" id="section-1">
+        <div class="glass-panel">
+          <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+            <h2 class="text-2xl font-bold tracking-tight">Expertise Catalog</h2>
+            <div class="flex items-center gap-4">
+              <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500">Step 2 of 6</span>
+              <button type="button" onclick="Builder.addFormsetItem('skills')" class="add-btn-pill">+ Add Skill</button>
+            </div>
+          </div>
+          {{ skill_formset.management_form }}
+          <div id="skills-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for form in skill_formset %}
+            <div class="formset-item mb-0">
+              {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+              <button type="button" class="remove-item-btn">✕</button>
+              <label class="sf-label">Capability</label>
+              <input type="text" name="{{ form.skill.html_name }}" value="{{ form.skill.value|default:'' }}" class="sf-input" placeholder="e.g. Adobe Suite Proficiency">
+              <div style="display:none">{{ form.DELETE }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="flex flex-col-reverse md:flex-row gap-4 md:justify-between mt-12 w-full">
+            <button type="button" onclick="Builder.switchSection(0)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">Back</button>
+            <button type="button" onclick="Builder.switchSection(2)" class="btn-premium">Next: Academic Record →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: EDUCATION -->
+      <div class="section-panel" id="section-2">
+        <div class="glass-panel">
+          <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+            <h2 class="text-2xl font-bold tracking-tight">Academic Record</h2>
+            <div class="flex items-center gap-4">
+              <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500">Step 3 of 6</span>
+              <button type="button" onclick="Builder.addFormsetItem('education')" class="add-btn-pill">+ Add Edu</button>
+            </div>
+          </div>
+          {{ education_formset.management_form }}
+          <div id="education-container" class="space-y-6">
+            {% for form in education_formset %}
+            <div class="formset-item">
+              {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+              <button type="button" class="remove-item-btn">✕</button>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                  <label class="sf-label">Institution</label>
+                  <input type="text" name="{{ form.school.html_name }}" value="{{ form.school.value|default:'' }}" class="sf-input" placeholder="e.g. University of Design">
+                </div>
+                <div>
+                  <label class="sf-label">Degree</label>
+                  <input type="text" name="{{ form.degree.html_name }}" value="{{ form.degree.value|default:'' }}" class="sf-input" placeholder="e.g. Bachelor of Arts">
+                </div>
+                <div>
+                  <label class="sf-label">Year</label>
+                  <input type="number" name="{{ form.year.html_name }}" value="{{ form.year.value|default:'' }}" class="sf-input" placeholder="e.g. 2024">
+                </div>
+              </div>
+              <div style="display:none">{{ form.DELETE }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="flex flex-col-reverse md:flex-row gap-4 md:justify-between mt-12 w-full">
+            <button type="button" onclick="Builder.switchSection(1)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">Back</button>
+            <button type="button" onclick="Builder.switchSection(3)" class="btn-premium">Next: Experience Timeline →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: EXPERIENCE -->
+      <div class="section-panel" id="section-3">
+        <div class="glass-panel">
+          <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+            <h2 class="text-2xl font-bold tracking-tight">Experience Timeline</h2>
+            <div class="flex items-center gap-4">
+              <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500">Step 4 of 6</span>
+              <button type="button" onclick="Builder.addFormsetItem('experience')" class="add-btn-pill">+ Add Work</button>
+            </div>
+          </div>
+          {{ experience_formset.management_form }}
+          <div id="experience-container" class="space-y-6">
+            {% for form in experience_formset %}
+            <div class="formset-item">
+              {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+              <button type="button" class="remove-item-btn">✕</button>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="sf-label">Title / Role</label>
+                  <input type="text" name="{{ form.title.html_name }}" value="{{ form.title.value|default:'' }}" class="sf-input" placeholder="e.g. Senior Editor">
+                </div>
+                <div>
+                  <label class="sf-label">Organization / Studio</label>
+                  <input type="text" name="{{ form.company.html_name }}" value="{{ form.company.value|default:'' }}" class="sf-input" placeholder="e.g. Creative Studio">
+                </div>
+                <div>
+                  <label class="sf-label">Start Date</label>
+                  <input type="month" name="{{ form.start.html_name }}" value="{{ form.start.value|default:'' }}" class="sf-input" placeholder="e.g. YYYY-MM">
+                </div>
+                <div>
+                  <label class="sf-label">End Date</label>
+                  <input type="month" name="{{ form.end.html_name }}" value="{{ form.end.value|default:'' }}" class="sf-input" placeholder="Present">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="sf-label">Core Responsibilities</label>
+                  <textarea name="{{ form.description.html_name }}" class="sf-input" rows="3" placeholder="Briefly describe your role and achievements...">{{ form.description.value|default:'' }}</textarea>
+                </div>
+              </div>
+              <div style="display:none">{{ form.DELETE }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="flex flex-col-reverse md:flex-row gap-4 md:justify-between mt-12 w-full">
+            <button type="button" onclick="Builder.switchSection(2)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">Back</button>
+            <button type="button" onclick="Builder.switchSection(4)" class="btn-premium">Next: Work Showcase →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: PROJECTS -->
+      <div class="section-panel" id="section-4">
+        <div class="glass-panel">
+          <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+            <h2 class="text-2xl font-bold tracking-tight">Work Showcase</h2>
+            <div class="flex items-center gap-4">
+              <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500">Step 5 of 6</span>
+              <button type="button" onclick="Builder.addFormsetItem('projects')" class="add-btn-pill">+ Add Project</button>
+            </div>
+          </div>
+          {{ project_formset.management_form }}
+          <div id="projects-container" class="space-y-8">
+            {% for form in project_formset %}
+            <div class="formset-item">
+              {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+              <button type="button" class="remove-item-btn">✕</button>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-7 space-y-6">
+                  <div><label class="sf-label">Asset Title</label><input type="text" name="{{ form.name.html_name }}"
+                      value="{{ form.name.value|default:'' }}" class="sf-input" placeholder="e.g. Brand Campaign 2023"></div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="sf-label">URL Source</label><input type="url" name="{{ form.url.html_name }}"
+                        value="{{ form.url.value|default:'' }}" class="sf-input" placeholder="Vimeo / YT / TikTok">
+                    </div>
+                    <div><label class="sf-label">Placement</label>{{ form.video_type }}</div>
+                  </div>
+                  <div><label class="sf-label">Role Context</label><textarea name="{{ form.description.html_name }}"
+                      class="sf-input" rows="3"
+                      placeholder="Briefly explain your role in this project...">{{ form.description.value|default:'' }}</textarea>
+                  </div>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col justify-between">
+                  <div>
+                    <label class="sf-label">Thumbnail Upload</label>
+                    <div class="bg-black/20 p-4 rounded-xl border border-white/5">
+                      <input type="file" name="{{ form.thumbnail.html_name }}" class="sf-input text-xs">
+                    </div>
+                  </div>
+                  <div class="mt-4 flex flex-col items-center">
+                    <span class="text-[9px] text-zinc-600 uppercase font-black tracking-widest mb-3">Asset
+                      Preview</span>
+                    <div class="preview-box">
+                      {% if form.instance.thumbnail %}
+                      <img src="{{ form.instance.thumbnail.url }}" alt="Asset">
+                      {% else %}
+                      <div class="flex flex-col items-center gap-2 opacity-10">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:none">{{ form.DELETE }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="flex flex-col-reverse md:flex-row gap-4 md:justify-between mt-12 w-full">
+            <button type="button" onclick="Builder.switchSection(3)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">Back</button>
+            <button type="button" onclick="Builder.switchSection(5)" class="btn-premium">Next: Network Links →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 5: LINKS -->
+      <div class="section-panel" id="section-5">
+        <div class="glass-panel">
+          <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+            <h2 class="text-2xl font-bold tracking-tight">Network Links</h2>
+            <div class="flex items-center gap-4">
+              <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500">Step 6 of 6</span>
+              <button type="button" onclick="Builder.addFormsetItem('links')" class="add-btn-pill">+ Add Link</button>
+            </div>
+          </div>
+          {{ link_formset.management_form }}
+          <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for form in link_formset %}
+            <div class="formset-item mb-0">
+              {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+              <button type="button" class="remove-item-btn">✕</button>
+              <div class="space-y-4">
+                <div>
+                  <label class="sf-label">Platform Name</label>
+                  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="sf-input" placeholder="e.g. LinkedIn">
+                </div>
+                <div>
+                  <label class="sf-label">Public Profile URL</label>
+                  <input type="url" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="sf-input" placeholder="e.g. Brand Campaign 2023">
+                </div>
+              </div>
+              <div style="display:none">{{ form.DELETE }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="mt-20 pt-12 border-t border-white/5 flex flex-col-reverse md:flex-row gap-6 md:items-center md:justify-between">
+            <button type="button" onclick="Builder.switchSection(4)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">Back to Showcase</button>
+            <button type="submit" id="submit-btn" class="btn-premium w-full md:w-auto px-6 py-4 md:px-12 md:py-4 justify-center">
+              Launch Portfolio & Preview Live
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- EMPTY FORM TEMPLATES -->
+  <script type="text/html" id="skills-empty-form">
+    {% for hidden in skill_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <label class="sf-label">Capability</label>
+    <input type="text" name="skills-__prefix__-skill" class="sf-input" placeholder="e.g. Adobe Suite Proficiency">
+    <div style="display:none"><input type="checkbox" name="skills-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="education-empty-form">
+    {% for hidden in education_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="md:col-span-2"><label class="sf-label">Institution</label><input type="text" name="education-__prefix__-school" class="sf-input" placeholder="e.g. University of Design"></div>
+      <div><label class="sf-label">Degree</label><input type="text" name="education-__prefix__-degree" class="sf-input" placeholder="e.g. Bachelor of Arts"></div>
+      <div><label class="sf-label">Year</label><input type="number" name="education-__prefix__-year" class="sf-input" placeholder="e.g. 2024"></div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="education-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="experience-empty-form">
+    {% for hidden in experience_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div><label class="sf-label">Title / Role</label><input type="text" name="experience-__prefix__-title" class="sf-input" placeholder="e.g. Senior Editor"></div>
+      <div><label class="sf-label">Organization / Studio</label><input type="text" name="experience-__prefix__-company" class="sf-input" placeholder="e.g. Creative Studio"></div>
+      <div><label class="sf-label">Start Date</label><input type="month" name="experience-__prefix__-start" class="sf-input" placeholder="e.g. YYYY-MM"></div>
+      <div><label class="sf-label">End Date</label><input type="month" name="experience-__prefix__-end" class="sf-input"></div>
+      <div class="md:col-span-2"><label class="sf-label">Core Responsibilities</label><textarea name="experience-__prefix__-description" class="sf-input" rows="3" placeholder="Briefly describe your role and achievements..."></textarea></div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="experience-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="projects-empty-form">
+    {% for hidden in project_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-7 space-y-6">
+            <div><label class="sf-label">Asset Title</label><input type="text" name="projects-__prefix__-name" class="sf-input" placeholder="e.g. Brand Campaign 2023"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="sf-label">URL Source</label><input type="url" name="projects-__prefix__-url" class="sf-input" placeholder="YouTube/IG/TikTok"></div>
+                <div><label class="sf-label">Placement</label>{{ project_formset.empty_form.video_type }}</div>
+            </div>
+            <div><label class="sf-label">Role Context</label><textarea name="projects-__prefix__-description" class="sf-input" rows="3" placeholder="Briefly explain your role in this project..."></textarea></div>
+        </div>
+        <div class="lg:col-span-5 flex flex-col justify-between">
+            <div>
+                <label class="sf-label">Thumbnail Upload</label>
+                <div class="bg-black/20 p-4 rounded-xl border border-white/5"><input type="file" name="projects-__prefix__-thumbnail" class="sf-input text-xs"></div>
+            </div>
+            <div class="mt-4 flex flex-col items-center">
+                <span class="text-[9px] text-zinc-600 uppercase font-black tracking-widest mb-3">Asset Preview</span>
+                <div class="preview-box"><span class="text-zinc-700 text-[9px] font-bold">Waiting for media...</span></div>
+            </div>
+        </div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="projects-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="links-empty-form">
+    {% for hidden in link_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="sf-label">Platform Name</label><input type="text" name="links-__prefix__-name" class="sf-input" placeholder="e.g. LinkedIn / GitHub"></div>
+      <div><label class="sf-label">Public Profile URL</label><input type="url" name="links-__prefix__-url" class="sf-input" placeholder="e.g. https://..."></div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="links-__prefix__-DELETE"></div>
+  </script>
+
+  <script src="{% static 'js/builder.js' %}"></script>
+</body>
+{% endblock %}

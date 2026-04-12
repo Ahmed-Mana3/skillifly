@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.title }} — {{ personal_info.full_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #151515;
+            --accent: #00d9ff;
+            --text: #ffffff;
+            --text-dim: #999;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            padding: 20px 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+        .btn-back:hover { color: var(--accent); }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 5%;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 40px;
+        }
+
+        /* ─── Player Section ─── */
+        .player-container {
+            width: 100%;
+        }
+
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-bottom: 24px;
+        }
+
+        .video-player iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .info-section {
+            padding: 0 10px;
+        }
+
+        .project-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .project-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .cta-btn-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--accent);
+            color: #000;
+            padding: 14px 28px;
+            border-radius: 100px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 40px rgba(0, 217, 255, 0.2);
+        }
+
+        .cta-btn-main:hover {
+            transform: translateY(-3px);
+            background: #fff;
+            box-shadow: 0 20px 50px rgba(0, 217, 255, 0.4);
+        }
+
+        .project-desc {
+            white-space: pre-line;
+            color: #ddd;
+            font-size: 1rem;
+            line-height: 1.8;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .related-card {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.3s;
+        }
+
+        .related-card:hover { opacity: 0.8; }
+
+        .related-thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            background: #222;
+            overflow: hidden;
+        }
+
+        .related-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .related-info h4 {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .related-info p {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 1100px) {
+            main { grid-template-columns: 1fr; }
+            .sidebar { margin-top: 40px; }
+        }
+
+        @media (max-width: 768px) {
+            .project-title { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/{{ personal_info.user.username }}/" class="logo">
+            {{ personal_info.full_name|upper }}
+        </a>
+        <a href="/{{ personal_info.user.username }}/long-videos/" class="btn-back">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Gallery
+        </a>
+    </header>
+
+    <main>
+        <div class="player-container">
+            <div class="video-player">
+                <iframe 
+                    id="mainPlayer"
+                    src="" 
+                    allow="autoplay; fullscreen" 
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                </iframe>
+            </div>
+
+            <div class="info-section">
+                <h1 class="project-title">{{ project.title }}</h1>
+                
+                <div class="project-meta">
+                    <div class="author-info">
+                        <div class="author-name">{{ personal_info.full_name }}</div>
+                    </div>
+                    {% if personal_info.booking_url %}
+                    <a href="{{ personal_info.booking_url }}" class="cta-btn-main" style="margin-left:auto;" target="_blank" rel="noopener">
+                        Request Similar Work
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                    {% elif personal_info.email %}
+                    <a href="mailto:{{ personal_info.email }}" class="cta-btn-main" style="margin-left:auto;">
+                        Request Similar Work
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="project-desc">
+                    {{ project.details }}
+                </div>
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <h3 class="sidebar-title">Other Professional Work</h3>
+            {% for other in other_videos %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card">
+                <div class="related-thumb">
+                    {% if other.image %}
+                    <img src="{{ other.image.url }}" alt="{{ other.title }}">
+                    {% else %}
+                    <img src="https://img.youtube.com/vi/{{ other.url|slice:'-11:' }}/mqdefault.jpg" alt="{{ other.title }}">
+                    {% endif %}
+                </div>
+                <div class="related-info">
+                    <h4>{{ other.title }}</h4>
+                    <p>{{ personal_info.full_name }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </aside>
+    </main>
+
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function getTikTokId(url) {
+            const regExp = /tiktok\.com\/.*\/video\/(\d+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        function getInstagramId(url) {
+            const regExp = /instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        const videoUrl = "{{ project.url }}";
+        const ytId = getYouTubeId(videoUrl);
+        const ttId = getTikTokId(videoUrl);
+        const igId = getInstagramId(videoUrl);
+        const player = document.getElementById('mainPlayer');
+        const origin = window.location.origin;
+
+        if (ytId) {
+            player.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&origin=${origin}`;
+        } else if (ttId) {
+            player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
+        } else if (igId) {
+            player.src = `https://www.instagram.com/reels/${igId}/embed/`;
+        } else {
+            // Fallback for direct links
+            player.style.display = 'none';
+            document.querySelector('.video-player').innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%;"><a href="${videoUrl}" target="_blank" class="nav-link" style="background:var(--accent); color:#000; padding:15px 30px; border-radius:12px; font-weight:700; text-decoration:none;">View Video on Source</a></div>`;
+        }
+    </script>
+
+</body>
+</html>

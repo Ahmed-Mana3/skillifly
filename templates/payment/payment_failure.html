@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Payment Failed — Skillifly{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-6 py-12">
+    <div class="max-w-xl w-full">
+        <!-- Main Card -->
+        <div class="glass-card rounded-[2.5rem] p-8 md:p-12 text-center animate-fadeInUp relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 blur-[80px] rounded-full"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 blur-[80px] rounded-full"></div>
+
+            <!-- Icon -->
+            <div class="relative mb-8 inline-flex">
+                <div class="absolute inset-0 bg-red-500/20 blur-2xl rounded-full animate-pulse"></div>
+                <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Text Content -->
+            <h1 class="text-4xl font-bold mb-4 tracking-tight" style="font-family: 'Syne', sans-serif;">
+                Something went <span class="text-red-500">wrong</span>
+            </h1>
+            <p class="text-gray-400 text-lg mb-10 leading-relaxed">
+                We couldn't process your payment. This usually happens due to card restrictions or communication errors with the bank.
+            </p>
+
+            <!-- Info Box -->
+            <div class="bg-gray-900/40 border border-gray-800/50 rounded-2xl p-6 mb-10 text-left">
+                <h3 class="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Common reasons:</h3>
+                <ul class="space-y-2.5">
+                    <li class="flex items-start gap-3 text-sm text-gray-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
+                        Insufficient funds or credit limit reached.
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-gray-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
+                        Incorrect CVV or expiration date entered.
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-gray-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
+                        International payment restrictions on your card.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{% url 'payment' %}" class="btn-primary flex-1 justify-center py-4 bg-red-500 hover:bg-red-600 border-red-400/20">
+                    Try another card
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn-ghost flex-1 justify-center py-4">
+                    Return home
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer Help -->
+        <p class="mt-8 text-center text-gray-500 text-sm">
+            Still having trouble? <a href="#" class="text-purple-400 hover:underline">Contact our support team</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

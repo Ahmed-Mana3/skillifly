@@ -1,0 +1,347 @@
+/* 
+ * builder_theme.css - Minimal Developer Style
+ * Premium dark UI with deep glassmorphism and refined typography.
+ */
+
+:root {
+    --bg: #060A12;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-hover: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.06);
+    --accent: #3B82F6;
+    --accent-alt: #8B5CF6;
+    --accent-glow: rgba(59, 130, 246, 0.2);
+    --text: #F8FAFC;
+    --text-dim: #94A3B8;
+    --error: #F87171;
+    --success: #10B981;
+}
+
+body.builder-body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Background Noise Overlay */
+body.builder-body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.3;
+}
+
+/* ─── Glass Containers ─── */
+.glass-panel {
+    background: var(--surface);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+    position: relative;
+    z-index: 10;
+}
+
+.formset-item {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    margin-bottom: 2rem;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.formset-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Inputs ─── */
+.sf-input {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    color: #fff !important;
+    width: 100%;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;
+}
+
+.sf-input:focus {
+    border-color: var(--accent) !important;
+    background: rgba(15, 23, 42, 0.9) !important;
+    box-shadow: 0 0 0 4px var(--accent-glow) !important;
+}
+
+.sf-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    margin-top: 20px;
+}
+
+/* ─── Tabs & Progress ─── */
+.tabs-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 15px;
+    scrollbar-width: none;
+    position: relative;
+    z-index: 20;
+}
+.tabs-scroll::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-alt));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 20px var(--accent-glow);
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+}
+
+.progress-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.progress-dot.filled {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+}
+
+/* ─── Buttons ─── */
+.btn-premium {
+    position: relative;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #C026D3 100%);
+    background-size: 200% auto;
+    color: #fff;
+    font-weight: 800;
+    padding: 16px 36px;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+}
+
+.btn-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: all 0.6s;
+}
+
+.btn-premium:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.5), 0 0 20px rgba(192, 38, 211, 0.3);
+    background-position: right center;
+}
+
+.btn-premium:hover::before {
+    left: 100%;
+    transition: all 0.6s;
+}
+
+.btn-premium:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* Shimmer Continuous Animation */
+@keyframes shimmerLoop {
+    0% { transform: translateX(-150%); }
+    100% { transform: translateX(150%); }
+}
+
+.btn-premium-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transform: translateX(-150%);
+    animation: shimmerLoop 3s infinite;
+}
+
+.add-btn-pill {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-btn-pill:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.remove-item-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #F87171;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 5;
+}
+
+/* ─── Media Assets ─── */
+.preview-box {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ─── Utilities ─── */
+.error-msg {
+    color: var(--error);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.ambient-glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.05;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* ─── Sticky Action Bar ─── */
+.builder-action-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 1.25rem 2rem;
+    background: rgba(6, 10, 18, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.launch-btn-wide {
+    width: 100%;
+    max-width: 500px;
+    justify-content: center;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideIn {
+    animation: slideIn 0.4s ease forwards;
+}
+
+@media (max-width: 768px) {
+    .builder-container {
+        padding-top: 4rem !important;
+        padding-bottom: 6rem !important;
+    }
+    .glass-panel {
+        padding: 1.5rem;
+    }
+    .formset-item {
+        padding: 1.5rem;
+        padding-top: 3rem;
+    }
+    .btn-premium {
+        width: 100%;
+        justify-content: center;
+    }
+    button.text-zinc-500 {
+        width: 100%;
+        text-align: center;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+}

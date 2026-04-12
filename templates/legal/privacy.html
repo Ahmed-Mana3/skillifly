@@ -1,0 +1,263 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy — Skillifly{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen px-6 py-24 relative">
+
+  <!-- Gradient spotlight -->
+  <div
+    class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-[0.05]"
+    style="background: radial-gradient(circle, #3B82F6, transparent 70%);"></div>
+
+  <div class="max-w-4xl mx-auto relative z-10">
+
+    <!-- Header -->
+    <div class="text-center mb-16 animate-fadeInUp">
+      <div
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/20 text-sm mb-6">
+        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span class="text-gray-400">Your data matters</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-display font-bold mb-4" style="font-family: 'Syne', sans-serif;">
+        Privacy <span class="gradient-text">Policy</span>
+      </h1>
+      <p class="text-gray-500 text-sm">Last updated: April 9, 2026</p>
+    </div>
+
+    <!-- Content -->
+    <div class="space-y-8 animate-fadeInUp" style="animation-delay: 0.2s">
+
+      <!-- Intro -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1" style="background: linear-gradient(135deg, #3B82F6, #60A5FA);">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Our Commitment</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              At Skillifly, your privacy is fundamental to everything we do. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our platform. We are committed to transparency and to giving you control over your data.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 1 -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">1</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Information We Collect</h2>
+            <p class="text-gray-400 text-sm leading-relaxed mb-4">
+              We collect information that you provide directly and information generated through your use of the Service:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <h3 class="text-sm font-semibold text-blue-400 mb-2">Provided by You</h3>
+                <ul class="space-y-1.5 text-gray-400 text-sm">
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-blue-400"></span>
+                    Name and email address
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-blue-400"></span>
+                    Portfolio content (bio, skills, projects)
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-blue-400"></span>
+                    Payment information
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-blue-400"></span>
+                    Profile photos and media
+                  </li>
+                </ul>
+              </div>
+              <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <h3 class="text-sm font-semibold text-purple-400 mb-2">Collected Automatically</h3>
+                <ul class="space-y-1.5 text-gray-400 text-sm">
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-purple-400"></span>
+                    Device and browser information
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-purple-400"></span>
+                    IP address and location data
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-purple-400"></span>
+                    Usage patterns and analytics
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-purple-400"></span>
+                    Cookies and session data
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">2</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">How We Use Your Information</h2>
+            <p class="text-gray-400 text-sm leading-relaxed mb-3">We use your information to:</p>
+            <ul class="space-y-2 text-gray-400 text-sm">
+              <li class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Provide, maintain, and improve the Skillifly platform
+              </li>
+              <li class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Process payments and manage your subscription
+              </li>
+              <li class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Send important updates about your account and the Service
+              </li>
+              <li class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Analyze usage to enhance user experience and develop new features
+              </li>
+              <li class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Protect against fraud and ensure security of the platform
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3 -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">3</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Data Sharing & Third Parties</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              We do <strong class="text-gray-200">not</strong> sell your personal data. We may share limited information with trusted third-party services solely to operate the platform, such as payment processors (Kashier) for transaction handling. These partners are bound by strict data protection agreements. We may also disclose information when required by law or to protect the rights and safety of our users.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4 -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">4</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Data Security</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              We implement industry-standard security measures to protect your data, including encrypted connections (HTTPS/TLS), secure password hashing, and regular security audits. While no system is completely impenetrable, we continuously work to strengthen our defenses and promptly address any vulnerabilities.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5 -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">5</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Your Rights</h2>
+            <p class="text-gray-400 text-sm leading-relaxed mb-3">You have the right to:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex items-center gap-3 bg-white/[0.02] rounded-lg p-3 border border-white/5">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span class="text-sm text-gray-300">Access your data</span>
+              </div>
+              <div class="flex items-center gap-3 bg-white/[0.02] rounded-lg p-3 border border-white/5">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span class="text-sm text-gray-300">Correct inaccuracies</span>
+              </div>
+              <div class="flex items-center gap-3 bg-white/[0.02] rounded-lg p-3 border border-white/5">
+                <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="text-sm text-gray-300">Request deletion</span>
+              </div>
+              <div class="flex items-center gap-3 bg-white/[0.02] rounded-lg p-3 border border-white/5">
+                <svg class="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span class="text-sm text-gray-300">Export your data</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 6 -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">6</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Cookies</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              We use essential cookies to maintain your session and preferences. We do not use third-party tracking cookies for advertising. Analytics cookies, if used, are anonymized and solely help us understand how the platform is used so we can make it better.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="gradient-border rounded-2xl p-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0 mt-1">
+            <span class="text-white font-bold text-sm">7</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="font-family: 'Syne', sans-serif;">Contact Us</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              If you have questions about this Privacy Policy or wish to exercise your data rights, contact us at
+              <a href="mailto:support@skillifly.cloud" class="text-purple-400 hover:text-purple-300 transition-colors">support@skillifly.cloud</a>
+              or visit our <a href="{% url 'contact' %}" class="text-purple-400 hover:text-purple-300 transition-colors">Contact page</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

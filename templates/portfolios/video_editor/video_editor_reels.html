@@ -1,0 +1,490 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal_info.full_name }} — Reels</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --accent: #00d9ff;
+            --surface: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* ─── Scroll Container ─── */
+        .reels-container {
+            height: 100dvh; /* Dynamic viewport height for mobile */
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            overscroll-behavior-y: contain;
+        }
+
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel-slide {
+            height: 100dvh;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        /* ─── Video Wrapper ─── */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 450px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .video-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            pointer-events: auto;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-glow {
+            position: absolute;
+            inset: -100px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(80px) brightness(0.3);
+            opacity: 0.5;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ─── UI Overlays ─── */
+        .reel-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            right: 80px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .reel-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .reel-desc {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .reel-actions {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            pointer-events: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn:hover { transform: scale(1.1); background: var(--surface); }
+
+        .request-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--accent);
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-decoration: none;
+            margin-top: 15px;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .request-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 217, 255, 0.5);
+            background: #fff;
+        }
+
+        /* ─── Navigation ─── */
+        .top-nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .nav-link.active { color: var(--accent); }
+        .nav-link:hover { color: #fff; }
+
+        .back-home {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 100;
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.5rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .back-home:hover { opacity: 1; }
+
+        /* ─── Loading state ─── */
+        .loading-shimmer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @media (max-width: 768px) {
+            .video-wrapper { 
+                max-width: 100%; 
+                height: 100dvh;
+            }
+            .reel-overlay { bottom: 100px; }
+            .reel-actions { bottom: 120px; right: 15px; }
+        }
+
+        /* ─── Contact Slide ─── */
+        .contact-content {
+            text-align: center;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            pointer-events: auto;
+        }
+
+        .contact-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-info-list {
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .contact-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .contact-info-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .contact-info-value {
+            font-size: 1.1rem;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .reel-social-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .social-chip-small {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 18px;
+            border-radius: 100px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .social-chip-small:hover {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="/{{ personal_info.user.username }}/" class="back-home">✕</a>
+
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/" class="nav-link active">Reels</a>
+        <a href="/{{ username }}/long-videos/" class="nav-link">Work</a>
+        <a href="#contactSlide" class="nav-link">Contact</a>
+    </nav>
+
+    <div class="reels-container" id="reelsContainer">
+        {% for project in projects %}
+        <div class="reel-slide" data-id="{{ project.id }}" data-url="{{ project.url }}">
+            <div class="ambient-glow" id="glow-{{ project.id }}"></div>
+            <div class="video-wrapper">
+                <div class="loading-shimmer"></div>
+                <div id="player-{{ project.id }}" class="video-content"></div>
+            </div>
+
+            <div class="reel-overlay">
+                <h3 class="reel-title">{{ project.title }}</h3>
+                <p class="reel-desc">{{ project.details }}</p>
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="request-btn" target="_blank" rel="noopener">
+                    Request Similar Work
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="request-btn">
+                    Request Similar Work
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="reel-actions">
+                <div class="action-btn" title="View Source">
+                    <a href="{{ project.url }}" target="_blank" style="color: inherit;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="reel-slide">
+            <p>No reels added yet.</p>
+        </div>
+        {% endfor %}
+
+        <!-- Final Contact Slide -->
+        <div class="reel-slide" id="contactSlide">
+            <div class="contact-content">
+                <h2 class="contact-heading">LET'S WORK.</h2>
+                
+                <div class="contact-info-list">
+                    <div class="contact-info-item">
+                        <span class="contact-info-label">Direct Inbox</span>
+                        <a href="mailto:{{ personal_info.email }}" class="contact-info-value">{{ personal_info.email }}</a>
+                    </div>
+                    {% if personal_info.phone %}
+                    <div class="contact-info-item">
+                        <span class="contact-info-label">Studio Connect</span>
+                        <span class="contact-info-value">{{ personal_info.phone }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="reel-social-links">
+                    {% for link in links %}
+                    <a href="{{ link.url }}" target="_blank" class="social-chip-small">
+                        {{ link.platform }}
+                    </a>
+                    {% endfor %}
+                </div>
+
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="request-btn" style="padding: 18px 40px; font-size: 1rem;" target="_blank" rel="noopener">
+                    Request Similar Work
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="request-btn" style="padding: 18px 40px; font-size: 1rem;">
+                    Get In Touch
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const players = {};
+        
+        function onYouTubeIframeAPIReady() {
+            // API Loaded
+        }
+
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function getTikTokId(url) {
+            const regExp = /tiktok\.com\/.*\/video\/(\d+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        function getInstagramId(url) {
+            const regExp = /instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        const observerOptions = {
+            root: document.getElementById('reelsContainer'),
+            threshold: 0.8
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.dataset.id;
+                const url = entry.target.dataset.url;
+                const playerContainer = document.getElementById(`player-${id}`);
+                const shimmer = entry.target.querySelector('.loading-shimmer');
+                const glow = document.getElementById(`glow-${id}`);
+
+                const ytId = getYouTubeId(url);
+                const ttId = getTikTokId(url);
+                const igId = getInstagramId(url);
+
+                if (entry.isIntersecting) {
+                    if (ytId) {
+                        if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
+                        if (!players[id]) {
+                            players[id] = new YT.Player(`player-${id}`, {
+                                height: '100%', width: '100%', videoId: ytId,
+                                playerVars: { 'autoplay': 1, 'mute': 1, 'loop': 1, 'playlist': ytId, 'controls': 1, 'modestbranding': 1, 'rel': 0, 'origin': window.location.origin },
+                                events: { 'onReady': (event) => { event.target.playVideo(); if (shimmer) shimmer.style.display = 'none'; } }
+                            });
+                        } else if (typeof players[id].playVideo === 'function') {
+                            players[id].playVideo();
+                        }
+                    } else if (ttId) {
+                        // Inject TikTok on viewport entry
+                        playerContainer.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+                        if (shimmer) shimmer.style.display = 'none';
+                    } else if (igId) {
+                        // Inject Instagram on viewport entry
+                        playerContainer.innerHTML = `<iframe src="https://www.instagram.com/p/${igId}/embed/" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+                        if (shimmer) shimmer.style.display = 'none';
+                    } 
+                } else {
+                    // Stop sound and video when leaving viewport
+                    if (players[id] && typeof players[id].pauseVideo === 'function') {
+                        players[id].pauseVideo();
+                    } else if (ttId || igId) {
+                        // Clear hidden TikTok/IG frames to stop sound
+                        playerContainer.innerHTML = '';
+                        if (shimmer) shimmer.style.display = 'block';
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reel-slide').forEach(reel => {
+            if (reel.dataset.id) observer.observe(reel);
+        });
+    </script>
+</body>
+</html>
