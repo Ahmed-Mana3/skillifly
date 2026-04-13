@@ -60,7 +60,7 @@ ALLOWED_HOSTS = [
 
 # In development, allow localhost automatically so devs don't need to configure it.
 if DEBUG and not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]  # noqa: S104
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0","skillifly.cloud","www.skillifly.cloud","156.67.217.227"]  # noqa: S104
 
 SITE_ID = int(os.environ.get("DJANGO_SITE_ID", "1"))
 
@@ -337,7 +337,8 @@ else:
 # ---------------------------------------------------------------------------
 # Writes INFO+ to stdout (captured by systemd/journald on the VPS)
 # and WARNING+ to a rotating file for persistence.
-
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -368,7 +369,7 @@ LOGGING = {
         "file": {
             "level": "WARNING",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": os.path.join(BASE_DIR, "logs", "django.log"),
+            "filename": os.path.join(LOGS_DIR, "django.log"),
             "maxBytes": 1024 * 1024 * 5,  # 5 MB
             "backupCount": 5,
             "formatter": "verbose",
