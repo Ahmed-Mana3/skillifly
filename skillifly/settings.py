@@ -203,6 +203,14 @@ STATICFILES_STORAGE = (
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+
+# ---------------------------------------------------------------------------
+# Upload Limits (Increased for high-res portfolio media)
+# ---------------------------------------------------------------------------
+# Standardizes limit at 100MB for all environments.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
+
 # ---------------------------------------------------------------------------
 # Authentication
 # ---------------------------------------------------------------------------
@@ -302,10 +310,6 @@ if not DEBUG:
 
     # Required when behind a reverse proxy (Nginx) to detect HTTPS.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-    # Increase upload limits for portfolio media (default is 2.5MB).
-    DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
-    FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
 
     # HTTP Strict Transport Security — enable only after HTTPS is confirmed working.
     # Set DJANGO_SECURE_HSTS=True in .env to activate.
