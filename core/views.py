@@ -5,6 +5,7 @@ from datetime import timedelta
 from .forms import RegisterForm, LoginForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment
@@ -42,7 +43,8 @@ def signup_view(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
-            login(request, form.save())
+            user = form.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('themes')
         else:
             message = form.errors
@@ -102,12 +104,17 @@ def dashboard_view(request):
     # Context helpers for template visibility
     is_developer = (profile.theme and profile.theme.category and profile.theme.category.name.lower() == 'developer')
     is_annual_subscriber = payment and payment.subscription and payment.subscription.days >= 365
+    has_active_payment = payment is not None and payment.is_active
+    # Ensure visibility is synced with subscription status
+    if not has_active_payment and profile.is_public:
+        profile.is_public = False
+        profile.save()
 
     context = {
         'profile': profile,
         'days_left': days_left,
         'payment': payment,
-        'has_active_payment': payment is not None,
+        'has_active_payment': has_active_payment,
         'portfolio_url': portfolio_url,
         'is_developer': is_developer,
         'is_annual_subscriber': is_annual_subscriber,
@@ -118,7 +125,17 @@ def dashboard_view(request):
 def activate_portfolio(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
-    # Allow any user to toggle visibility — removed payment requirement for public status
+    # Check if user is trying to make it public
+    if not profile.is_public:
+        # Check for active subscription
+        payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+        has_active_subscription = payment and payment.is_active
+        
+        if not has_active_subscription:
+            messages.error(request, "Visibility can only be set to Public for Pro members. Please subscribe to go live.")
+            return redirect('payment')
+    
+    # Toggle visibility
     profile.is_public = not profile.is_public
     profile.save()
     
@@ -175,8 +192,8 @@ def builder_view(request):
             save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset)
 
             # Set profile to public if user has payment
-            has_active_payment = UserPayment.objects.filter(user=request.user, status='paid').exists()
-            if has_active_payment:
+            payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+            if payment and payment.is_active:
                 profile, _ = Profile.objects.get_or_create(user=request.user)
                 profile.is_public = True
                 profile.save()
@@ -253,9 +270,9 @@ def update_portfolio_view(request):
             and link_formset.is_valid()
         ):
             save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset)
-            # Set profile to public if user has payment
-            has_active_payment = UserPayment.objects.filter(user=request.user, status='paid').exists()
-            if has_active_payment:
+            # Set profile to public if user has active payment
+            payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+            if payment and payment.is_active:
                 profile = Profile.objects.filter(user=user).first()
                 if profile:
                     profile.is_public = True
@@ -484,7 +501,15 @@ def preview_view(request, username):
     # Increment visit counter
     profile, created = Profile.objects.get_or_create(user=user)
     
-    # Visibility Check: Require manual public toggle for anyone (payment check removed)
+    # Visibility Check
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    has_active_subscription = payment and payment.is_active
+    
+    # Auto-flip to private if not subscribed
+    if not has_active_subscription and profile.is_public:
+        profile.is_public = False
+        profile.save()
+
     if not profile.is_public and request.user != user:
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
@@ -1007,12 +1032,26 @@ def robots_txt_view(request):
 def portfolio_reels(request, username):
     clean_username = username.lstrip('@')
     user = get_object_or_404(CustomUser, username=clean_username)
+    # Visibility Check
+    profile = getattr(user, 'profile', None)
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    has_active_subscription = payment and payment.is_active
+
+    if not has_active_subscription and profile and profile.is_public:
+        profile.is_public = False
+        profile.save()
+
+    if profile and not profile.is_public and request.user != user:
+        return render(request, 'errors/403_private.html', {'username': username}, status=403)
+
+    profile.visits += 1
+    profile.save()
+
     projects = Project.objects.filter(user=user, video_type='reel')
     personal_info = PersonalInfo.objects.filter(user=user).first()
     links = Link.objects.filter(user=user)
     
     # Dynamic template selection
-    profile = getattr(user, 'profile', None)
     category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
     theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
     
@@ -1035,12 +1074,26 @@ def portfolio_reels(request, username):
 def portfolio_long_videos(request, username):
     clean_username = username.lstrip('@')
     user = get_object_or_404(CustomUser, username=clean_username)
+    # Visibility Check
+    profile = getattr(user, 'profile', None)
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    has_active_subscription = payment and payment.is_active
+
+    if not has_active_subscription and profile and profile.is_public:
+        profile.is_public = False
+        profile.save()
+
+    if profile and not profile.is_public and request.user != user:
+        return render(request, 'errors/403_private.html', {'username': username}, status=403)
+
+    profile.visits += 1
+    profile.save()
+
     projects = Project.objects.filter(user=user, video_type='long')
     personal_info = PersonalInfo.objects.filter(user=user).first()
     links = Link.objects.filter(user=user)
     
     # Dynamic template selection
-    profile = getattr(user, 'profile', None)
     category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
     theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
     
@@ -1063,12 +1116,26 @@ def portfolio_long_videos(request, username):
 def portfolio_video_detail(request, username, slug):
     clean_username = username.lstrip('@')
     user = get_object_or_404(CustomUser, username=clean_username)
+    # Visibility Check
+    profile = getattr(user, 'profile', None)
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    has_active_subscription = payment and payment.is_active
+
+    if not has_active_subscription and profile and profile.is_public:
+        profile.is_public = False
+        profile.save()
+
+    if profile and not profile.is_public and request.user != user:
+        return render(request, 'errors/403_private.html', {'username': username}, status=403)
+
+    profile.visits += 1
+    profile.save()
+
     project = get_object_or_404(Project, user=user, slug=slug)
     personal_info = PersonalInfo.objects.filter(user=user).first()
     other_videos = Project.objects.filter(user=user, video_type='long').exclude(id=project.id)[:4]
     
     # Dynamic template selection
-    profile = getattr(user, 'profile', None)
     category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
     theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
     

@@ -24,6 +24,16 @@
     <div class="gradient-border rounded-2xl p-5">
       <div class="flex items-center justify-between mb-1">
         <p class="text-xs text-gray-500 uppercase tracking-widest">Status</p>
+        {% if not has_active_payment and not profile.is_public %}
+        <a href="{% url 'payment' %}"
+          class="text-[10px] font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest flex items-center gap-1">
+          <svg class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span>Unlock</span>
+        </a>
+        {% else %}
         <form method="POST" action="{% url 'activate_portfolio' %}" style="display: inline;">
           {% csrf_token %}
           <button type="submit"
@@ -31,10 +41,11 @@
             Toggle
           </button>
         </form>
+       {% endif %}
       </div>
       <div class="flex items-center gap-2">
         {% if profile.is_public %}
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <p class="text-sm font-medium text-emerald-300">Public</p>
         {% else %}
         <span class="w-2 h-2 rounded-full bg-amber-400"></span>
