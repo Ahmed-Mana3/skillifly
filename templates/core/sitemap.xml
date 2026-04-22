@@ -4,8 +4,8 @@
     <url>
         <loc>{{ page.loc }}</loc>
         <lastmod>{{ page.lastmod|date:"Y-m-d" }}</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
+        <changefreq>{{ page.changefreq }}</changefreq>
+        <priority>{{ page.priority }}</priority>
     </url>
     {% endfor %}
 </urlset>

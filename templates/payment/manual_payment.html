@@ -1,0 +1,358 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Complete Payment — Skillifly{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-6 py-16">
+
+  <!-- Messages -->
+  {% if messages %}
+    <div class="w-full mb-8 animate-fadeInUp space-y-3">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl {% if message.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %} flex items-center gap-3">
+          {% if message.tags == 'error' %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {% else %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {% endif %}
+          <span class="text-sm font-medium">{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="text-center mb-10 animate-fadeInUp">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/20 text-sm mb-6">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="text-gray-400">Secure Manual Payment</span>
+    </div>
+    <h1 class="text-4xl md:text-5xl font-bold mb-3" style="font-family: 'Syne', sans-serif;">
+      Complete your <span class="gradient-text">payment</span>
+    </h1>
+    <p class="text-gray-500">Transfer the amount and upload your receipt — our AI verifies it instantly.</p>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" id="receipt-form">
+    {% csrf_token %}
+    <input type="hidden" name="coupon" value="{{ coupon_code }}">
+
+    <!-- ============================================== -->
+    <!-- STEP 1: SELECT PAYMENT METHOD                  -->
+    <!-- ============================================== -->
+    <div id="step-1" class="animate-fadeInUp" style="animation-delay: 0.1s">
+      
+      <!-- Plan Summary Card -->
+      <div class="gradient-border rounded-3xl p-6 mb-8">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Selected Plan</p>
+            <p class="text-xl font-bold" style="font-family: 'Syne', sans-serif;">{{ plan_name }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Amount to Pay</p>
+            <p class="text-3xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">{{ amount }} <span class="text-lg text-gray-400 font-normal">EGP</span></p>
+          </div>
+        </div>
+        {% if discount_applied %}
+        <div class="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {{ discount_applied }}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="gradient-border rounded-2xl p-6 space-y-6">
+        <div>
+          <h2 class="text-lg font-semibold mb-4 text-white" style="font-family: 'Syne', sans-serif;">1. Choose your payment method</h2>
+          <div class="grid grid-cols-2 gap-4">
+            
+            <!-- Vodafone Cash Option -->
+            <label class="relative cursor-pointer group">
+              <input type="radio" name="payment_method" value="vodafone" class="peer sr-only" checked>
+              <div class="rounded-xl p-5 text-center border-2 border-gray-700/80 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-500/10 hover:border-gray-500 transition-all">
+                <div class="w-16 h-16 rounded-xl mx-auto mb-3 flex items-center justify-center bg-white/10 p-2 overflow-hidden shadow-lg">
+                  <img src="{% static 'img/vodafone_logo.png' %}" alt="Vodafone Cash" class="w-full h-full object-contain">
+                </div>
+                <span class="text-sm font-bold text-white block">Vodafone Cash</span>
+              </div>
+              <!-- Checkmark icon for active state -->
+              <div class="absolute top-3 right-3 hidden peer-checked:block text-red-500">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+              </div>
+            </label>
+
+            <!-- InstaPay Option -->
+            <label class="relative cursor-pointer group">
+              <input type="radio" name="payment_method" value="instapay" class="peer sr-only">
+              <div class="rounded-xl p-5 text-center border-2 border-gray-700/80 bg-gray-900/40 peer-checked:border-purple-500 peer-checked:bg-purple-500/10 hover:border-gray-500 transition-all">
+                <div class="w-16 h-16 rounded-xl mx-auto mb-3 flex items-center justify-center bg-white/10 overflow-hidden shadow-lg">
+                  <img src="{% static 'img/InstaPay_Logo.png' %}" alt="InstaPay" class="w-full h-full object-cover">
+                </div>
+                <span class="text-sm font-bold text-white block">InstaPay</span>
+              </div>
+              <!-- Checkmark icon for active state -->
+              <div class="absolute top-3 right-3 hidden peer-checked:block text-purple-500">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <button type="button" onclick="goToStep2()" class="btn-primary w-full justify-center py-4 text-lg">
+          Continue
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </div>
+
+      <!-- Back link to plans -->
+      <div class="text-center mt-8">
+        <a href="{% url 'payment' %}" class="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+          ← Back to plans
+        </a>
+      </div>
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- STEP 2: INSTRUCTIONS & UPLOAD RECEIPT          -->
+    <!-- ============================================== -->
+    <div id="step-2" class="hidden animate-fadeInUp">
+      
+      <button type="button" onclick="goToStep1()" class="mb-6 text-sm text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to payment method
+      </button>
+
+      <div class="gradient-border rounded-2xl p-6 space-y-6 mb-8">
+        <h2 class="text-xl font-bold text-white mb-2" style="font-family: 'Syne', sans-serif;">2. Send your payment</h2>
+        
+        <!-- Recipient Information Box -->
+        <div class="rounded-xl p-5" style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);">
+          <div class="flex items-center gap-3 mb-3">
+            <div id="method-icon-container" class="w-8 h-8 rounded-lg flex items-center justify-center bg-white/10 overflow-hidden shadow-sm">
+              <img id="method-icon" src="{% static 'img/vodafone_logo.png' %}" class="w-full h-full object-contain p-0.5">
+            </div>
+            <p class="text-xs text-purple-400 uppercase tracking-widest font-semibold" id="recipient-title">Send to this number</p>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/20 p-4 rounded-lg border border-purple-500/10">
+            <div>
+              <p class="text-xl md:text-2xl font-bold text-white tracking-wider" id="recipient-number">{{ recipient_number }}</p>
+              <p id="recipient-handle" class="text-sm text-gray-500 mt-1 hidden">or InstaPay Handle: <span class="text-gray-300">ahmed_medhat_06@instapay</span></p>
+            </div>
+            <button type="button" onclick="copyRecipient()" id="copy-recipient-btn"
+              class="text-xs text-purple-300 hover:text-white hover:bg-purple-500/30 transition-colors font-medium px-4 py-2 rounded-lg whitespace-nowrap"
+              style="background: rgba(139,92,246,0.2);">
+              Copy Number
+            </button>
+          </div>
+        </div>
+
+        <!-- InstaPay Warning Box (Hidden by default) -->
+        <div id="instapay-warning" class="hidden rounded-xl p-4 bg-yellow-500/10 border border-yellow-500/30">
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <div>
+              <p class="text-sm font-bold text-yellow-400 mb-1">Important Name Verification</p>
+              <p class="text-sm text-yellow-200/80">Recipient name appears exactly as:<br><span class="font-bold text-white block mt-1 tracking-wide">AHMED M**** E***** M****** M****** M*****</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amount reminder -->
+        <div class="rounded-xl p-4" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15);">
+          <p class="text-xs text-emerald-400 uppercase tracking-widest font-semibold mb-1">Exact amount to send</p>
+          <p class="text-2xl font-bold text-white">{{ amount }} EGP</p>
+        </div>
+      </div>
+
+      <!-- Upload Form Box -->
+      <div class="gradient-border rounded-2xl p-6 space-y-6">
+        <h2 class="text-xl font-bold text-white mb-2" style="font-family: 'Syne', sans-serif;">3. Confirm your transfer</h2>
+        
+        <!-- Sender Identifier -->
+        <div>
+          <label id="identifier_label" for="sender_identifier" class="block text-sm font-medium text-gray-300 mb-2">
+            Your Vodafone Cash phone number
+          </label>
+          <p id="identifier_help" class="text-xs text-gray-500 mb-2">The number you sent the money FROM.</p>
+          <input type="text" id="sender_identifier" name="sender_identifier"
+            placeholder="e.g. 01012345678"
+            class="w-full bg-gray-900/60 border border-gray-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm" />
+        </div>
+
+        <!-- Receipt upload -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">
+            Payment receipt screenshot
+          </label>
+          <div id="upload-area"
+            class="relative rounded-xl border-2 border-dashed border-gray-700 hover:border-purple-500/60 transition-colors cursor-pointer overflow-hidden bg-gray-900/30"
+            onclick="document.getElementById('receipt_image').click()">
+
+            <div id="upload-placeholder" class="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <div class="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-gray-300">Click to upload receipt</p>
+              <p class="text-xs text-gray-500 mt-1">PNG, JPG or JPEG</p>
+            </div>
+
+            <img id="receipt-preview" src="#" alt="Receipt preview" class="w-full object-contain max-h-72 hidden rounded-xl" />
+          </div>
+          <input type="file" id="receipt_image" name="receipt_image" accept="image/*" class="hidden" onchange="previewImage(event)" />
+          <p id="file-name" class="text-xs text-emerald-400 font-medium mt-2 hidden text-center"></p>
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit" id="submit-btn" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span id="submit-btn-text">Verify Payment & Activate</span>
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Wizard Navigation
+  function goToStep2() {
+    document.getElementById('step-1').classList.add('hidden');
+    document.getElementById('step-2').classList.remove('hidden');
+    updateStep2UI();
+    // Scroll to top of step 2 smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Add required attributes only when entering step 2 so browser validation works correctly
+    document.getElementById('sender_identifier').required = true;
+    document.getElementById('receipt_image').required = true;
+  }
+
+  function goToStep1() {
+    document.getElementById('step-2').classList.add('hidden');
+    document.getElementById('step-1').classList.remove('hidden');
+    
+    // Remove required attributes so back button works without validation errors
+    document.getElementById('sender_identifier').required = false;
+    document.getElementById('receipt_image').required = false;
+  }
+
+  // Dynamic UI Updates for Step 2 based on chosen method
+  function updateStep2UI() {
+    const method = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    // Elements
+    const label = document.getElementById('identifier_label');
+    const helpText = document.getElementById('identifier_help');
+    const input = document.getElementById('sender_identifier');
+    const recipientTitle = document.getElementById('recipient-title');
+    const recipientNumber = document.getElementById('recipient-number');
+    const warningBox = document.getElementById('instapay-warning');
+    const methodIcon = document.getElementById('method-icon');
+    
+    if (method === 'vodafone') {
+      // Vodafone specific texts
+      label.textContent = 'Your Vodafone Cash phone number';
+      helpText.textContent = 'The number you sent the money FROM.';
+      input.placeholder = 'e.g. 01012345678';
+      
+      recipientTitle.textContent = 'Send to this Vodafone Cash number';
+      document.getElementById('recipient-handle').classList.add('hidden');
+      warningBox.classList.add('hidden');
+      
+      methodIcon.src = "{% static 'img/vodafone_logo.png' %}";
+      methodIcon.classList.add('p-0.5');
+      methodIcon.classList.remove('object-cover');
+      methodIcon.classList.add('object-contain');
+    } else {
+      // InstaPay specific texts
+      label.textContent = 'Your InstaPay Handle';
+      helpText.textContent = 'The InstaPay handle you sent the money FROM.';
+      input.placeholder = 'e.g. username@instapay';
+      
+      recipientTitle.textContent = 'Send to this InstaPay Number';
+      document.getElementById('recipient-handle').classList.remove('hidden');
+      warningBox.classList.remove('hidden'); // Show Name Warning
+      
+      methodIcon.src = "{% static 'img/InstaPay_Logo.png' %}";
+      methodIcon.classList.remove('p-0.5', 'object-contain');
+      methodIcon.classList.add('object-cover');
+    }
+  }
+
+  // Image Upload Preview
+  function previewImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('receipt-preview');
+      const placeholder = document.getElementById('upload-placeholder');
+      const fileName = document.getElementById('file-name');
+      preview.src = e.target.result;
+      preview.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      fileName.textContent = `✓ ${file.name} selected`;
+      fileName.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Drag-and-drop support
+  const uploadArea = document.getElementById('upload-area');
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'rgba(139,92,246,0.8)';
+    uploadArea.style.background = 'rgba(139,92,246,0.1)';
+  });
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.style.borderColor = '';
+    uploadArea.style.background = '';
+  });
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '';
+    uploadArea.style.background = '';
+    const input = document.getElementById('receipt_image');
+    input.files = e.dataTransfer.files;
+    previewImage({ target: input });
+  });
+
+  // Show loading state on submit
+  document.getElementById('receipt-form').addEventListener('submit', function() {
+    const btn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('submit-btn-text');
+    btn.disabled = true;
+    btnText.textContent = 'Verifying with AI…';
+    btn.style.opacity = '0.75';
+    btn.style.cursor = 'wait';
+  });
+
+  // Copy recipient number
+  function copyRecipient() {
+    const num = document.getElementById('recipient-number').textContent.trim();
+    navigator.clipboard.writeText(num).then(() => {
+      const btn = document.getElementById('copy-recipient-btn');
+      btn.textContent = 'Copied!';
+      btn.style.color = '#fff';
+      btn.style.background = 'rgba(16, 185, 129, 0.4)'; // Emerald success
+      setTimeout(() => {
+        btn.textContent = 'Copy Number';
+        btn.style.color = '';
+        btn.style.background = 'rgba(139,92,246,0.2)';
+      }, 2000);
+    });
+  }
+</script>
+{% endblock %}

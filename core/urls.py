@@ -11,10 +11,13 @@ urlpatterns = [
     path('update_portfolio/', views.update_portfolio_view, name='update_portfolio'),
     path('payment/', views.pricing_view, name='payment'),
     path('pay/<str:plan_type>/', views.create_payment, name='create_payment'),
+    path('manual-pay/<str:plan_type>/', views.manual_payment_view, name='manual_payment'),
+    path('manual-pay/pending/', views.manual_payment_pending, name='manual_payment_pending'),
     path('payment/success/', views.payment_success, name='payment_success'),
     path('payment/failure/', views.payment_failure, name='payment_failure'),
     path('payment/callback/', views.payment_callback, name='payment_callback'),
     path('webhook/kashier/', views.kashier_webhook, name='kashier_webhook'),
+
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
     path('sitemap.xml', views.sitemap_view, name='sitemap'),

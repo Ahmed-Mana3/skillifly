@@ -270,6 +270,16 @@ KASHIER_MODE = os.environ.get("KASHIER_MODE", "test")
 SKILLIFLY_COUPON_CODE = os.environ.get("SKILLIFLY_COUPON_CODE", "")
 
 # ---------------------------------------------------------------------------
+# Payment — Manual (InstaPay / Vodafone Cash) + Gemini AI Verification
+# ---------------------------------------------------------------------------
+# Gemini Vision API key used to verify receipt screenshots.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBpW4owyc2QbNvlHeS27l0RhOts8bKniJU")
+
+# The recipient phone number users must send money to.
+MANUAL_PAYMENT_RECIPIENT = os.environ.get("MANUAL_PAYMENT_RECIPIENT", "+2010966071")
+
+
+# ---------------------------------------------------------------------------
 # Celery (async PDF export)
 # ---------------------------------------------------------------------------
 
