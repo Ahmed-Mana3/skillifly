@@ -42,6 +42,7 @@ class Profile(models.Model):
     visits = models.PositiveIntegerField(default=0)
     is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Profile: {self.user.username}"
@@ -178,6 +179,34 @@ class DiscountCode(models.Model):
     def __str__(self):
         return f"{self.code} ({self.discount_percentage}%) - Owner: {self.owner.username}"
 
+
+
+class ManualPayment(models.Model):
+    """Tracks InstaPay / Vodafone Cash receipt submissions verified by Gemini AI."""
+    STATUS_CHOICES = [
+        ('pending',  'Pending Verification'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
+        ('needs_review', 'Needs Manual Review'),
+    ]
+    PAYMENT_METHOD_CHOICES = [
+        ('vodafone', 'Vodafone Cash'),
+        ('instapay', 'InstaPay'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='manual_payments')
+    plan_type = models.CharField(max_length=20)                   # 'monthly' | 'pro_monthly' | 'pro_annual'
+    amount_expected = models.DecimalField(max_digits=8, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='vodafone')
+    sender_identifier = models.CharField(max_length=100)          # phone number or instapay handle
+    receipt_image = models.ImageField(upload_to='receipts/')
+    status = models.CharField(max_length=20, default='pending', choices=STATUS_CHOICES)
+    rejection_reason = models.TextField(blank=True, null=True)
+    discount_code_used = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} | {self.payment_method} | {self.status}"
 
 
 class PdfExportJob(models.Model):

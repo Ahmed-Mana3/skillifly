@@ -917,7 +917,8 @@ def payment_success(request):
 
 @login_required
 def payment_failure(request):
-    return render(request, 'payment/payment_failure.html')
+    error_message = request.session.pop('payment_error', "We couldn't process your payment. Please ensure your details are correct and try again.")
+    return render(request, 'payment/payment_failure.html', {'error_message': error_message})
 
 
 @csrf_exempt
@@ -1002,19 +1003,43 @@ def kashier_webhook(request):
 
 
 def sitemap_view(request):
-    """Return a simple sitemap.xml"""
-    users = CustomUser.objects.filter(profile__is_public=True)
+    """Return a sitemap.xml with real per-profile lastmod dates."""
+    from datetime import date as _date
+
+    # Static pages — use a stable launch date so Google doesn't see fake daily updates
+    SITE_LAUNCH_DATE = _date(2024, 1, 1)
+
     pages = [
-        {'loc': request.build_absolute_uri('/'), 'lastmod': timezone.now().date()},
-        {'loc': request.build_absolute_uri('/themes/'), 'lastmod': timezone.now().date()},
+        {
+            'loc': request.build_absolute_uri('/'),
+            'lastmod': SITE_LAUNCH_DATE,
+            'changefreq': 'monthly',
+            'priority': '1.0',
+        },
+        {
+            'loc': request.build_absolute_uri('/themes/'),
+            'lastmod': SITE_LAUNCH_DATE,
+            'changefreq': 'monthly',
+            'priority': '0.5',
+        },
     ]
-    for user in users:
-        # Restore the @ format and removed payment filter per user snippet
+
+    # Fetch public profiles with their real updated_at date in one query
+    public_profiles = (
+        Profile.objects.filter(is_public=True)
+        .select_related('user')
+        .only('user__username', 'updated_at', 'created_at')
+    )
+
+    for profile in public_profiles:
+        lastmod = (profile.updated_at or profile.created_at).date()
         pages.append({
-            'loc': request.build_absolute_uri(f'/@{user.username}/'),
-            'lastmod': timezone.now().date()
+            'loc': request.build_absolute_uri(f'/@{profile.user.username}/'),
+            'lastmod': lastmod,
+            'changefreq': 'weekly',
+            'priority': '0.9',
         })
-    
+
     return render(request, 'core/sitemap.xml', {'pages': pages}, content_type='application/xml')
 
 
@@ -1214,3 +1239,251 @@ def contact_view(request):
         # Handle contact form
         pass
     return render(request, 'core/contact.html')
+
+
+# ------------------------------------------------------------------
+# Manual Payment — InstaPay / Vodafone Cash + Gemini AI Verification
+# ------------------------------------------------------------------
+
+import base64
+import google.generativeai as genai
+
+@login_required
+def manual_payment_view(request, plan_type):
+    """
+    GET  — show payment instructions + upload form.
+    POST — verify receipt with Gemini AI and activate subscription if valid.
+    """
+    if plan_type not in PLAN_CATALOGUE:
+        messages.error(request, 'Invalid plan selected.')
+        return redirect('payment')
+
+    amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
+    recipient_number = getattr(settings, 'MANUAL_PAYMENT_RECIPIENT', '+2010966071')
+
+    # --- Coupon check (GET param so user can come from pricing page) ---
+    coupon_code = request.POST.get('coupon', request.GET.get('coupon', '')).strip().upper()
+    discount_applied = ''
+
+    if coupon_code:
+        # 1) Master Bypass Coupon — free access, skip payment entirely
+        if coupon_code == 'SKILLIFLY2026' or coupon_code == getattr(settings, 'SKILLIFLY_COUPON_CODE', ''):
+            sub = _get_or_create_subscription(sub_name, sub_days)
+            UserPayment.objects.create(
+                user=request.user,
+                subscription=sub,
+                amount=0,
+                status='paid',
+                kashier_order_id=f'MANUAL-MASTER-{uuid.uuid4().hex[:8].upper()}',
+                discount_code_used=coupon_code,
+            )
+            profile, _ = Profile.objects.get_or_create(user=request.user)
+            profile.is_public = True
+            profile.save()
+            messages.success(request, f'Developer Coupon applied! Your {sub_name} plan is now active.')
+            return redirect('payment_success')
+
+        # 2) Database Coupons
+        from .models import DiscountCode
+        try:
+            discount = DiscountCode.objects.get(code=coupon_code, is_active=True)
+            if discount.discount_percentage == 100:
+                # Full discount — activate immediately
+                sub = _get_or_create_subscription(sub_name, sub_days)
+                UserPayment.objects.create(
+                    user=request.user,
+                    subscription=sub,
+                    amount=0,
+                    status='paid',
+                    kashier_order_id=f'MANUAL-COUPON-{uuid.uuid4().hex[:12].upper()}',
+                    discount_code_used=coupon_code,
+                )
+                discount.usage_count += 1
+                discount.save()
+                profile, _ = Profile.objects.get_or_create(user=request.user)
+                profile.is_public = True
+                profile.save()
+                messages.success(request, f'Coupon applied! Your {sub_name} plan is now active.')
+                return redirect('payment_success')
+            else:
+                # Partial discount — reduce amount
+                original_amount = float(amount_str)
+                discounted_amount = original_amount * (1 - (discount.discount_percentage / 100.0))
+                amount_str = f"{discounted_amount:.2f}"
+                discount_applied = f'{discount.discount_percentage}% discount applied!'
+        except DiscountCode.DoesNotExist:
+            if request.method == 'POST':
+                messages.error(request, 'Invalid or expired coupon code.')
+                return redirect('payment')
+            # On GET, just ignore invalid coupon silently
+
+    context = {
+        'plan_type': plan_type,
+        'plan_name': sub_name,
+        'amount': amount_str,
+        'recipient_number': recipient_number,
+        'coupon_code': coupon_code,
+        'discount_applied': discount_applied,
+    }
+
+    if request.method == 'GET':
+        return render(request, 'payment/manual_payment.html', context)
+
+    # --- POST: process the uploaded receipt ---
+    payment_method = request.POST.get('payment_method', 'vodafone').strip()
+    sender_identifier = request.POST.get('sender_identifier', '').strip()
+    receipt_file = request.FILES.get('receipt_image')
+
+    if not sender_identifier:
+        messages.error(request, 'Please enter your phone number or InstaPay handle.')
+        return render(request, 'payment/manual_payment.html', context)
+
+    if not receipt_file:
+        messages.error(request, 'Please upload a screenshot of your payment receipt.')
+        return render(request, 'payment/manual_payment.html', context)
+
+    # --- Standardize Image for Gemini using PIL ---
+    import io
+    from PIL import Image
+
+    try:
+        receipt_file.seek(0)
+        with Image.open(receipt_file) as img:
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            # Resize to max 1024x1024 to save bandwidth and ensure compatibility
+            img.thumbnail((1024, 1024))
+            
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format='JPEG')
+            gemini_image_bytes = img_byte_arr.getvalue()
+            gemini_mime_type = 'image/jpeg'
+    except Exception as e:
+        logger.error('Invalid image uploaded by %s: %s', request.user.username, e)
+        messages.error(request, 'The uploaded image is invalid or corrupted. Please upload a valid image file.')
+        return render(request, 'payment/manual_payment.html', context)
+
+    # Reset file pointer for Django's model save
+    receipt_file.seek(0)
+
+    # Save the ManualPayment record
+    from .models import ManualPayment
+    manual_pay = ManualPayment.objects.create(
+        user=request.user,
+        plan_type=plan_type,
+        amount_expected=amount_str,
+        payment_method=payment_method,
+        sender_identifier=sender_identifier,
+        receipt_image=receipt_file,
+        status='pending',
+        discount_code_used=coupon_code or None,
+    )
+
+    # --- Gemini Vision Verification ---
+    ai_failed_needs_review = False
+    try:
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+
+        image_part = {
+            'mime_type': gemini_mime_type,
+            'data': gemini_image_bytes,
+        }
+
+        prompt = f"""You are a strict payment verification assistant for a subscription service.
+Carefully examine this payment receipt screenshot and check ALL THREE conditions:
+
+1. RECIPIENT: The money was sent TO the number containing "2010966071" or "+2010966071" or "010966071" OR the InstaPay handle "ahmed_medhat_06@instapay"
+2. SENDER: The sender's identifier (phone number or InstaPay handle) contains or matches "{sender_identifier}"  
+3. AMOUNT: The total amount paid is AT LEAST {amount_str} EGP (you may accept amounts greater than or equal to {amount_str} EGP)
+
+IMPORTANT rules:
+- If the image is blurry, unreadable, or not a payment receipt, set verified=false
+- All THREE conditions must be true for verified=true
+- Be strict — do not approve if any condition is unclear or missing
+- For the reason field, if verification fails, provide a perfect, user-friendly error message explaining exactly which condition failed. For example: "The receipt shows an amount less than the required {amount_str} EGP", "The sender handle does not match {sender_identifier}", or "The recipient number is incorrect".
+
+Respond ONLY with this exact JSON format, no extra text:
+{{"verified": true or false, "reason": "perfect error message or success message", "amount_found": "X EGP or not found", "recipient_found": "number or not found", "sender_found": "identifier or not found"}}"""
+
+        response = model.generate_content([prompt, image_part])
+        response_text = response.text.strip()
+
+        # Strip markdown code fences if Gemini wraps the JSON
+        if response_text.startswith('```'):
+            lines = response_text.split('\n')
+            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
+
+        result = json.loads(response_text)
+        verified = result.get('verified', False)
+        reason = result.get('reason', 'Verification could not be completed.')
+
+        logger.info(
+            'Gemini receipt verification for user %s plan %s: verified=%s reason=%s',
+            request.user.username, plan_type, verified, reason
+        )
+
+    except json.JSONDecodeError:
+        logger.error('Gemini returned non-JSON response: %s', response_text if 'response_text' in dir() else 'N/A')
+        verified = True
+        reason = 'AI returned non-JSON response. Sent for manual review.'
+        ai_failed_needs_review = True
+    except Exception as exc:
+        logger.exception('Gemini verification error for user %s', request.user.username)
+        verified = True
+        reason = f'AI Error: {str(exc)}. Sent for manual review.'
+        ai_failed_needs_review = True
+
+    if verified:
+        # Activate subscription
+        sub = _get_or_create_subscription(sub_name, sub_days)
+        UserPayment.objects.create(
+            user=request.user,
+            subscription=sub,
+            amount=amount_str,
+            status='paid',
+            kashier_order_id=f'MANUAL-{uuid.uuid4().hex[:12].upper()}',
+            discount_code_used=coupon_code or None,
+        )
+
+        # Increment discount usage if partial coupon was used
+        if coupon_code and coupon_code not in ('SKILLIFLY2026', getattr(settings, 'SKILLIFLY_COUPON_CODE', '')):
+            from .models import DiscountCode
+            try:
+                disc = DiscountCode.objects.get(code=coupon_code)
+                disc.usage_count += 1
+                disc.save()
+            except DiscountCode.DoesNotExist:
+                pass
+
+        # Mark manual payment as verified or needs_review
+        if ai_failed_needs_review:
+            manual_pay.status = 'needs_review'
+            manual_pay.rejection_reason = reason
+        else:
+            manual_pay.status = 'verified'
+        manual_pay.save()
+
+        # Make portfolio public
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        profile.is_public = True
+        profile.save()
+
+        logger.info('Manual payment verified and subscription activated for user %s', request.user.username)
+        messages.success(request, f'Payment verified! Your {sub_name} subscription is now active.')
+        return redirect('payment_success')
+    else:
+        # Mark as rejected
+        manual_pay.status = 'rejected'
+        manual_pay.rejection_reason = reason
+        manual_pay.save()
+
+        request.session['payment_error'] = reason
+        return redirect('payment_failure')
+
+
+@login_required
+def manual_payment_pending(request):
+    """Simple holding page (currently unused — verification is instant)."""
+    return render(request, 'payment/payment_success.html')
+
