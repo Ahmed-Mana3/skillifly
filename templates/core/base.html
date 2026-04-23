@@ -6,12 +6,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Skillifly — Build a professional portfolio that gets you hired. Showcase your skills, experience, and projects with stunning themes." />
-  <meta name="keywords" content="portfolio, career, professional, builder, themes, resume, skillifly" />
-  <meta property="og:title" content="Skillifly — Build Your Professional Portfolio" />
-  <meta property="og:description" content="Showcase your career story with beautiful themes and a unique URL." />
-  <meta property="og:image" content="{% static 'img/logo.png' %}" />
+    content="{% block meta_description %}Skillifly — Build a professional portfolio that gets you hired. Showcase your skills, experience, and projects with stunning themes.{% endblock %}" />
+  <meta name="keywords" content="{% block meta_keywords %}portfolio, career, professional, builder, themes, resume, skillifly, video editor portfolio{% endblock %}" />
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ request.build_absolute_uri }}" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{% block og_title %}Skillifly — Build Your Professional Portfolio{% endblock %}" />
+  <meta property="og:description" content="{% block og_description %}Showcase your career story with beautiful themes and a unique URL.{% endblock %}" />
+  <meta property="og:image" content="{% block og_image %}{% static 'img/logo.png' %}{% endblock %}" />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{% block twitter_title %}Skillifly — Build Your Professional Portfolio{% endblock %}" />
+  <meta name="twitter:description" content="{% block twitter_description %}Showcase your career story with beautiful themes and a unique URL.{% endblock %}" />
+  <meta name="twitter:image" content="{% block twitter_image %}{% static 'img/logo.png' %}{% endblock %}" />
+
   <title>{% block title %}Skillifly — Build Your Portfolio{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'img/bird.png' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -413,7 +426,7 @@
             clip-rule="evenodd" />
         </svg>
         {% endif %}
-        {{ message }}
+        {{ message|safe }}
       </div>
       {% endfor %}
     </div>
@@ -447,6 +460,18 @@
     btn?.addEventListener('click', () => {
       menu.classList.toggle('hidden');
       btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
+    });
+
+    // Auto-hide messages after 5 seconds
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.alert-success, .alert-error').forEach(alert => {
+        setTimeout(() => {
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateY(-10px)';
+          alert.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+          setTimeout(() => alert.remove(), 500);
+        }, 10000);
+      });
     });
   </script>
 

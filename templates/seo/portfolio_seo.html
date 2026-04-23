@@ -1,0 +1,48 @@
+{% load static %}
+<!-- Advanced Portfolio SEO -->
+{% if project %}
+<title>{{ project.title }} | {{ personal_info.full_name }} Portfolio</title>
+<meta name="description" content="Watch {{ project.title }}. Video edited by {{ personal_info.full_name }}. {{ project.details|truncatewords:30 }}">
+{% else %}
+<title>{{ personal_info.full_name }} | {{ personal_info.title }} Portfolio</title>
+<meta name="description" content="Check out {{ personal_info.full_name }}'s professional portfolio on Skillifly. {{ personal_info.bio|truncatewords:40 }}">
+{% endif %}
+
+<meta name="keywords" content="{{ personal_info.full_name }}, video editor, portfolio, skillifly, projects, {{ skills|join:', ' }}{% if project %}, {{ project.title }}{% endif %}">
+<link rel="canonical" href="{{ request.build_absolute_uri }}" />
+
+<!-- Open Graph -->
+<meta property="og:title" content="{% if project %}{{ project.title }} | {{ personal_info.full_name }}{% else %}{{ personal_info.full_name }} | {{ personal_info.title }}{% endif %}">
+<meta property="og:description" content="{% if project %}{{ project.details|truncatewords:20 }}{% else %}View my latest projects and work experience on Skillifly.{% endif %}">
+<meta property="og:image" content="{% if project and project.image %}{{ project.image.url }}{% elif personal_info.picture %}{{ personal_info.picture.url }}{% else %}{% static 'img/logo.png' %}{% endif %}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:type" content="{% if project %}video.other{% else %}profile{% endif %}">
+<meta property="profile:username" content="{{ personal_info.user.username }}">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ personal_info.full_name }}'s Portfolio">
+<meta name="twitter:description" content="{{ personal_info.title }}">
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "{{ personal_info.full_name }}",
+  "jobTitle": "{{ personal_info.title }}",
+  "url": "{{ request.build_absolute_uri }}",
+  "image": "{% if personal_info.picture %}{{ personal_info.picture.url }}{% endif %}",
+  "description": "{{ personal_info.bio|escapejs }}",
+  "sameAs": [
+    {% for link in links %}
+    "{{ link.url }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "knowsAbout": [
+    {% for skill in skills %}
+    "{{ skill.name }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>

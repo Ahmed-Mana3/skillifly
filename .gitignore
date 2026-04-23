@@ -215,3 +215,4 @@ venv/
 
 
 *.swp
+test_gemini.py

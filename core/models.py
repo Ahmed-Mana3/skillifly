@@ -55,7 +55,7 @@ class PersonalInfo(models.Model):
     email = models.EmailField()
     phone =  models.CharField(max_length=20)
     bio = models.TextField()
-    booking_url = models.URLField(max_length=500, blank=True, null=True)
+    booking_url = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f"PersonalInfo: {self.full_name}"
@@ -98,7 +98,7 @@ class Skill(models.Model):
 class Project(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="projects")
     title = models.CharField(max_length=500)
-    url = models.URLField(max_length=500, blank=True, null=True)
+    url = models.CharField(max_length=500, blank=True, null=True)
     details = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to='projects/', blank=True, null=True)
     video_type = models.CharField(
@@ -127,7 +127,7 @@ class Project(models.Model):
 class Link(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="links")
     platform = models.CharField(max_length=254)
-    url = models.URLField(max_length=500)
+    url = models.CharField(max_length=500)
 
     def __str__(self):
         return f"{self.platform}: {self.user.username}"
