@@ -197,15 +197,21 @@ class PersonalInfoForm(forms.Form):
             "class": "form-control",
         })
     )
-    booking_url = forms.URLField(
+    booking_url = forms.CharField(
         required=False,
-        widget=forms.URLInput(attrs={
+        widget=forms.TextInput(attrs={
             "id": "booking_url",
-            "placeholder": "https://wa.me/1234567890",
+            "placeholder": "skillifly.cloud or https://...",
             "class": "form-control",
         }),
         help_text="Direct link for bookings (e.g., WhatsApp, Calendly, Contra)"
     )
+
+    def clean_booking_url(self):
+        url = self.cleaned_data.get('booking_url')
+        if url and not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        return url
 
 
 
@@ -317,12 +323,18 @@ class ProjectForm(forms.Form):
             "required": True,
         })
     )
-    url = forms.URLField(
+    url = forms.CharField(
         required=False,
-        widget=forms.URLInput(attrs={
-            "placeholder": "https://example.com",
+        widget=forms.TextInput(attrs={
+            "placeholder": "skillifly.cloud",
         })
     )
+
+    def clean_url(self):
+        url = self.cleaned_data.get('url')
+        if url and not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        return url
     description = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
@@ -355,13 +367,19 @@ class LinkForm(forms.Form):
             "required": True,
         })
     )
-    url = forms.URLField(
+    url = forms.CharField(
         required=True,
-        widget=forms.URLInput(attrs={
-            "placeholder": "https://example.com",
+        widget=forms.TextInput(attrs={
+            "placeholder": "skillifly.cloud",
             "required": True,
         })
     )
+
+    def clean_url(self):
+        url = self.cleaned_data.get('url')
+        if url and not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        return url
 
 
 # =========================

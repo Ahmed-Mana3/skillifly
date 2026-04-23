@@ -16,10 +16,58 @@ const Builder = {
 
     cacheDOM() {
         this.form = document.getElementById('portfolio-form');
-        this.tabs = document.querySelectorAll('.tab-btn');
         this.panels = document.querySelectorAll('.section-panel');
-        this.progressDots = document.querySelectorAll('.progress-dot');
+        this.tabs = document.querySelectorAll('.tab-btn');
+        this.category = document.getElementById('builder-container')?.dataset.category || 'developer';
+    
+        this.initReordering();
         this.progressLabel = document.getElementById('progress-label');
+    },
+
+    initReordering() {
+        const container = document.getElementById('builder-panels');
+        if (!container) return;
+
+        // Define preferred order per category
+        // Indices relative to default: 0:Identity, 1:Expertise, 2:Education, 3:Experience, 4:Projects, 5:Links
+        const orders = {
+          'student': [0, 2, 1, 3, 4, 5],      // Education first
+          'video_editor': [0, 4, 1, 3, 2, 5], // Projects first
+          'developer': [0, 1, 3, 4, 2, 5]     // Expertise/Experience first
+        };
+
+        const preferredOrder = orders[this.category] || orders['developer'];
+        const panelArray = Array.from(this.panels);
+        
+        // Clear and re-append in preferred order
+        container.innerHTML = '';
+        preferredOrder.forEach(idx => {
+          if (panelArray[idx]) container.appendChild(panelArray[idx]);
+        });
+
+        // Re-append tabs in order
+        const tabContainer = document.querySelector('.builder-tabs');
+        if (tabContainer) {
+            const tabArray = Array.from(this.tabs);
+            tabContainer.innerHTML = '';
+            preferredOrder.forEach((idx, stepNum) => {
+                const tab = tabArray[idx];
+                if (tab) {
+                    // Update tab number label visually
+                    const numSpan = tab.querySelector('.tab-num');
+                    if (numSpan) numSpan.textContent = stepNum + 1;
+                    
+                    // Update the onclick attribute to match the NEW index (stepNum)
+                    tab.setAttribute('onclick', `Builder.switchSection(${stepNum})`);
+                    
+                    tabContainer.appendChild(tab);
+                }
+            });
+        }
+
+        // Re-query panels and tabs to update the references in correct order
+        this.panels = document.querySelectorAll('.section-panel');
+        this.tabs = document.querySelectorAll('.tab-btn');
     },
 
     bindEvents() {
@@ -59,12 +107,16 @@ const Builder = {
             const panel = firstInvalid.closest('.section-panel');
             if (panel) {
                 const index = Array.from(this.panels).indexOf(panel);
-                this.switchSection(index);
+                this.switchSection(index, true); // Pass true to bypass validation when jumping to error
                 setTimeout(() => {
                     firstInvalid.focus();
                     firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     // Explicitly trigger the browser's native missing data message
                     firstInvalid.reportValidity();
+                    
+                    // Add a temporary highlight class
+                    firstInvalid.classList.add('error-pulse');
+                    setTimeout(() => firstInvalid.classList.remove('error-pulse'), 2000);
                 }, 100);
             } else {
                 // Fallback if not inside a panel
@@ -126,8 +178,49 @@ const Builder = {
         }
     },
 
-    switchSection(index) {
+    validateSection(index) {
+        const panel = this.panels[index];
+        if (!panel) return true;
+
+        const inputs = panel.querySelectorAll('input, textarea, select');
+        let isValid = true;
+        let firstInvalid = null;
+
+        inputs.forEach(input => {
+            // Skip hidden inputs or those inside hidden containers (like marked for delete)
+            if (input.type === 'hidden' || input.closest('[style*="display: none"]')) return;
+
+            if (!input.checkValidity()) {
+                isValid = false;
+                if (!firstInvalid) firstInvalid = input;
+                
+                // Add error styling
+                input.classList.add('invalid-field');
+            } else {
+                input.classList.remove('invalid-field');
+            }
+        });
+
+        if (!isValid && firstInvalid) {
+            firstInvalid.reportValidity();
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            this.showToast("Please complete the required fields in this section.", "error");
+        }
+
+        return isValid;
+    },
+
+    switchSection(index, bypassValidation = false) {
         if (index < 0 || index >= this.panels.length) return;
+
+        // Only validate if moving FORWARD and not bypassing
+        if (!bypassValidation && index > this.currentSection) {
+            // Validate all sections from current up to (index - 1)
+            // Usually it's just the current one, but in case they click a dot ahead
+            for (let i = this.currentSection; i < index; i++) {
+                if (!this.validateSection(i)) return;
+            }
+        }
 
         // Animate out current
         this.panels[this.currentSection].classList.remove('active');
@@ -146,14 +239,16 @@ const Builder = {
         }
 
         // Update progress UI
-        this.progressDots.forEach((dot, i) => {
-            dot.classList.toggle('filled', i <= index);
+        this.tabs.forEach((tab, i) => {
+            tab.classList.toggle('active', i === index);
+            tab.classList.toggle('filled', i < index);
         });
         
         // Dynamically get name from tab or use panel ID
         if (this.progressLabel) {
             if (this.tabs[index]) {
-                this.progressLabel.textContent = this.tabs[index].textContent;
+                const span = this.tabs[index].querySelector('span:not(.tab-num)');
+                this.progressLabel.textContent = span ? span.textContent : this.tabs[index].textContent;
             } else {
                 // Fallback for Solo mode: Get name from section header
                 const header = nextPanel.querySelector('h2');

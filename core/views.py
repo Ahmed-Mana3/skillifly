@@ -150,8 +150,9 @@ def themes(request):
         theme_id = request.POST.get('theme')
         theme = get_object_or_404(Theme, id=theme_id)
         
-        # Ensure profile exists and save theme
+        # Ensure profile exists and check if user had a theme already
         profile, created = Profile.objects.get_or_create(user=request.user)
+        had_theme = profile.theme is not None
         profile.theme = theme
         profile.save()
 
@@ -163,6 +164,13 @@ def themes(request):
         has_data = PersonalInfo.objects.filter(user=request.user).exists()
         if not has_data:
             return redirect('builder')
+            
+        if had_theme:
+            from django.urls import reverse
+            preview_url = reverse('preview', kwargs={'username': request.user.username})
+            messages.success(request, f'Theme updated successfully! <a href="{preview_url}" class="underline font-bold">Preview Portfolio</a>')
+            return redirect('dashboard')
+            
         return redirect('preview', username=request.user.username)
     
     themes = Theme.objects.all()
@@ -220,6 +228,7 @@ def builder_view(request):
         project_formset = ProjectFormSet(prefix="projects")
         link_formset = LinkFormSet(prefix="links")
 
+    profile = getattr(request.user, 'profile', None)
     context = {
         "personal_form": personal_form,
         "skill_formset": skill_formset,
@@ -227,9 +236,11 @@ def builder_view(request):
         "experience_formset": experience_formset,
         "project_formset": project_formset,
         "link_formset": link_formset,
+        "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
+        "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
+        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True
     }
     template_name = 'dashboard/builder.html'
-    profile = getattr(request.user, 'profile', None)
     if profile and profile.theme:
         category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"
         theme_name = profile.theme.name.lower().replace(" ", "_")
@@ -278,7 +289,7 @@ def update_portfolio_view(request):
                     profile.is_public = True
                     profile.save()
 
-            return redirect("preview", username=request.user.username)
+            return redirect("dashboard")
         else:
             print("--- UPDATE PORTFOLIO VALIDATION ERRORS ---")
             print(f"Personal Form Errors: {personal_form.errors}")
@@ -350,6 +361,7 @@ def update_portfolio_view(request):
         } for l in Link.objects.filter(user=user)]
         link_formset = LinkFormSetUpdate(initial=link_data, prefix="links")
 
+    profile = getattr(request.user, 'profile', None)
     context = {
         "personal_form": personal_form,
         "skill_formset": skill_formset,
@@ -357,10 +369,12 @@ def update_portfolio_view(request):
         "experience_formset": experience_formset,
         "project_formset": project_formset,
         "link_formset": link_formset,
-        "is_update": True
+        "is_update": True,
+        "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
+        "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
+        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True
     }
     template_name = 'dashboard/builder.html'
-    profile = getattr(request.user, 'profile', None)
     if profile and profile.theme:
         category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"
         theme_name = profile.theme.name.lower().replace(" ", "_")
@@ -1003,28 +1017,31 @@ def kashier_webhook(request):
 
 
 def sitemap_view(request):
-    """Return a sitemap.xml with real per-profile lastmod dates."""
+    """Return an enhanced sitemap.xml with static pages and deep-linked user portfolios."""
     from datetime import date as _date
+    from .models import Project
 
-    # Static pages — use a stable launch date so Google doesn't see fake daily updates
+    # Static pages
     SITE_LAUNCH_DATE = _date(2024, 1, 1)
-
-    pages = [
-        {
-            'loc': request.build_absolute_uri('/'),
-            'lastmod': SITE_LAUNCH_DATE,
-            'changefreq': 'monthly',
-            'priority': '1.0',
-        },
-        {
-            'loc': request.build_absolute_uri('/themes/'),
-            'lastmod': SITE_LAUNCH_DATE,
-            'changefreq': 'monthly',
-            'priority': '0.5',
-        },
+    static_paths = [
+        ('/', '1.0', 'monthly'),
+        ('/themes/', '0.5', 'monthly'),
+        ('/payment/', '0.8', 'monthly'),
+        ('/contact/', '0.3', 'monthly'),
+        ('/terms/', '0.2', 'monthly'),
+        ('/privacy/', '0.2', 'monthly'),
     ]
+    
+    pages = []
+    for path, priority, freq in static_paths:
+        pages.append({
+            'loc': request.build_absolute_uri(path),
+            'lastmod': SITE_LAUNCH_DATE,
+            'changefreq': freq,
+            'priority': priority,
+        })
 
-    # Fetch public profiles with their real updated_at date in one query
+    # Fetch public profiles
     public_profiles = (
         Profile.objects.filter(is_public=True)
         .select_related('user')
@@ -1032,13 +1049,41 @@ def sitemap_view(request):
     )
 
     for profile in public_profiles:
+        username = profile.user.username
         lastmod = (profile.updated_at or profile.created_at).date()
+        
+        # Main portfolio page
         pages.append({
-            'loc': request.build_absolute_uri(f'/@{profile.user.username}/'),
+            'loc': request.build_absolute_uri(f'/@{username}/'),
             'lastmod': lastmod,
             'changefreq': 'weekly',
             'priority': '0.9',
         })
+        
+        # Reels & Long Videos index
+        pages.append({
+            'loc': request.build_absolute_uri(f'/@{username}/reels/'),
+            'lastmod': lastmod,
+            'changefreq': 'weekly',
+            'priority': '0.7',
+        })
+        pages.append({
+            'loc': request.build_absolute_uri(f'/@{username}/long-videos/'),
+            'lastmod': lastmod,
+            'changefreq': 'weekly',
+            'priority': '0.7',
+        })
+        
+        # Individual project pages
+        user_projects = Project.objects.filter(user=profile.user, video_type='long').only('slug')
+        for project in user_projects:
+            if project.slug:
+                pages.append({
+                    'loc': request.build_absolute_uri(f'/@{username}/long-videos/{project.slug}/'),
+                    'lastmod': lastmod,
+                    'changefreq': 'monthly',
+                    'priority': '0.6',
+                })
 
     return render(request, 'core/sitemap.xml', {'pages': pages}, content_type='application/xml')
 
