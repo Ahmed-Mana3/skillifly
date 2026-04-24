@@ -180,7 +180,7 @@ def themes(request):
 @login_required
 def builder_view(request):
     if request.method == "POST":
-        personal_form = PersonalInfoForm(request.POST)
+        personal_form = PersonalInfoForm(request.POST, request.FILES)
 
         skill_formset = SkillFormSet(request.POST, prefix="skills")
         education_formset = EducationFormSet(request.POST, prefix="education")
@@ -264,7 +264,7 @@ def update_portfolio_view(request):
     personal_info = PersonalInfo.objects.filter(user=user).first()
     
     if request.method == "POST":
-        personal_form = PersonalInfoForm(request.POST) # Start with POST data
+        personal_form = PersonalInfoForm(request.POST, request.FILES) # Start with POST data
         
         skill_formset = SkillFormSetUpdate(request.POST, prefix="skills")
         education_formset = EducationFormSetUpdate(request.POST, prefix="education")
@@ -434,6 +434,12 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
                     "booking_url": personal_data.get("booking_url"),
                 },
             )
+
+            # Save picture to Profile if provided
+            if "picture" in personal_data and personal_data["picture"]:
+                profile, p_created = Profile.objects.get_or_create(user=request.user)
+                profile.picture = personal_data["picture"]
+                profile.save()
 
             Skill.objects.filter(user=request.user).delete()
             for skill_name in skills:
@@ -1304,7 +1310,7 @@ def manual_payment_view(request, plan_type):
         return redirect('payment')
 
     amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
-    recipient_number = getattr(settings, 'MANUAL_PAYMENT_RECIPIENT', '+2010966071')
+    recipient_number = getattr(settings, 'MANUAL_PAYMENT_RECIPIENT', '+201020966071')
 
     # --- Coupon check (GET param so user can come from pricing page) ---
     coupon_code = request.POST.get('coupon', request.GET.get('coupon', '')).strip().upper()
@@ -1438,7 +1444,7 @@ def manual_payment_view(request, plan_type):
         prompt = f"""You are a strict payment verification assistant for a subscription service.
 Carefully examine this payment receipt screenshot and check ALL THREE conditions:
 
-1. RECIPIENT: The money was sent TO the number containing "2010966071" or "+2010966071" or "010966071" OR the InstaPay handle "ahmed_medhat_06@instapay"
+1. RECIPIENT: The money was sent TO the number containing "201020966071" or "+201020966071" or "01020966071" OR the InstaPay handle "ahmed_medhat_06@instapay"
 2. SENDER: The sender's identifier (phone number or InstaPay handle) contains or matches "{sender_identifier}"  
 3. AMOUNT: The total amount paid is AT LEAST {amount_str} EGP (you may accept amounts greater than or equal to {amount_str} EGP)
 

@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/animated.css' %}">
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Animated Background Shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <!-- Floating Icons -->
+    <div class="floating-icon icon-pr"><img src="{% static 'img/Adobe_Premiere_Pro_icon.svg' %}" alt="Premiere"></div>
+    <div class="floating-icon icon-ae"><img src="{% static 'img/Adobe_Illustrator_CC_icon.svg' %}" alt="Illustrator"></div>
+    <div class="floating-icon icon-dv"><img src="{% static 'img/DaVinci_Resolve_Studio.png' %}" alt="DaVinci"></div>
+    <div class="floating-icon icon-cc"><img src="{% static 'img/capcut_Icon.jpeg' %}" alt="Capcut" style="border-radius:10px;"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="nav-brand">{{ personal_info.full_name|default:"Portfolio" }}</a>
+        <div class="nav-links">
+            {% if projects %}<a href="#projects">Projects</a>{% endif %}
+            {% if skills %}<a href="#skills">Skills</a>{% endif %}
+            {% if experiences %}<a href="#experience">Experience</a>{% endif %}
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-avatar-box">
+            <div class="avatar-ring"></div>
+            <div class="avatar-ring-2"></div>
+            <div class="hero-avatar">
+                {% if personal_info.user.profile.picture %}
+                <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
+                {% else %}
+                <img src="{% static 'img/myAvatar (1).png' %}" alt="Default Avatar">
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="hero-subtitle">{{ personal_info.title|default:"Video Editor & Motion Designer" }}</div>
+
+        <h1 class="hero-title">
+            <span class="word"><span class="grad-text">{{ personal_info.full_name|upper }}</span></span>
+        </h1>
+
+        {% if personal_info.bio %}
+        <p class="hero-bio">{{ personal_info.bio }}</p>
+        {% endif %}
+
+        <div class="btn-group">
+            <a href="#projects" class="btn-main">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Watch Reels
+            </a>
+            {% if personal_info.booking_url %}
+            <a href="{{ personal_info.booking_url }}" target="_blank" class="btn-sub">Hire Me</a>
+            {% else %}
+            <a href="#contact" class="btn-sub">Contact Me</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- PROJECTS -->
+    {% if projects %}
+    <section class="section" id="projects">
+        <div class="section-header reveal">
+            <div class="section-tag">Portfolio</div>
+            <h2 class="section-title">Selected Works</h2>
+        </div>
+        <div class="projects-grid">
+            {% for project in projects %}
+            {% if project.video_type == 'reel' %}
+            <a href="/{{ personal_info.user.username }}/reels/" class="project-card reveal-scale" style="transition-delay:{{ forloop.counter0|add:"1" }}00ms">
+            {% else %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="project-card reveal-scale" style="transition-delay:{{ forloop.counter0|add:"1" }}00ms">
+            {% endif %}
+                <div class="project-img">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <div style="width:100%;height:100%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Bebas Neue';font-size:3rem">▶</div>
+                    {% endif %}
+                    <div class="project-overlay"></div>
+                    <div class="project-play">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </div>
+                    <div class="badge">{% if project.video_type == 'reel' %}Reel{% else %}Film{% endif %}</div>
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">{{ project.title }}</h3>
+                    {% if project.details %}
+                    <p class="project-desc">{{ project.details|truncatechars:100 }}</p>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- SKILLS -->
+    {% if skills %}
+    <section class="section" id="skills">
+        <div class="section-header reveal">
+            <div class="section-tag">Toolkit</div>
+            <h2 class="section-title">Software & Skills</h2>
+        </div>
+        <div class="skills-container">
+            {% for skill in skills %}
+            <div class="skill-item reveal-scale" style="animation-delay:{{ forloop.counter0 }}00ms; transition-delay:{{ forloop.counter0 }}0ms">
+                <span class="skill-dot"></span>
+                {{ skill.name }}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- EXPERIENCE -->
+    {% if experiences %}
+    <section class="section" id="experience">
+        <div class="section-header reveal">
+            <div class="section-tag">Career</div>
+            <h2 class="section-title">Experience</h2>
+        </div>
+        <div class="timeline-wrapper">
+            {% for exp in experiences %}
+            <div class="timeline-item reveal" style="transition-delay:{{ forloop.counter0 }}00ms">
+                <div class="timeline-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-date">
+                        {{ exp.start_date|date:"M Y" }} — {% if exp.still_working %}Present{% elif exp.end_date %}{{ exp.end_date|date:"M Y" }}{% else %}Present{% endif %}
+                    </div>
+                    <h3 class="timeline-title">{{ exp.title }}</h3>
+                    <div class="timeline-org">{{ exp.company }}</div>
+                    {% if exp.details %}
+                    <p class="timeline-desc">{{ exp.details }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- EDUCATION -->
+    {% if education %}
+    <section class="section" id="education">
+        <div class="section-header reveal">
+            <div class="section-tag">Academy</div>
+            <h2 class="section-title">Education</h2>
+        </div>
+        <div class="timeline-wrapper">
+            {% for edu in education %}
+            <div class="timeline-item reveal" style="transition-delay:{{ forloop.counter0 }}00ms">
+                <div class="timeline-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/></svg>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-date">{{ edu.grade_year|date:"Y" }}</div>
+                    <h3 class="timeline-title">{{ edu.degree }} {% if edu.field %}in {{ edu.field }}{% endif %}</h3>
+                    <div class="timeline-org">{{ edu.school }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CONTACT -->
+    <section class="section" id="contact">
+        <div class="contact-box reveal">
+            <div class="contact-text">LET'S MAKE SOMETHING <br> <span style="background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">EXTRAORDINARY</span></div>
+            
+            <div class="contact-links">
+                {% if personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="contact-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    {{ personal_info.email }}
+                </a>
+                {% endif %}
+                {% if personal_info.phone %}
+                <a href="tel:{{ personal_info.phone }}" class="contact-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                    {{ personal_info.phone }}
+                </a>
+                {% endif %}
+            </div>
+
+            {% if links %}
+            <div class="social-icons">
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" class="social-icon" title="{{ link.name }}">
+                    {{ link.platform }}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <a href="/" target="_blank" class="skillifly-tag">
+            <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+            <span>Powered by Skillifly</span>
+        </a>
+        <p style="margin-top:20px;font-size:0.8rem;color:var(--text-muted);font-weight:600;letter-spacing:0.1em;text-transform:uppercase">
+            © {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.
+        </p>
+    </footer>
+
+    <script>
+    /* Custom Cursor */
+    const cursor = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+    document.addEventListener('mousemove', e => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top = mouseY + 'px';
+    });
+
+    function animateRing() {
+        ringX += (mouseX - ringX) * 0.15;
+        ringY += (mouseY - ringY) * 0.15;
+        ring.style.left = ringX + 'px';
+        ring.style.top = ringY + 'px';
+        requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, .project-card, .skill-item').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+            ring.style.width = '60px';
+            ring.style.height = '60px';
+            ring.style.borderColor = 'var(--accent-1)';
+        });
+        el.addEventListener('mouseleave', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            ring.style.width = '40px';
+            ring.style.height = '40px';
+            ring.style.borderColor = 'var(--accent-3)';
+        });
+    });
+
+    /* Navbar scroll */
+    let lastScroll = 0;
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.scrollY;
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            navbar.classList.add('hidden');
+        } else {
+            navbar.classList.remove('hidden');
+        }
+        lastScroll = currentScroll;
+    });
+
+    /* Reveal Animations */
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal, .reveal-scale').forEach(el => {
+        observer.observe(el);
+    });
+
+    /* Smooth Scroll */
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const target = document.querySelector(this.getAttribute('href'));
+            if(target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+
+    /* Floating Icons Parallax */
+    document.addEventListener('mousemove', e => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 40;
+        const y = (e.clientY / window.innerHeight - 0.5) * 40;
+        document.querySelectorAll('.floating-icon').forEach((icon, index) => {
+            const speed = (index + 1) * 0.5;
+            icon.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+        });
+    });
+    </script>
+</body>
+</html>

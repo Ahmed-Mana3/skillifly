@@ -236,6 +236,17 @@
               <div><label class="sf-label">Email Address</label><input type="email" name="email" value="{{ personal_form.email.value|default:'' }}" class="sf-input"></div>
               <div><label class="sf-label">Phone Number</label><input type="text" name="phone" value="{{ personal_form.phone.value|default:'' }}" class="sf-input"></div>
               <div class="md:col-span-2"><label class="sf-label">Booking Link (WhatsApp / Calendly)</label><input type="text" name="booking_url" value="{{ personal_form.booking_url.value|default:'' }}" class="sf-input"></div>
+              
+              {% if theme_name == 'animated' or theme_name == 'creative_white' %}
+              <div class="md:col-span-2">
+                <label class="sf-label">Profile Picture <span class="text-[10px] text-zinc-500 font-normal normal-case ml-2">(Required by your current theme)</span></label>
+                <input type="file" name="picture" class="sf-input" accept="image/*">
+                {% if request.user.profile.picture %}
+                <div class="mt-2 text-xs text-emerald-400">Current: uploaded</div>
+                {% endif %}
+              </div>
+              {% endif %}
+
               <div class="md:col-span-2"><label class="sf-label">Short Bio (About You)</label><textarea name="bio" class="sf-input" rows="4">{{ personal_form.bio.value|default:'' }}</textarea></div>
             </div>
             <div class="flex justify-end mt-12"><button type="button" onclick="Builder.switchSection(1)" class="btn-premium">Next: Expertise →</button></div>

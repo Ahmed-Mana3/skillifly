@@ -207,6 +207,16 @@ class PersonalInfoForm(forms.Form):
         help_text="Direct link for bookings (e.g., WhatsApp, Calendly, Contra)"
     )
 
+    picture = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            "id": "picture",
+            "class": "form-control",
+            "accept": "image/*",
+        }),
+        help_text="Upload a profile picture for themes that support it"
+    )
+
     def clean_booking_url(self):
         url = self.cleaned_data.get('booking_url')
         if url and not url.startswith(('http://', 'https://')):
