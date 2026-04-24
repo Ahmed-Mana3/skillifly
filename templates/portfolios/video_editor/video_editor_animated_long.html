@@ -1,0 +1,487 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/animated.css' %}">
+    <style>
+        :root {
+            --bg: #f3f7fa;
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --accent: #ff3366;
+            --text: #111827;
+            --text-dim: #4b5563;
+            --border: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* ─── Header ─── */
+        header {
+            padding: 40px 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(243, 247, 250, 0.8);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text);
+        }
+
+        /* ─── Main Content ─── */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 5%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 6vw, 5rem);
+            margin-bottom: 40px;
+            color: var(--text);
+        }
+
+        /* ─── Video Grid ─── */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .video-card {
+            background: var(--surface);
+            text-decoration: none;
+            color: inherit;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: all 0.4s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            background: #e2e8f0;
+            margin-bottom: 0;
+        }
+
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s;
+        }
+
+        .video-card:hover .thumbnail-wrapper img {
+            transform: scale(1.1);
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            transform: scale(0.5);
+            transition: all 0.4s;
+        }
+
+        .video-card:hover .play-btn {
+            transform: scale(1);
+        }
+
+        .video-info {
+            padding: 24px;
+            flex-grow: 1;
+        }
+
+        .video-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        /* ─── Contact Section ─── */
+        .contact-section {
+            padding: 120px 5%;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .contact-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 80px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contact-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--grad);
+        }
+
+        .contact-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            line-height: 1;
+            margin-bottom: 40px;
+            color: var(--text);
+        }
+
+        .contact-details {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .contact-label {
+            display: none;
+        }
+
+        .contact-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s;
+        }
+        .contact-value:hover { color: var(--accent-1); }
+
+        .social-links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .contact-cta {
+            padding: 18px 40px;
+            border-radius: 100px;
+            background: var(--text);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .contact-cta:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--bg);
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row-reverse;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <header>
+        <a href="/{{ personal_info.user.username }}/" class="logo">
+            {{ personal_info.full_name|upper }}
+        </a>
+        <nav class="nav-links">
+            <a href="/{{ personal_info.user.username }}/reels/" class="nav-link">Reels</a>
+            <a href="#" class="nav-link active">Work</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">Professional Work</h1>
+
+        <div class="video-grid">
+            {% for project in projects %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
+                <div class="thumbnail-wrapper" data-url="{{ project.url }}">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <!-- Fallback is handled by JS -->
+                    <img class="yt-thumb" src="" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="play-overlay">
+                        <div class="play-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">{{ project.title }}</h3>
+                    <p class="video-meta">{{ project.details|truncatechars:60 }}</p>
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <p>No professional work videos added yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <section class="contact-section" id="contact">
+        <div class="contact-container">
+            <h2 class="contact-title">GET IN TOUCH</h2>
+            
+            <div class="contact-details">
+                <div class="contact-item">
+                    <a href="mailto:{{ personal_info.email }}" class="contact-value">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        {{ personal_info.email }}
+                    </a>
+                </div>
+                {% if personal_info.phone %}
+                <div class="contact-item">
+                    <a href="tel:{{ personal_info.phone }}" class="contact-value">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                        {{ personal_info.phone }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="social-links-grid">
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" class="social-icon" title="{{ link.name }}">
+                    {{ link.name }}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                </a>
+                {% endfor %}
+            </div>
+
+            {% if personal_info.booking_url %}
+            <a href="{{ personal_info.booking_url }}" class="contact-cta" target="_blank" rel="noopener">
+                Request Similar Work
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% elif personal_info.email %}
+            <a href="mailto:{{ personal_info.email }}" class="contact-cta">
+                Request Similar Work
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="/" target="_blank" class="skillifly-tag">
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                <span>Powered by Skillifly</span>
+            </a>
+            
+            <p style="margin-top:20px;font-size:0.8rem;color:var(--text-muted);font-weight:600;letter-spacing:0.1em;text-transform:uppercase">
+                © {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        document.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
+            const url = wrapper.dataset.url;
+            const img = wrapper.querySelector('.yt-thumb');
+            if (img && url) {
+                const id = getYouTubeId(url);
+                if (id) {
+                    img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+                    img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+                }
+            }
+        });
+
+        /* Custom Cursor */
+        const cursor = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            ring.style.left = ringX + 'px';
+            ring.style.top = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        document.querySelectorAll('a, button, .video-card, .contact-cta, .social-icon').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                ring.style.width = '60px';
+                ring.style.height = '60px';
+                ring.style.borderColor = 'var(--accent-1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                ring.style.width = '40px';
+                ring.style.height = '40px';
+                ring.style.borderColor = 'var(--accent-3)';
+            });
+        });
+    </script>
+</body>
+</html>
