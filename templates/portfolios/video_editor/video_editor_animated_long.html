@@ -28,6 +28,7 @@
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         /* ─── Header ─── */
@@ -92,7 +93,7 @@
         /* ─── Video Grid ─── */
         .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
             gap: 24px;
         }
 
@@ -317,13 +318,37 @@
                 justify-content: space-between;
             }
         }
+
+        /* ─── Mobile Responsive ─── */
+        @media (max-width: 768px) {
+            html, body { overflow-x: hidden; }
+            header { padding: 20px 5%; }
+            .nav-links { gap: 16px; }
+            .contact-section { padding: 60px 5%; }
+            .contact-container { padding: 40px 20px; }
+            .contact-details { flex-direction: column; align-items: center; gap: 16px; }
+            .contact-value { font-size: 1rem; }
+            main { padding: 30px 5%; }
+        }
+        @media (max-width: 480px) {
+            html, body { overflow-x: hidden; }
+            header { padding: 16px 16px; }
+            .logo { font-size: 1.3rem; }
+            .nav-link { font-size: 0.75rem; letter-spacing: 0; }
+            .page-title { font-size: clamp(2rem, 10vw, 3rem); }
+            .contact-container { padding: 28px 16px; }
+            .contact-cta { width: 100%; justify-content: center; padding: 16px 20px; }
+            main { padding: 24px 16px; }
+        }
     </style>
 </head>
 <body>
     <!-- Animated Background Shapes -->
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
-    <div class="shape shape-3"></div>
+    <div class="shapes-bg">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
     
     <!-- Custom Cursor -->
     <div class="cursor-dot" id="cursorDot"></div>

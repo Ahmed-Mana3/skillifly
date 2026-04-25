@@ -12,7 +12,7 @@
   --shadow-xl:0 30px 80px rgba(108,60,224,0.18);
   --radius:16px;
 }
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden}
 
 /* ─── Scrollbar ─── */
@@ -20,12 +20,13 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
 
-/* ─── Animated Background Blobs ─── */
+/* Blob wrapper clips overflow */
+.blobs-bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18;pointer-events:none;animation:blobFloat 10s ease-in-out infinite alternate}
 .blob-1{width:500px;height:500px;background:#6c3ce0;top:-10%;left:-5%;animation-delay:0s}
-.blob-2{width:400px;height:400px;background:#e8457c;bottom:5%;right:-5%;animation-delay:-4s}
+.blob-2{width:400px;height:400px;background:#e8457c;bottom:5%;right:0;animation-delay:-4s}
 .blob-3{width:350px;height:350px;background:#ff8f3f;top:40%;right:15%;animation-delay:-7s}
-@keyframes blobFloat{0%{transform:translate(0,0) scale(1)}100%{transform:translate(25px,-35px) scale(1.1)}}
+@keyframes blobFloat{0%{transform:translate(0,0) scale(1)}100%{transform:translate(0,-35px) scale(1.1)}}
 
 /* ─── Floating Particles Canvas ─── */
 #particles{position:fixed;inset:0;pointer-events:none;z-index:0}
@@ -118,7 +119,7 @@ section{position:relative}
 
 /* ─── Projects ─── */
 .projects-section{background:var(--bg)}
-.projects-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+.projects-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px;overflow:hidden}
 .project-card{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--surface);border:1px solid var(--border);transition:transform .5s cubic-bezier(.16,1,.3,1),box-shadow .5s;grid-column:span 6;text-decoration:none;color:inherit;display:block}
 .project-card:nth-child(1){grid-column:span 8}
 .project-card:nth-child(2){grid-column:span 4}
@@ -224,4 +225,23 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:44px
   .section-heading{font-size:2.8rem}
   .hero{padding:10vh 5vw}
   .section-inner{padding:80px 5vw}
+  /* Mobile overflow guard */
+  .hero,.contact-section,.projects-section,.skills-section,.exp-section,.edu-section{overflow:hidden}
+  /* Buttons full-width on mobile */
+  .hero-actions{flex-direction:column;align-items:center;width:100%}
+  .btn-primary,.btn-secondary{width:100%;max-width:300px;justify-content:center}
+  /* Contact grid */
+  .contact-inner{padding:80px 5vw}
+  /* Blob sizes */
+  .blob-1{width:280px;height:280px}
+  .blob-2{width:240px;height:240px}
+  .blob-3{width:200px;height:200px}
+  /* Timeline */
+  .timeline-item{padding:28px 0}
+  .timeline-year{font-size:1.6rem}
+  .timeline-role{font-size:1.4rem}
+  /* Stat bar */
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  /* Marquee */
+  .marquee-track{gap:32px}
 }
