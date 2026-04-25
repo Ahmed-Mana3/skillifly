@@ -17,8 +17,9 @@
   --shadow-lg:0 24px 64px rgba(0,0,0,0.1);
   --shadow-color:rgba(0,201,255,0.25);
 }
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden}
+html{scroll-behavior:smooth;overflow-x:hidden;max-width:100vw}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;max-width:100vw}
+.page-wrapper{width:100%;max-width:100vw;overflow-x:hidden;position:relative}
 
 /* Custom Cursor */
 .cursor-dot{position:fixed;width:8px;height:8px;background:var(--accent-1);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,background .3s}
@@ -26,13 +27,15 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 @media(max-width:900px){.cursor-dot,.cursor-ring{display:none}body{cursor:auto}}
 
 /* Animated Background Shapes */
-.shape{position:absolute;filter:blur(60px);opacity:0.6;z-index:0;animation:morph 15s ease-in-out infinite alternate}
+/* Shapes wrapper clips overflow so shapes never cause horizontal scroll */
+.shapes-bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.shape{position:absolute;filter:blur(60px);opacity:0.6;pointer-events:none;animation:morph 15s ease-in-out infinite alternate}
 .shape-1{width:40vw;height:40vw;background:var(--accent-3);top:-10%;left:-10%;border-radius:40% 60% 70% 30% / 40% 50% 60% 50%;animation-delay:0s}
-.shape-2{width:35vw;height:35vw;background:var(--accent-1);bottom:10%;right:-5%;border-radius:60% 40% 30% 70% / 60% 30% 70% 40%;animation-delay:-5s}
+.shape-2{width:35vw;height:35vw;background:var(--accent-1);bottom:10%;right:0;border-radius:60% 40% 30% 70% / 60% 30% 70% 40%;animation-delay:-5s}
 .shape-3{width:30vw;height:30vw;background:var(--accent-2);top:40%;left:20%;border-radius:50% 50% 30% 70% / 50% 50% 70% 30%;animation-delay:-10s}
 @keyframes morph{
   0%{border-radius:40% 60% 70% 30% / 40% 50% 60% 50%;transform:translate(0,0) rotate(0deg) scale(1)}
-  100%{border-radius:60% 40% 30% 70% / 60% 30% 70% 40%;transform:translate(50px,50px) rotate(45deg) scale(1.1)}
+  100%{border-radius:60% 40% 30% 70% / 60% 30% 70% 40%;transform:translate(0,40px) rotate(45deg) scale(1.1)}
 }
 
 /* Nav */
@@ -43,10 +46,10 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 .nav-links a::after{content:'';position:absolute;bottom:-6px;left:0;width:0;height:2px;background:var(--grad);transition:width .3s}
 .nav-links a:hover::after{width:100%}
 .nav-brand{font-weight:800;font-size:1.2rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
-@media(max-width:768px){.nav-links{display:none}.navbar{width:90%;justify-content:center;padding:16px}}
+@media(max-width:768px){.nav-links{display:none}.navbar{width:calc(100% - 32px);left:16px;right:16px;transform:none;justify-content:center;padding:14px 20px;top:12px}}
 
 /* Hero */
-.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;z-index:1}
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;z-index:1;overflow:hidden}
 .hero-avatar-box{position:relative;margin-bottom:40px;width:220px;height:220px}
 .hero-avatar{width:100%;height:100%;border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;overflow:hidden;border:6px solid #fff;box-shadow:var(--shadow-lg);position:relative;z-index:2;animation:floatAvatar 6s ease-in-out infinite, morphBorder 8s linear infinite}
 .hero-avatar img{width:100%;height:100%;object-fit:cover;transform:scale(1.05);transition:transform .5s}
@@ -94,13 +97,13 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 @media(max-width:900px){.floating-icon{display:none}}
 
 /* Sections */
-.section{padding:120px 5vw;position:relative;z-index:2}
+.section{padding:100px 5vw;position:relative;z-index:2;overflow:hidden}
 .section-header{text-align:center;margin-bottom:80px}
 .section-tag{display:inline-block;font-size:0.8rem;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent-1);background:rgba(255,51,102,0.1);padding:8px 20px;border-radius:100px;margin-bottom:20px}
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,6vw,5rem);color:var(--text);line-height:1}
 
 /* Projects */
-.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:30px;max-width:1400px;margin:0 auto}
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(350px,100%),1fr));gap:30px;max-width:1400px;margin:0 auto}
 .project-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md);transition:all .4s;text-decoration:none;color:inherit;position:relative;display:flex;flex-direction:column}
 .project-card:hover{transform:translateY(-10px) scale(1.02);box-shadow:var(--shadow-lg)}
 .project-img{width:100%;aspect-ratio:16/10;position:relative;overflow:hidden}
@@ -140,6 +143,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
   .timeline-item{padding-left:60px}
   .timeline-icon{left:0;width:42px;height:42px}
   .timeline-content{padding:24px}
+  .timeline-title{font-size:1.2rem}
 }
 
 /* Contact */
@@ -152,7 +156,28 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 .social-icons{display:flex;gap:15px;justify-content:center;flex-wrap:wrap}
 .social-icon{padding:14px 28px;border-radius:100px;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);text-decoration:none;font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;transition:all .3s;gap:10px}
 .social-icon:hover{background:var(--text);color:#fff;border-color:var(--text);transform:translateY(-5px);box-shadow:0 15px 30px rgba(0,0,0,0.1)}
-@media(max-width:768px){.contact-box{padding:40px 20px}}
+@media(max-width:768px){.contact-box{padding:32px 16px}}
+
+/* ─── Mobile Responsive ─── */
+@media(max-width:600px){
+  .hero{padding:100px 20px 60px}
+  .hero-title{font-size:clamp(2.5rem,12vw,5rem)}
+  .hero-bio{font-size:1rem;padding:0 4px}
+  .hero-avatar-box{width:170px;height:170px}
+  .btn-group{flex-direction:column;align-items:center;gap:14px;width:100%}
+  .btn-main,.btn-sub{width:100%;max-width:280px;justify-content:center;padding:16px 28px}
+  .section{padding:70px 20px}
+  .section-title{font-size:clamp(2rem,10vw,3rem)}
+  .contact-box{padding:30px 16px}
+  .contact-links{flex-direction:column;align-items:center;gap:16px}
+  .contact-link{font-size:1rem}
+  .social-icons{gap:10px}
+  .social-icon{padding:10px 16px;font-size:0.8rem}
+  .skills-container{gap:10px}
+  .skill-item{padding:10px 20px;font-size:0.82rem;gap:8px}
+  .skill-item .skill-dot{width:6px;height:6px}
+  .hero-subtitle{font-size:0.8rem;letter-spacing:0.2em;padding:6px 16px}
+}
 
 /* Footer */
 .footer{text-align:center;padding:40px 20px;border-top:1px solid var(--border)}
