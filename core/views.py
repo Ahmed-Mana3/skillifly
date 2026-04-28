@@ -1,14 +1,57 @@
+import os
+from django.conf import settings
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from datetime import timedelta
-from .forms import RegisterForm, LoginForm
+from .forms import RegisterForm, LoginForm, ReviewForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase
+
+@login_required
+def submit_review_view(request):
+    """Hidden review submission page for authenticated users"""
+    if request.method == "POST":
+        form = ReviewForm(request.POST, request.FILES)
+        if form.is_valid():
+            review = form.save(commit=False)
+            # Default to not featured until admin approves? 
+            # User didn't specify, but usually it's better to review them.
+            # I'll set is_featured=False by default just in case.
+            review.is_featured = False 
+            review.save()
+            messages.success(request, "Thank you for your review! It has been submitted for verification.")
+            return redirect('dashboard')
+    else:
+        # Pre-fill user name if possible
+        initial_data = {}
+        if hasattr(request.user, 'personal_info'):
+            initial_data['user_name'] = request.user.personal_info.full_name
+            initial_data['user_title'] = request.user.personal_info.title
+        
+        form = ReviewForm(initial=initial_data)
+
+    return render(request, 'core/submit_review.html', {'form': form})
+
+from django.http import HttpResponse
+
+def service_worker(request):
+    """Serve the service worker file"""
+    sw_path = os.path.join(settings.BASE_DIR, 'static', 'sw.js')
+    try:
+        with open(sw_path, 'rb') as f:
+            return HttpResponse(f.read(), content_type="application/javascript")
+    except FileNotFoundError:
+        return HttpResponse("// Service Worker not found", content_type="application/javascript")
+
+def examples_view(request):
+    """Render the live examples page featuring showcased portfolios"""
+    showcases = Showcase.objects.filter(is_active=True).select_related('profile__user', 'profile__theme')
+    return render(request, 'core/examples.html', {'showcases': showcases})
 from .forms import (
     PersonalInfoForm,
     SkillFormSet,
@@ -24,15 +67,24 @@ from .forms import (
 )
 
 
+from django.db.models import Sum
+
 def index(request):
     """Render the home/landing page — redirect authenticated users to dashboard"""
     if request.user.is_authenticated:
         return redirect('dashboard')
     portfolios_count = Profile.objects.count()
     themes_count = Theme.objects.count()
+    total_visits = Profile.objects.aggregate(Sum('visits'))['visits__sum'] or 0
+    
+    # Get featured reviews
+    reviews = Review.objects.filter(is_featured=True)[:6]
+    
     context = {
         'portfolios_count': portfolios_count,
         'themes_count': themes_count,
+        'total_visits': total_visits,
+        'reviews': reviews,
     }
     return render(request, 'core/index.html', context)
 
@@ -40,12 +92,15 @@ def index(request):
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+    
+    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect('themes')
+            return redirect(next_url)
         else:
             message = form.errors
     else:
@@ -54,7 +109,8 @@ def signup_view(request):
 
     context = {
         'message': message,
-        'form': form
+        'form': form,
+        'next': next_url
     }
     return render(request, 'auth/signup.html', context)
 
@@ -62,11 +118,14 @@ def signup_view(request):
 def signin_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+    
+    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             login(request, form.get_user())
-            return redirect('themes')
+            return redirect(next_url)
         else:
             message = form.errors
     else:
@@ -75,7 +134,8 @@ def signin_view(request):
 
     context = {
         'message': message,
-        'form': form
+        'form': form,
+        'next': next_url
     }
     return render(request, 'auth/signin.html', context)
 
@@ -105,6 +165,14 @@ def dashboard_view(request):
     is_developer = (profile.theme and profile.theme.category and profile.theme.category.name.lower() == 'developer')
     is_annual_subscriber = payment and payment.subscription and payment.subscription.days >= 365
     has_active_payment = payment is not None and payment.is_active
+
+    # Fetch site settings for the banner
+    from .models import SiteSettings
+    site_settings = SiteSettings.objects.first()
+    if not site_settings:
+        # Create default settings if none exist
+        site_settings = SiteSettings.objects.create()
+
     # Ensure visibility is synced with subscription status
     if not has_active_payment and profile.is_public:
         profile.is_public = False
@@ -118,6 +186,7 @@ def dashboard_view(request):
         'portfolio_url': portfolio_url,
         'is_developer': is_developer,
         'is_annual_subscriber': is_annual_subscriber,
+        'site_settings': site_settings,
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -1316,57 +1385,74 @@ def manual_payment_view(request, plan_type):
     coupon_code = request.POST.get('coupon', request.GET.get('coupon', '')).strip().upper()
     discount_applied = ''
 
-    if coupon_code:
-        # 1) Master Bypass Coupon — free access, skip payment entirely
-        if coupon_code == 'SKILLIFLY2026' or coupon_code == getattr(settings, 'SKILLIFLY_COUPON_CODE', ''):
-            sub = _get_or_create_subscription(sub_name, sub_days)
-            UserPayment.objects.create(
-                user=request.user,
-                subscription=sub,
-                amount=0,
-                status='paid',
-                kashier_order_id=f'MANUAL-MASTER-{uuid.uuid4().hex[:8].upper()}',
-                discount_code_used=coupon_code,
-            )
-            profile, _ = Profile.objects.get_or_create(user=request.user)
-            profile.is_public = True
-            profile.save()
-            messages.success(request, f'Developer Coupon applied! Your {sub_name} plan is now active.')
-            return redirect('payment_success')
+    from .models import SiteSettings
+    site_settings = SiteSettings.objects.first()
+    if not site_settings:
+        site_settings = SiteSettings.objects.create()
 
-        # 2) Database Coupons
-        from .models import DiscountCode
-        try:
-            discount = DiscountCode.objects.get(code=coupon_code, is_active=True)
-            if discount.discount_percentage == 100:
-                # Full discount — activate immediately
+    master_code = site_settings.banner_coupon_code.upper()
+    master_percent = site_settings.banner_discount_percentage
+
+    if coupon_code:
+        # 1) Master Settings Coupon
+        if coupon_code == master_code:
+            if master_percent >= 100:
+                # Full bypass
                 sub = _get_or_create_subscription(sub_name, sub_days)
                 UserPayment.objects.create(
                     user=request.user,
                     subscription=sub,
                     amount=0,
                     status='paid',
-                    kashier_order_id=f'MANUAL-COUPON-{uuid.uuid4().hex[:12].upper()}',
+                    kashier_order_id=f'MANUAL-MASTER-{uuid.uuid4().hex[:8].upper()}',
                     discount_code_used=coupon_code,
                 )
-                discount.usage_count += 1
-                discount.save()
                 profile, _ = Profile.objects.get_or_create(user=request.user)
                 profile.is_public = True
                 profile.save()
-                messages.success(request, f'Coupon applied! Your {sub_name} plan is now active.')
+                messages.success(request, f'Master Coupon applied! Your {sub_name} plan is now active.')
                 return redirect('payment_success')
             else:
-                # Partial discount — reduce amount
+                # Partial discount
                 original_amount = float(amount_str)
-                discounted_amount = original_amount * (1 - (discount.discount_percentage / 100.0))
+                discounted_amount = original_amount * (1 - (master_percent / 100.0))
                 amount_str = f"{discounted_amount:.2f}"
-                discount_applied = f'{discount.discount_percentage}% discount applied!'
-        except DiscountCode.DoesNotExist:
-            if request.method == 'POST':
-                messages.error(request, 'Invalid or expired coupon code.')
-                return redirect('payment')
-            # On GET, just ignore invalid coupon silently
+                discount_applied = f'{master_percent}% discount applied (Master Code)!'
+        
+        else:
+            # 2) Database Coupons
+            from .models import DiscountCode
+            try:
+                discount = DiscountCode.objects.get(code=coupon_code, is_active=True)
+                if discount.discount_percentage == 100:
+                    # Full discount — activate immediately
+                    sub = _get_or_create_subscription(sub_name, sub_days)
+                    UserPayment.objects.create(
+                        user=request.user,
+                        subscription=sub,
+                        amount=0,
+                        status='paid',
+                        kashier_order_id=f'MANUAL-COUPON-{uuid.uuid4().hex[:12].upper()}',
+                        discount_code_used=coupon_code,
+                    )
+                    discount.usage_count += 1
+                    discount.save()
+                    profile, _ = Profile.objects.get_or_create(user=request.user)
+                    profile.is_public = True
+                    profile.save()
+                    messages.success(request, f'Coupon applied! Your {sub_name} plan is now active.')
+                    return redirect('payment_success')
+                else:
+                    # Partial discount — reduce amount
+                    original_amount = float(amount_str)
+                    discounted_amount = original_amount * (1 - (discount.discount_percentage / 100.0))
+                    amount_str = f"{discounted_amount:.2f}"
+                    discount_applied = f'{discount.discount_percentage}% discount applied!'
+            except DiscountCode.DoesNotExist:
+                if request.method == 'POST':
+                    messages.error(request, 'Invalid or expired coupon code.')
+                    return redirect('payment')
+                # On GET, just ignore invalid coupon silently
 
     context = {
         'plan_type': plan_type,

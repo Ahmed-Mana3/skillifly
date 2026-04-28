@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth overflow-x-hidden">
 
 <head>
   <meta charset="UTF-8" />
@@ -27,6 +27,26 @@
 
   <title>{% block title %}Skillifly — Build Your Portfolio{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'img/bird.png' %}">
+  
+  <!-- PWA Support -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Skillifly">
+  <link rel="apple-touch-icon" href="{% static 'img/bird.png' %}">
+  <link rel="apple-touch-startup-image" href="{% static 'img/logo.png' %}">
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered', reg))
+          .catch(err => console.log('Service Worker registration failed', err));
+      });
+    }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -40,15 +60,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
-      --brand-blue: #3B82F6;
-      --brand-purple: #8B5CF6;
-      --brand-pink: #C026D3;
-      --bg-dark: #080B14;
-      --bg-card: #0F1523;
-      --bg-card-hover: #141B2D;
-      --border-subtle: rgba(255, 255, 255, 0.07);
-      --text-primary: #F0F4FF;
-      --text-muted: #6B7A9E;
+      --brand-blue: #2563EB;
+      --brand-purple: #7C3AED;
+      --brand-pink: #DB2777;
+      --bg-dark: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --text-primary: #0F172A;
+      --text-muted: #475569;
     }
 
     * {
@@ -56,10 +76,13 @@
     }
 
     body {
+      overflow-x: hidden;
       font-family: 'DM Sans', sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-primary);
+      background-color: white !important;
+      color: var(--text-primary) !important;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     h1,
@@ -70,34 +93,36 @@
     h6,
     .font-display {
       font-family: 'Syne', sans-serif;
+      color: #000000;
     }
 
     /* Gradient text */
     .gradient-text {
-      background: linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #E879F9 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%);
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
     }
 
     /* Brand gradient */
     .gradient-brand {
-      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #C026D3 100%);
+      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%);
     }
 
-    /* Glow effects */
+    /* Glow effects - subtle for light mode */
     .glow-blue {
-      box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.08);
     }
 
     .glow-purple {
-      box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+      box-shadow: 0 0 40px rgba(139, 92, 246, 0.08);
     }
 
-    /* Glass card */
+    /* Glass card optimized for light mode */
     .glass-card {
-      background: rgba(15, 21, 35, 0.8);
-      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(0, 0, 0, 0.08) !important;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
@@ -105,7 +130,14 @@
     /* Animated gradient border */
     .gradient-border {
       position: relative;
-      background: var(--bg-card);
+      background: white !important;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1) !important;
+      transition: all 0.3s ease;
+    }
+
+    .gradient-border:hover {
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12) !important;
+      transform: translateY(-2px);
     }
 
     .gradient-border::before {
@@ -113,33 +145,39 @@
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(139, 92, 246, 0.4), rgba(192, 38, 211, 0.4));
+      padding: 1.5px;
+      background: linear-gradient(135deg, #3B82F6, #8B5CF6, #D946EF);
+      opacity: 0.3;
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
       pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .gradient-border:hover::before {
+      opacity: 0.5;
     }
 
     /* Form inputs */
     .sf-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 11px 16px;
-      color: var(--text-primary);
+      background: #F8FAFC !important;
+      border: 1px solid #E2E8F0 !important;
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #0F172A !important;
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
+      font-size: 1rem;
       transition: all 0.2s ease;
       outline: none;
     }
 
     .sf-input:focus {
-      border-color: rgba(139, 92, 246, 0.6);
-      background: rgba(139, 92, 246, 0.05);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+      border-color: #3B82F6 !important;
+      background: #FFFFFF !important;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
     }
 
     .sf-input::placeholder {
@@ -149,10 +187,10 @@
     .sf-label {
       display: block;
       font-size: 0.82rem;
-      font-weight: 500;
-      color: #94A3C4;
-      margin-bottom: 6px;
-      letter-spacing: 0.02em;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
     }
 
     /* Primary button */
@@ -160,29 +198,29 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 12px 28px;
-      background: linear-gradient(135deg, #3B82F6, #8B5CF6);
-      color: white;
+      gap: 10px;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%);
+      color: white !important;
       font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      font-size: 0.9rem;
-      letter-spacing: 0.02em;
-      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.01em;
+      border-radius: 12px;
       border: none;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25);
     }
 
     .btn-primary:hover {
-      background: linear-gradient(135deg, #2563EB, #7C3AED);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4);
     }
 
     .btn-primary:active {
-      transform: translateY(0);
+      transform: translateY(0) scale(0.98);
     }
 
     /* Ghost button */
@@ -190,34 +228,36 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 11px 24px;
-      background: transparent;
-      color: var(--text-primary);
+      gap: 10px;
+      padding: 13px 28px;
+      background: #F8FAFC;
+      color: #0F172A !important;
       font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      font-size: 0.9rem;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.3s ease;
       text-decoration: none;
     }
 
     .btn-ghost:hover {
-      border-color: rgba(139, 92, 246, 0.5);
-      background: rgba(139, 92, 246, 0.08);
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
-    /* Noise texture overlay */
+    /* Noise texture overlay - optimized for light */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
       pointer-events: none;
       z-index: 0;
-      opacity: 0.4;
+      opacity: 0.2;
     }
 
     /* Scrollbar */
@@ -296,34 +336,39 @@
 
     /* Alert */
     .alert-success {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #6EE7B7;
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      color: #166534;
       padding: 12px 16px;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(22, 101, 52, 0.05);
     }
 
     .alert-error {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #FCA5A5;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #991B1B;
       padding: 12px 16px;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(153, 27, 27, 0.05);
     }
 
     /* Nav */
     .nav-link {
-      color: var(--text-muted);
+      color: #475569;
       font-size: 0.875rem;
-      font-weight: 500;
-      transition: color 0.2s;
+      font-weight: 700;
+      transition: all 0.2s;
       text-decoration: none;
     }
 
     .nav-link:hover {
-      color: var(--text-primary);
+      color: #000000;
+      transform: translateY(-1px);
     }
 
     /* Ambient orbs */
@@ -365,13 +410,15 @@
         {% if user.is_authenticated %}
         <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
         <a href="{% url 'themes' %}" class="nav-link">Themes</a>
+        <a href="{% url 'examples' %}" class="nav-link">Live Examples</a>
         <a href="{% url 'update_portfolio' %}" class="nav-link">Builder</a>
-        <div class="h-4 w-px bg-white/10"></div>
+        <div class="h-4 w-px bg-slate-200"></div>
         <form method="POST" action="{% url 'logout' %}" style="display:inline;">
           {% csrf_token %}
           <button type="submit" class="btn-ghost text-sm py-2 px-4 border-none cursor-pointer">Sign out</button>
         </form>
         {% else %}
+        <a href="{% url 'examples' %}" class="nav-link">Live Examples</a>
         <a href="{% url 'signin' %}" class="nav-link">Sign in</a>
         <a href="{% url 'signup' %}" class="btn-primary text-sm py-2.5 px-5">Get started</a>
         {% endif %}
@@ -392,14 +439,16 @@
         {% if user.is_authenticated %}
         <a href="{% url 'dashboard' %}" class="block nav-link py-2">Dashboard</a>
         <a href="{% url 'themes' %}" class="block nav-link py-2">Themes</a>
+        <a href="{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
         <a href="{% url 'update_portfolio' %}" class="block nav-link py-2">Builder</a>
         <form method="POST" action="{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit" class="block w-full btn-ghost text-center mt-2 border-none cursor-pointer">Sign out</button>
         </form>
         {% else %}
+        <a href="{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
         <a href="{% url 'signin' %}" class="block nav-link py-2">Sign in</a>
-        <a href="{% url 'signup' %}" class="block btn-primary text-center mt-2">Get started</a>
+        <a href="{% url 'signup' %}" class="block btn-primary text-center py-3 mt-2">Get started</a>
         {% endif %}
       </div>
     </div>
@@ -437,19 +486,19 @@
 
   <!-- Footer -->
   {% block footer %}
-  <footer class="relative z-10 border-t border-white/5 mt-24">
+  <footer class="relative z-10 border-t border-slate-100 mt-24">
     <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-2">
         <img src="{% static 'img/bird.png' %}" alt="Skillifly Bird Icon" loading="lazy"
-          class="h-6 w-6 object-contain opacity-70">
-        <span class="text-sm text-gray-500" style="font-family: 'Syne', sans-serif;">Skillifly</span>
+          class="h-6 w-6 object-contain opacity-50">
+        <span class="text-sm text-slate-500 font-bold" style="font-family: 'Syne', sans-serif;">Skillifly</span>
       </div>
       <div class="flex items-center gap-6 mt-4 md:mt-0">
-        <a href="{% url 'terms' %}" class="text-xs text-gray-500 hover:text-white transition-colors">Terms</a>
-        <a href="{% url 'privacy' %}" class="text-xs text-gray-500 hover:text-white transition-colors">Privacy</a>
-        <a href="{% url 'contact' %}" class="text-xs text-gray-500 hover:text-white transition-colors">Contact</a>
+        <a href="{% url 'terms' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Terms</a>
+        <a href="{% url 'privacy' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Privacy</a>
+        <a href="{% url 'contact' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Contact</a>
       </div>
-      <p class="text-xs text-gray-600 mt-4 md:mt-0">© 2025 Skillifly. All rights reserved.</p>
+      <p class="text-xs text-slate-400 mt-4 md:mt-0 font-medium">© 2025 Skillifly. All rights reserved.</p>
     </div>
   </footer>
   {% endblock %}

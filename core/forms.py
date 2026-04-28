@@ -407,3 +407,19 @@ EducationFormSetUpdate = formset_factory(EducationForm, extra=0, can_delete=True
 ExperienceFormSetUpdate = formset_factory(ExperienceForm, extra=0, can_delete=True)
 ProjectFormSetUpdate = formset_factory(ProjectForm, extra=0, can_delete=True)
 LinkFormSetUpdate = formset_factory(LinkForm, extra=0, can_delete=True)
+# =========================
+# Reviews (ModelForm)
+# =========================
+from core.models import Review
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['user_name', 'user_title', 'user_image', 'content', 'rating']
+        widgets = {
+            'user_name': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'Your Name'}),
+            'user_title': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. Video Editor'}),
+            'user_image': forms.ClearableFileInput(attrs={'class': 'sf-input', 'accept': 'image/*'}),
+            'content': forms.Textarea(attrs={'class': 'sf-input', 'placeholder': 'Your Review...', 'rows': 4}),
+            'rating': forms.NumberInput(attrs={'class': 'sf-input', 'min': 1, 'max': 5}),
+        }

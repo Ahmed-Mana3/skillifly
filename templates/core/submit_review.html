@@ -1,0 +1,138 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Share Your Story — Skillifly{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen px-6 py-24 relative overflow-hidden">
+  
+  <!-- Animated background blobs -->
+  <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-[100px]"
+    style="background: radial-gradient(circle, #3B82F6, #8B5CF6);"></div>
+  <div class="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[500px] h-[500px] rounded-full opacity-[0.03] blur-[100px]"
+    style="background: radial-gradient(circle, #D946EF, #F43F5E);"></div>
+
+  <div class="max-w-2xl mx-auto relative z-10">
+    
+    <!-- Header -->
+    <div class="text-center mb-12 animate-fadeInUp">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/20 text-sm mb-6">
+        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+        <span class="text-slate-600 font-bold">Help us grow</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-display font-bold mb-4 text-black" style="font-family: 'Syne', sans-serif;">
+        Share Your <span class="gradient-text">Experience</span>
+      </h1>
+      <p class="text-slate-500 text-lg font-medium">
+        Your feedback helps us build a better platform for everyone.
+      </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="gradient-border rounded-3xl p-8 sm:p-12 bg-white shadow-2xl animate-fadeInUp" style="animation-delay: 0.1s">
+      <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Name -->
+          <div class="space-y-2">
+            <label class="text-sm font-bold text-slate-700 ml-1">Full Name</label>
+            {{ form.user_name }}
+          </div>
+          
+          <!-- Title -->
+          <div class="space-y-2">
+            <label class="text-sm font-bold text-slate-700 ml-1">Title / Profession</label>
+            {{ form.user_title }}
+          </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-slate-700 ml-1">Rating (1-5)</label>
+          <div class="relative">
+             {{ form.rating }}
+             <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-yellow-500 pointer-events-none">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                <span class="text-xs font-bold">Stars</span>
+             </div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-slate-700 ml-1">Your Review</label>
+          {{ form.content }}
+        </div>
+
+        <!-- Image -->
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-slate-700 ml-1">Profile Photo (Optional)</label>
+          <div class="relative group">
+            <div class="absolute inset-0 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl group-hover:border-blue-400 transition-colors"></div>
+            {{ form.user_image }}
+          </div>
+          <p class="text-[10px] text-slate-400 italic">Recommended: Square photo, 200x200px</p>
+        </div>
+
+        <!-- Submit -->
+        <div class="pt-4">
+          <button type="submit" class="w-full gradient-brand text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+            <span>Submit Review</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Back to Dashboard -->
+    <div class="text-center mt-12 animate-fadeInUp" style="animation-delay: 0.2s">
+      <a href="{% url 'dashboard' %}" class="text-slate-500 hover:text-blue-600 transition-colors text-sm font-bold flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Dashboard
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .sf-input {
+    width: 100%;
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #0F172A !important;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  .sf-input:focus {
+    border-color: #3B82F6 !important;
+    background: #FFFFFF !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  }
+  input[type="file"].sf-input {
+    padding: 10px;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+  textarea.sf-input {
+    resize: vertical;
+    min-height: 120px;
+  }
+</style>
+
+{% endblock %}

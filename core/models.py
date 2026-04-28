@@ -224,5 +224,61 @@ class PdfExportJob(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class SiteSettings(models.Model):
+    banner_discount_percentage = models.PositiveIntegerField(default=25, help_text="Discount percentage to show in the dashboard banner.")
+    banner_coupon_code = models.CharField(max_length=50, default="SKILLIFLY2026", help_text="Coupon code to show in the banner.")
+    banner_is_active = models.BooleanField(default=True, help_text="Whether the payment banner is enabled globally.")
+
+    class Meta:
+        verbose_name = "Site Settings"
+        verbose_name_plural = "Site Settings"
+
     def __str__(self):
-        return f"PDF export {self.id} for {self.user.username} ({self.status})"
+        return "Global Site Settings"
+
+
+class Review(models.Model):
+    user_name = models.CharField(max_length=254)
+    user_title = models.CharField(max_length=254, blank=True, null=True, help_text="e.g. Video Editor, Frontend Developer")
+    user_image = models.ImageField(upload_to='reviews/', blank=True, null=True)
+    content = models.TextField()
+    rating = models.PositiveIntegerField(default=5, help_text="1 to 5 stars")
+    is_featured = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review by {self.user_name}"
+
+    @property
+    def image_url(self):
+        if self.user_image and hasattr(self.user_image, 'url'):
+            return self.user_image.url
+        return None
+
+    @property
+    def initials(self):
+        if not self.user_name:
+            return "SF"
+        parts = self.user_name.split()
+        if len(parts) >= 2:
+            return (parts[0][0] + parts[1][0]).upper()
+        return self.user_name[:2].upper()
+
+# 11. Showcase / Live Examples
+class Showcase(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name="showcase")
+    title = models.CharField(max_length=200, blank=True, help_text="Optional custom title for the showcase")
+    description = models.TextField(blank=True, help_text="Short description of the user or their work")
+    preview_image = models.ImageField(upload_to='showcase/', blank=True, null=True, help_text="Custom preview image (defaults to profile pic if empty)")
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return f"Showcase: {self.profile.user.username}"

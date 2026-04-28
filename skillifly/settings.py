@@ -273,7 +273,7 @@ SKILLIFLY_COUPON_CODE = os.environ.get("SKILLIFLY_COUPON_CODE", "")
 # Payment — Manual (InstaPay / Vodafone Cash) + Gemini AI Verification
 # ---------------------------------------------------------------------------
 # Gemini Vision API key used to verify receipt screenshots.
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBpW4owyc2QbNvlHeS27l0RhOts8bKniJU")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBuaN3NrcOg63zZC9pDDl6kJ1y5d3frM5c")
 
 # The recipient phone number users must send money to.
 MANUAL_PAYMENT_RECIPIENT = os.environ.get("MANUAL_PAYMENT_RECIPIENT", "+201020966071")
