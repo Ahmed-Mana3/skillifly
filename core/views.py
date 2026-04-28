@@ -2,6 +2,7 @@ import os
 from django.conf import settings
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 from .forms import RegisterForm, LoginForm, ReviewForm
@@ -1329,7 +1330,7 @@ def export_pdf_status(request, job_id):
     data = {
         'status': job.status,
         'error': job.error if job.status == PdfExportJob.Status.FAILED else None,
-        'pdf_url': job.pdf_file.url if job.status == PdfExportJob.Status.SUCCEEDED and job.pdf_file else None
+        'download_url': reverse('export_pdf_download', kwargs={'job_id': job.id}) if job.status == PdfExportJob.Status.SUCCEEDED and job.pdf_file else None
     }
     return JsonResponse(data)
 
