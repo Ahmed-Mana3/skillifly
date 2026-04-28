@@ -56,13 +56,19 @@ def generate_portfolio_pdf(self, job_id: int) -> str:
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(args=["--no-sandbox"])
-            page = browser.new_page()
-            page.set_content(html, wait_until="networkidle")
+            browser = p.chromium.launch(args=["--no-sandbox", "--disable-setuid-sandbox"])
+            context = browser.new_context()
+            page = context.new_page()
+            
+            # Use 'load' instead of 'networkidle' to be more robust against slow external fonts/scripts
+            page.set_content(html, wait_until="load", timeout=30000)
+            
             pdf_bytes = page.pdf(
                 format="A4",
                 print_background=True,
                 margin={"top": "12mm", "bottom": "12mm", "left": "12mm", "right": "12mm"},
+                scale=1.0,
+                display_header_footer=False,
             )
             browser.close()
 
