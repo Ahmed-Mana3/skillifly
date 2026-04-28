@@ -23,26 +23,26 @@
             </div>
 
             <!-- Text Content -->
-            <h1 class="text-4xl font-bold mb-4 tracking-tight" style="font-family: 'Syne', sans-serif;">
-                Verification <span class="text-red-500">Failed</span>
+            <h1 class="text-4xl font-bold mb-4 tracking-tight text-slate-900" style="font-family: 'Syne', sans-serif;">
+                Verification <span class="text-red-600">Failed</span>
             </h1>
-            <p class="text-gray-300 text-lg mb-8 leading-relaxed">
-                {{ error_message }}
+            <p class="text-slate-600 text-lg mb-8 leading-relaxed font-medium">
+                {{ error_message|default:"We couldn't verify your payment receipt. Please check the details and try again." }}
             </p>
 
             <!-- Info Box -->
-            <div class="bg-gray-900/40 border border-gray-800/50 rounded-2xl p-6 mb-10 text-left">
-                <h3 class="text-white font-semibold text-sm mb-3 uppercase tracking-wider">What to do next:</h3>
-                <ul class="space-y-2.5">
-                    <li class="flex items-start gap-3 text-sm text-gray-400">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-10 text-left">
+                <h3 class="text-slate-900 font-bold text-sm mb-3 uppercase tracking-wider">What to do next:</h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700 font-medium">
                         <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
                         Ensure you sent the exact amount requested.
                     </li>
-                    <li class="flex items-start gap-3 text-sm text-gray-400">
+                    <li class="flex items-start gap-3 text-sm text-slate-700 font-medium">
                         <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
                         Verify that the recipient number/handle was correct.
                     </li>
-                    <li class="flex items-start gap-3 text-sm text-gray-400">
+                    <li class="flex items-start gap-3 text-sm text-slate-700 font-medium">
                         <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
                         Upload a clear, uncropped screenshot of the receipt.
                     </li>
@@ -51,19 +51,19 @@
 
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row gap-4">
-                <a href="{% url 'payment' %}" class="btn-primary flex-1 justify-center py-4 bg-red-500 hover:bg-red-600 border-red-400/20">
+                <a href="{% url 'payment' %}" class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-500/20">
                     Try Again
-                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </a>
-                <a href="{% url 'dashboard' %}" class="btn-ghost flex-1 justify-center py-4">
+                <a href="{% url 'dashboard' %}" class="w-full sm:flex-1 inline-flex items-center justify-center bg-slate-100 text-slate-900 font-bold py-4 rounded-xl hover:bg-slate-200 transition-all">
                     Return home
                 </a>
             </div>
         </div>
 
         <!-- Footer Help -->
-        <p class="mt-8 text-center text-gray-500 text-sm">
-            Still having trouble? <a href="#" class="text-purple-400 hover:underline">Contact our support team</a>
+        <p class="mt-8 text-center text-slate-500 text-sm font-medium">
+            Still having trouble? <a href="{% url 'contact' %}" class="text-blue-600 hover:underline font-bold">Contact our support team</a>
         </p>
     </div>
 </div>

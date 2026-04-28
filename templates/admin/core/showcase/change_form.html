@@ -1,0 +1,166 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<style>
+    .cropper-container-wrapper {
+        max-width: 100%;
+        margin: 20px 0;
+        display: none;
+    }
+    #cropper-image {
+        max-width: 100%;
+        display: block;
+    }
+    .btn-crop {
+        background: #79aec8 !important;
+        padding: 10px 20px !important;
+        border: none !important;
+        border-radius: 4px !important;
+        color: white !important;
+        cursor: pointer !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+    }
+    .btn-crop:hover {
+        background: #417690 !important;
+    }
+    #cropper-modal {
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.85);
+        overflow: auto;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: white;
+        width: 100%;
+        max-width: 900px;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .cropper-area {
+        max-height: 60vh;
+        width: 100%;
+        margin-top: 15px;
+        overflow: hidden;
+        background: #f0f0f0;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+
+<div id="cropper-modal" style="display:none;">
+    <div class="modal-content">
+        <h2 style="margin-top:0; color:#333; font-family:sans-serif; border-bottom:1px solid #eee; padding-bottom:15px;">Crop Showcase Image (16:10 Ratio)</h2>
+        <div class="cropper-area">
+            <img id="cropper-image" src="">
+        </div>
+        <div style="margin-top:25px; text-align:right; border-top:1px solid #eee; pt:15px;">
+            <button type="button" id="cancel-crop" style="background:#eee; border:1px solid #ccc; padding:10px 20px; border-radius:4px; cursor:pointer; margin-right:10px; font-weight:bold; color:#666;">Cancel</button>
+            <button type="button" id="save-crop" class="btn-crop">Apply Crop</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.querySelector('input[name="preview_image"]');
+            if (!imageInput) return;
+
+            const modal = document.getElementById('cropper-modal');
+            const cropperImg = document.getElementById('cropper-image');
+            const saveBtn = document.getElementById('save-crop');
+            const cancelBtn = document.getElementById('cancel-crop');
+            let cropper;
+            let originalFile;
+
+            imageInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    originalFile = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        cropperImg.src = event.target.result;
+                        modal.style.display = 'flex';
+                        if (cropper) cropper.destroy();
+                        
+                        // Small delay to ensure image is loaded in DOM
+                        setTimeout(() => {
+                            cropper = new Cropper(cropperImg, {
+                                aspectRatio: 16 / 10,
+                                viewMode: 1,
+                                background: true,
+                                responsive: true,
+                                restore: false,
+                            });
+                        }, 100);
+                    };
+                    reader.readAsDataURL(originalFile);
+                }
+            });
+
+            saveBtn.addEventListener('click', function() {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 1280,
+                    height: 800,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                
+                canvas.toBlob(function(blob) {
+                    const croppedFile = new File([blob], originalFile.name, {
+                        type: originalFile.type,
+                        lastModified: Date.now()
+                    });
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    imageInput.files = dataTransfer.files;
+                    
+                    modal.style.display = 'none';
+                    
+                    // Update/Show preview in admin
+                    let preview = document.getElementById('cropped-preview-admin');
+                    if (!preview) {
+                        preview = document.createElement('div');
+                        preview.id = 'cropped-preview-admin';
+                        preview.style.marginTop = '15px';
+                        preview.innerHTML = '<p style="color:#666; font-size:12px; margin-bottom:5px;"><strong>Cropped Preview:</strong></p><img id="preview-img-tag" style="max-width:300px; border-radius:8px; border:1px solid #ddd; box-shadow:0 4px 10px rgba(0,0,0,0.1);">';
+                        imageInput.parentNode.appendChild(preview);
+                    }
+                    document.getElementById('preview-img-tag').src = canvas.toDataURL();
+                }, originalFile.type);
+            });
+
+            cancelBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                imageInput.value = ''; // Clear selection
+            });
+            
+            // Close on escape
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    modal.style.display = 'none';
+                    imageInput.value = '';
+                }
+            });
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,5 +1,5 @@
 import google.generativeai as genai
-genai.configure(api_key='AIzaSyBpW4owyc2QbNvlHeS27l0RhOts8bKniJU')
+genai.configure(api_key='AIzaSyBuaN3NrcOg63zZC9pDDl6kJ1y5d3frM5c')
 model = genai.GenerativeModel('gemini-2.5-flash')
 with open('static/img/vodafone_logo.png', 'rb') as f:
     data = f.read()

@@ -8,11 +8,11 @@
 
   <!-- Header -->
   <div class="mb-10 animate-fadeInUp">
-    <p class="text-sm text-purple-400 font-medium uppercase tracking-widest mb-2">Step 1 of 2</p>
-    <h1 class="text-4xl md:text-5xl font-bold mb-3" style="font-family: 'Syne', sans-serif;">
+    <p class="text-sm text-blue-600 font-bold uppercase tracking-widest mb-2">Step 1 of 2</p>
+    <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">
       Pick your <span class="gradient-text">theme</span>
     </h1>
-    <p class="text-gray-500 max-w-xl">Choose a design that represents your professional identity. You can always change
+    <p class="text-slate-600 max-w-xl font-medium">Choose a design that represents your professional identity. You can always change
       it later.</p>
   </div>
 
@@ -26,12 +26,12 @@
     {% if categories %}
     <div class="flex flex-wrap gap-2 mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
       <button type="button" onclick="filterCategory('all')" data-cat="all"
-        class="cat-filter px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 border-purple-500/40 bg-purple-500/10 text-purple-300">
+        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-blue-600/40 bg-blue-50 text-blue-700">
         All themes
       </button>
       {% for category in categories %}
       <button type="button" onclick="filterCategory('{{ category.id }}')" data-cat="{{ category.id }}"
-        class="cat-filter px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 border-white/10 text-gray-400 hover:border-purple-500/40 hover:text-gray-200">
+        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-slate-200 text-slate-500 hover:border-blue-600/40 hover:text-blue-600">
         {{ category.name }}
       </button>
       {% endfor %}
@@ -71,8 +71,8 @@
 
             <!-- Selected overlay -->
             <div
-              class="selected-overlay absolute inset-0 bg-purple-600/20 border-2 border-purple-500 rounded-none opacity-0 transition-opacity duration-200 flex items-center justify-center">
-              <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center shadow-lg">
+              class="selected-overlay absolute inset-0 bg-blue-600/10 border-4 border-blue-600 rounded-none opacity-0 transition-opacity duration-200 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
                 <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -86,11 +86,11 @@
           <div class="p-4">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="font-semibold text-sm mb-0.5" style="font-family: 'Syne', sans-serif;">{{ theme.name }}</h3>
-                <p class="text-xs text-gray-500">{{ theme.category.name|default:"Theme" }}</p>
+                <h3 class="font-bold text-sm mb-0.5 text-black" style="font-family: 'Syne', sans-serif;">{{ theme.name }}</h3>
+                <p class="text-xs text-slate-500 font-bold">{{ theme.category.name|default:"Theme" }}</p>
               </div>
               <div class="text-right">
-                <p class="text-xs text-gray-600">{{ theme.use_num }} uses</p>
+                <p class="text-xs text-slate-600 font-bold">{{ theme.use_num }} uses</p>
               </div>
             </div>
           </div>
@@ -100,10 +100,10 @@
     </div>
 
     <!-- Submit -->
-    <div class="mt-10 flex items-center justify-between border-t border-white/5 pt-8 animate-fadeInUp"
+    <div class="mt-10 flex items-center justify-between border-t border-slate-200 pt-8 animate-fadeInUp"
       style="animation-delay: 0.3s">
-      <p id="selection-msg" class="text-sm text-gray-500">Select a theme to continue</p>
-      <button type="submit" id="apply-btn" disabled class="btn-primary opacity-50 cursor-not-allowed"
+      <p id="selection-msg" class="text-sm text-slate-500 font-bold">Select a theme to continue</p>
+      <button type="submit" id="apply-btn" disabled class="btn-primary opacity-50 cursor-not-allowed shadow-none"
         style="min-width: 160px;">
         Apply theme
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,19 +154,19 @@
 
     // Update message
     document.getElementById('selection-msg').textContent = 'Theme selected — click to apply';
-    document.getElementById('selection-msg').classList.add('text-purple-400');
-    document.getElementById('selection-msg').classList.remove('text-gray-500');
+    document.getElementById('selection-msg').classList.add('text-blue-600', 'font-bold');
+    document.getElementById('selection-msg').classList.remove('text-slate-500');
   }
 
   function filterCategory(catId) {
     // Update button styles
     document.querySelectorAll('.cat-filter').forEach(btn => {
       if (btn.dataset.cat === catId) {
-        btn.classList.add('border-purple-500/40', 'bg-purple-500/10', 'text-purple-300');
-        btn.classList.remove('border-white/10', 'text-gray-400');
+        btn.classList.add('border-blue-600/40', 'bg-blue-50', 'text-blue-700');
+        btn.classList.remove('border-slate-200', 'text-slate-500');
       } else {
-        btn.classList.remove('border-purple-500/40', 'bg-purple-500/10', 'text-purple-300');
-        btn.classList.add('border-white/10', 'text-gray-400');
+        btn.classList.remove('border-blue-600/40', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-slate-200', 'text-slate-500');
       }
     });
 
