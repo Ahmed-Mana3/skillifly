@@ -1,12 +1,61 @@
-{% load static %}
+﻿
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% include "seo/portfolio_seo.html" %}
-    <title>{{ personal_info.full_name|default:"Developer" }} — Portfolio</title>
+    
+<!-- Advanced Portfolio SEO -->
+
+    <title>Test User | Developer Portfolio</title>
+    <meta name="description" content="Check out Test User's professional portfolio on Skillifly. Hello world">
+
+
+<meta name="keywords" content="Test User, video editor, portfolio, skillifly, projects, ">
+<link rel="canonical" href="http://localhost:8000/testuser/" />
+
+<!-- Open Graph -->
+<meta property="og:title" content="Test User | Developer">
+<meta property="og:description" content="View my latest projects and work experience on Skillifly.">
+<meta property="og:image" content="/static/img/logo.png">
+<meta property="og:url" content="http://localhost:8000/testuser/">
+<meta property="og:type" content="profile">
+<meta property="profile:username" content="testuser">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Test User's Portfolio">
+<meta name="twitter:description" content="Developer">
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Test User",
+  "jobTitle": "Developer",
+  "url": "http://localhost:8000/testuser/",
+  "image": "",
+  "description": "Hello world",
+  "sameAs": [
+    
+  ],
+  "knowsAbout": [
+    
+  ]
+}
+</script>
+
+<!-- Skillifly Analytics Tracking -->
+<script>
+    window.SF_ANALYTICS = {
+        username: "testuser"
+    };
+</script>
+<script src="/static/js/sf_analytics.js" defer></script>
+
+    <title>Test User — Portfolio</title>
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,700;1,300&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet" />
@@ -738,20 +787,18 @@
 
     <!-- Header -->
     <header>
-        {# FIX: Use safe chained filters; |lower|cut removes spaces for slug-style logo #}
-        <div class="logo"><span>~/</span>{{ personal_info.full_name|lower|cut:" " }}</div>
+        
+        <div class="logo"><span>~/</span>testuser</div>
         <nav>
-            {% if experiences %}<a href="#experience">experience</a>{% endif %}
-            {% if skills %}<a href="#skills">skills</a>{% endif %}
-            {% if projects %}<a href="#projects">projects</a>{% endif %}
-            {% if education %}<a href="#education">education</a>{% endif %}
+            
+            
+            
+            
             <a href="#contact">contact</a>
         </nav>
-        {% if personal_info.booking_url %}
-        <a href="{{ personal_info.booking_url }}" class="header-cta" target="_blank" rel="noopener">Get In Touch</a>
-        {% elif personal_info.email %}
-        <a href="mailto:{{ personal_info.email }}" class="header-cta">Hire Me</a>
-        {% endif %}
+        
+        <a href="mailto:test@example.com" class="header-cta">Hire Me</a>
+        
     </header>
 
     <!-- Hero -->
@@ -763,23 +810,19 @@
             <div class="hero-tag">Available for work</div>
 
 
-            <h1 id="hero-name" data-name="{{ personal_info.full_name|default:'Developer' }}">
+            <h1 id="hero-name" data-name="Test User">
                 <span id="hero-first"></span>
                 <span class="name-accent" id="hero-last"></span>
             </h1>
 
-            {% if personal_info.bio %}
-            <p class="hero-bio">{{ personal_info.bio }}</p>
-            {% endif %}
+            
+            <p class="hero-bio">Hello world</p>
+            
             <div class="hero-actions">
                 <a href="#projects" class="btn-primary">View Projects</a>
-                {% if personal_info.booking_url %}
-                <a href="{{ personal_info.booking_url }}" class="btn-ghost" target="_blank" rel="noopener">Get In Touch</a>
-                {% elif personal_info.email %}
-                <a href="mailto:{{ personal_info.email }}" class="btn-ghost">Get In Touch</a>
-                {% else %}
-                <a href="#contact" class="btn-ghost">Get In Touch</a>
-                {% endif %}
+                
+                <a href="mailto:test@example.com" class="btn-ghost">Get In Touch</a>
+                
             </div>
         </div>
 
@@ -794,25 +837,23 @@
                     <div class="terminal-title">portfolio.json</div>
                 </div>
                 <div class="terminal-body">
-                    <div class="t-line"><span class="t-comment">// {{ personal_info.full_name }} — Developer Profile</span></div>
+                    <div class="t-line"><span class="t-comment">// Test User — Developer Profile</span></div>
                     <div class="t-blank"></div>
                     <div class="t-line">{</div>
-                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"name"</span>: <span class="t-str">"{{ personal_info.full_name }}"</span>,</div>
-                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"title"</span>: <span class="t-str">"{{ personal_info.title|default:"Developer" }}"</span>,</div>
-                    {# FIX: PersonalInfo has no 'location' field per models import — replaced with email #}
-                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"email"</span>: <span class="t-str">"{{ personal_info.email }}"</span>,</div>
-                    {# FIX: .count works on QuerySets; use it directly #}
-                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"projects"</span>: <span class="t-num">{{ projects.count }}</span>,</div>
+                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"name"</span>: <span class="t-str">"Test User"</span>,</div>
+                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"title"</span>: <span class="t-str">"Developer"</span>,</div>
+                    
+                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"email"</span>: <span class="t-str">"test@example.com"</span>,</div>
+                    
+                    <div class="t-line">&nbsp;&nbsp;<span class="t-key">"projects"</span>: <span class="t-num">0</span>,</div>
                     <div class="t-blank"></div>
                     <div class="t-line">&nbsp;&nbsp;<span class="t-key">"skills"</span>: [</div>
-                    {% for skill in skills|slice:":6" %}
-                    <div class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-str">"{{ skill.name }}"</span>{% if not forloop.last %},{% endif %}</div>
-                    {% endfor %}
+                    
                     <div class="t-line">&nbsp;&nbsp;],</div>
                     <div class="t-blank"></div>
                     <div class="t-line">&nbsp;&nbsp;<span class="t-key">"portfolio"</span>: {</div>
-                    <div class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"visits"</span>: <span class="t-num">{{ personal_info.user.profile.visits|default:0 }}</span>,</div>
-                    <div class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"status"</span>: <span class="t-str">"{% if personal_info.user.profile.is_public %}public{% else %}private{% endif %}"</span>,</div>
+                    <div class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"visits"</span>: <span class="t-num">6</span>,</div>
+                    <div class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"status"</span>: <span class="t-str">"public"</span>,</div>
                     <div class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"theme"</span>: <span class="t-str">"creative"</span></div>
                     <div class="t-line">&nbsp;&nbsp;},</div>
                     <div class="t-blank"></div>
@@ -825,157 +866,41 @@
         </div>
     </section>
 
-    {% if skills %}
-    <!-- Marquee -->
-    <div class="marquee-wrap">
-        <div class="marquee-track">
-            {# Duplicated for seamless infinite loop #}
-            {% for skill in skills %}
-            <span class="marquee-item">{{ skill.name }}<span class="sep">✦</span></span>
-            {% endfor %}
-            {% for skill in skills %}
-            <span class="marquee-item">{{ skill.name }}<span class="sep">✦</span></span>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+    
 
-    {% if experiences %}
-    <!-- Experience -->
-    <section id="experience">
-        <div class="section-label fade-in">Work History</div>
-        <div class="section-title fade-in">Experience</div>
+    
 
-        <div class="exp-grid">
-            {% for exp in experiences %}
-            <div class="exp-item fade-in">
-                <div class="exp-meta">
-                    {# FIX: correct field names from Experience model: start_date, end_date, still_working #}
-                    <span class="exp-date">
-                        {{ exp.start_date|date:"Y" }} — {% if exp.still_working %}Present{% else %}{{ exp.end_date|date:"Y" }}{% endif %}
-                    </span>
-                    <span class="exp-company">{{ exp.company }}</span>
-                </div>
-                <div class="exp-content">
-                    <div class="exp-title">{{ exp.title }}</div>
-                    {# FIX: field is 'details' not 'description'; Experience has no 'tags' field — removed #}
-                    <p class="exp-desc">{{ exp.details|default:"" }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+    
 
-    {% if skills %}
-    <!-- Skills -->
-    <section class="skills-section" id="skills">
-        <div class="section-label fade-in">Technical Stack</div>
-        <div class="section-title fade-in">Skills</div>
+    
 
-        <div class="skills-grid">
-            {% for skill in skills %}
-            <div class="skill-card fade-in">
-                {# |slice:":2" gives first 2 chars for the icon box #}
-                <div class="skill-icon">{{ skill.name|slice:":2"|upper }}</div>
-                <div class="skill-info">
-                    <div class="skill-name">{{ skill.name }}</div>
-                    <div class="skill-bar-wrap">
-                        {# FIX: Skill model only has 'name' — no 'level' field exists.
-                           Using a fixed 80% bar width for all skills. #}
-                        <div class="skill-bar" style="width:0" data-width="80%"></div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-
-    {% if projects %}
-    <!-- Projects -->
-    <section id="projects">
-        <div class="section-label fade-in">Selected Work</div>
-        <div class="section-title fade-in">Projects</div>
-
-        <div class="projects-grid">
-            {% for project in projects %}
-            <div class="project-card fade-in" data-project-id="{{ project.id }}">
-                {# FIX: stringformat:"02d" zero-pads correctly for any number (10, 11, etc.) #}
-                <div class="project-num">{{ forloop.counter|stringformat:"02d" }}</div>
-                <div class="project-title">{{ project.title }}</div>
-                {# FIX: field is 'details' not 'description' per Project model #}
-                <p class="project-desc">{{ project.details|default:"" }}</p>
-                {% if project.url %}
-                <a href="{{ project.url }}" target="_blank" rel="noopener noreferrer" class="project-link">
-                    <span>View Project</span>
-                </a>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-
-    {% if education %}
-    <!-- Education -->
-    <section class="edu-section" id="education">
-        <div class="section-label fade-in">Academic Background</div>
-        <div class="section-title fade-in">Education</div>
-
-        <div class="edu-grid">
-            {% for edu in education %}
-            <div class="edu-card fade-in">
-                {# FIX: grade_year is a date object stored as date(year,1,1) — use |date:"Y" #}
-                <div class="edu-year">{{ edu.grade_year|date:"Y" }}</div>
-                <div class="edu-degree">{{ edu.degree }}</div>
-                {# FIX: added edu.field display — 'field' is a real column on Education model #}
-                {% if edu.field %}
-                <div class="edu-field">{{ edu.field }}</div>
-                {% endif %}
-                <div class="edu-school">{{ edu.school }}</div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+    
 
     <!-- Contact -->
     <section class="contact-section" id="contact">
         <div class="contact-glow"></div>
         <div class="contact-label fade-in">Let's Work Together</div>
         <div class="contact-title fade-in">Say Hello</div>
-        <div class="contact-email fade-in">{{ personal_info.email }}</div>
+        <div class="contact-email fade-in">test@example.com</div>
 
         <!-- <div class="flex justify-center mb-12">
-            {% if personal_info.booking_url %}
-            <a href="{{ personal_info.booking_url }}" class="btn-primary" target="_blank" rel="noopener">Hire Me Now</a>
-            {% elif personal_info.email %}
-            <a href="mailto:{{ personal_info.email }}" class="btn-primary">Hire Me Now</a>
-            {% endif %}
+            
+            <a href="mailto:test@example.com" class="btn-primary">Hire Me Now</a>
+            
         </div> -->
 
-        {% if links %}
-        <div class="links-row fade-in">
-            {# FIX: Link model fields are 'platform' and 'url' — correct field names #}
-            {% for link in links %}
-            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="social-link">
-                <span>{{ link.platform }}</span>
-            </a>
-            {% endfor %}
-        </div>
-        {% endif %}
+        
     </section>
 
     <!-- Footer -->
     <footer>
         <a href="/" target="_blank" rel="noopener noreferrer" class="sf-badge-creative">
             <span class="pow">Powered by</span>
-            <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+            <img src="/static/img/bird.png" alt="Skillifly">
             <span class="brand">SKILLIFLY</span>
         </a>
         <div class="flex flex-col items-center md:items-end gap-2 opacity-60">
-            <p style="letter-spacing: 0.1em; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">© {% now "Y" %} Skillifly. All rights reserved.</p>
+            <p style="letter-spacing: 0.1em; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">© 2026 Skillifly. All rights reserved.</p>
             <div style="width: 20px; height: 1px; background: var(--accent); opacity: 0.3;"></div>
         </div>
     </footer>

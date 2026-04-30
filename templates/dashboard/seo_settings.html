@@ -1,0 +1,481 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}SEO Meta Tag Control — Skillifly{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .gradient-border {
+        position: relative;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+    }
+    
+    .gradient-border::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: -1;
+        margin: -1px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
+    }
+
+    .sf-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        background: white;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+    }
+
+    .sf-input:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease forwards;
+    }
+
+    /* Google Preview Styles */
+    .google-preview {
+        font-family: arial, sans-serif;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+        max-width: 100%;
+    }
+    .google-title {
+        color: #1a0dab;
+        font-size: 16px;
+        line-height: 1.3;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .google-url {
+        color: #202124;
+        font-size: 12px;
+        margin-bottom: 3px;
+        word-break: break-all;
+    }
+    .google-desc {
+        color: #4d5156;
+        font-size: 12px;
+        line-height: 1.58;
+    }
+
+    /* Social Preview Styles */
+    .social-preview {
+        background: white;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        overflow: hidden;
+        max-width: 100%;
+    }
+    .social-img {
+        width: 100%;
+        aspect-ratio: 1.91 / 1;
+        background: #f5f8fa;
+        object-fit: cover;
+    }
+    .social-content {
+        padding: 10px;
+        border-top: 1px solid #e1e8ed;
+    }
+    .social-site {
+        color: #657786;
+        font-size: 11px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+    .social-title {
+        color: #14171a;
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    .social-desc {
+        color: #657786;
+        font-size: 11px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Desktop Adjustments */
+    @media (min-width: 640px) {
+        .google-preview { padding: 20px; }
+        .google-title { font-size: 20px; }
+        .google-url { font-size: 14px; }
+        .google-desc { font-size: 14px; }
+        .social-content { padding: 12px; }
+        .social-site { font-size: 13px; }
+        .social-title { font-size: 15px; }
+        .social-desc { font-size: 13px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+    
+    <!-- Back Button -->
+    <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-slate-500 hover:text-black transition-colors mb-6 sm:mb-8 group">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span class="font-bold text-xs sm:text-sm">Back to Dashboard</span>
+    </a>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        
+        <!-- Left Side: Form -->
+        <div class="flex-1 animate-fade-in">
+            <div class="glass-card rounded-[1.5rem] sm:rounded-3xl p-5 sm:p-8 shadow-xl">
+                <div class="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-black" style="font-family: 'Syne', sans-serif;">SEO Meta Tag Control</h1>
+                        <p class="text-slate-500 text-[11px] sm:text-sm font-medium">Customize your search presence.</p>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Meta Title -->
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Meta Title</label>
+                            {{ form.meta_title }}
+                            <p class="text-[10px] text-slate-400 mt-1.5 font-medium italic">Recommended: 50-60 characters</p>
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Meta Description</label>
+                            {{ form.meta_description }}
+                            <p class="text-[10px] text-slate-400 mt-1.5 font-medium italic">Recommended: 150-160 characters</p>
+                        </div>
+
+                        <!-- Keywords -->
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Meta Keywords</label>
+                            <div id="keywords-container" class="sf-input flex flex-wrap gap-2 items-center min-h-[3rem] cursor-text bg-white" onclick="document.getElementById('keyword-input').focus()">
+                                <!-- Tags will appear here -->
+                                <input type="text" id="keyword-input" class="flex-1 outline-none border-none p-0 text-sm min-w-[120px] bg-transparent" placeholder="Type and press Enter...">
+                            </div>
+                            <!-- Hidden original field -->
+                            <div class="hidden">
+                                {{ form.meta_keywords }}
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1.5 font-medium italic">Type a keyword and press <span class="font-bold">Enter</span> or <span class="font-bold">Comma</span> to add it.</p>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 mt-4">
+                            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                                </svg>
+                                Social Media Sharing (Open Graph)
+                            </h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Social Title</label>
+                                    {{ form.og_title }}
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Social Description</label>
+                                    {{ form.og_description }}
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Social Sharing Image</label>
+                                    <div class="mt-1 relative group">
+                                        {{ form.og_image }}
+                                        <div id="crop-badge" class="hidden absolute top-2 right-2 px-2 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow-lg animate-fade-in">
+                                            Image Cropped ✓
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1.5 font-medium italic">Best size: 1200x630px. If empty, your profile picture will be used.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cropper Modal -->
+                        <div id="cropper-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                            <div class="glass-card rounded-[2rem] w-full max-w-4xl overflow-hidden shadow-2xl animate-fade-in bg-white">
+                                <div class="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg sm:text-xl font-bold text-black" style="font-family: 'Syne', sans-serif;">Crop Your Image</h3>
+                                        <p class="text-[11px] sm:text-sm text-slate-500 font-medium">Standard 1.91:1 ratio</p>
+                                    </div>
+                                    <button type="button" onclick="closeCropper()" class="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="p-0 sm:p-6">
+                                    <div class="cropper-container bg-slate-900 sm:rounded-2xl overflow-hidden max-h-[50vh] sm:max-h-[60vh]">
+                                        <img id="cropper-image" src="" class="max-w-full block">
+                                    </div>
+                                </div>
+                                <div class="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                                    <button type="button" onclick="closeCropper()" class="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cancel</button>
+                                    <button type="button" id="apply-crop" class="btn-primary px-6 sm:px-8 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all">Apply Crop</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-8">
+                        <button type="submit" class="w-full btn-primary py-4 rounded-2xl text-base font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-2">
+                            <span>Save SEO Settings</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side: Live Previews -->
+        <div class="lg:w-96 space-y-8 animate-fade-in" style="animation-delay: 0.1s">
+            
+            <!-- Google Search Preview -->
+            <div>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.288 1.288-3.312 2.696-6.896 2.696-5.552 0-10.04-4.504-10.04-10.04s4.488-10.04 10.04-10.04c3.048 0 5.272 1.2 6.856 2.68l2.328-2.328C18.472 1.344 15.792 0 12.48 0 6.656 0 2.136 4.704 2.136 10.536s4.52 10.536 10.344 10.536c3.152 0 5.568-1.032 7.424-2.928 1.912-1.912 2.52-4.584 2.52-6.816 0-.648-.048-1.264-.144-1.84h-9.8z"/>
+                    </svg>
+                    Google Preview
+                </h3>
+                <div class="google-preview">
+                    <div class="google-url">{{ portfolio_url }}</div>
+                    <div id="preview-google-title" class="google-title">Your Custom Title Shows Here</div>
+                    <div id="preview-google-desc" class="google-desc">This is how your description will appear in search results. Make it catchy to get more clicks!</div>
+                </div>
+            </div>
+
+            <!-- Social Media Preview -->
+            <div>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Social Preview
+                </h3>
+                <div class="social-preview shadow-lg">
+                    <img id="preview-social-img" src="{% if seo_settings.og_image %}{{ seo_settings.og_image.url }}{% elif user.profile.picture %}{{ user.profile.picture.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" class="social-img" alt="Preview">
+                    <div class="social-content">
+                        <div class="social-site">skillifly.cloud</div>
+                        <div id="preview-social-title" class="social-title">Sharing Title</div>
+                        <div id="preview-social-desc" class="social-desc">A brief description of your awesome portfolio for social media feeds.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Tip -->
+            <div class="rounded-3xl bg-blue-50 p-6 border border-blue-100">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="p-1.5 rounded-lg bg-blue-500 text-white">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1a1 1 0 112 0v1a1 1 0 11-2 0zM13.333 16h-6.666a1.333 1.333 0 000 2.666h6.666a1.333 1.333 0 000-2.666z" />
+                        </svg>
+                    </span>
+                    <span class="text-xs font-black text-blue-600 uppercase tracking-widest">Pro Tip</span>
+                </div>
+                <p class="text-sm text-blue-800 font-medium leading-relaxed">
+                    Good SEO helps recruiters find you directly on Google. Use keywords like <span class="font-bold">"Video Editor"</span>, <span class="font-bold">"Motion Designer"</span>, or your specific niche.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const titleInput = document.querySelector('input[name="meta_title"]');
+        const descInput = document.querySelector('textarea[name="meta_description"]');
+        const ogTitleInput = document.querySelector('input[name="og_title"]');
+        const ogDescInput = document.querySelector('textarea[name="og_description"]');
+        const ogImageInput = document.querySelector('input[name="og_image"]');
+        
+        const googleTitle = document.getElementById('preview-google-title');
+        const googleDesc = document.getElementById('preview-google-desc');
+        const socialTitle = document.getElementById('preview-social-title');
+        const socialDesc = document.getElementById('preview-social-desc');
+        const socialImg = document.getElementById('preview-social-img');
+
+        // Keywords Tag Logic
+        const keywordsInput = document.querySelector('input[name="meta_keywords"]');
+        const keywordTextInput = document.getElementById('keyword-input');
+        const keywordsContainer = document.getElementById('keywords-container');
+        let tags = keywordsInput.value ? keywordsInput.value.split(',').map(t => t.trim()).filter(t => t !== "") : [];
+
+        function renderTags() {
+            // Clear existing tags but keep the input
+            const existingTags = keywordsContainer.querySelectorAll('.keyword-tag');
+            existingTags.forEach(tag => tag.remove());
+
+            tags.forEach((tag, index) => {
+                const tagEl = document.createElement('div');
+                tagEl.className = 'keyword-tag flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold animate-fade-in';
+                tagEl.innerHTML = `
+                    <span>${tag}</span>
+                    <button type="button" class="hover:text-blue-900 transition-colors" onclick="removeTag(${index})">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                `;
+                keywordsContainer.insertBefore(tagEl, keywordTextInput);
+            });
+            keywordsInput.value = tags.join(', ');
+        }
+
+        window.removeTag = function(index) {
+            tags.splice(index, 1);
+            renderTags();
+        };
+
+        keywordTextInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const val = keywordTextInput.value.trim().replace(/,/g, '');
+                if (val && !tags.includes(val)) {
+                    tags.push(val);
+                    renderTags();
+                    keywordTextInput.value = '';
+                }
+            } else if (e.key === 'Backspace' && keywordTextInput.value === '' && tags.length > 0) {
+                tags.pop();
+                renderTags();
+            }
+        });
+
+        // Cropper Logic
+        const cropperModal = document.getElementById('cropper-modal');
+        const cropperImage = document.getElementById('cropper-image');
+        const applyCropBtn = document.getElementById('apply-crop');
+        const cropBadge = document.getElementById('crop-badge');
+        let cropper;
+        let originalFile;
+
+        window.closeCropper = function() {
+            cropperModal.classList.add('hidden');
+            cropperModal.classList.remove('flex');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            // Clear input if cancelled and not already cropped
+            if (!cropBadge.classList.contains('hidden') === false) {
+                ogImageInput.value = '';
+            }
+        };
+
+        ogImageInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                originalFile = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    cropperImage.src = event.target.result;
+                    cropperModal.classList.remove('hidden');
+                    cropperModal.classList.add('flex');
+                    
+                    if (cropper) cropper.destroy();
+                    
+                    // Initialize Cropper after modal is shown and image loaded
+                    setTimeout(() => {
+                        cropper = new Cropper(cropperImage, {
+                            aspectRatio: 1.91 / 1,
+                            viewMode: 2,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false,
+                        });
+                    }, 100);
+                }
+                reader.readAsDataURL(originalFile);
+            }
+        });
+
+        applyCropBtn.addEventListener('click', function() {
+            if (!cropper) return;
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 1200,
+                height: 630,
+            });
+
+            canvas.toBlob((blob) => {
+                const croppedFile = new File([blob], originalFile.name, {
+                    type: originalFile.type,
+                    lastModified: Date.now(),
+                });
+
+                // Update the file input using DataTransfer
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                ogImageInput.files = dataTransfer.files;
+
+                // Update preview
+                socialImg.src = canvas.toDataURL();
+                cropBadge.classList.remove('hidden');
+                
+                closeCropper();
+            }, originalFile.type);
+        });
+
+        // Previews Logic
+        function updatePreviews() {
+            googleTitle.textContent = titleInput.value || "Your Custom Title Shows Here";
+            googleDesc.textContent = descInput.value || "This is how your description will appear in search results. Make it catchy to get more clicks!";
+            
+            socialTitle.textContent = ogTitleInput.value || titleInput.value || "Sharing Title";
+            socialDesc.textContent = ogDescInput.value || descInput.value || "A brief description of your awesome portfolio for social media feeds.";
+        }
+
+        titleInput.addEventListener('input', updatePreviews);
+        descInput.addEventListener('input', updatePreviews);
+        ogTitleInput.addEventListener('input', updatePreviews);
+        ogDescInput.addEventListener('input', updatePreviews);
+        
+        // Initial render
+        renderTags();
+        updatePreviews();
+    });
+</script>
+{% endblock %}

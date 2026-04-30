@@ -988,7 +988,7 @@
 
     <div class="portfolio-grid">
       {% for project in projects %}
-      <div class="project-card" {% if project.url %}data-url="{{ project.url }}"{% endif %}>
+      <div class="project-card" data-project-id="{{ project.id }}" {% if project.url %}data-url="{{ project.url }}"{% endif %}>
         <div class="project-thumbnail {% if project.image %}has-image{% else %}no-image{% endif %}" style="{% if not project.image %}background: linear-gradient(135deg, {% cycle '#667eea, #764ba2' '#f093fb, #f5576c' '#4facfe, #00f2fe' '#43e97b, #38f9d7' '#fa709a, #fee140' '#30cfd0, #330867' %}){% endif %}">
           {% if project.image %}
           <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
@@ -1224,6 +1224,11 @@
       });
     }
   </script>
+  <script>
+    window.SF_ANALYTICS = {
+        username: "{{ username }}"
+    };
+  </script>
+  <script src="{% static 'js/sf_analytics.js' %}"></script>
 </body>
-
 </html>

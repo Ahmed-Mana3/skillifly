@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>{{ personal_info.full_name }} — Reels</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -314,7 +315,7 @@
     <div class="reels-container" id="reelsContainer">
 
         {% for project in projects %}
-        <div class="reel-slide" data-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
+        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
             <div class="ambient-glow" id="glow-{{ project.id }}"></div>
             <div class="ambient-solid"></div>
 
@@ -432,7 +433,7 @@
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const slide = entry.target;
-                const id    = slide.dataset.id;
+                const id    = slide.dataset.projectId;
                 const url   = slide.dataset.url || '';
                 const idx   = parseInt(slide.dataset.index ?? -1, 10);
 

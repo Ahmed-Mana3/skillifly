@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
-from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link
+from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain
 from django import forms
 from django.forms import formset_factory, BaseFormSet
 from django.core.validators import RegexValidator
@@ -423,3 +423,37 @@ class ReviewForm(forms.ModelForm):
             'content': forms.Textarea(attrs={'class': 'sf-input', 'placeholder': 'Your Review...', 'rows': 4}),
             'rating': forms.NumberInput(attrs={'class': 'sf-input', 'min': 1, 'max': 5}),
         }
+
+from core.models import SEOSettings
+
+class SEOSettingsForm(forms.ModelForm):
+    class Meta:
+        model = SEOSettings
+        fields = ['meta_title', 'meta_description', 'meta_keywords', 'og_title', 'og_description', 'og_image']
+        widgets = {
+            'meta_title': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. John Doe | Professional Video Editor'}),
+            'meta_description': forms.Textarea(attrs={'class': 'sf-input', 'placeholder': 'A brief description of your portfolio...', 'rows': 3}),
+            'meta_keywords': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. video editor, motion graphics, freelancer'}),
+            'og_title': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'Social media title'}),
+            'og_description': forms.Textarea(attrs={'class': 'sf-input', 'placeholder': 'Social media description...', 'rows': 2}),
+            'og_image': forms.ClearableFileInput(attrs={'class': 'sf-input', 'accept': 'image/*'}),
+        }
+
+class CustomDomainForm(forms.ModelForm):
+    domain = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'sf-input',
+            'placeholder': 'e.g. portfolio.yourname.com',
+        }),
+        help_text="Enter your custom domain without http:// or https://"
+    )
+
+    class Meta:
+        model = CustomDomain
+        fields = ['domain']
+
+    def clean_domain(self):
+        domain = self.cleaned_data.get('domain', '').lower().strip()
+        # Basic validation: remove http://, https://, and trailing slashes
+        domain = domain.replace('http://', '').replace('https://', '').rstrip('/')
+        return domain

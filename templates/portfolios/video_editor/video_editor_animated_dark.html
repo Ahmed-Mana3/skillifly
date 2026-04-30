@@ -87,9 +87,9 @@
         <div class="projects-grid">
             {% for project in projects %}
             {% if project.video_type == 'reel' %}
-            <a href="/{{ personal_info.user.username }}/reels/" class="project-card reveal-scale" style="transition-delay:{{ forloop.counter0|add:"1" }}00ms">
+            <a href="/{{ personal_info.user.username }}/reels/" class="project-card reveal-scale" data-project-id="{{ project.id }}" style="transition-delay:{{ forloop.counter0|add:"1" }}00ms">
             {% else %}
-            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="project-card reveal-scale" style="transition-delay:{{ forloop.counter0|add:"1" }}00ms">
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="project-card reveal-scale" data-project-id="{{ project.id }}" style="transition-delay:{{ forloop.counter0|add:"1" }}00ms">
             {% endif %}
                 <div class="project-img">
                     {% if project.image %}

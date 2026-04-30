@@ -270,7 +270,7 @@
         <aside class="sidebar">
             <h3 class="sidebar-title">Other Professional Work</h3>
             {% for other in other_videos %}
-            <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card">
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card" data-project-id="{{ other.id }}">
                 <div class="related-thumb">
                     {% if other.image %}
                     <img src="{{ other.image.url }}" alt="{{ other.title }}">

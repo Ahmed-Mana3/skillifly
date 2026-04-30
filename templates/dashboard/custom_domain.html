@@ -1,0 +1,185 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Custom Domain — Skillifly{% endblock %}
+
+{% block extra_head %}
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .gradient-border {
+        position: relative;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+    }
+    
+    .gradient-border::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: -1;
+        margin: -1px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
+    }
+
+    .sf-input {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        background: white;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .sf-input:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .dns-code {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        background: #F8FAFC;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        font-size: 0.85rem;
+        color: #1E293B;
+        font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+    
+    <!-- Back Button -->
+    <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-slate-500 hover:text-black transition-colors mb-6 sm:mb-8 group">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span class="font-bold text-xs sm:text-sm">Back to Dashboard</span>
+    </a>
+
+    <div class="animate-fade-in">
+        <div class="glass-card rounded-[2rem] p-6 sm:p-10 shadow-2xl overflow-hidden relative">
+            <!-- Decorative background -->
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-10">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 flex items-center justify-center shadow-xl shadow-blue-500/20">
+                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">Custom Domain</h1>
+                        <p class="text-slate-500 text-sm sm:text-base font-medium">Build your personal brand on your own domain.</p>
+                    </div>
+                </div>
+
+                <form method="POST" class="space-y-10">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Your Domain Name</label>
+                            <div class="relative group">
+                                {{ form.domain }}
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2.5 font-medium italic">Example: <span class="text-slate-600 font-bold">portfolio.johndoe.com</span> or <span class="text-slate-600 font-bold">johndoe.com</span></p>
+                        </div>
+
+                        <div class="p-6 sm:p-8 rounded-[1.5rem] bg-slate-50 border border-slate-100 space-y-6">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">DNS</span>
+                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Setup Instructions</h3>
+                            </div>
+                            
+                            <p class="text-sm text-slate-600 leading-relaxed font-medium">
+                                To connect your domain, log in to your domain provider (GoDaddy, Namecheap, etc.) and add the following record:
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Type</p>
+                                    <p class="dns-code inline-block">CNAME</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Host (Name)</p>
+                                    <p class="dns-code inline-block">@</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Value (Points to)</p>
+                                    <p class="dns-code inline-block">skillifly.cloud</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100">
+                                <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                                <p class="text-xs text-amber-700 leading-relaxed font-medium">
+                                    DNS changes can take up to <span class="font-bold underline">24-48 hours</span> to propagate worldwide, though they usually happen much faster.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex flex-col sm:flex-row gap-4">
+                        <button type="submit" class="flex-1 btn-primary py-4 rounded-2xl text-base font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-2">
+                            <span>Save Domain Settings</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
+                {% if custom_domain.domain %}
+                <div class="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full {% if custom_domain.is_active %}bg-emerald-500 animate-pulse{% else %}bg-amber-500{% endif %}"></div>
+                        <span class="text-sm font-bold text-slate-700">
+                            Status: {% if custom_domain.is_active %}Live{% else %}Pending DNS{% endif %}
+                        </span>
+                    </div>
+                    {% if custom_domain.is_active %}
+                    <a href="http://{{ custom_domain.domain }}" target="_blank" class="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                        Visit Domain
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

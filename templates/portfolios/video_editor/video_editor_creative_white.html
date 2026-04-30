@@ -141,10 +141,10 @@
                 {% for project in projects %}
                 {% if project.video_type == 'reel' %}
                 <a href="/{{ personal_info.user.username }}/reels/"
-                   class="project-card reveal" style="transition-delay:{{ forloop.counter0 }}00ms">
+                   class="project-card reveal" data-project-id="{{ project.id }}" style="transition-delay:{{ forloop.counter0 }}00ms">
                 {% else %}
                 <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/"
-                   class="project-card reveal" style="transition-delay:{{ forloop.counter0 }}00ms">
+                   class="project-card reveal" data-project-id="{{ project.id }}" style="transition-delay:{{ forloop.counter0 }}00ms">
                 {% endif %}
                     <div class="project-thumb">
                         {% if project.image %}

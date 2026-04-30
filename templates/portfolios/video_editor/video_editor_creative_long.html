@@ -3,7 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% include "seo/portfolio_seo.html" %}
     <title>{{ personal_info.full_name }} — Professional Work</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -338,7 +339,7 @@
 
         <div class="video-grid">
             {% for project in projects %}
-            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card" data-project-id="{{ project.id }}">
                 <div class="thumbnail-wrapper" data-url="{{ project.url }}">
                     {% if project.image %}
                     <img src="{{ project.image.url }}" alt="{{ project.title }}">

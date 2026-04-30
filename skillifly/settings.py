@@ -92,10 +92,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise: serve static files efficiently without a separate web server step.
-    # Must come right after SecurityMiddleware.
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'core.middleware.CustomDomainMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
