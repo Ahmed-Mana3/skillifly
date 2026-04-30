@@ -421,7 +421,7 @@
 
         <div class="video-grid">
             {% for project in projects %}
-            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card" data-project-id="{{ project.id }}">
                 <div class="thumbnail-wrapper" data-url="{{ project.url }}">
                     {% if project.image %}
                     <img src="{{ project.image.url }}" alt="{{ project.title }}">
@@ -526,5 +526,11 @@
         });
     </script>
 
+    <script>
+        window.SF_ANALYTICS = {
+            username: "{{ username }}"
+        };
+    </script>
+    <script src="{% static 'js/sf_analytics.js' %}"></script>
 </body>
 </html>

@@ -1,5 +1,10 @@
 from django.contrib import admin
-from core.models import CustomUser, Category, Theme, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, Subscription, UserPayment, DiscountCode, SiteSettings, Review, Showcase
+from core.models import (
+    CustomUser, Category, Theme, Profile, PersonalInfo, 
+    Experience, Education, Skill, Project, Link, 
+    Subscription, UserPayment, DiscountCode, SiteSettings, 
+    Review, Showcase, SEOSettings, CustomDomain
+)
 
 # Register your models here.
 admin.site.register(CustomUser)
@@ -16,6 +21,22 @@ admin.site.register(Subscription)
 admin.site.register(UserPayment)
 admin.site.register(DiscountCode)
 admin.site.register(SiteSettings)
+admin.site.register(SEOSettings)
+
+@admin.register(CustomDomain)
+class CustomDomainAdmin(admin.ModelAdmin):
+    list_display = ('domain', 'user', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    search_fields = ('domain', 'user__username')
+    actions = ['activate_domains', 'deactivate_domains']
+
+    def activate_domains(self, request, queryset):
+        queryset.update(is_active=True)
+    activate_domains.short_description = "Mark selected domains as Active"
+
+    def deactivate_domains(self, request, queryset):
+        queryset.update(is_active=False)
+    deactivate_domains.short_description = "Mark selected domains as Inactive"
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

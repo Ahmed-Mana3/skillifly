@@ -280,5 +280,52 @@ class Showcase(models.Model):
     class Meta:
         ordering = ['order', '-created_at']
 
+
+# 12. SEO Settings
+class SEOSettings(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="seo_settings")
+    meta_title = models.CharField(max_length=255, blank=True, null=True, help_text="Custom browser title tag")
+    meta_description = models.TextField(blank=True, null=True, help_text="Custom meta description for search engines")
+    meta_keywords = models.CharField(max_length=500, blank=True, null=True, help_text="Comma-separated keywords")
+    
+    # social sharing
+    og_title = models.CharField(max_length=255, blank=True, null=True, help_text="Title for social media sharing")
+    og_description = models.TextField(blank=True, null=True, help_text="Description for social media sharing")
+    og_image = models.ImageField(upload_to='seo_images/', blank=True, null=True, help_text="Custom image for social media sharing")
+
     def __str__(self):
-        return f"Showcase: {self.profile.user.username}"
+        return f"SEO Settings: {self.user.username}"
+
+class CustomDomain(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="custom_domain")
+    domain = models.CharField(max_length=255, unique=True, help_text="The custom domain name (e.g., example.com)")
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.domain} ({self.user.username})"
+
+class AnalyticsVisit(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="analytics_visits")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    country = models.CharField(max_length=100, default="Unknown")
+    city = models.CharField(max_length=100, default="Unknown")
+    user_agent = models.TextField(null=True, blank=True)
+    referer = models.TextField(null=True, blank=True)
+    session_id = models.CharField(max_length=255, db_index=True)
+    duration_seconds = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Visit to {self.user.username} from {self.country}"
+
+class AnalyticsEvent(models.Model):
+    visit = models.ForeignKey(AnalyticsVisit, on_delete=models.CASCADE, related_name="events")
+    event_type = models.CharField(max_length=50) # e.g., 'project_click'
+    project = models.ForeignKey('Project', on_delete=models.SET_NULL, null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.event_type} on {self.visit.user.username}'s portfolio"

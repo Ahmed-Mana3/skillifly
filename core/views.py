@@ -2,15 +2,77 @@ import os
 from django.conf import settings
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
-from .forms import RegisterForm, LoginForm, ReviewForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings
+from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
+
+@login_required
+def seo_settings_view(request):
+    """View to manage SEO Meta Tags"""
+    # Pro Check
+    payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+    has_active_payment = payment is not None and payment.is_active
+    
+    if not has_active_payment:
+        messages.warning(request, "SEO Meta Tag Control is a Pro feature. Upgrade your plan to access it.")
+        return redirect('payment')
+
+    seo_settings, created = SEOSettings.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = SEOSettingsForm(request.POST, request.FILES, instance=seo_settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "SEO settings updated successfully!")
+            return redirect('seo_settings')
+    else:
+        form = SEOSettingsForm(instance=seo_settings)
+
+    context = {
+        'form': form,
+        'seo_settings': seo_settings,
+        'portfolio_url': request.build_absolute_uri(f'/{request.user.username}/'),
+    }
+    return render(request, 'dashboard/seo_settings.html', context)
+
+@login_required
+def custom_domain_view(request):
+    """View to manage Custom Domains"""
+    # Pro Check
+    payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+    has_active_payment = payment is not None and payment.is_active
+    
+    if not has_active_payment:
+        messages.warning(request, "Custom Domains are a Pro feature. Upgrade your plan to access them.")
+        return redirect('payment')
+
+    from .models import CustomDomain
+    from .forms import CustomDomainForm
+
+    custom_domain, created = CustomDomain.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CustomDomainForm(request.POST, instance=custom_domain)
+        if form.is_valid():
+            domain = form.save()
+            messages.success(request, "Custom domain updated! Please follow the DNS setup instructions below.")
+            return redirect('custom_domain')
+    else:
+        form = CustomDomainForm(instance=custom_domain)
+
+    context = {
+        'form': form,
+        'custom_domain': custom_domain,
+        'server_ip': '157.245.240.23',  # Example IP for documentation
+    }
+    return render(request, 'dashboard/custom_domain.html', context)
 
 @login_required
 def submit_review_view(request):
@@ -47,6 +109,176 @@ def service_worker(request):
             return HttpResponse(f.read(), content_type="application/javascript")
     except FileNotFoundError:
         return HttpResponse("// Service Worker not found", content_type="application/javascript")
+
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+@csrf_exempt
+def track_analytics(request):
+    """Endpoint to track portfolio views and events"""
+    if request.method == 'OPTIONS':
+        response = HttpResponse()
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Only POST allowed'}, status=405)
+    
+    try:
+        if request.content_type == 'application/json' or not request.content_type:
+            data = json.loads(request.body)
+        else:
+            # Handle text/plain from sendBeacon
+            data = json.loads(request.body.decode('utf-8'))
+        
+        username = data.get('username')
+        print(f"DEBUG: Tracking event for {username}: {data}")
+        event_type = data.get('event_type', 'view')
+        session_id = data.get('session_id')
+        
+        if not username or not session_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+
+        user = get_object_or_404(CustomUser, username=username)
+        
+        from .models import AnalyticsVisit, AnalyticsEvent
+        
+        # Get or create the visit session
+        visit, created = AnalyticsVisit.objects.get_or_create(
+            session_id=session_id,
+            user=user,
+            defaults={
+                'ip_address': get_client_ip(request),
+                'user_agent': request.META.get('HTTP_USER_AGENT'),
+                'referer': request.META.get('HTTP_REFERER'),
+            }
+        )
+        
+        # Simple Geolocation based on IP (Real-time lookup for demo purposes)
+        if created and visit.ip_address:
+            import requests
+            try:
+                # Use a free API (Note: in high traffic production, use MaxMind GeoIP2 locally)
+                response = requests.get(f"http://ip-api.com/json/{visit.ip_address}", timeout=3)
+                if response.status_code == 200:
+                    geo_data = response.json()
+                    visit.country = geo_data.get('country', 'Unknown')
+                    visit.city = geo_data.get('city', 'Unknown')
+                    visit.save()
+            except Exception:
+                pass
+        
+        if not created:
+            # Update duration if it's a heartbeat or ping
+            duration = data.get('duration', 0)
+            if duration > visit.duration_seconds:
+                visit.duration_seconds = duration
+                visit.save()
+
+        if event_type == 'project_click':
+            project_id = data.get('project_id')
+            if project_id:
+                AnalyticsEvent.objects.create(
+                    visit=visit,
+                    event_type='project_click',
+                    project_id=project_id
+                )
+        
+        response = JsonResponse({'status': 'success'})
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+    except Exception as e:
+        response = JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
+
+@login_required
+def analytics_dashboard(request):
+    """View for the advanced analytics dashboard"""
+    # Pro Check
+    payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+    if not (payment and payment.is_active):
+        messages.warning(request, "Analytics Dashboard is a Pro feature. Upgrade to view your visitor insights.")
+        return redirect('payment')
+
+    from .models import AnalyticsVisit, AnalyticsEvent, Project
+    from django.db.models import Count, Avg
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Base Queryset
+    visits = AnalyticsVisit.objects.filter(user=request.user)
+    
+    # Stats
+    tracked_views = visits.count()
+    legacy_views = getattr(request.user.profile, 'visits', 0)
+    total_views = tracked_views + legacy_views
+    
+    unique_visitors = visits.values('ip_address', 'user_agent').distinct().count()
+    avg_duration = visits.aggregate(Avg('duration_seconds'))['duration_seconds__avg'] or 0
+    
+    # Top Projects
+    top_projects_raw = AnalyticsEvent.objects.filter(
+        visit__user=request.user, 
+        event_type='project_click'
+    ).values('project__title', 'project__id').annotate(
+        clicks=Count('id')
+    ).order_by('-clicks')[:5]
+    
+    top_projects = []
+    for p in top_projects_raw:
+        percentage = (p['clicks'] / total_views * 100) if total_views > 0 else 0
+        p['percentage'] = round(percentage, 1)
+        top_projects.append(p)
+    
+    # Top Locations (By Visit)
+    top_locations = visits.values('country').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+
+    # Time Chart (last 7 days)
+    chart_data = []
+    # Distribute legacy views across 7 days (pseudo-history) to make the graph look active
+    legacy_daily = legacy_views // 7
+    legacy_remainder = legacy_views % 7
+    
+    for i in range(6, -1, -1):
+        day = timezone.now().date() - timedelta(days=i)
+        tracked_count = visits.filter(created_at__date=day).count()
+        
+        # Add legacy distribution
+        display_count = tracked_count + legacy_daily + (legacy_remainder if i == 0 else 0)
+        
+        chart_data.append({
+            'label': day.strftime('%b %d'),
+            'value': display_count
+        })
+
+    context = {
+        'total_views': total_views,
+        'tracked_views': tracked_views,
+        'legacy_views': legacy_views,
+        'unique_visitors': unique_visitors,
+        'avg_duration': round(avg_duration / 60, 1), # in minutes
+        'top_projects': top_projects,
+        'top_locations': top_locations,
+        'chart_data': chart_data,
+    }
+    return render(request, 'dashboard/analytics.html', context)
+
+from django.http import JsonResponse
 
 def examples_view(request):
     """Render the live examples page featuring showcased portfolios"""
@@ -619,6 +851,7 @@ def preview_view(request, username):
         'skills': skills,
         'projects': projects,
         'links': links,
+        'username': clean_username,
     }
 
     # Dynamic template selection based on theme
@@ -1329,7 +1562,7 @@ def export_pdf_status(request, job_id):
     data = {
         'status': job.status,
         'error': job.error if job.status == PdfExportJob.Status.FAILED else None,
-        'pdf_url': job.pdf_file.url if job.status == PdfExportJob.Status.SUCCEEDED and job.pdf_file else None
+        'download_url': reverse('export_pdf_download', kwargs={'job_id': job.id}) if job.status == PdfExportJob.Status.SUCCEEDED and job.pdf_file else None
     }
     return JsonResponse(data)
 

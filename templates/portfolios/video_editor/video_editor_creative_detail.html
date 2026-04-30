@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
+    {% include "seo/portfolio_seo.html" %}
     <title>{{ project.title }} — {{ personal_info.full_name }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -409,7 +410,7 @@
 
             {% if other_videos %}
                 {% for other in other_videos %}
-                <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card">
+                <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card" data-project-id="{{ other.id }}">
                     <div class="related-thumb">
                         {% if other.image %}
                             <img src="{{ other.image.url }}" alt="{{ other.title }}">

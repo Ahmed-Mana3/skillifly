@@ -338,7 +338,7 @@
 
     <div class="reels-container" id="reelsContainer">
         {% for project in projects %}
-        <div class="reel-slide" data-id="{{ project.id }}" data-url="{{ project.url }}">
+        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}">
             <div class="ambient-glow" id="glow-{{ project.id }}"></div>
             <div class="video-wrapper">
                 <div class="loading-shimmer"></div>
@@ -450,7 +450,7 @@
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                const id = entry.target.dataset.id;
+                const id = entry.target.dataset.projectId;
                 const url = entry.target.dataset.url;
                 const playerContainer = document.getElementById(`player-${id}`);
                 const shimmer = entry.target.querySelector('.loading-shimmer');
@@ -495,8 +495,15 @@
         }, observerOptions);
 
         document.querySelectorAll('.reel-slide').forEach(reel => {
-            if (reel.dataset.id) observer.observe(reel);
+            if (reel.dataset.projectId) observer.observe(reel);
         });
     </script>
+
+    <script>
+        window.SF_ANALYTICS = {
+            username: "{{ username }}"
+        };
+    </script>
+    <script src="{% static 'js/sf_analytics.js' %}"></script>
 </body>
 </html>

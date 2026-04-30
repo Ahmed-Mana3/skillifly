@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% include "seo/portfolio_seo.html" %}
     <title>{{ personal_info.full_name }} — Academic Portfolio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -176,7 +177,7 @@
             <div class="section-divider"></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {% for project in projects %}
-                <div class="card p-6 flex flex-col h-full">
+                <div class="card p-6 flex flex-col h-full" data-project-id="{{ project.id }}">
                     {% if project.image %}
                     <div class="aspect-video w-full overflow-hidden rounded mb-4">
                         <img src="{{ project.image.url }}" alt="{{ project.title }}"
