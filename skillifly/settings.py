@@ -89,6 +89,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'core.middleware.CustomDomainMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'core.middleware.DynamicCsrfTrustedOriginsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -309,6 +310,10 @@ if not DEBUG:
         for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
         if o.strip()
     ]
+
+    # Custom domains are added dynamically at runtime by
+    # core.middleware.DynamicCsrfTrustedOriginsMiddleware so that
+    # newly-verified domains work without restarting Gunicorn.
 
     # Required when behind a reverse proxy (Nginx) to detect HTTPS.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

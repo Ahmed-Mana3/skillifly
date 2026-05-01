@@ -300,6 +300,7 @@ class CustomDomain(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="custom_domain")
     domain = models.CharField(max_length=255, unique=True, help_text="The custom domain name (e.g., example.com)")
     is_active = models.BooleanField(default=False)
+    dns_verified_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

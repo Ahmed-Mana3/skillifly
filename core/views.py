@@ -55,14 +55,58 @@ def custom_domain_view(request):
 
     from .models import CustomDomain
     from .forms import CustomDomainForm
+    import socket
 
     custom_domain, created = CustomDomain.objects.get_or_create(user=request.user)
+    server_ip = '157.245.240.23'
 
     if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'verify':
+            if not custom_domain.domain:
+                messages.error(request, "Please set a domain first.")
+            else:
+                try:
+                    # Check if domain resolves to our server IP (A record)
+                    # or to skillifly.cloud (CNAME record)
+                    resolved_ip = socket.gethostbyname(custom_domain.domain)
+                    skillifly_ip = socket.gethostbyname('skillifly.cloud')
+                    
+                    if resolved_ip == server_ip or resolved_ip == skillifly_ip:
+                        custom_domain.is_active = True
+                        custom_domain.dns_verified_at = timezone.now()
+                        custom_domain.save()
+                        
+                        # Trigger SSL provisioning in production
+                        if not settings.DEBUG:
+                            import subprocess
+                            try:
+                                subprocess.Popen(
+                                    ['sudo', 'python', 'manage.py', 'provision_ssl', custom_domain.domain],
+                                    cwd=settings.BASE_DIR,
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL,
+                                )
+                                logger.info('SSL provisioning triggered for %s', custom_domain.domain)
+                            except Exception as e:
+                                logger.warning('Could not trigger SSL provisioning for %s: %s', custom_domain.domain, e)
+                        
+                        messages.success(request, f"DNS Verified! Your portfolio is now live at {custom_domain.domain}. SSL certificate is being provisioned automatically.")
+                    else:
+                        messages.warning(request, f"DNS check failed. {custom_domain.domain} currently points to {resolved_ip}, but it should point to {server_ip}. Please update your DNS records.")
+                except socket.gaierror:
+                    messages.error(request, f"Could not resolve {custom_domain.domain}. Please check your DNS settings and try again in a few minutes.")
+            return redirect('custom_domain')
+
         form = CustomDomainForm(request.POST, instance=custom_domain)
         if form.is_valid():
-            domain = form.save()
-            messages.success(request, "Custom domain updated! Please follow the DNS setup instructions below.")
+            domain_obj = form.save()
+            # Reset verification status on domain change
+            domain_obj.is_active = False
+            domain_obj.dns_verified_at = None
+            domain_obj.save()
+            messages.success(request, "Custom domain updated! Please follow the DNS setup instructions and click Verify.")
             return redirect('custom_domain')
     else:
         form = CustomDomainForm(instance=custom_domain)
