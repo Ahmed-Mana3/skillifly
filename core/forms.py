@@ -455,5 +455,14 @@ class CustomDomainForm(forms.ModelForm):
     def clean_domain(self):
         domain = self.cleaned_data.get('domain', '').lower().strip()
         # Basic validation: remove http://, https://, and trailing slashes
-        domain = domain.replace('http://', '').replace('https://', '').rstrip('/')
+        domain = domain.replace('http://', '').replace('https://', '').split('/')[0]
+        
+        if not domain:
+            raise forms.ValidationError("Please enter a valid domain name.")
+        
+        # Prevent people from trying to use the main domain as their custom domain
+        main_domains = ['skillifly.cloud', 'localhost', '127.0.0.1']
+        if any(domain == d or domain.endswith('.' + d) for d in main_domains):
+            raise forms.ValidationError("You cannot use this domain as a custom domain.")
+            
         return domain

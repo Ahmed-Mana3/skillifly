@@ -51,16 +51,9 @@ if not SECRET_KEY:
 DEBUG = _env_bool("DJANGO_DEBUG", default=True)
 
 # Comma-separated list of hosts/domains your site can serve.
-# Example: DJANGO_ALLOWED_HOSTS=skillifly.cloud,www.skillifly.cloud
-ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
-    if h.strip()
-]
-
-# In development, allow localhost automatically so devs don't need to configure it.
-if DEBUG and not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0","skillifly.cloud","www.skillifly.cloud","156.67.217.227"]  # noqa: S104
+# In production, we allow '*' so that custom domains can reach the app,
+# then we validate them in CustomDomainMiddleware.
+ALLOWED_HOSTS = ["*"]
 
 SITE_ID = int(os.environ.get("DJANGO_SITE_ID", "1"))
 
@@ -96,6 +89,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'core.middleware.CustomDomainMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'core.middleware.DynamicCsrfTrustedOriginsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -316,6 +310,10 @@ if not DEBUG:
         for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
         if o.strip()
     ]
+
+    # Custom domains are added dynamically at runtime by
+    # core.middleware.DynamicCsrfTrustedOriginsMiddleware so that
+    # newly-verified domains work without restarting Gunicorn.
 
     # Required when behind a reverse proxy (Nginx) to detect HTTPS.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
