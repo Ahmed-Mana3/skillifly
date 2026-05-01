@@ -58,7 +58,9 @@ def custom_domain_view(request):
     import socket
 
     custom_domain, created = CustomDomain.objects.get_or_create(user=request.user)
-    server_ip = '157.245.240.23'
+    
+    # The actual IP of the Skillifly VPS
+    server_ip = '156.67.217.227'
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -114,7 +116,7 @@ def custom_domain_view(request):
     context = {
         'form': form,
         'custom_domain': custom_domain,
-        'server_ip': '157.245.240.23',  # Example IP for documentation
+        'server_ip': server_ip,
     }
     return render(request, 'dashboard/custom_domain.html', context)
 
