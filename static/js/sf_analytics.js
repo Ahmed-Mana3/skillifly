@@ -49,14 +49,44 @@
         track('heartbeat');
     }, 20000);
 
+    const trackedProjects = new Set();
+
     // Track clicks on elements with data-project-id
     document.addEventListener('click', (e) => {
         const projectLink = e.target.closest('[data-project-id]');
         if (projectLink) {
             const projectId = projectLink.getAttribute('data-project-id');
-            track('project_click', { project_id: projectId });
+            if (!trackedProjects.has(projectId)) {
+                trackedProjects.add(projectId);
+                track('project_click', { project_id: projectId });
+            }
         }
     });
+
+    // Automatically track reels that come into view (since they autoplay on scroll)
+    const projectObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const projectId = entry.target.getAttribute('data-project-id');
+                if (projectId && !trackedProjects.has(projectId)) {
+                    trackedProjects.add(projectId);
+                    track('project_click', { project_id: projectId });
+                }
+            }
+        });
+    }, { threshold: 0.6 });
+
+    function observeProjects() {
+        document.querySelectorAll('.reel-slide[data-project-id]').forEach(el => {
+            projectObserver.observe(el);
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', observeProjects);
+    } else {
+        observeProjects();
+    }
 
     // Cleanup and final track
     window.addEventListener('visibilitychange', () => {

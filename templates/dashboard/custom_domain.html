@@ -54,6 +54,7 @@
         font-size: 0.85rem;
         color: #1E293B;
         font-weight: 600;
+        word-break: break-all;
     }
 
     @keyframes fadeIn {
@@ -128,9 +129,9 @@
 
                             <div class="space-y-4">
                                 <!-- A Record for Root -->
-                                <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
                                     <p class="text-[10px] font-black text-blue-500 uppercase mb-3">Option 1: Root Domain (e.g. johndoe.com)</p>
-                                    <div class="grid grid-cols-3 gap-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                         <div>
                                             <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Type</p>
                                             <p class="dns-code">A</p>
@@ -147,9 +148,9 @@
                                 </div>
 
                                 <!-- CNAME for Subdomain -->
-                                <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
                                     <p class="text-[10px] font-black text-purple-500 uppercase mb-3">Option 2: Subdomain (e.g. portfolio.johndoe.com)</p>
-                                    <div class="grid grid-cols-3 gap-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                         <div>
                                             <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Type</p>
                                             <p class="dns-code">CNAME</p>

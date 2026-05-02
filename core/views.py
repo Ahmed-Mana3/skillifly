@@ -296,20 +296,14 @@ def analytics_dashboard(request):
 
     # Time Chart (last 7 days)
     chart_data = []
-    # Distribute legacy views across 7 days (pseudo-history) to make the graph look active
-    legacy_daily = legacy_views // 7
-    legacy_remainder = legacy_views % 7
     
     for i in range(6, -1, -1):
         day = timezone.now().date() - timedelta(days=i)
         tracked_count = visits.filter(created_at__date=day).count()
         
-        # Add legacy distribution
-        display_count = tracked_count + legacy_daily + (legacy_remainder if i == 0 else 0)
-        
         chart_data.append({
             'label': day.strftime('%b %d'),
-            'value': display_count
+            'value': tracked_count
         })
 
     context = {
@@ -320,7 +314,7 @@ def analytics_dashboard(request):
         'avg_duration': round(avg_duration / 60, 1), # in minutes
         'top_projects': top_projects,
         'top_locations': top_locations,
-        'chart_data': chart_data,
+        'chart_data': json.dumps(chart_data),
     }
     return render(request, 'dashboard/analytics.html', context)
 
