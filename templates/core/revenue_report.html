@@ -1,0 +1,270 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Revenue Insights | Skillifly Admin{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .date-input {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #334155;
+        transition: all 0.2s;
+        outline: none;
+    }
+    .date-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    .filter-btn {
+        background-color: #0f172a;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        transition: all 0.2s;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .filter-btn:hover {
+        background-color: #1e293b;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <!-- Page header & Filters -->
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10 animate-fadeInUp">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-3">
+                Internal Reports
+            </div>
+            <h1 class="text-4xl font-bold mb-2 text-black" style="font-family: 'Syne', sans-serif;">
+                Revenue <span class="gradient-text">Insights</span> ✦
+            </h1>
+            <p class="text-slate-600 font-medium">Viewing performance from {{ start_date|date:"M d" }} to {{ end_date|date:"M d, Y" }}.</p>
+        </div>
+
+        <form method="GET" class="flex flex-wrap items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex flex-col gap-1">
+                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">Start Date</span>
+                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="date-input">
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">End Date</span>
+                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="date-input">
+            </div>
+            <button type="submit" class="filter-btn mt-4 lg:mt-0">Apply Filter</button>
+        </form>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
+        <div class="gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group">
+            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Total Revenue</p>
+            <p class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">EGP {{ total_revenue|floatformat:2 }}</p>
+            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
+        </div>
+        <div class="gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group">
+            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Paid Activations</p>
+            <p class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">{{ total_transactions }}</p>
+            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors"></div>
+        </div>
+        <div class="gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group">
+            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Average Ticket</p>
+            <p class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">EGP {{ avg_payment|floatformat:2 }}</p>
+            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="gradient-border rounded-2xl bg-white p-8 mb-12 animate-fadeInUp" style="animation-delay: 0.2s">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Revenue Growth</h3>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Daily Revenue (EGP)</span>
+            </div>
+        </div>
+        <div class="h-[300px] w-full">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="gradient-border rounded-2xl bg-white overflow-hidden animate-fadeInUp" style="animation-delay: 0.3s">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Platform Transactions</h3>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Manual & Coupon Activations</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50">
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">User</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Method / Code</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Amount</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Plan</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for p in payments %}
+                    <tr class="hover:bg-slate-50/30 transition-colors">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold">
+                                    {{ p.user.username|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-black">{{ p.user.username }}</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">{{ p.user.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-600">
+                                    {% if 'MANUAL' in p.kashier_order_id %}
+                                        Manual Payment
+                                    {% elif 'COUPON' in p.kashier_order_id %}
+                                        Coupon Activation
+                                    {% else %}
+                                        Other
+                                    {% endif %}
+                                </span>
+                                {% if p.discount_code_used %}
+                                <span class="text-[10px] text-blue-500 font-bold uppercase tracking-tighter">{{ p.discount_code_used }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-bold {% if p.amount > 0 %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                                EGP {{ p.amount|floatformat:2 }}
+                            </p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-xs text-slate-600 font-bold">{{ p.subscription.name|default:"Pro Plan" }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-xs text-slate-500 font-medium">{{ p.date|date:"M d, Y • H:i" }}</p>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-8 py-12 text-center">
+                            <div class="flex flex-col items-center gap-2">
+                                <svg class="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p class="text-slate-400 font-medium">No transactions found for the selected period.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const labels = {{ chart_labels|safe }};
+        const values = {{ chart_values|safe }};
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Daily Revenue',
+                    data: values,
+                    borderColor: '#3b82f6',
+                    borderWidth: 3,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#3b82f6',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#3b82f6',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: '#fff',
+                        titleColor: '#000',
+                        bodyColor: '#64748b',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'EGP ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { 
+                            color: '#94a3b8', 
+                            font: { size: 10, weight: 'bold' },
+                            callback: function(value) { return 'EGP ' + value; }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    .gradient-brand {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+    .gradient-text {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    @keyframes fadeInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}

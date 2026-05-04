@@ -3,7 +3,7 @@ from core.models import (
     CustomUser, Category, Theme, Profile, PersonalInfo, 
     Experience, Education, Skill, Project, Link, 
     Subscription, UserPayment, DiscountCode, SiteSettings, 
-    Review, Showcase, SEOSettings, CustomDomain
+    Review, Showcase, SEOSettings, CustomDomain, ManualPayment
 )
 
 # Register your models here.
@@ -59,3 +59,12 @@ class ShowcaseAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />', obj.preview_image.url)
         return "No Image"
     image_preview.short_description = 'Preview'
+
+
+@admin.register(ManualPayment)
+class ManualPaymentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan_type', 'amount_expected', 'payment_method', 'status', 'created_at')
+    list_filter = ('status', 'payment_method', 'plan_type')
+    search_fields = ('user__username', 'sender_identifier')
+    readonly_fields = ('created_at',)
+

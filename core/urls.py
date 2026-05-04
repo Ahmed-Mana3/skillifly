@@ -35,8 +35,11 @@ urlpatterns = [
     path('contact/', views.contact_view, name='contact'),
     path('sw.js', views.service_worker, name='service_worker'),
     path('submit-review-exclusive/', views.submit_review_view, name='submit_review'),
+    path('revenue-report-exclusive/', views.revenue_report, name='revenue_report'),
     path('<str:username>/reels/', views.portfolio_reels, name='portfolio_reels'),
     path('<str:username>/long-videos/', views.portfolio_long_videos, name='portfolio_long_videos'),
     path('<str:username>/long-videos/<slug:slug>/', views.portfolio_video_detail, name='portfolio_video_detail'),
     path('<str:username>/', views.preview_view, name='preview'),
 ]
+
+

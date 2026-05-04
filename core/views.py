@@ -4,13 +4,14 @@ from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.db.models import Sum, Count, Avg
 from datetime import timedelta
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment
 from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
 
 @login_required
@@ -339,7 +340,7 @@ from .forms import (
 )
 
 
-from django.db.models import Sum
+
 
 def index(request):
     """Render the home/landing page — redirect authenticated users to dashboard"""
@@ -1896,4 +1897,82 @@ Respond ONLY with this exact JSON format, no extra text:
 def manual_payment_pending(request):
     """Simple holding page (currently unused — verification is instant)."""
     return render(request, 'payment/payment_success.html')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def revenue_report(request):
+    """Hidden admin-only revenue report with date filtering and graphs."""
+    platform_launch_date = timezone.datetime(2026, 5, 1, tzinfo=timezone.get_current_timezone()).date()
+    today = timezone.now().date()
+    
+    # Get dates from request or set defaults
+    start_str = request.GET.get('start_date')
+    end_str = request.GET.get('end_date')
+    
+    if start_str:
+        try:
+            start_date = timezone.datetime.strptime(start_str, '%Y-%m-%d').date()
+            if start_date < platform_launch_date:
+                start_date = platform_launch_date
+        except ValueError:
+            start_date = max(platform_launch_date, today - timedelta(days=7))
+    else:
+        start_date = max(platform_launch_date, today - timedelta(days=7))
+        
+    if end_str:
+        try:
+            end_date = timezone.datetime.strptime(end_str, '%Y-%m-%d').date()
+        except ValueError:
+            end_date = today
+    else:
+        end_date = today
+
+    # Convert to datetime for filtering (inclusive)
+    start_dt = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))
+    end_dt = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
+    
+    # Fetch UserPayments (Exclude Kashier 'SKF-' gateway payments)
+    payments = UserPayment.objects.filter(
+        status='paid', 
+        date__range=(start_dt, end_dt)
+    ).exclude(
+        kashier_order_id__startswith='SKF-'
+    ).select_related('user', 'subscription').order_by('-date')
+    
+    # Calculate statistics
+    total_revenue = payments.aggregate(total=Sum('amount'))['total'] or 0
+    total_transactions = payments.count()
+    avg_payment = total_revenue / total_transactions if total_transactions > 0 else 0
+    
+    # Prepare Chart Data (Daily Revenue)
+    chart_labels = []
+    chart_values = []
+    
+    current_day = start_date
+    while current_day <= end_date:
+        day_total = payments.filter(
+            date__date=current_day
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        chart_labels.append(current_day.strftime('%b %d'))
+        chart_values.append(float(day_total))
+        current_day += timedelta(days=1)
+    
+    context = {
+        'payments': payments,
+        'total_revenue': total_revenue,
+        'total_transactions': total_transactions,
+        'avg_payment': avg_payment,
+        'start_date': start_date,
+        'end_date': end_date,
+        'min_date': platform_launch_date,
+        'chart_labels': json.dumps(chart_labels),
+        'chart_values': json.dumps(chart_values),
+    }
+    
+    return render(request, 'core/revenue_report.html', context)
+
+
+
+
 
