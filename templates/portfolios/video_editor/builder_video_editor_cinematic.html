@@ -1,0 +1,39 @@
+{% extends "dashboard/builder.html" %}
+{% load static %}
+
+{% block title %}Build Your Video Editor Portfolio — Cinematic{% endblock %}
+
+{% block extra_head %}
+  {{ block.super }}
+  <style>
+    /* Small theme hint inside the generic builder */
+    .builder-theme-hint {
+      background: rgba(255, 250, 240, 0.06);
+      border: 1px solid rgba(255, 250, 240, 0.10);
+      border-radius: 16px;
+      padding: 14px 16px;
+      color: rgba(244, 244, 245, 0.85);
+      margin-top: 16px;
+    }
+    .builder-theme-hint strong {
+      display: block;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 11px;
+      margin-bottom: 6px;
+      color: rgba(167, 139, 250, 0.95);
+    }
+    .builder-theme-hint p {
+      margin: 0;
+      color: rgba(161, 161, 170, 0.9);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {{ block.super }}
+{% endblock %}
+

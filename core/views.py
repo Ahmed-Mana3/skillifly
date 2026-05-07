@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator
 from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
 
 @login_required
@@ -336,11 +336,13 @@ from .forms import (
     ExperienceFormSet,
     ProjectFormSet,
     LinkFormSet,
+    CreatorFormSet,
     SkillFormSetUpdate,
     EducationFormSetUpdate,
     ExperienceFormSetUpdate,
     ProjectFormSetUpdate,
     LinkFormSetUpdate,
+    CreatorFormSetUpdate,
 )
 
 
@@ -533,6 +535,7 @@ def builder_view(request):
         experience_formset = ExperienceFormSet(request.POST, prefix="experience")
         project_formset = ProjectFormSet(request.POST, request.FILES, prefix="projects")
         link_formset = LinkFormSet(request.POST, prefix="links")
+        creator_formset = CreatorFormSet(request.POST, request.FILES, prefix="creators")
 
         if (
             personal_form.is_valid()
@@ -541,9 +544,10 @@ def builder_view(request):
             and experience_formset.is_valid()
             and project_formset.is_valid()
             and link_formset.is_valid()
+            and creator_formset.is_valid()
         ):
 
-            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset)
+            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset)
 
             # Set profile to public if user has payment
             payment = UserPayment.objects.filter(user=request.user, status='paid').last()
@@ -573,6 +577,7 @@ def builder_view(request):
         experience_formset = ExperienceFormSet(prefix="experience")
         project_formset = ProjectFormSet(prefix="projects")
         link_formset = LinkFormSet(prefix="links")
+        creator_formset = CreatorFormSet(prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
     context = {
@@ -582,6 +587,7 @@ def builder_view(request):
         "experience_formset": experience_formset,
         "project_formset": project_formset,
         "link_formset": link_formset,
+        "creator_formset": creator_formset,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
         "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True
@@ -617,6 +623,7 @@ def update_portfolio_view(request):
         experience_formset = ExperienceFormSetUpdate(request.POST, prefix="experience")
         project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects")
         link_formset = LinkFormSetUpdate(request.POST, prefix="links")
+        creator_formset = CreatorFormSetUpdate(request.POST, request.FILES, prefix="creators")
 
         if (
             personal_form.is_valid()
@@ -625,8 +632,9 @@ def update_portfolio_view(request):
             and experience_formset.is_valid()
             and project_formset.is_valid()
             and link_formset.is_valid()
+            and creator_formset.is_valid()
         ):
-            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset)
+            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset)
             # Set profile to public if user has active payment
             payment = UserPayment.objects.filter(user=request.user, status='paid').last()
             if payment and payment.is_active:
@@ -707,6 +715,13 @@ def update_portfolio_view(request):
         } for l in Link.objects.filter(user=user)]
         link_formset = LinkFormSetUpdate(initial=link_data, prefix="links")
 
+        # Creators
+        creator_data = [{
+            'name': c.name,
+            'image': c.image
+        } for c in Creator.objects.filter(user=user)]
+        creator_formset = CreatorFormSetUpdate(initial=creator_data, prefix="creators")
+
     profile = getattr(request.user, 'profile', None)
     context = {
         "personal_form": personal_form,
@@ -715,6 +730,7 @@ def update_portfolio_view(request):
         "experience_formset": experience_formset,
         "project_formset": project_formset,
         "link_formset": link_formset,
+        "creator_formset": creator_formset,
         "is_update": True,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
@@ -736,7 +752,7 @@ def update_portfolio_view(request):
     return render(request, template_name, context)
 
 
-def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset):
+def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset):
             personal_data = personal_form.cleaned_data
 
             skills = [
@@ -766,6 +782,12 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
             links = [
                 f.cleaned_data
                 for f in link_formset
+                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+            ]
+
+            creators = [
+                f.cleaned_data
+                for f in creator_formset
                 if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
             ]
 
@@ -854,6 +876,21 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
                     url=link_data["url"],
                 )
             
+            # Cache existing creator images
+            existing_creator_images = {c.name: c.image for c in Creator.objects.filter(user=request.user) if c.image}
+
+            Creator.objects.filter(user=request.user).delete()
+            for c_data in creators:
+                new_c_image = c_data.get("image")
+                if not new_c_image:
+                    new_c_image = existing_creator_images.get(c_data["name"])
+
+                Creator.objects.create(
+                    user=request.user,
+                    name=c_data["name"],
+                    image=new_c_image,
+                )
+            
             # Ensure a UserPayment record exists
             if not UserPayment.objects.filter(user=request.user).exists():
                 UserPayment.objects.create(user=request.user)
@@ -888,6 +925,12 @@ def preview_view(request, username):
     skills = Skill.objects.filter(user=user).select_related('user')
     projects = Project.objects.filter(user=user).select_related('user')
     links = Link.objects.filter(user=user).select_related('user')
+    creators = Creator.objects.filter(user=user).select_related('user')
+
+    # Cinematic/video-editor themes need safe numeric highlights
+    project_count = projects.count()
+    long_count = projects.filter(video_type='long').count()
+    reel_count = projects.filter(video_type='reel').count()
 
     context = {
         'personal_info': personal_info,
@@ -896,7 +939,11 @@ def preview_view(request, username):
         'skills': skills,
         'projects': projects,
         'links': links,
+        'creators': creators,
         'username': clean_username,
+        'project_count': project_count,
+        'long_count': long_count,
+        'reel_count': reel_count,
     }
 
     # Dynamic template selection based on theme

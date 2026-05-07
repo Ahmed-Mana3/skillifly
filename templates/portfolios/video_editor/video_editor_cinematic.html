@@ -1,1 +1,1524 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% include "seo/portfolio_seo.html" %}
+  <title>{{ personal_info.full_name|default:"Video Editor" }} | Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #101114;
+      --muted: #676d76;
+      --line: rgba(16, 17, 20, 0.12);
+      --paper: #f5f0e8;
+      --paper-strong: #fffaf0;
+      --panel: rgba(255, 250, 240, 0.78);
+      --ember: #ff5a3c;
+      --gold: #d9a441;
+      --teal: #0f9f9a;
+      --plum: #6c4cc4;
+      --blue: #2773ff;
+      --radius: 12px;
+      --shadow: 0 24px 80px rgba(26, 21, 14, 0.16);
+      --font: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --display: "Space Grotesk", "Inter", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 90, 60, 0.18), transparent 27rem),
+        radial-gradient(circle at 78% 8%, rgba(15, 159, 154, 0.16), transparent 28rem),
+        linear-gradient(135deg, #f7f2ea 0%, #ece5d9 45%, #f5f0e8 100%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body.menu-open { overflow: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .site-shell { min-height: 100vh; overflow: clip; }
+
+    .topbar {
+      position: fixed;
+      z-index: 20;
+      top: 18px;
+      left: 50%;
+      width: min(1180px, calc(100% - 32px));
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 10px 12px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      border-radius: var(--radius);
+      background: var(--panel);
+      backdrop-filter: blur(22px);
+      box-shadow: 0 18px 60px rgba(32, 24, 12, 0.12);
+      transform: translateX(-50%);
+      transition: background 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .topbar.is-scrolled {
+      background: rgba(255, 250, 240, 0.93);
+      box-shadow: 0 16px 50px rgba(32, 24, 12, 0.17);
+      border-color: rgba(16, 17, 20, 0.14);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: max-content;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--ink), #3c2b20 58%, var(--ember));
+      box-shadow: 0 12px 30px rgba(16, 17, 20, 0.18);
+      letter-spacing: 0.06em;
+    }
+
+    .brand-copy strong { display: block; font-size: 13px; letter-spacing: 0.02em; }
+    .brand-copy span { display: block; font-size: 12px; color: rgba(16, 17, 20, 0.62); font-weight: 600; }
+
+    .nav {
+      display: flex;
+      gap: 16px;
+      margin-left: auto;
+      margin-right: 8px;
+      align-items: center;
+    }
+    .nav a {
+      font-size: 13px;
+      color: rgba(16, 17, 20, 0.72);
+      font-weight: 600;
+      padding: 10px 10px;
+      border-radius: 10px;
+      transition: background 160ms ease, color 160ms ease;
+      white-space: nowrap;
+    }
+    .nav a:hover { background: rgba(16, 17, 20, 0.06); color: rgba(16, 17, 20, 0.92); }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 17, 20, 0.12);
+      background: rgba(255, 250, 240, 0.6);
+      font-weight: 700;
+      font-size: 13px;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(32, 24, 12, 0.12);
+      border-color: rgba(16, 17, 20, 0.18);
+    }
+
+    .menu-button {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 17, 20, 0.12);
+      background: rgba(255, 250, 240, 0.6);
+      padding: 0;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-direction: column;
+    }
+    .menu-button span {
+      width: 18px;
+      height: 2px;
+      background: rgba(16, 17, 20, 0.76);
+      border-radius: 2px;
+      transition: transform 200ms ease, opacity 200ms ease;
+    }
+    body.menu-open .menu-button span:nth-child(1) { transform: translateY(4px) rotate(45deg); }
+    body.menu-open .menu-button span:nth-child(2) { opacity: 0; }
+    body.menu-open .menu-button span:nth-child(3) { transform: translateY(-4px) rotate(-45deg); }
+
+    main { padding-top: 120px; }
+
+    .hero {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 56px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 34px;
+      align-items: center;
+      position: relative;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.64);
+      margin-bottom: 16px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 26px;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--ember), var(--teal));
+      opacity: 0.85;
+    }
+
+    .hero h1 {
+      font-family: var(--display);
+      font-size: clamp(2.25rem, 3.4vw, 3.4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin: 0 0 14px;
+    }
+
+    .hero-lede {
+      margin: 0 0 22px;
+      font-size: 1.08rem;
+      line-height: 1.7;
+      color: rgba(16, 17, 20, 0.84);
+      max-width: 54ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      border: 1px solid rgba(16, 17, 20, 0.12);
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+      cursor: pointer;
+    }
+    .button.primary {
+      background: linear-gradient(135deg, rgba(16, 17, 20, 0.96), rgba(16, 17, 20, 0.86) 70%, rgba(255, 90, 60, 0.92));
+      color: var(--paper-strong);
+      border-color: rgba(16, 17, 20, 0.18);
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.16);
+    }
+    .button.secondary {
+      background: rgba(255, 250, 240, 0.55);
+      color: rgba(16, 17, 20, 0.88);
+    }
+    .button:hover { transform: translateY(-1px); box-shadow: 0 18px 55px rgba(32, 24, 12, 0.16); }
+
+    .story-beats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: rgba(16, 17, 20, 0.68);
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .story-beats span {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.55);
+      box-shadow: 0 14px 50px rgba(32, 24, 12, 0.06);
+    }
+    .story-beats b {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      color: rgba(255, 250, 240, 0.96);
+      background: linear-gradient(135deg, var(--ember), var(--gold));
+      box-shadow: 0 12px 30px rgba(255, 90, 60, 0.16);
+      font-size: 12px;
+    }
+
+    .hero-stage { position: relative; }
+    .stage-glass {
+      position: absolute;
+      inset: -12px -10px auto auto;
+      width: 160px;
+      height: 160px;
+      border-radius: 40px;
+      filter: blur(0.0px);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    .stage-glass-left {
+      left: -16px;
+      right: auto;
+      top: -18px;
+      background: radial-gradient(circle at 30% 30%, rgba(15, 159, 154, 0.16), transparent 60%);
+    }
+    .stage-glass-right {
+      top: 24px;
+      right: -18px;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 90, 60, 0.18), transparent 60%);
+    }
+
+    .editor-scene {
+      border-radius: 20px;
+      border: 1px solid rgba(16, 17, 20, 0.12);
+      background: rgba(255, 250, 240, 0.72);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transform: translateZ(0);
+    }
+
+    .preview-monitor {
+      border-radius: 16px;
+      background: #0f1116;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(16, 17, 20, 0.22);
+    }
+    #heroCanvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      aspect-ratio: 16/9;
+    }
+    .playhead-dot {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--ember);
+      box-shadow: 0 0 0 4px rgba(255, 90, 60, 0.25);
+    }
+
+    .timeline-desk {
+      margin-top: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.66);
+      padding: 12px;
+      position: relative;
+    }
+    .timeline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+      font-size: 12px;
+      color: rgba(16, 17, 20, 0.62);
+      margin-bottom: 10px;
+    }
+    .timeline-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(16, 17, 20, 0.07);
+      overflow: hidden;
+      display: flex;
+      gap: 8px;
+      padding: 4px 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .timeline-track span {
+      height: 100%;
+      border-radius: 999px;
+      display: block;
+      opacity: 0.92;
+    }
+    .track-one span { background: linear-gradient(90deg, rgba(255, 90, 60, 0.86), rgba(217, 164, 65, 0.86)); }
+    .track-two span { background: linear-gradient(90deg, rgba(15, 159, 154, 0.86), rgba(39, 115, 255, 0.86)); }
+
+    .audio-wave {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: 3px;
+      height: 32px;
+      align-items: end;
+      margin: 2px 0 0;
+    }
+    .audio-wave i {
+      display: block;
+      height: 40%;
+      border-radius: 8px 8px 10px 10px;
+      background: rgba(16, 17, 20, 0.20);
+      transform-origin: bottom;
+      animation: wave 1400ms ease-in-out infinite;
+    }
+    .audio-wave i:nth-child(4n+1) { background: rgba(255, 90, 60, 0.24); }
+    .audio-wave i:nth-child(4n+2) { background: rgba(15, 159, 154, 0.22); }
+    .audio-wave i:nth-child(4n+3) { background: rgba(39, 115, 255, 0.18); }
+    .audio-wave i:nth-child(4n) { background: rgba(217, 164, 65, 0.22); }
+    .audio-wave i:nth-child(3n+1) { animation-delay: -180ms; }
+    .audio-wave i:nth-child(3n+2) { animation-delay: -320ms; }
+    .audio-wave i:nth-child(3n) { animation-delay: -540ms; }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.55); opacity: 0.85; }
+      50% { transform: scaleY(1.25); opacity: 1; }
+    }
+
+    .scrubber {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 50%;
+      height: 1px;
+      background: rgba(16, 17, 20, 0.10);
+      transform: translateY(16px);
+      pointer-events: none;
+    }
+    .scrubber::after {
+      content: "";
+      position: absolute;
+      left: 28%;
+      top: -10px;
+      width: 2px;
+      height: 22px;
+      border-radius: 2px;
+      background: var(--ember);
+      box-shadow: 0 0 0 6px rgba(255, 90, 60, 0.18);
+      animation: playhead 3.8s ease-in-out infinite;
+    }
+    @keyframes playhead {
+      0% { left: 14%; }
+      50% { left: 78%; }
+      100% { left: 14%; }
+    }
+
+    .scene-caption {
+      margin-top: 12px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(16, 17, 20, 0.14);
+      color: rgba(16, 17, 20, 0.80);
+    }
+    .scene-caption strong {
+      color: rgba(16, 17, 20, 0.9);
+      font-family: var(--display);
+      letter-spacing: -0.01em;
+      font-size: 13px;
+    }
+    .scene-caption span { font-weight: 800; font-size: 12px; }
+
+    .hero-proof {
+      width: min(1180px, calc(100% - 32px));
+      margin: 18px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .hero-proof > div {
+      border-radius: 16px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.58);
+      padding: 14px 16px;
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.06);
+    }
+    .hero-proof strong { display: block; font-family: var(--display); font-size: 22px; letter-spacing: -0.02em; }
+    .hero-proof span { display: block; margin-top: 4px; font-weight: 700; color: rgba(16, 17, 20, 0.64); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    .section {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 70px 0;
+    }
+    .section-kicker {
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.58);
+      margin-bottom: 12px;
+    }
+    .section h2 {
+      font-family: var(--display);
+      font-size: clamp(1.6rem, 2.3vw, 2.1rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 10px;
+    }
+    .section p { margin: 0 0 12px; color: rgba(16, 17, 20, 0.86); line-height: 1.8; }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+      margin-top: 18px;
+    }
+    .about-profile {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.62);
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.08);
+      overflow: hidden;
+    }
+    .about-avatar {
+      height: 110px;
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: 28px;
+      color: rgba(255, 250, 240, 0.98);
+      background: linear-gradient(135deg, var(--plum), var(--blue) 50%, var(--teal));
+    }
+    .about-profile-body { padding: 16px; }
+    .about-profile-body span { display: block; font-weight: 900; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(16, 17, 20, 0.58); }
+    .about-profile-body h3 { font-family: var(--display); margin: 8px 0 8px; letter-spacing: -0.02em; }
+    .about-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .about-tags span {
+      font-weight: 800;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.6);
+      color: rgba(16, 17, 20, 0.84);
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .text-link {
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.72);
+      border-bottom: 1px solid rgba(16, 17, 20, 0.22);
+      padding-bottom: 4px;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .text-link:hover { color: rgba(16, 17, 20, 0.92); border-color: rgba(16, 17, 20, 0.42); }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+    .project-card {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.6);
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.08);
+      overflow: hidden;
+      transform: translateZ(0);
+      transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+      cursor: pointer;
+      outline: none;
+      position: relative;
+    }
+    .project-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(16, 17, 20, 0.18);
+      box-shadow: 0 28px 80px rgba(32, 24, 12, 0.12);
+    }
+    .project-media {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: linear-gradient(135deg, rgba(16, 17, 20, 0.88), rgba(16, 17, 20, 0.72) 60%, rgba(255, 90, 60, 0.55));
+      overflow: hidden;
+    }
+    .project-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scale(1.01);
+      transition: transform 280ms ease, filter 280ms ease;
+      filter: saturate(1.02) contrast(1.02);
+    }
+    .project-card:hover .project-media img {
+      transform: scale(1.06);
+      filter: saturate(1.08) contrast(1.05);
+    }
+    .project-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(16, 17, 20, 0.00) 0%, rgba(16, 17, 20, 0.10) 55%, rgba(16, 17, 20, 0.62) 100%),
+        radial-gradient(circle at 30% 20%, rgba(255, 90, 60, 0.18), transparent 55%),
+        radial-gradient(circle at 70% 35%, rgba(15, 159, 154, 0.14), transparent 50%);
+      pointer-events: none;
+    }
+    .project-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 250, 240, 0.22);
+      background: rgba(16, 17, 20, 0.58);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 18px 55px rgba(16, 17, 20, 0.22);
+      color: rgba(255, 250, 240, 0.92);
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transform: translateY(0);
+      opacity: 0.92;
+      transition: transform 220ms ease, opacity 220ms ease, background 220ms ease, border-color 220ms ease;
+    }
+    .project-label::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--ember), var(--gold));
+      box-shadow: 0 0 0 4px rgba(255, 90, 60, 0.18);
+    }
+    .project-meta {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      gap: 6px;
+      padding: 14px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 250, 240, 0.18);
+      background: rgba(16, 17, 20, 0.48);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 24px 80px rgba(16, 17, 20, 0.24);
+      transform: translateY(10px);
+      opacity: 0.0;
+      transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease, background 260ms ease, border-color 260ms ease;
+    }
+    .project-title {
+      margin: 0;
+      color: rgba(255, 250, 240, 0.96);
+      font-family: var(--display);
+      letter-spacing: -0.02em;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+    .project-hint {
+      margin: 0;
+      color: rgba(255, 250, 240, 0.92);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      justify-self: start;
+      width: fit-content;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 250, 240, 0.22);
+      background: rgba(255, 250, 240, 0.08);
+      box-shadow: 0 18px 55px rgba(0, 0, 0, 0.18);
+      transform: translateY(2px);
+      opacity: 0.0;
+      transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease;
+    }
+    .project-hint::after {
+      content: "↗";
+      font-weight: 900;
+      opacity: 0.9;
+    }
+
+    .project-card:focus-within {
+      border-color: rgba(16, 17, 20, 0.22);
+      box-shadow: 0 30px 90px rgba(32, 24, 12, 0.16);
+    }
+
+    .project-card:hover .project-label,
+    .project-card:focus-within .project-label {
+      opacity: 1;
+      transform: translateY(-1px);
+      background: rgba(16, 17, 20, 0.66);
+      border-color: rgba(255, 250, 240, 0.26);
+    }
+
+    .project-card:hover .project-meta,
+    .project-card:focus-within .project-meta {
+      transform: translateY(0);
+      opacity: 1;
+      background: rgba(16, 17, 20, 0.56);
+      border-color: rgba(255, 250, 240, 0.22);
+    }
+
+    .project-card:hover .project-hint,
+    .project-card:focus-within .project-hint {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .project-card:hover .project-hint,
+    .project-card:focus-within .project-hint {
+      background: rgba(255, 250, 240, 0.12);
+      border-color: rgba(255, 250, 240, 0.30);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+    }
+
+    @media (hover: none) {
+      .project-meta { transform: none; opacity: 1; }
+      .project-hint { transform: none; opacity: 1; }
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .timeline-list {
+      display: grid;
+      gap: 12px;
+    }
+    .timeline-list article {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.58);
+      padding: 16px;
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.06);
+    }
+    .timeline-list time {
+      display: block;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.54);
+      margin-bottom: 8px;
+    }
+    .timeline-list h3 { margin: 0 0 6px; font-family: var(--display); }
+
+    .education-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .education-grid article {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.58);
+      padding: 16px;
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.06);
+    }
+    .education-grid article > span {
+      display: block;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.54);
+      margin-bottom: 10px;
+    }
+    .education-grid h3 { margin: 0 0 6px; font-family: var(--display); }
+
+    .creators-section { padding-top: 40px; }
+    .creator-motion-stage {
+      margin-top: 14px;
+      display: grid;
+      gap: 16px;
+    }
+    .creator-lane {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.58);
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.06);
+      overflow: hidden;
+    }
+    .creator-track {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      width: max-content;
+      animation: marquee 26s linear infinite;
+    }
+    .creator-lane-reverse .creator-track { animation-direction: reverse; }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    .creator-set { display: flex; gap: 12px; }
+    .creator-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.62);
+      min-width: 240px;
+      box-shadow: 0 14px 40px rgba(32, 24, 12, 0.06);
+    }
+    .creator-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: #101114;
+      display: block;
+      flex: none;
+      border: 1px solid rgba(16, 17, 20, 0.18);
+    }
+    .creator-pill strong { display: block; font-family: var(--display); letter-spacing: -0.01em; }
+    .creator-pill span { display: block; font-weight: 800; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(16, 17, 20, 0.56); }
+
+    .creator-proof {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .creator-proof article {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.58);
+      padding: 16px;
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.06);
+    }
+    .creator-proof strong { display: block; font-family: var(--display); letter-spacing: -0.02em; }
+    .creator-proof span { display: block; margin-top: 10px; font-weight: 800; color: rgba(16, 17, 20, 0.58); }
+
+    .contact-panel {
+      border-radius: 22px;
+      border: 1px solid rgba(16, 17, 20, 0.12);
+      background: rgba(255, 250, 240, 0.64);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .contact-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    .brief-form {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.62);
+      padding: 16px;
+    }
+    .brief-form label { display: grid; gap: 8px; font-weight: 900; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(16, 17, 20, 0.56); margin-bottom: 12px; }
+    .brief-form input, .brief-form select, .brief-form textarea {
+      border-radius: 14px;
+      border: 1px solid rgba(16, 17, 20, 0.14);
+      background: rgba(255, 255, 255, 0.55);
+      padding: 12px 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: rgba(16, 17, 20, 0.86);
+      outline: none;
+    }
+    .brief-form input:focus, .brief-form select:focus, .brief-form textarea:focus {
+      border-color: rgba(255, 90, 60, 0.38);
+      box-shadow: 0 0 0 4px rgba(255, 90, 60, 0.12);
+    }
+
+    .footer {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 38px 0 54px;
+      border-top: 1px solid rgba(16, 17, 20, 0.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: rgba(16, 17, 20, 0.78);
+    }
+    .social-links { display: flex; gap: 14px; flex-wrap: wrap; }
+    .social-links a {
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.64);
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.56);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+    .social-links a:hover { transform: translateY(-1px); box-shadow: 0 18px 55px rgba(32, 24, 12, 0.10); }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-proof { grid-template-columns: 1fr; }
+      .about-grid { grid-template-columns: 1fr; }
+      .project-grid { grid-template-columns: 1fr; }
+      .split-grid { grid-template-columns: 1fr; }
+      .education-grid { grid-template-columns: 1fr; }
+      .creator-proof { grid-template-columns: 1fr; }
+      .contact-panel { grid-template-columns: 1fr; }
+      .nav, .nav-cta { display: none; }
+      .menu-button { display: inline-flex; margin-left: auto; }
+      body.menu-open .nav {
+        display: flex;
+        position: fixed;
+        top: 92px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(1180px, calc(100% - 32px));
+        flex-direction: column;
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(16, 17, 20, 0.12);
+        background: rgba(255, 250, 240, 0.94);
+        box-shadow: 0 30px 90px rgba(32, 24, 12, 0.20);
+        z-index: 30;
+      }
+      body.menu-open .nav a { width: 100%; justify-content: center; }
+      body.menu-open .nav-cta { display: inline-flex; width: 100%; justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .audio-wave i, .creator-track, .scrubber::after { animation: none !important; }
+      .project-card, .button, .nav-cta, .social-links a { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar" data-header>
+      <a class="brand" href="#main" aria-label="Home">
+        <span class="brand-mark">
+          {{ personal_info.full_name|default:"AM"|slice:":2"|upper }}
+        </span>
+        <span class="brand-copy">
+          <strong>{{ personal_info.full_name|default:"A.M. Studio" }}</strong>
+          <span>{{ personal_info.title|default:"Video Editor" }}</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Primary navigation">
+        {% if projects %}<a href="#projects">Projects</a>{% endif %}
+        {% if experiences %}<a href="#experience">Experience</a>{% endif %}
+        {% if education %}<a href="#education">Education</a>{% endif %}
+        {% if creators %}<a href="#creators">Creators</a>{% endif %}
+        <a href="#contact">Contact</a>
+        <a class="nav-cta" href="#contact">Book a call</a>
+      </nav>
+
+      <a class="nav-cta" href="#contact">Book a call</a>
+
+      <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" data-menu-button>
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero" id="main" aria-labelledby="hero-title">
+        <div class="hero-content">
+          <p class="eyebrow">{{ personal_info.title|default:"The editor clients remember" }}</p>
+          <h1 id="hero-title">Edit the story clients cannot ignore.</h1>
+          <p class="hero-lede">
+            {% if personal_info.bio %}
+              {{ personal_info.bio }}
+            {% else %}
+              From the first frame to the final CTA, I build edits with tension, rhythm, proof, and polish so your project feels like the safest choice.
+            {% endif %}
+          </p>
+          <div class="hero-actions">
+            {% if projects %}
+              <a class="button primary" href="#projects">See the transformation</a>
+            {% endif %}
+            <a class="button secondary" href="#contact">Start your edit</a>
+          </div>
+          <div class="story-beats" aria-label="Editing story process">
+            <span><b>01</b> Find the hook</span>
+            <span><b>02</b> Build the arc</span>
+            <span><b>03</b> Add the pulse</span>
+            <span><b>04</b> Deliver the wow</span>
+          </div>
+        </div>
+
+        <div class="hero-stage" aria-hidden="true">
+          <div class="stage-glass stage-glass-left"></div>
+          <div class="stage-glass stage-glass-right"></div>
+          <div class="editor-scene" data-parallax>
+            <div class="preview-monitor">
+              <canvas id="heroCanvas" width="960" height="540"></canvas>
+              <div class="playhead-dot"></div>
+            </div>
+            <div class="timeline-desk">
+              <div class="timeline-header">
+                <span>Retention pass</span>
+                <span id="heroTimecode">00:01:18:22</span>
+              </div>
+              <div class="timeline-track track-one">
+                <span style="width: 19%"></span>
+                <span style="width: 28%"></span>
+                <span style="width: 15%"></span>
+                <span style="width: 24%"></span>
+              </div>
+              <div class="timeline-track track-two">
+                <span style="width: 13%"></span>
+                <span style="width: 35%"></span>
+                <span style="width: 20%"></span>
+                <span style="width: 18%"></span>
+              </div>
+              <div class="audio-wave" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <div class="scrubber" aria-hidden="true"></div>
+            </div>
+            <div class="scene-caption">
+              <span>Client-ready story system</span>
+              <strong>Hook → emotion → proof → action</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="hero-proof" aria-label="Portfolio highlights">
+        <div>
+          <strong>{{ project_count|default:"0" }}</strong>
+          <span>projects</span>
+        </div>
+        <div>
+          <strong>{{ long_count|default:"0" }}</strong>
+          <span>long videos</span>
+        </div>
+        <div>
+          <strong>{{ reel_count|default:"0" }}</strong>
+          <span>reels</span>
+        </div>
+      </div>
+
+      {% if projects %}
+      <section class="section projects-section" id="projects" aria-labelledby="projects-title">
+        <div class="section-heading">
+          <div>
+            <div class="section-kicker">Projects</div>
+            <h2 id="projects-title">Proof chapters from the kind of edits clients actually buy.</h2>
+          </div>
+          <a class="text-link" href="#contact">Request full reel</a>
+        </div>
+
+        <div class="project-grid">
+          {% for project in projects %}
+          <article class="project-card" data-tilt {% if project.url %}data-url="{{ project.url }}"{% endif %}>
+            <div class="project-media">
+              {% if project.image %}
+                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+              {% endif %}
+              {% if project.video_type == "reel" %}
+                <div class="project-label">Reel</div>
+              {% else %}
+                <div class="project-label">Long video</div>
+              {% endif %}
+              <div class="project-meta">
+                <h3 class="project-title">{{ project.title }}</h3>
+                {% if project.url %}
+                  <p class="project-hint">Watch</p>
+                {% else %}
+                  <p class="project-hint">Preview</p>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if experiences %}
+      <section class="section split-section" id="experience" aria-labelledby="experience-title">
+        <div class="section-kicker">Experience</div>
+        <div class="split-grid">
+          <div>
+            <h2 id="experience-title">A workflow clients can rely on under real deadlines.</h2>
+            <p>
+              From solo creators to brand teams, I bring the calm, organized process needed to keep edits moving: clear milestones, first-cut thinking, smart revisions, and exports built for every platform.
+            </p>
+          </div>
+          <div class="timeline-list">
+            {% for exp in experiences %}
+            <article>
+              <time>
+                {{ exp.start_date|date:"Y" }} —
+                {% if exp.still_working %}Present{% else %}{{ exp.end_date|date:"Y" }}{% endif %}
+              </time>
+              <h3>{{ exp.title }}</h3>
+              <p>{{ exp.details|default:exp.company }}</p>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if education %}
+      <section class="section education-section" id="education" aria-labelledby="education-title">
+        <div class="section-heading">
+          <div>
+            <div class="section-kicker">Education</div>
+            <h2 id="education-title">Training that supports creative judgment.</h2>
+          </div>
+        </div>
+        <div class="education-grid">
+          {% for edu in education %}
+          <article>
+            <span>{{ edu.field|default:"Training" }}</span>
+            <h3>{{ edu.degree|default:edu.school }}</h3>
+            <p>{{ edu.school }}</p>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if creators %}
+      <section class="section creators-section" id="creators" aria-labelledby="creators-title">
+        <div class="section-heading">
+          <div>
+            <div class="section-kicker">Creators I Worked With</div>
+            <h2 id="creators-title">Creators who trusted the cut.</h2>
+          </div>
+          <p>A moving wall of social proof, built to show range, credibility, and momentum in seconds.</p>
+        </div>
+
+        <div class="creator-motion-stage" aria-label="Creator profile carousel">
+          <div class="creator-lane">
+            <div class="creator-track">
+              <div class="creator-set">
+                {% for creator in creators %}
+                <article class="creator-pill">
+                  <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
+                  <div><strong>{{ creator.name }}</strong><span>Creator</span></div>
+                </article>
+                {% endfor %}
+              </div>
+              <div class="creator-set" aria-hidden="true">
+                {% for creator in creators %}
+                <article class="creator-pill">
+                  <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
+                  <div><strong>{{ creator.name }}</strong><span>Creator</span></div>
+                </article>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="creator-lane creator-lane-reverse">
+            <div class="creator-track">
+              <div class="creator-set">
+                {% for creator in creators %}
+                <article class="creator-pill">
+                  <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
+                  <div><strong>{{ creator.name }}</strong><span>Client</span></div>
+                </article>
+                {% endfor %}
+              </div>
+              <div class="creator-set" aria-hidden="true">
+                {% for creator in creators %}
+                <article class="creator-pill">
+                  <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
+                  <div><strong>{{ creator.name }}</strong><span>Client</span></div>
+                </article>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="creator-proof">
+          <article>
+            <strong>"The first editor who understood the story before touching the timeline."</strong>
+            <span>Creator client</span>
+          </article>
+          <article>
+            <strong>"Clean edits, fast revisions, and the final videos finally felt premium."</strong>
+            <span>Brand client</span>
+          </article>
+          <article>
+            <strong>"Our clips stopped feeling random and started working as a system."</strong>
+            <span>Founder client</span>
+          </article>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="section contact-section" id="contact" aria-labelledby="contact-title">
+        <div class="contact-panel">
+          <div class="contact-copy">
+            <div class="section-kicker">Get In Touch</div>
+            <h2 id="contact-title">Bring me the footage. I will find the edit that sells the moment.</h2>
+            <p>
+              Send the brief, deadline, platforms, and a sample of the raw footage. I will reply with a clear production plan, timeline, and next steps.
+            </p>
+            <div class="contact-actions">
+              {% if personal_info.email %}
+                <a class="button primary" href="mailto:{{ personal_info.email }}?subject=Video%20editing%20project%20inquiry">{{ personal_info.email }}</a>
+              {% endif %}
+              {% if personal_info.booking_url %}
+                <a class="button secondary" href="{{ personal_info.booking_url }}" target="_blank" rel="noreferrer">Book a call</a>
+              {% endif %}
+              {% if not personal_info.email and not personal_info.booking_url %}
+                <a class="button primary" href="{% if projects %}#projects{% else %}#main{% endif %}">View portfolio</a>
+              {% endif %}
+            </div>
+          </div>
+
+          <form class="brief-form" action="mailto:{% if personal_info.email %}{{ personal_info.email }}{% else %}hello@example.com{% endif %}" method="post" enctype="text/plain">
+            <label>
+              Name
+              <input type="text" name="name" placeholder="Your name" required>
+            </label>
+            <label>
+              Project type
+              <select name="project-type" required>
+                <option value="">Choose one</option>
+                <option>Long-form YouTube</option>
+                <option>Short-form package</option>
+                <option>Brand film</option>
+                <option>Paid social ads</option>
+                <option>Podcast edit</option>
+              </select>
+            </label>
+            <label>
+              What do you need edited?
+              <textarea name="brief" rows="5" placeholder="Tell me about the footage, goal, deadline, and platforms." required></textarea>
+            </label>
+            <button class="button primary" type="submit">Send brief</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong style="font-family: var(--display); color: rgba(16, 17, 20, 0.88);">{{ personal_info.full_name|default:"A.M. Studio" }}</strong>
+        <span style="display:block; margin-top: 4px;">Video editing portfolio built for premium clients.</span>
+      </div>
+      <nav class="social-links" aria-label="Social media links">
+        {% if links %}
+          {% for link in links|slice:":5" %}
+            <a href="{{ link.url }}" target="_blank" rel="noreferrer">{{ link.platform }}</a>
+          {% endfor %}
+        {% else %}
+          <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
+          <a href="https://www.youtube.com/" target="_blank" rel="noreferrer">YouTube</a>
+          <a href="https://www.tiktok.com/" target="_blank" rel="noreferrer">TikTok</a>
+          <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
+          <a href="https://vimeo.com/" target="_blank" rel="noreferrer">Vimeo</a>
+        {% endif %}
+      </nav>
+    </footer>
+  </div>
+
+  <script>
+    const header = document.querySelector("[data-header]");
+    const menuButton = document.querySelector("[data-menu-button]");
+    const nav = document.querySelector(".nav");
+    const heroCanvas = document.querySelector("#heroCanvas");
+    const posterCanvases = document.querySelectorAll("[data-poster]");
+    const creatorCanvases = document.querySelectorAll("[data-creator]");
+    const tiltCards = document.querySelectorAll("[data-tilt]");
+    const parallax = document.querySelector("[data-parallax]");
+    const heroTimecode = document.querySelector("#heroTimecode");
+
+    const palette = {
+      ink: "#101114",
+      ember: "#ff5a3c",
+      gold: "#d9a441",
+      teal: "#0f9f9a",
+      blue: "#2773ff",
+      plum: "#6c4cc4",
+      paper: "#fffaf0"
+    };
+
+    const setHeaderState = () => {
+      if (!header) return;
+      header.classList.toggle("is-scrolled", window.scrollY > 18);
+    };
+
+    const closeMenu = () => {
+      document.body.classList.remove("menu-open");
+      if (menuButton) menuButton.setAttribute("aria-expanded", "false");
+    };
+
+    if (menuButton) {
+      menuButton.addEventListener("click", () => {
+        const isOpen = document.body.classList.toggle("menu-open");
+        menuButton.setAttribute("aria-expanded", String(isOpen));
+      });
+    }
+
+    if (nav) {
+      nav.addEventListener("click", (event) => {
+        if (event.target && event.target.matches("a")) closeMenu();
+      });
+    }
+
+    window.addEventListener("scroll", setHeaderState, { passive: true });
+    setHeaderState();
+
+    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+      anchor.addEventListener("click", function (e) {
+        const href = this.getAttribute("href");
+        if (!href || href === "#") return;
+        const el = document.querySelector(href);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    const drawRoundedRect = (ctx, x, y, width, height, radius) => {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + width, y, x + width, y + height, r);
+      ctx.arcTo(x + width, y + height, x, y + height, r);
+      ctx.arcTo(x, y + height, x, y, r);
+      ctx.arcTo(x, y, x + width, y, r);
+      ctx.closePath();
+    };
+
+    const fillRound = (ctx, x, y, width, height, radius, fill) => {
+      drawRoundedRect(ctx, x, y, width, height, radius);
+      ctx.fillStyle = fill;
+      ctx.fill();
+    };
+
+    const drawHeroFrame = (time = 0) => {
+      if (!heroCanvas) return;
+      const ctx = heroCanvas.getContext("2d");
+      if (!ctx) return;
+
+      const { width, height } = heroCanvas;
+      ctx.clearRect(0, 0, width, height);
+
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#15171f");
+      gradient.addColorStop(0.44, "#283032");
+      gradient.addColorStop(1, "#211411");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.globalAlpha = 0.34;
+      for (let i = 0; i < 11; i += 1) {
+        ctx.strokeStyle = i % 2 ? palette.teal : palette.ember;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const y = 42 + i * 45 + Math.sin(time / 700 + i) * 6;
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(width * 0.28, y - 60, width * 0.62, y + 80, width, y + 14);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      const cardW = width * 0.42;
+      const cardH = height * 0.62;
+      const cardX = width * 0.11 + Math.sin(time / 1300) * 6;
+      const cardY = height * 0.16;
+      fillRound(ctx, cardX, cardY, cardW, cardH, 18, "rgba(255,250,240,0.9)");
+      fillRound(ctx, cardX + 22, cardY + 22, cardW - 44, cardH * 0.55, 12, "#14161c");
+
+      const sceneGrad = ctx.createLinearGradient(cardX, cardY + 22, cardX + cardW, cardY + cardH * 0.57);
+      sceneGrad.addColorStop(0, "#ff7b4a");
+      sceneGrad.addColorStop(0.52, palette.gold);
+      sceneGrad.addColorStop(1, palette.teal);
+      fillRound(ctx, cardX + 34, cardY + 34, cardW - 68, cardH * 0.45, 10, sceneGrad);
+
+      ctx.fillStyle = "rgba(16,17,20,0.78)";
+      ctx.font = "800 28px Inter, sans-serif";
+      ctx.fillText("FINAL CUT", cardX + 32, cardY + cardH * 0.69);
+      ctx.font = "800 14px Inter, sans-serif";
+      ctx.fillStyle = "rgba(16,17,20,0.55)";
+      ctx.fillText("HOOK • ARC • PROOF • CTA", cardX + 32, cardY + cardH * 0.75);
+
+      ctx.fillStyle = "rgba(255,90,60,0.9)";
+      ctx.fillRect(cardX + 32, cardY + cardH * 0.80, cardW * 0.68, 8);
+      ctx.fillStyle = "rgba(255,250,240,0.95)";
+      ctx.fillRect(cardX + 32, cardY + cardH * 0.80, cardW * 0.24, 8);
+    };
+
+    const drawPoster = (canvas, seed = 0) => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const { width, height } = canvas;
+      ctx.clearRect(0, 0, width, height);
+
+      const g = ctx.createLinearGradient(0, 0, width, height);
+      const variants = [
+        ["#15171f", palette.ember, palette.gold],
+        ["#101114", palette.teal, palette.blue],
+        ["#12131a", palette.plum, palette.ember],
+        ["#14161c", palette.gold, palette.teal],
+        ["#0f1116", palette.blue, palette.plum]
+      ];
+      const v = variants[seed % variants.length];
+      g.addColorStop(0, v[0]);
+      g.addColorStop(0.5, v[1]);
+      g.addColorStop(1, v[2]);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.globalAlpha = 0.22;
+      for (let i = 0; i < 14; i += 1) {
+        ctx.strokeStyle = i % 2 ? "rgba(255,250,240,0.32)" : "rgba(16,17,20,0.40)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const y = 40 + i * 26 + Math.sin((seed + i) * 1.7) * 10;
+        ctx.moveTo(-20, y);
+        ctx.bezierCurveTo(width * 0.22, y - 34, width * 0.6, y + 46, width + 20, y + 8);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.fillStyle = "rgba(255,250,240,0.88)";
+      ctx.font = "800 18px Inter, sans-serif";
+      ctx.fillText("PROJECT", 20, height - 34);
+      ctx.fillStyle = "rgba(255,250,240,0.70)";
+      ctx.font = "700 12px Inter, sans-serif";
+      ctx.fillText("CINEMATIC CUT", 20, height - 16);
+    };
+
+    const drawCreator = (canvas, name = "Creator") => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const { width, height } = canvas;
+      ctx.clearRect(0, 0, width, height);
+
+      const initials = name.trim().split(/\s+/).slice(0, 2).map(s => s[0] || "").join("").toUpperCase() || "VE";
+
+      const g = ctx.createLinearGradient(0, 0, width, height);
+      g.addColorStop(0, palette.plum);
+      g.addColorStop(0.5, palette.blue);
+      g.addColorStop(1, palette.teal);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = "rgba(255,250,240,1)";
+      for (let i = 0; i < 9; i += 1) {
+        ctx.beginPath();
+        ctx.arc(width * 0.2 + i * (width / 10), height * 0.3 + Math.sin(i * 1.4) * 10, 10 + i * 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.fillStyle = "rgba(255,250,240,0.96)";
+      ctx.font = "900 92px Space Grotesk, Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(initials, width / 2, height / 2);
+    };
+
+    const formatTimecode = (frames) => {
+      const fps = 30;
+      const totalSeconds = Math.floor(frames / fps);
+      const f = frames % fps;
+      const s = totalSeconds % 60;
+      const m = Math.floor(totalSeconds / 60) % 60;
+      const h = Math.floor(totalSeconds / 3600);
+      const pad = (n, l = 2) => String(n).padStart(l, "0");
+      return `${pad(h)}:${pad(m)}:${pad(s)}:${pad(f)}`;
+    };
+
+    let start = performance.now();
+    const tick = (now) => {
+      const t = now - start;
+      drawHeroFrame(t);
+      if (heroTimecode) heroTimecode.textContent = formatTimecode(Math.floor(t / 33.33) + 2400);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    posterCanvases.forEach((c) => drawPoster(c, Number(c.dataset.poster || 0)));
+    creatorCanvases.forEach((c) => drawCreator(c, String(c.dataset.creator || "Creator")));
+
+    tiltCards.forEach((card) => {
+      const rectFor = () => card.getBoundingClientRect();
+      card.addEventListener("mousemove", (e) => {
+        const r = rectFor();
+        const px = (e.clientX - r.left) / r.width;
+        const py = (e.clientY - r.top) / r.height;
+        const rx = (py - 0.5) * -6;
+        const ry = (px - 0.5) * 8;
+        card.style.transform = `translateY(-2px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+      card.addEventListener("mouseleave", () => {
+        card.style.transform = "";
+      });
+      card.addEventListener("click", () => {
+        const url = card.dataset.url;
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
+      });
+    });
+
+    if (parallax) {
+      const handleParallax = () => {
+        const y = Math.min(1, Math.max(0, window.scrollY / 600));
+        parallax.style.transform = `translateY(${y * -10}px)`;
+      };
+      window.addEventListener("scroll", handleParallax, { passive: true });
+      handleParallax();
+    }
+  </script>
+
+  <script>
+    window.SF_ANALYTICS = { username: "{{ username }}" };
+  </script>
+  <script src="{% static 'js/sf_analytics.js' %}"></script>
+</body>
+</html>
 <!-- Template code will go here -->
