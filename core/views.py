@@ -324,7 +324,11 @@ from django.http import JsonResponse
 def examples_view(request):
     """Render the live examples page featuring showcased portfolios"""
     showcases = Showcase.objects.filter(is_active=True).select_related('profile__user', 'profile__theme')
-    return render(request, 'core/examples.html', {'showcases': showcases})
+    portfolios_count = Profile.objects.count()
+    return render(request, 'core/examples.html', {
+        'showcases': showcases,
+        'portfolios_count': portfolios_count
+    })
 from .forms import (
     PersonalInfoForm,
     SkillFormSet,
@@ -1971,6 +1975,122 @@ def revenue_report(request):
     }
     
     return render(request, 'core/revenue_report.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_dashboard(request):
+    """Hidden admin-only dashboard with user stats, growth charts, and user list."""
+    # Absolute minimum date allowed
+    min_date = timezone.datetime(2026, 4, 16, tzinfo=timezone.get_current_timezone()).date()
+    today = timezone.now().date()
+    
+    # 1. Date Filtering Logic
+    start_str = request.GET.get('start_date')
+    end_str = request.GET.get('end_date')
+    period = request.GET.get('period', 'day') # 'day' or 'week'
+    
+    if start_str:
+        try:
+            start_date = timezone.datetime.strptime(start_str, '%Y-%m-%d').date()
+            if start_date < min_date:
+                start_date = min_date
+        except ValueError:
+            start_date = timezone.datetime(2026, 5, 1).date()
+    else:
+        # Default to the first of the current month (May 2026)
+        start_date = timezone.datetime(2026, 5, 1).date()
+        
+    if end_str:
+        try:
+            end_date = timezone.datetime.strptime(end_str, '%Y-%m-%d').date()
+        except ValueError:
+            end_date = today
+    else:
+        end_date = today
+
+    # 2. High-level Stats (Now filtered by range)
+    # Total Users = New signups in this period
+    total_users = CustomUser.objects.filter(date_joined__date__range=(start_date, end_date)).count()
+    
+    # Paid users = unique users who made a successful payment in this period
+    paid_user_ids_in_period = UserPayment.objects.filter(
+        status='paid', 
+        date__date__range=(start_date, end_date)
+    ).values_list('user_id', flat=True).distinct()
+    
+    total_paid_users = len(paid_user_ids_in_period)
+    conversion_rate = (total_paid_users / total_users * 100) if total_users > 0 else 0
+    
+    # Global paid user IDs for the table 'Paid' badge (unfiltered)
+    all_paid_user_ids = UserPayment.objects.filter(status='paid').values_list('user_id', flat=True).distinct()
+    
+    # 3. Growth Chart Data (Filtered by range and period)
+    signup_labels = []
+    signup_values = []
+    paid_values = [] # Track unique users who paid in each interval
+    
+    if period == 'week':
+        # Grouping by 7-day intervals starting from start_date
+        current_dt = start_date
+        while current_dt <= end_date:
+            next_dt = current_dt + timedelta(days=7)
+            
+            # 1. New Signups in interval
+            signup_count = CustomUser.objects.filter(
+                date_joined__date__gte=current_dt,
+                date_joined__date__lt=next_dt
+            ).count()
+            
+            # 2. New Paid Users (payments made in interval)
+            paid_count = UserPayment.objects.filter(
+                status='paid',
+                date__date__gte=current_dt,
+                date__date__lt=next_dt
+            ).values('user').distinct().count()
+            
+            signup_labels.append(f"Wk: {current_dt.strftime('%b %d')}")
+            signup_values.append(signup_count)
+            paid_values.append(paid_count)
+            current_dt = next_dt
+    else:
+        # Default: Daily grouping
+        current_dt = start_date
+        while current_dt <= end_date:
+            # 1. New Signups
+            signup_count = CustomUser.objects.filter(date_joined__date=current_dt).count()
+            
+            # 2. New Paid Users
+            paid_count = UserPayment.objects.filter(
+                status='paid',
+                date__date=current_dt
+            ).values('user').distinct().count()
+            
+            signup_labels.append(current_dt.strftime('%b %d'))
+            signup_values.append(signup_count)
+            paid_values.append(paid_count)
+            current_dt += timedelta(days=1)
+        
+    # 4. Users Table Data (NOW FILTERED BY RANGE)
+    users_list = CustomUser.objects.filter(
+        date_joined__date__range=(start_date, end_date)
+    ).select_related('profile', 'personal_info').order_by('-date_joined')
+    
+    context = {
+        'total_users': total_users,
+        'total_paid_users': total_paid_users,
+        'paid_user_ids': list(all_paid_user_ids), # Convert to list for template 'in' check
+        'conversion_rate': round(conversion_rate, 1),
+        'signup_labels': json.dumps(signup_labels),
+        'signup_values': json.dumps(signup_values),
+        'paid_values': json.dumps(paid_values),
+        'users_list': users_list,
+        'start_date': start_date,
+        'end_date': end_date,
+        'min_date': min_date,
+        'period': period,
+    }
+    
+    return render(request, 'core/admin_dashboard.html', context)
 
 
 
