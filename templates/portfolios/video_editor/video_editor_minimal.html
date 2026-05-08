@@ -615,6 +615,70 @@
       line-height: 1.8;
     }
 
+    /* Creators Section */
+    .creators-marquee-container {
+      width: 100%;
+      overflow: hidden;
+      padding: 60px 0;
+      position: relative;
+      background: rgba(26, 31, 58, 0.5);
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    }
+
+    .creators-track {
+      display: flex;
+      gap: 30px;
+      width: max-content;
+      animation: creatorsMove 30s linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes creatorsMove {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-25%, 0, 0); }
+    }
+
+    .creator-set {
+      display: flex;
+      gap: 30px;
+    }
+
+    .creator-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 20px 8px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 50px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .creator-pill:hover {
+      border-color: var(--primary);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2);
+    }
+
+    .creator-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-color);
+    }
+
+    .creator-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
     /* Education Section */
     .education-grid {
       display: grid;
@@ -1061,7 +1125,33 @@
   </section>
   {% endif %}
 
-  <!-- Education Section -->
+    {% if creators %}
+    <section id="creators" style="padding-bottom: 0;">
+      <h2 class="section-title">CREATORS</h2>
+      <p class="section-subtitle">Collaborating with the industry's most influential voices to create high-impact visual stories.</p>
+    </section>
+
+    <div class="creators-marquee-container">
+      <div class="creators-track">
+        {% for i in "1234" %}
+        <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
+          {% for creator in creators %}
+          <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
+            {% if creator.image %}
+            <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img">
+            {% else %}
+            <canvas class="creator-avatar-canvas creator-img" width="80" height="80" data-name="{{ creator.name }}"></canvas>
+            {% endif %}
+            <span class="creator-name">{{ creator.name }}</span>
+          </{% if creator.url %}a{% else %}div{% endif %}>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Education Section -->
   {% if education %}
   <section id="education">
     <h2 class="section-title">Education</h2>
@@ -1222,6 +1312,35 @@
           }
         });
       });
+
+    // --- Creator Initials Avatar Logic ---
+    function drawCreatorAvatars() {
+      const canvases = document.querySelectorAll('.creator-avatar-canvas');
+      canvases.forEach(canvas => {
+        const name = canvas.dataset.name || "C";
+        const ctx = canvas.getContext('2d');
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        
+        // Background
+        const colors = ['#00d9ff', '#ff006e', '#8f00ff', '#00ff9d'];
+        const colorIndex = name.length % colors.length;
+        ctx.fillStyle = colors[colorIndex] + '22';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Border
+        ctx.strokeStyle = colors[colorIndex];
+        ctx.lineWidth = 4;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        
+        // Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px Inter';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+      });
+    }
+    document.addEventListener('DOMContentLoaded', drawCreatorAvatars);
     }
   </script>
   <script>

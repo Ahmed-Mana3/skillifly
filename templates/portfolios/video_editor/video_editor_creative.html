@@ -819,6 +819,96 @@
             font-weight: 700;
         }
 
+        /* ─── Creators Section ─── */
+        .creators-section {
+            background: var(--bg);
+            overflow: hidden;
+            padding: 100px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .creator-lane {
+            width: 100%;
+            overflow: hidden;
+            padding: 40px 0;
+            position: relative;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+
+        .creator-track {
+            display: flex;
+            gap: 24px;
+            white-space: nowrap;
+            width: max-content;
+            animation: creatorMarquee 40s linear infinite;
+            will-change: transform;
+        }
+
+        .creator-lane-reverse .creator-track {
+            animation-direction: reverse;
+        }
+
+        .creator-set {
+            display: flex;
+            gap: 24px;
+        }
+
+        @keyframes creatorMarquee {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-25%, 0, 0); }
+        }
+
+        .creator-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px 12px 12px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
+            text-decoration: none;
+        }
+
+        .creator-pill:hover {
+            background: rgba(255, 61, 107, 0.1);
+            border-color: var(--accent);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .creator-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+            background: var(--surface);
+        }
+
+        .creator-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .creator-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.05em;
+            color: var(--text);
+        }
+
+
+        .creators-intro {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 0 8vw;
+        }
+
         /* ─── Contact Section ─── */
         .contact-section {
             background: var(--bg);
@@ -1378,6 +1468,60 @@
     </section>
     {% endif %}
 
+    <!-- ─── CREATORS ─── -->
+    {% if creators %}
+    <section class="creators-section" id="creators">
+        <div class="creators-intro">
+            <h2 class="section-heading reveal" style="margin-bottom: 20px;">CREATORS I<br>WORKED WITH</h2>
+            <p class="reveal" style="color: var(--dim); max-width: 600px; margin: 0 auto;">
+                Building visual stories for the world's most creative minds. Trusted by editors and influencers to deliver high-impact content.
+            </p>
+        </div>
+
+        <div class="creator-lane reveal">
+            <div class="creator-track">
+                {% for i in "1234" %}
+                <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-avatar" width="96" height="96" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <div class="creator-info">
+                            <div class="creator-name">{{ creator.name }}</div>
+                        </div>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="creator-lane creator-lane-reverse reveal" style="margin-top: 10px;">
+            <div class="creator-track">
+                {% for i in "1234" %}
+                <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-avatar" width="96" height="96" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <div class="creator-info">
+                            <div class="creator-name">{{ creator.name }}</div>
+                        </div>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- ─── CONTACT ─── -->
     <section class="contact-section" id="contact">
         <div class="contact-inner">
@@ -1390,14 +1534,12 @@
                 <div class="contact-items reveal">
                     {% if personal_info.email %}
                     <a href="mailto:{{ personal_info.email }}" class="social-btn" style="padding: 16px 28px; font-size: 0.9rem; border-radius: 8px;">
-                        <span class="c-label" style="margin-bottom: 0; margin-right: 8px; color: inherit;">Email:</span>
                         {{ personal_info.email }}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     </a>
                     {% endif %}
                     {% if personal_info.phone %}
                     <a href="tel:{{ personal_info.phone }}" class="social-btn" style="padding: 16px 28px; font-size: 0.9rem; border-radius: 8px;">
-                        <span class="c-label" style="margin-bottom: 0; margin-right: 8px; color: inherit;">Phone:</span>
                         {{ personal_info.phone }}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 015.06 2h3a2 2 0 012 1.72 12.81 12.81 0 00.63 2.81 2 2 0 01-.45 2.11L8.95 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.63A2 2 0 0122 16.92z"/></svg>
                     </a>
@@ -1513,6 +1655,33 @@
         }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        /* ─── Creator Avatar Fallback ─── */
+        function drawCreatorAvatars() {
+            const canvases = document.querySelectorAll('.creator-avatar-canvas');
+            canvases.forEach(canvas => {
+                const ctx = canvas.getContext('2d');
+                const name = canvas.dataset.name || 'C';
+                const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+                
+                const { width, height } = canvas;
+                const gradient = ctx.createLinearGradient(0, 0, width, height);
+                gradient.addColorStop(0, '#ff3d6b');
+                gradient.addColorStop(1, '#ff8c00');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(width/2, height/2, width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 36px Outfit';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, width/2, height/2);
+            });
+        }
+        drawCreatorAvatars();
 
         /* ─── Parallax Orbs ─── */
         document.addEventListener('mousemove', e => {

@@ -718,7 +718,8 @@ def update_portfolio_view(request):
         # Creators
         creator_data = [{
             'name': c.name,
-            'image': c.image
+            'image': c.image,
+            'url': c.url
         } for c in Creator.objects.filter(user=user)]
         creator_formset = CreatorFormSetUpdate(initial=creator_data, prefix="creators")
 
@@ -880,15 +881,15 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
             existing_creator_images = {c.name: c.image for c in Creator.objects.filter(user=request.user) if c.image}
 
             Creator.objects.filter(user=request.user).delete()
-            for c_data in creators:
-                new_c_image = c_data.get("image")
-                if not new_c_image:
-                    new_c_image = existing_creator_images.get(c_data["name"])
-
+            for cr_data in creators:
+                new_img = cr_data.get("image")
+                if not new_img:
+                    new_img = existing_creator_images.get(cr_data["name"])
                 Creator.objects.create(
                     user=request.user,
-                    name=c_data["name"],
-                    image=new_c_image,
+                    name=cr_data["name"],
+                    image=new_img,
+                    url=cr_data.get("url")
                 )
             
             # Ensure a UserPayment record exists

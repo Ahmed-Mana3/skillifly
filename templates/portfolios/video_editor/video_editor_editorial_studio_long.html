@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{{ personal_info.full_name }} — Professional Work</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #fffaf0;
+            --paper-strong: #f5f0e8;
+            --ink: #101114;
+            --ember: #ff5a3c;
+            --line: rgba(16, 17, 20, 0.1);
+            --muted: rgba(16, 17, 20, 0.55);
+            --display: 'Space Grotesk', sans-serif;
+            --body: 'Inter', sans-serif;
+            --shadow: 0 14px 40px rgba(32, 24, 12, 0.08);
+            --radius: 18px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: var(--body);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ─── Editorial Studio Grain ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 1000; opacity: 0.15;
+        }
+
+        /* ─── Header ─── */
+        header {
+            padding: 24px 5%;
+            background: rgba(255, 250, 240, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--line);
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand {
+            font-family: var(--display); font-weight: 700; font-size: 1.2rem;
+            text-decoration: none; color: var(--ink); letter-spacing: -0.02em;
+        }
+        .nav-pills { display: flex; gap: 10px; }
+        .nav-pill {
+            text-decoration: none; color: var(--muted); font-size: 0.75rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 8px 20px; border-radius: 100px; border: 1px solid var(--line);
+            transition: all 0.3s ease;
+        }
+        .nav-pill:hover, .nav-pill.active { border-color: var(--ember); color: var(--ember); background: rgba(255, 90, 60, 0.05); }
+
+        /* ─── Main ─── */
+        main { max-width: 1200px; margin: 0 auto; padding: 80px 5% 120px; }
+        .page-header { margin-bottom: 60px; text-align: center; }
+        .page-title {
+            font-family: var(--display); font-size: clamp(2.5rem, 6vw, 4.5rem);
+            line-height: 0.95; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 16px;
+        }
+        .page-subtitle { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        /* ─── Video Grid ─── */
+        .video-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 40px;
+        }
+
+        .video-card {
+            background: #fff; border-radius: var(--radius);
+            border: 1px solid var(--line); overflow: hidden;
+            text-decoration: none; color: inherit;
+            box-shadow: var(--shadow); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .video-card:hover {
+            transform: translateY(-8px); border-color: var(--ember);
+            box-shadow: 0 30px 60px rgba(32, 24, 12, 0.12);
+        }
+
+
+        .thumbnail-box {
+            position: relative; width: 100%; aspect-ratio: 16/9;
+            background: #000; overflow: hidden;
+        }
+        .thumbnail-box img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        .video-card:hover .thumbnail-box img { transform: scale(1.05); }
+
+        .play-icon {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(16, 17, 20, 0.3); opacity: 0; transition: opacity 0.3s;
+        }
+        .video-card:hover .play-icon { opacity: 1; }
+        .play-circle {
+            width: 64px; height: 64px; background: var(--ember); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: #fff;
+            transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .video-card:hover .play-circle { transform: scale(1); }
+
+        .video-info { padding: 24px 30px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .video-title {
+            font-family: var(--display); font-size: 1.5rem; font-weight: 800;
+            letter-spacing: -0.01em; color: var(--ink); line-height: 1.2;
+        }
+        .video-desc { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+
+        /* ─── Footer CTA ─── */
+        .cta-section {
+            padding: 100px 5%; background: var(--paper-strong);
+            text-align: center; border-top: 1px solid var(--line);
+        }
+        .cta-btn {
+            display: inline-flex; align-items: center; gap: 14px;
+            background: var(--ink); color: #fff;
+            padding: 20px 50px; border-radius: 12px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            text-decoration: none; transition: all 0.3s;
+        }
+        .cta-btn:hover { background: var(--ember); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(255, 90, 60, 0.25); }
+
+        @media (max-width: 768px) {
+            .video-grid { grid-template-columns: 1fr; }
+            .page-title { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/{{ username }}/" class="brand">{{ personal_info.full_name|upper }}</a>
+        <nav class="nav-pills">
+            <a href="/{{ username }}/reels/" class="nav-pill">Reels</a>
+            <a href="#" class="nav-pill active">Work</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <h1 class="page-title">Professional Work</h1>
+            <p class="page-subtitle">Full-length projects, brand films, and high-production edits.</p>
+        </div>
+
+        <div class="video-grid">
+            {% for project in projects %}
+            <a href="/{{ username }}/long-videos/{{ project.slug }}/" class="video-card">
+                <div class="thumbnail-box" data-url="{{ project.url }}">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <img class="yt-thumb" src="" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="play-icon">
+                        <div class="play-circle">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">{{ project.title }}</h3>
+                    <p class="video-desc">{{ project.details|truncatechars:140 }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </main>
+
+    <section class="cta-section">
+        <h2 style="font-family: var(--display); font-size: 2.5rem; margin-bottom: 40px;">READY FOR YOUR NEXT <span>CUT?</span></h2>
+        {% if personal_info.booking_url %}
+        <a href="{{ personal_info.booking_url }}" class="cta-btn">Hire Me Now</a>
+        {% else %}
+        <a href="mailto:{{ personal_info.email }}" class="cta-btn">Get In Touch</a>
+        {% endif %}
+    </section>
+
+    <footer style="padding: 60px 0; text-align: center; border-top: 1px solid var(--line);">
+        <p style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;">© {% now "Y" %} {{ personal_info.full_name }}. Editorial Studio Portfolio.</p>
+    </footer>
+
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        document.querySelectorAll('.thumbnail-box').forEach(box => {
+            const url = box.dataset.url;
+            const img = box.querySelector('.yt-thumb');
+            if (img && url) {
+                const id = getYouTubeId(url);
+                if (id) {
+                    img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+                    img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+                }
+            }
+        });
+    </script>
+</body>
+</html>

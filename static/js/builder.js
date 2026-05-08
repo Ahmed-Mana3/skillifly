@@ -29,11 +29,11 @@ const Builder = {
         if (!container) return;
 
         // Define preferred order per category
-        // Indices relative to default: 0:Identity, 1:Expertise, 2:Education, 3:Experience, 4:Projects, 5:Links
+        // Indices relative to default: 0:Identity, 1:Expertise, 2:Education, 3:Experience, 4:Projects, 5:Links, 6:Creators
         const orders = {
-          'student': [0, 2, 1, 3, 4, 5],      // Education first
-          'video_editor': [0, 4, 1, 3, 2, 5], // Projects first
-          'developer': [0, 1, 3, 4, 2, 5]     // Expertise/Experience first
+          'student': [0, 2, 1, 3, 4, 6, 5],      // Education first
+          'video_editor': [0, 4, 1, 6, 3, 2, 5], // Projects first
+          'developer': [0, 1, 3, 4, 6, 2, 5]     // Expertise/Experience first
         };
 
         const preferredOrder = orders[this.category] || orders['developer'];
@@ -41,8 +41,15 @@ const Builder = {
         
         // Clear and re-append in preferred order
         container.innerHTML = '';
-        preferredOrder.forEach(idx => {
-          if (panelArray[idx]) container.appendChild(panelArray[idx]);
+        preferredOrder.forEach((idx, stepNum) => {
+          if (panelArray[idx]) {
+            container.appendChild(panelArray[idx]);
+            // Update Step Label inside panel if it exists
+            const stepLabel = panelArray[idx].querySelector('.step-label');
+            if (stepLabel) {
+              stepLabel.textContent = `Step ${stepNum + 1} of ${preferredOrder.length}`;
+            }
+          }
         });
 
         // Re-append tabs in order

@@ -284,6 +284,93 @@
             box-shadow: 0 30px 60px rgba(0, 217, 255, 0.4);
         }
 
+        /* ─── Creators Section ─── */
+        .creators-section {
+            padding: 100px 0;
+            margin-top: 60px;
+            background: #000;
+            border-top: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .creators-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0.8;
+        }
+
+        .creators-marquee {
+            width: 100%;
+            display: flex;
+            position: relative;
+            padding: 20px 0;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+
+        .creators-marquee:hover .creators-track {
+            animation-play-state: paused;
+        }
+
+        .creators-track {
+            display: flex;
+            gap: 40px;
+            animation: proMove 40s linear infinite;
+            will-change: transform;
+        }
+
+        @keyframes proMove {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-25%, 0, 0); }
+        }
+
+        .creator-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 35px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .creator-item:hover {
+            border-color: var(--accent);
+            background: rgba(0, 217, 255, 0.08);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.15);
+        }
+
+        .creator-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 2px;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: filter 0.3s;
+        }
+
+        .creator-item:hover .creator-avatar {
+            filter: grayscale(0%);
+        }
+
+        .creator-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
         /* ─── Footer ─── */
         footer {
             background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
@@ -463,6 +550,30 @@
         </div>
     </section>
 
+    {% if creators %}
+    <div class="creators-section">
+        <div class="creators-label">Worked With</div>
+        <div class="creators-marquee">
+            <div class="creators-track">
+                {% for i in "1234" %}
+                <div style="display: flex; gap: 40px;" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-item">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-avatar" width="64" height="64" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <span class="creator-name">{{ creator.name }}</span>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <section class="contact-section" id="contact">
         <div class="contact-container">
             <h2 class="contact-title">GET IN TOUCH</h2>
@@ -520,6 +631,34 @@
         </div>
     </footer>
 
+    <script>
+        // --- Creator Initials Avatar Logic ---
+        function drawCreatorAvatars() {
+            const canvases = document.querySelectorAll('.creator-avatar-canvas');
+            canvases.forEach(canvas => {
+                const name = canvas.dataset.name || "C";
+                const ctx = canvas.getContext('2d');
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                
+                // Professional Dark Theme Background
+                ctx.fillStyle = '#111111';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Accent Border
+                ctx.strokeStyle = '#00d9ff';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+                
+                // Text
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', drawCreatorAvatars);
+    </script>
 </body>
 
 </html>

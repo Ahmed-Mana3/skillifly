@@ -557,11 +557,18 @@
       cursor: pointer;
       outline: none;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
     }
     .project-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(16, 17, 20, 0.18);
-      box-shadow: 0 28px 80px rgba(32, 24, 12, 0.12);
+      transform: translateY(-8px);
+      border-color: var(--ember);
+      box-shadow: var(--shadow);
+    }
+    .project-card:hover .meta-arrow {
+      transform: translateX(0);
     }
     .project-media {
       position: relative;
@@ -624,29 +631,76 @@
       box-shadow: 0 0 0 4px rgba(255, 90, 60, 0.18);
     }
     .project-meta {
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      display: grid;
+      padding: 20px 24px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
       gap: 6px;
-      padding: 14px 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 250, 240, 0.18);
-      background: rgba(16, 17, 20, 0.48);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 24px 80px rgba(16, 17, 20, 0.24);
-      transform: translateY(10px);
-      opacity: 0.0;
-      transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease, background 260ms ease, border-color 260ms ease;
+      transition: background 0.3s ease;
+    }
+    .project-card:hover .project-meta {
+      background: var(--paper-strong);
+    }
+
+    .project-rec {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 5;
+    }
+    .project-card:hover .project-rec { opacity: 1; }
+    .project-rec::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: #ff0000;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .project-tc {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      color: rgba(255, 250, 240, 0.6);
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 5;
+    }
+    .project-card:hover .project-tc { opacity: 0.8; }
+
+    .project-scanlines {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.3;
     }
     .project-title {
       margin: 0;
-      color: rgba(255, 250, 240, 0.96);
+      color: var(--ink);
       font-family: var(--display);
-      letter-spacing: -0.02em;
-      font-size: 18px;
+      letter-spacing: -0.01em;
+      font-size: 19px;
       line-height: 1.2;
+      font-weight: 800;
     }
     .project-hint {
       margin: 0;
@@ -804,8 +858,8 @@
       box-shadow: 0 14px 40px rgba(32, 24, 12, 0.06);
     }
     .creator-avatar {
-      width: 42px;
-      height: 42px;
+      width: 56px;
+      height: 56px;
       border-radius: 999px;
       background: #101114;
       display: block;
@@ -923,6 +977,172 @@
       body.menu-open .nav-cta { display: inline-flex; width: 100%; justify-content: center; }
     }
 
+    /* ─── Modern Contact Section (Adapted Structure) ─── */
+    .contact-section {
+      padding: 120px 0;
+      background: var(--paper-strong);
+      border-top: 1px solid var(--line);
+    }
+    .contact-inner {
+      width: min(1180px, calc(100% - 48px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .contact-big-text {
+      font-family: var(--display);
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      line-height: 0.9;
+      font-weight: 900;
+      color: var(--ink);
+      letter-spacing: -0.04em;
+      margin-bottom: 40px;
+    }
+    .contact-big-text .accent-word {
+      color: var(--ember);
+    }
+    .contact-items {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .contact-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .c-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .c-value {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--ink);
+      transition: color 0.3s ease;
+    }
+    .c-value:hover { color: var(--ember); }
+
+    .social-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .social-btn:hover {
+      background: var(--ink);
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .contact-card {
+      background: #fff;
+      padding: 50px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .cta-tagline {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+    .big-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 20px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.3s ease;
+    }
+    .big-cta:hover {
+      background: var(--ember);
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(255, 90, 60, 0.25);
+    }
+
+    /* ─── Modern Footer ─── */
+    .footer-cine {
+      padding: 40px 0;
+      background: var(--paper);
+      border-top: 1px solid var(--line);
+    }
+    .footer-inner {
+      width: min(1180px, calc(100% - 48px));
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .skillifly-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.8;
+      transition: opacity 0.3s ease;
+    }
+    .skillifly-badge:hover { opacity: 1; }
+    .skillifly-badge img { width: 22px; height: auto; }
+    .skillifly-badge .powered { font-size: 11px; color: var(--muted); }
+    .skillifly-badge .brand { font-weight: 700; font-size: 14px; color: var(--ink); }
+    .footer-copy {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    @media (max-width: 991px) {
+      .contact-inner { grid-template-columns: 1fr; gap: 60px; }
+      .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
+      
+      .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .project-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      .section h2 {
+        font-size: 28px;
+        line-height: 1.1;
+      }
+      .text-link {
+        font-size: 13px;
+        padding-bottom: 6px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .audio-wave i, .creator-track, .scrubber::after { animation: none !important; }
@@ -949,10 +1169,8 @@
         {% if education %}<a href="#education">Education</a>{% endif %}
         {% if creators %}<a href="#creators">Creators</a>{% endif %}
         <a href="#contact">Contact</a>
-        <a class="nav-cta" href="#contact">Book a call</a>
+        <a class="nav-cta" href="#contact">Hire Me</a>
       </nav>
-
-      <a class="nav-cta" href="#contact">Book a call</a>
 
       <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" data-menu-button>
         <span></span>
@@ -978,12 +1196,6 @@
               <a class="button primary" href="#projects">See the transformation</a>
             {% endif %}
             <a class="button secondary" href="#contact">Start your edit</a>
-          </div>
-          <div class="story-beats" aria-label="Editing story process">
-            <span><b>01</b> Find the hook</span>
-            <span><b>02</b> Build the arc</span>
-            <span><b>03</b> Add the pulse</span>
-            <span><b>04</b> Deliver the wow</span>
           </div>
         </div>
 
@@ -1026,20 +1238,6 @@
         </div>
       </section>
 
-      <div class="hero-proof" aria-label="Portfolio highlights">
-        <div>
-          <strong>{{ project_count|default:"0" }}</strong>
-          <span>projects</span>
-        </div>
-        <div>
-          <strong>{{ long_count|default:"0" }}</strong>
-          <span>long videos</span>
-        </div>
-        <div>
-          <strong>{{ reel_count|default:"0" }}</strong>
-          <span>reels</span>
-        </div>
-      </div>
 
       {% if projects %}
       <section class="section projects-section" id="projects" aria-labelledby="projects-title">
@@ -1053,26 +1251,32 @@
 
         <div class="project-grid">
           {% for project in projects %}
-          <article class="project-card" data-tilt {% if project.url %}data-url="{{ project.url }}"{% endif %}>
+          <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-card" data-tilt>
+            <div class="project-rec">REC</div>
+            <div class="project-tc">00:14:02:18</div>
             <div class="project-media">
+              <div class="project-scanlines"></div>
               {% if project.image %}
                 <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
               {% endif %}
               {% if project.video_type == "reel" %}
                 <div class="project-label">Reel</div>
               {% else %}
-                <div class="project-label">Long video</div>
+                <div class="project-label">Project</div>
               {% endif %}
-              <div class="project-meta">
-                <h3 class="project-title">{{ project.title }}</h3>
-                {% if project.url %}
-                  <p class="project-hint">Watch</p>
-                {% else %}
-                  <p class="project-hint">Preview</p>
-                {% endif %}
+            </div>
+            <div class="project-meta">
+              <h3 class="project-title">{{ project.title }}</h3>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); font-weight:700;">
+                  {% if project.url %}View Case Study{% else %}Preview Edit{% endif %}
+                </span>
+                <div style="color:var(--ember); transform: translateX(-4px); transition: transform 0.3s ease;" class="meta-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
               </div>
             </div>
-          </article>
+          </a>
           {% endfor %}
         </div>
       </section>
@@ -1131,135 +1335,119 @@
             <div class="section-kicker">Creators I Worked With</div>
             <h2 id="creators-title">Creators who trusted the cut.</h2>
           </div>
-          <p>A moving wall of social proof, built to show range, credibility, and momentum in seconds.</p>
         </div>
 
         <div class="creator-motion-stage" aria-label="Creator profile carousel">
           <div class="creator-lane">
             <div class="creator-track">
-              <div class="creator-set">
+              {% for i in "1234" %}
+              <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
                 {% for creator in creators %}
-                <article class="creator-pill">
+                <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
+                  {% if creator.image %}
+                  <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar" style="width:56px; height:56px; object-fit:cover; border-radius:inherit;">
+                  {% else %}
                   <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
-                  <div><strong>{{ creator.name }}</strong><span>Creator</span></div>
-                </article>
+                  {% endif %}
+                  <div><strong>{{ creator.name }}</strong></div>
+                </{% if creator.url %}a{% else %}div{% endif %}>
                 {% endfor %}
               </div>
-              <div class="creator-set" aria-hidden="true">
-                {% for creator in creators %}
-                <article class="creator-pill">
-                  <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
-                  <div><strong>{{ creator.name }}</strong><span>Creator</span></div>
-                </article>
-                {% endfor %}
-              </div>
+              {% endfor %}
             </div>
           </div>
 
           <div class="creator-lane creator-lane-reverse">
             <div class="creator-track">
-              <div class="creator-set">
+              {% for i in "1234" %}
+              <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
                 {% for creator in creators %}
-                <article class="creator-pill">
+                <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
+                  {% if creator.image %}
+                  <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar" style="width:56px; height:56px; object-fit:cover; border-radius:inherit;">
+                  {% else %}
                   <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
-                  <div><strong>{{ creator.name }}</strong><span>Client</span></div>
-                </article>
+                  {% endif %}
+                  <div><strong>{{ creator.name }}</strong></div>
+                </{% if creator.url %}a{% else %}div{% endif %}>
                 {% endfor %}
               </div>
-              <div class="creator-set" aria-hidden="true">
-                {% for creator in creators %}
-                <article class="creator-pill">
-                  <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
-                  <div><strong>{{ creator.name }}</strong><span>Client</span></div>
-                </article>
-                {% endfor %}
-              </div>
+              {% endfor %}
             </div>
           </div>
         </div>
 
-        <div class="creator-proof">
-          <article>
-            <strong>"The first editor who understood the story before touching the timeline."</strong>
-            <span>Creator client</span>
-          </article>
-          <article>
-            <strong>"Clean edits, fast revisions, and the final videos finally felt premium."</strong>
-            <span>Brand client</span>
-          </article>
-          <article>
-            <strong>"Our clips stopped feeling random and started working as a system."</strong>
-            <span>Founder client</span>
-          </article>
-        </div>
       </section>
       {% endif %}
 
-      <section class="section contact-section" id="contact" aria-labelledby="contact-title">
-        <div class="contact-panel">
-          <div class="contact-copy">
-            <div class="section-kicker">Get In Touch</div>
-            <h2 id="contact-title">Bring me the footage. I will find the edit that sells the moment.</h2>
-            <p>
-              Send the brief, deadline, platforms, and a sample of the raw footage. I will reply with a clear production plan, timeline, and next steps.
+    <section class="contact-section" id="contact">
+      <div class="contact-inner">
+        <div>
+          <div class="section-kicker" style="margin-bottom:20px">Let's Collaborate</div>
+          <div class="contact-big-text">
+            LET'S<br>MAKE IT<br><span class="accent-word">CINEMATIC.</span>
+          </div>
+
+          <div class="contact-items">
+            {% if personal_info.email %}
+            <div class="contact-item">
+              <span class="c-label">Email</span>
+              <a href="mailto:{{ personal_info.email }}" class="c-value">{{ personal_info.email }}</a>
+            </div>
+            {% endif %}
+            {% if personal_info.phone %}
+            <div class="contact-item">
+              <span class="c-label">Phone</span>
+              <a href="tel:{{ personal_info.phone }}" class="c-value">{{ personal_info.phone }}</a>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if links %}
+          <div class="social-row">
+            {% for link in links %}
+            <a href="{{ link.url }}" target="_blank" class="social-btn">
+              {{ link.platform }}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div>
+          <div class="contact-card">
+            <div class="section-kicker" style="margin-bottom:20px">Inquiry</div>
+            <p class="cta-tagline">
+              Bring me the footage. I will find the edit that sells the moment, ensures retention, and moves your audience.
             </p>
-            <div class="contact-actions">
-              {% if personal_info.email %}
-                <a class="button primary" href="mailto:{{ personal_info.email }}?subject=Video%20editing%20project%20inquiry">{{ personal_info.email }}</a>
-              {% endif %}
+            <div>
               {% if personal_info.booking_url %}
-                <a class="button secondary" href="{{ personal_info.booking_url }}" target="_blank" rel="noreferrer">Book a call</a>
-              {% endif %}
-              {% if not personal_info.email and not personal_info.booking_url %}
-                <a class="button primary" href="{% if projects %}#projects{% else %}#main{% endif %}">View portfolio</a>
+              <a href="{{ personal_info.booking_url }}" class="big-cta" target="_blank" rel="noopener">
+                Hire Me
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+              </a>
+              {% elif personal_info.email %}
+              <a href="mailto:{{ personal_info.email }}" class="big-cta">
+                Hire Me
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+              </a>
               {% endif %}
             </div>
           </div>
-
-          <form class="brief-form" action="mailto:{% if personal_info.email %}{{ personal_info.email }}{% else %}hello@example.com{% endif %}" method="post" enctype="text/plain">
-            <label>
-              Name
-              <input type="text" name="name" placeholder="Your name" required>
-            </label>
-            <label>
-              Project type
-              <select name="project-type" required>
-                <option value="">Choose one</option>
-                <option>Long-form YouTube</option>
-                <option>Short-form package</option>
-                <option>Brand film</option>
-                <option>Paid social ads</option>
-                <option>Podcast edit</option>
-              </select>
-            </label>
-            <label>
-              What do you need edited?
-              <textarea name="brief" rows="5" placeholder="Tell me about the footage, goal, deadline, and platforms." required></textarea>
-            </label>
-            <button class="button primary" type="submit">Send brief</button>
-          </form>
         </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div>
-        <strong style="font-family: var(--display); color: rgba(16, 17, 20, 0.88);">{{ personal_info.full_name|default:"A.M. Studio" }}</strong>
-        <span style="display:block; margin-top: 4px;">Video editing portfolio built for premium clients.</span>
       </div>
-      <nav class="social-links" aria-label="Social media links">
-        {% if links %}
-          {% for link in links|slice:":5" %}
-            <a href="{{ link.url }}" target="_blank" rel="noreferrer">{{ link.platform }}</a>
-          {% endfor %}
-        {% else %}
-          <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
-          <a href="https://www.youtube.com/" target="_blank" rel="noreferrer">YouTube</a>
-          <a href="https://www.tiktok.com/" target="_blank" rel="noreferrer">TikTok</a>
-          <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
-          <a href="https://vimeo.com/" target="_blank" rel="noreferrer">Vimeo</a>
-        {% endif %}
-      </nav>
+    </section>
+
+    <footer class="footer-cine">
+      <div class="footer-inner">
+        <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+          <span class="powered">Powered by</span>
+          <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+          <span class="brand">Skillifly</span>
+        </a>
+        <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
+      </div>
     </footer>
   </div>
 
@@ -1484,6 +1672,33 @@
     requestAnimationFrame(tick);
 
     posterCanvases.forEach((c) => drawPoster(c, Number(c.dataset.poster || 0)));
+
+    /* Creator Avatars */
+    (function(){
+      const canvases = document.querySelectorAll('.creator-avatar-canvas');
+      canvases.forEach(canvas => {
+        const name = canvas.dataset.name || "C";
+        const ctx = canvas.getContext('2d');
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        
+        // Elegant Background
+        ctx.fillStyle = "#101114";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Ember Accent
+        ctx.strokeStyle = "#ff5a3c";
+        ctx.lineWidth = 6;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        
+        // Text
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "900 48px Space Grotesk";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+      });
+    })();
+
     creatorCanvases.forEach((c) => drawCreator(c, String(c.dataset.creator || "Creator")));
 
     tiltCards.forEach((card) => {
@@ -1498,10 +1713,6 @@
       });
       card.addEventListener("mouseleave", () => {
         card.style.transform = "";
-      });
-      card.addEventListener("click", () => {
-        const url = card.dataset.url;
-        if (url) window.open(url, "_blank", "noopener,noreferrer");
       });
     });
 

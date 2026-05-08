@@ -330,3 +330,12 @@ class AnalyticsEvent(models.Model):
 
     def __str__(self):
         return f"{self.event_type} on {self.visit.user.username}'s portfolio"
+
+class Creator(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="creators")
+    name = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='creators/', blank=True, null=True)
+    url = models.CharField(max_length=500, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} (for {self.user.username})"

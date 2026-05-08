@@ -9,6 +9,83 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/animated_dark.css' %}">
+    <style>
+        /* Creators Section */
+        .creators-marquee-container {
+            width: 100%;
+            overflow: hidden;
+            padding: 40px 0;
+            position: relative;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(255,255,255,0.05);
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            z-index: 5;
+        }
+
+        .creators-track {
+            display: flex;
+            gap: 30px;
+            width: max-content;
+            animation: bounceScroll 30s linear infinite;
+            will-change: transform;
+        }
+
+        .creators-marquee-container:hover .creators-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes bounceScroll {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-25%, 0, 0); }
+        }
+
+        .creator-set {
+            display: flex;
+            gap: 30px;
+        }
+
+        .creator-bubble {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 24px 10px 10px;
+            background: #1a1a2e;
+            border: 2px solid var(--accent-1);
+            border-radius: 60px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .creator-bubble:nth-child(even) { border-color: var(--accent-2); }
+        .creator-bubble:nth-child(3n) { border-color: var(--accent-3); }
+
+        .creator-bubble:hover {
+            transform: scale(1.08) rotate(2deg);
+            border-color: var(--grad-1);
+            background: #25254a;
+            box-shadow: 0 15px 35px rgba(0, 217, 255, 0.2);
+        }
+
+        .creator-avatar-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .creator-label-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+    </style>
 </head>
 <body>
 <div class="page-wrapper">
@@ -76,6 +153,33 @@
             {% endif %}
         </div>
     </section>
+
+    {% if creators %}
+    <section class="section" id="creators">
+        <div class="section-header reveal">
+            <div class="section-tag">Network</div>
+            <h2 class="section-title">Creators I Worked With</h2>
+        </div>
+        <div class="creators-marquee-container">
+            <div class="creators-track">
+                {% for i in "1234" %}
+                <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-bubble">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar-img">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-avatar-img" width="88" height="88" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <span class="creator-label-name">{{ creator.name }}</span>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
 
     <!-- PROJECTS -->
     {% if projects %}
@@ -313,6 +417,29 @@
             icon.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
         });
     });
+
+    /* Creator Avatars */
+    (function(){
+        const canvases = document.querySelectorAll('.creator-avatar-canvas');
+        canvases.forEach(canvas => {
+            const name = canvas.dataset.name || "C";
+            const ctx = canvas.getContext('2d');
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            
+            // Vibrant Background
+            const colors = ['#6c3ce0', '#e8457c', '#ff8f3f', '#00d9ff'];
+            const colorIndex = name.length % colors.length;
+            ctx.fillStyle = colors[colorIndex];
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 40px Outfit';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+        });
+    })();
     </script>
 </div>
 </body>

@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{{ personal_info.full_name }} — Editorial Studio Reels</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #fffaf0;
+            --ink: #101114;
+            --ember: #ff5a3c;
+            --line: rgba(16, 17, 20, 0.1);
+            --muted: rgba(16, 17, 20, 0.55);
+            --display: 'Space Grotesk', sans-serif;
+            --body: 'Inter', sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--ink);
+            color: var(--paper);
+            font-family: var(--body);
+            overflow: hidden;
+        }
+
+        /* ─── Editorial Studio Grain ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 1000; opacity: 0.2;
+        }
+
+        /* ─── Reels Container ─── */
+        .reels-container {
+            height: 100dvh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            overscroll-behavior-y: contain;
+        }
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel-slide {
+            height: 100dvh;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        /* ─── Ambient Glow ─── */
+        .ambient-glow {
+            position: absolute; inset: -100px;
+            background-size: cover; background-position: center;
+            filter: blur(120px) brightness(0.3) saturate(1.2);
+            opacity: 0.5;
+            z-index: 0; pointer-events: none;
+        }
+
+        /* ─── Video Wrapper (Monitor Frame) ─── */
+        .video-wrapper {
+            position: relative;
+            width: 100%; height: 100%;
+            max-width: 440px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            z-index: 2;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        .video-content {
+            width: 100%; height: 100%;
+            position: relative; z-index: 1;
+        }
+        
+        /* ─── Monitor Elements ─── */
+        .monitor-ui {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .monitor-rec {
+            position: absolute; top: 48px; right: 24px;
+            display: flex; align-items: center; gap: 8px;
+            color: #fff; font-size: 10px; font-weight: 900;
+            letter-spacing: 0.1em;
+        }
+        .monitor-rec::before {
+            content: ""; width: 8px; height: 8px; background: #ff0000;
+            border-radius: 50%; animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .monitor-tc {
+            position: absolute; bottom: 32px; right: 24px;
+            color: rgba(255,255,255,0.6); font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* ─── UI Overlays ─── */
+        .reel-info {
+            position: absolute;
+            bottom: 40px; left: 24px; right: 80px;
+            z-index: 20; pointer-events: none;
+        }
+        .reel-title {
+            font-family: var(--display);
+            font-size: 1.8rem; font-weight: 700;
+            letter-spacing: -0.02em; margin-bottom: 8px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+        .reel-desc {
+            font-size: 0.9rem; color: rgba(255,255,255,0.7);
+            line-height: 1.5; max-width: 320px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* ─── Navigation ─── */
+        .close-btn {
+            position: fixed; top: 24px; left: 24px; z-index: 100;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(16, 17, 20, 0.6); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; text-decoration: none; transition: all 0.3s;
+        }
+        .close-btn:hover { border-color: var(--ember); background: var(--ember); }
+
+        .top-nav {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 100; display: flex; gap: 8px;
+            background: rgba(16, 17, 20, 0.6); backdrop-filter: blur(10px);
+            padding: 8px 16px; border-radius: 100px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-link {
+            text-decoration: none; color: rgba(255,255,255,0.5);
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; padding: 6px 14px; border-radius: 100px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { color: #fff; }
+        .nav-link.active { color: var(--paper); background: var(--ember); }
+
+        /* ─── Actions ─── */
+        .reel-actions {
+            position: absolute; right: 20px; bottom: 120px;
+            z-index: 20; display: flex; flex-direction: column; gap: 20px;
+        }
+        .action-btn {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; text-decoration: none; transition: all 0.3s;
+        }
+        .action-btn:hover { transform: scale(1.1); background: var(--ember); border-color: var(--ember); }
+
+        /* ─── Contact Slide ─── */
+        .contact-slide-inner {
+            background: var(--paper); color: var(--ink);
+            padding: 60px 40px; border-radius: 24px;
+            max-width: 480px; width: calc(100% - 40px);
+            text-align: center; position: relative; z-index: 10;
+        }
+        .contact-big {
+            font-family: var(--display); font-size: clamp(2.5rem, 8vw, 4.5rem);
+            line-height: 0.9; font-weight: 800; margin-bottom: 40px;
+        }
+        .contact-big span { color: var(--ember); }
+        .cta-btn {
+            display: inline-flex; align-items: center; gap: 12px;
+            background: var(--ink); color: #fff;
+            padding: 18px 40px; border-radius: 12px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            text-decoration: none; transition: all 0.3s; width: 100%; justify-content: center;
+        }
+        .cta-btn:hover { background: var(--ember); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 90, 60, 0.3); }
+
+        @media (max-width: 768px) {
+            .video-wrapper { max-width: 100%; height: 100dvh; }
+            .top-nav {
+                top: auto;
+                bottom: 24px;
+                padding: 6px 12px;
+                gap: 4px;
+                background: rgba(16, 17, 20, 0.85);
+            }
+            .nav-link {
+                font-size: 0.65rem;
+                padding: 5px 10px;
+            }
+            .close-btn {
+                top: 16px;
+                left: 16px;
+                width: 36px;
+                height: 36px;
+            }
+            .reel-info {
+                bottom: 80px;
+                left: 12px;
+                right: 12px;
+                padding: 16px 20px;
+                background: var(--paper);
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+            .reel-title {
+                color: var(--ink);
+                font-size: 1.4rem;
+                text-shadow: none;
+            }
+            .reel-desc {
+                color: var(--muted);
+                text-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="/{{ personal_info.user.username }}/" class="close-btn" title="Exit Player">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </a>
+
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/" class="nav-link active">Reels</a>
+        <a href="/{{ username }}/long-videos/" class="nav-link">Work</a>
+        <a href="#contactSlide" class="nav-link">Contact</a>
+    </nav>
+
+    <div class="reels-container" id="reelsContainer">
+        {% for project in projects %}
+        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
+            <div class="ambient-glow" id="glow-{{ project.id }}"></div>
+            
+            <div class="video-wrapper">
+                <div class="monitor-ui">
+                    <div class="monitor-rec">REC</div>
+                    <div class="monitor-tc">00:00:{{ forloop.counter }}:24</div>
+                </div>
+                <div id="player-{{ project.id }}" class="video-content"></div>
+            </div>
+
+            <div class="reel-info">
+                <div class="reel-title">{{ project.title }}</div>
+                {% if project.details %}
+                <p class="reel-desc">{{ project.details|truncatechars:100 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="reel-actions">
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="action-btn" title="Hire Me">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                </a>
+                {% endif %}
+                {% if project.url %}
+                <a href="{{ project.url }}" target="_blank" class="action-btn" title="Source">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="reel-slide" id="contactSlide">
+            <div class="contact-slide-inner">
+                <div class="contact-big">LET'S MAKE IT<br><span>CINEMATIC.</span></div>
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="cta-btn">Hire Me Now</a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="cta-btn">Send Message</a>
+                {% endif %}
+                <div style="margin-top:24px; font-size: 0.8rem; color: var(--muted); font-weight: 600;">{{ personal_info.full_name|upper }} STUDIO</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const players = {};
+        function getYouTubeId(url) {
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        function getTikTokId(url) {
+            const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+            return m ? m[1] : null;
+        }
+        function getInstagramId(url) {
+            const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
+            return m ? m[1] : null;
+        }
+
+        const container = document.getElementById('reelsContainer');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const slide = entry.target;
+                const id = slide.dataset.projectId;
+                const url = slide.dataset.url || '';
+                const playerEl = id ? document.getElementById(`player-${id}`) : null;
+                const glow = id ? document.getElementById(`glow-${id}`) : null;
+
+                const ytId = getYouTubeId(url);
+                const ttId = getTikTokId(url);
+                const igId = getInstagramId(url);
+
+                if (entry.isIntersecting) {
+                    if (!id || !playerEl) return;
+                    if (ytId) {
+                        if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
+                        if (!players[id]) {
+                            players[id] = new YT.Player(`player-${id}`, {
+                                height: '100%', width: '100%', videoId: ytId,
+                                playerVars: { autoplay:1, mute:1, loop:1, playlist:ytId, controls:1, modestbranding:1, rel:0, origin:window.location.origin },
+                                events: { onReady(e) { e.target.playVideo(); } }
+                            });
+                        } else if (players[id].playVideo) { players[id].playVideo(); }
+                    } else if (ttId) {
+                        playerEl.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen"></iframe>`;
+                    } else if (igId) {
+                        playerEl.innerHTML = `<iframe src="https://www.instagram.com/p/${igId}/embed/" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen"></iframe>`;
+                    }
+                } else {
+                    if (players[id] && players[id].pauseVideo) players[id].pauseVideo();
+                    else if ((ttId || igId) && playerEl) playerEl.innerHTML = '';
+                }
+            });
+        }, { root: container, threshold: 0.75 });
+
+        document.querySelectorAll('.reel-slide').forEach(s => obs.observe(s));
+    </script>
+</body>
+</html>

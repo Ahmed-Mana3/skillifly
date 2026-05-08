@@ -393,6 +393,31 @@ class LinkForm(forms.Form):
 
 
 # =========================
+# Creators (Formset)
+# =========================
+class CreatorForm(forms.Form):
+    name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Creator Name",
+            "required": True,
+        })
+    )
+    image = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            "accept": "image/*",
+        })
+    )
+    url = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            "placeholder": "Link to profile (optional)",
+        })
+    )
+
+
+# =========================
 # Formset factories
 # =========================
 SkillFormSet = formset_factory(SkillForm, extra=1, can_delete=True)
@@ -400,6 +425,7 @@ EducationFormSet = formset_factory(EducationForm, extra=1, can_delete=True)
 ExperienceFormSet = formset_factory(ExperienceForm, extra=1, can_delete=True)
 ProjectFormSet = formset_factory(ProjectForm, extra=1, can_delete=True)
 LinkFormSet = formset_factory(LinkForm, extra=1, can_delete=True)
+CreatorFormSet = formset_factory(CreatorForm, extra=1, can_delete=True)
 
 # Formsets for updates (no extra empty forms)
 SkillFormSetUpdate = formset_factory(SkillForm, extra=0, can_delete=True)
@@ -407,6 +433,7 @@ EducationFormSetUpdate = formset_factory(EducationForm, extra=0, can_delete=True
 ExperienceFormSetUpdate = formset_factory(ExperienceForm, extra=0, can_delete=True)
 ProjectFormSetUpdate = formset_factory(ProjectForm, extra=0, can_delete=True)
 LinkFormSetUpdate = formset_factory(LinkForm, extra=0, can_delete=True)
+CreatorFormSetUpdate = formset_factory(CreatorForm, extra=0, can_delete=True)
 # =========================
 # Reviews (ModelForm)
 # =========================

@@ -9,6 +9,75 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/creative_white.css' %}">
+    <style>
+        /* Creators Section */
+        .creators-marquee-container {
+            width: 100%;
+            overflow: hidden;
+            padding: 40px 0 80px;
+            position: relative;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+
+        .creators-track {
+            display: flex;
+            gap: 32px;
+            width: max-content;
+            animation: creatorScroll 35s linear infinite;
+            will-change: transform;
+        }
+
+        .creators-marquee-container:hover .creators-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes creatorScroll {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-25%, 0, 0); }
+        }
+
+        .creator-set {
+            display: flex;
+            gap: 32px;
+        }
+
+        .creator-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 28px 12px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .creator-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            background: rgba(108,60,224, 0.03);
+            box-shadow: var(--shadow-md);
+        }
+
+        .creator-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--surface);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .creator-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+    </style>
 </head>
 <body>
     <!-- Particles Canvas -->
@@ -128,6 +197,33 @@
             <div class="stat-label">Creative Vision</div>
         </div>
     </div>
+    {% endif %}
+
+    {% if creators %}
+    <section class="creators-section">
+        <div class="section-inner" style="padding-bottom: 0;">
+            <div class="section-label reveal">Collaborations</div>
+            <h2 class="section-heading reveal">CREATORS I<br>WORKED WITH</h2>
+        </div>
+        <div class="creators-marquee-container">
+            <div class="creators-track">
+                {% for i in "1234" %}
+                <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-card">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-img" width="100" height="100" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <span class="creator-name">{{ creator.name }}</span>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
     {% endif %}
 
     <!-- ─── PROJECTS ─── -->
@@ -417,6 +513,30 @@
         });
         card.addEventListener('mouseleave',()=>{card.style.transform=''})
     });
+
+    /* ─── Creator Avatars ─── */
+    (function(){
+        const canvases = document.querySelectorAll('.creator-avatar-canvas');
+        canvases.forEach(canvas => {
+            const name = canvas.dataset.name || "C";
+            const ctx = canvas.getContext('2d');
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            
+            // Gradient Background
+            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, '#6c3ce0');
+            grad.addColorStop(1, '#e8457c');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 44px Outfit';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+        });
+    })();
     </script>
 </body>
 </html>
