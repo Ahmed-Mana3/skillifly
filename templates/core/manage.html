@@ -1,0 +1,175 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Admin Management Hub | Skillifly{% endblock %}
+
+{% block extra_head %}
+<style>
+    .manage-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .manage-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    .icon-box {
+        transition: all 0.4s ease;
+    }
+    .manage-card:hover .icon-box {
+        transform: scale(1.1) rotate(5deg);
+    }
+    .gradient-text {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    @keyframes fadeInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-16">
+    <!-- Header Section -->
+    <div class="mb-16 text-center animate-fadeInUp">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Control Center
+        </div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6 text-black" style="font-family: 'Syne', sans-serif;">
+            Manage <span class="gradient-text">Skillifly</span> ✦
+        </h1>
+        <p class="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
+            Unified access to all administrative tools, platform analytics, and exclusive pages.
+        </p>
+    </div>
+
+    <!-- Management Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <!-- Platform Analytics -->
+        <a href="{% url 'admin_dashboard' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.1s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-8 group-hover:bg-blue-500 transition-colors">
+                <svg class="w-8 h-8 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Platform Growth</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Real-time user signups, conversion rates, and growth trends visualization.</p>
+            <div class="flex items-center text-blue-600 text-xs font-bold uppercase tracking-wider">
+                Explore Dashboard
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+        <!-- Revenue Report -->
+        <a href="{% url 'revenue_report' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.2s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mb-8 group-hover:bg-emerald-500 transition-colors">
+                <svg class="w-8 h-8 text-emerald-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Revenue Insights</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Comprehensive financial reporting, subscription metrics, and transaction logs.</p>
+            <div class="flex items-center text-emerald-600 text-xs font-bold uppercase tracking-wider">
+                View Financials
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+        <!-- System Database (Django Admin) -->
+        <a href="/admin/" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.3s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center mb-8 group-hover:bg-purple-600 transition-colors">
+                <svg class="w-8 h-8 text-purple-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">System Core</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Direct access to the underlying database, user records, and system configurations.</p>
+            <div class="flex items-center text-purple-600 text-xs font-bold uppercase tracking-wider">
+                Open Database
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+        <!-- Manual Payments -->
+        <a href="/admin/core/manualpayment/" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.4s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-8 group-hover:bg-orange-500 transition-colors">
+                <svg class="w-8 h-8 text-orange-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Payment Verification</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Review and approve manual InstaPay and Vodafone Cash receipt submissions.</p>
+            <div class="flex items-center text-orange-600 text-xs font-bold uppercase tracking-wider">
+                Verify Receipts
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+        <!-- User Activity Monitoring -->
+        <a href="{% url 'user_activity_report' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.5s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-cyan-50 flex items-center justify-center mb-8 group-hover:bg-cyan-500 transition-colors">
+                <svg class="w-8 h-8 text-cyan-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">User Activity</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Monitor when users last logged in and when their portfolios were last visited.</p>
+            <div class="flex items-center text-cyan-600 text-xs font-bold uppercase tracking-wider">
+                View Activity Logs
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+        <!-- User Reviews -->
+        <a href="/admin/core/review/" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.5s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-8 group-hover:bg-rose-500 transition-colors">
+                <svg class="w-8 h-8 text-rose-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Manage Reviews</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Moderate user testimonials, feature the best reviews on the landing page.</p>
+            <div class="flex items-center text-rose-600 text-xs font-bold uppercase tracking-wider">
+                Moderate Feedback
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+        <!-- Submit Review (Exclusive) -->
+        <a href="{% url 'submit_review' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.6s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-8 group-hover:bg-indigo-500 transition-colors">
+                <svg class="w-8 h-8 text-indigo-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Submit Review</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Internal link to the exclusive review submission page for trusted members.</p>
+            <div class="flex items-center text-indigo-600 text-xs font-bold uppercase tracking-wider">
+                Add New Review
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- Quick Links Footer -->
+    <div class="mt-20 pt-10 border-t border-slate-100 flex flex-wrap justify-center gap-8 animate-fadeInUp" style="animation-delay: 0.7s">
+        <a href="{% url 'index' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Back to Home</a>
+        <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">User Dashboard</a>
+        <a href="/admin/core/showcase/" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Showcase Manager</a>
+    </div>
+</div>
+{% endblock %}

@@ -41,6 +41,8 @@ class CustomDomainMiddleware:
         '/examples/',
         '/update_portfolio/',
         '/submit-review-exclusive/',
+        '/manage/',
+        '/user-activity/',
     )
 
     MAIN_DOMAINS = frozenset([
@@ -122,4 +124,20 @@ class DynamicCsrfTrustedOriginsMiddleware:
             # Never break the request pipeline over this
             pass
 
+
         return self.get_response(request)
+
+
+class UpdateLastSeenMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            from .models import Profile
+            from django.utils import timezone
+            # Update last_seen timestamp
+            Profile.objects.filter(user=request.user).update(last_seen=timezone.now())
+        
+        response = self.get_response(request)
+        return response

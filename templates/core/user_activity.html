@@ -1,0 +1,156 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}User Activity Report | Skillifly{% endblock %}
+
+{% block extra_head %}
+<style>
+    .activity-row {
+        transition: all 0.2s ease;
+    }
+    .activity-row:hover {
+        background-color: #f8fafc;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 99px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        tracking-wider;
+    }
+    .status-active { background: #f0fdf4; color: #166534; }
+    .status-active span { background: #22c55e; }
+    
+    .status-idle { background: #fffbeb; color: #92400e; }
+    .status-idle span { background: #f59e0b; }
+    
+    .status-away { background: #f1f5f9; color: #475569; }
+    .status-away span { background: #94a3b8; }
+
+    .pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    .animate-pulse-slow {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .5; }
+    }
+    .gradient-text {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-3">
+                Live Monitoring
+            </div>
+            <h1 class="text-4xl font-bold mb-2 text-black" style="font-family: 'Syne', sans-serif;">
+                User <span class="gradient-text">Activity</span> Hub ✦
+            </h1>
+            <p class="text-slate-500 font-medium">Tracking platform engagement and portfolio traffic in real-time.</p>
+        </div>
+        <a href="{% url 'manage_dashboard' %}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Management
+        </a>
+    </div>
+
+    <!-- Table Container -->
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50">
+                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">User / Identity</th>
+                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Platform Status</th>
+                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Site Activity</th>
+                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Portfolio Visit</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for u in users %}
+                    <tr class="activity-row">
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm shadow-inner">
+                                    {{ u.username|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <p class="text-base font-bold text-black">{{ u.username }}</p>
+                                    <p class="text-xs text-slate-400 font-medium">{{ u.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            {% if u.profile.last_seen %}
+                                {% if u.profile.last_seen > active_threshold %}
+                                    <div class="status-badge status-active">
+                                        <span class="pulse-dot animate-pulse-slow"></span>
+                                        Active Now
+                                    </div>
+                                {% elif u.profile.last_seen > idle_threshold %}
+                                    <div class="status-badge status-idle">
+                                        <span class="pulse-dot"></span>
+                                        Idle
+                                    </div>
+                                {% else %}
+                                    <div class="status-badge status-away">
+                                        <span class="pulse-dot"></span>
+                                        Away
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="status-badge status-away">
+                                    <span class="pulse-dot"></span>
+                                    Never Seen
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-6">
+                            {% if u.profile.last_seen %}
+                                <p class="text-sm font-bold text-slate-700">{{ u.profile.last_seen|timesince }} ago</p>
+                                <p class="text-[10px] text-slate-400 font-medium">{{ u.profile.last_seen|date:"M d, H:i" }}</p>
+                            {% else %}
+                                <span class="text-slate-300 text-sm italic">No data</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-6">
+                            {% if u.last_portfolio_visit %}
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                    <p class="text-sm font-bold text-blue-600">{{ u.last_portfolio_visit|timesince }} ago</p>
+                                </div>
+                                <p class="text-[10px] text-slate-400 font-medium ml-4">{{ u.last_portfolio_visit|date:"M d, H:i" }}</p>
+                            {% else %}
+                                <span class="text-slate-300 text-sm italic">No visits yet</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-8 py-20 text-center">
+                            <p class="text-slate-400 italic">No users found in the system.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

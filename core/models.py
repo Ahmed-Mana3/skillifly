@@ -41,6 +41,7 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=20, blank=True)
     visits = models.PositiveIntegerField(default=0)
     is_public = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

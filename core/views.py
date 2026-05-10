@@ -2150,6 +2150,41 @@ def admin_dashboard(request):
     return render(request, 'core/admin_dashboard.html', context)
 
 
+@user_passes_test(lambda u: u.is_superuser)
+def manage_dashboard(request):
+    """Admin hub for superusers to access all management pages."""
+    return render(request, 'core/manage.html')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_activity_report(request):
+    """View to see last time users opened Skillifly and last portfolio visits."""
+    from .models import CustomUser, AnalyticsVisit
+    from django.db.models import OuterRef, Subquery, Max
+    
+    # Subquery to get the latest visit for each user's portfolio
+    latest_visit_subquery = AnalyticsVisit.objects.filter(
+        user=OuterRef('pk')
+    ).order_by('-created_at').values('created_at')[:1]
+    
+    users = CustomUser.objects.annotate(
+        last_portfolio_visit=Subquery(latest_visit_subquery)
+    ).select_related('profile', 'personal_info').order_by('-profile__last_seen')
+    
+    # Calculate status badges (Active: < 15 mins, Idle: < 24 hours, Away: > 24 hours)
+    now = timezone.now()
+    active_threshold = now - timedelta(minutes=15)
+    idle_threshold = now - timedelta(hours=24)
+    
+    context = {
+        'users': users,
+        'now': now,
+        'active_threshold': active_threshold,
+        'idle_threshold': idle_threshold,
+    }
+    return render(request, 'core/user_activity.html', context)
+
+
 
 
 
