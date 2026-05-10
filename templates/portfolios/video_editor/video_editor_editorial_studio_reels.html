@@ -322,6 +322,7 @@
                 const ytId = getYouTubeId(url);
                 const ttId = getTikTokId(url);
                 const igId = getInstagramId(url);
+                const driveId = getDriveId(url);
 
                 if (entry.isIntersecting) {
                     if (!id || !playerEl) return;
@@ -338,6 +339,8 @@
                         playerEl.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen"></iframe>`;
                     } else if (igId) {
                         playerEl.innerHTML = `<iframe src="https://www.instagram.com/p/${igId}/embed/" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen"></iframe>`;
+                    } else if (driveId) {
+                        playerEl.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen"></iframe>`;
                     }
                 } else {
                     if (players[id] && players[id].pauseVideo) players[id].pauseVideo();

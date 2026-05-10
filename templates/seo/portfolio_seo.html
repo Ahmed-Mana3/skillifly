@@ -47,6 +47,54 @@
 }
 </script>
 
+<!-- Video Helper Functions -->
+<script>
+    function getYouTubeId(url) {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function getTikTokId(url) {
+        if (!url) return null;
+        const regExp = /tiktok\.com\/.*\/video\/(\d+)/;
+        const match = url.match(regExp);
+        return match ? match[1] : null;
+    }
+
+    function getInstagramId(url) {
+        if (!url) return null;
+        const regExp = /instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/;
+        const match = url.match(regExp);
+        return match ? match[1] : null;
+    }
+
+    function getDriveId(url) {
+        if (!url) return null;
+        const regExp = /drive\.google\.com\/(?:file\/d\/|open\?id=|file\/u\/\d+\/d\/)([^/?#&]+)/;
+        const match = url.match(regExp);
+        return match ? match[1] : null;
+    }
+
+    function getEmbedUrl(url) {
+        if (!url) return "";
+        const ytId = getYouTubeId(url);
+        if (ytId) return `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&origin=${window.location.origin}`;
+        
+        const ttId = getTikTokId(url);
+        if (ttId) return `https://www.tiktok.com/embed/v2/${ttId}`;
+        
+        const igId = getInstagramId(url);
+        if (igId) return `https://www.instagram.com/p/${igId}/embed/`;
+        
+        const driveId = getDriveId(url);
+        if (driveId) return `https://drive.google.com/file/d/${driveId}/preview`;
+        
+        return url;
+    }
+</script>
+
 <!-- Skillifly Analytics Tracking -->
 <script>
     window.SF_ANALYTICS = {

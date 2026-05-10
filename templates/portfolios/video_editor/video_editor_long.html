@@ -517,10 +517,17 @@
             const img = wrapper.querySelector('.yt-thumb');
             if (img && url) {
                 const id = getYouTubeId(url);
+                const driveId = getDriveId(url);
                 if (id) {
                     img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
                     // Fallback if maxres is missing
                     img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+                } else if (driveId) {
+                    // Placeholder for Drive videos
+                    img.src = 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=1000&auto=format&fit=crop';
+                } else {
+                    // General placeholder
+                    img.src = 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000&auto=format&fit=crop';
                 }
             }
         });

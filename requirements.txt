@@ -43,3 +43,4 @@ django-cors-headers==4.3.1
 # Missing dependencies for allauth social login
 PyJWT==2.11.0
 cryptography==46.0.7
+google-genai==2.0.1

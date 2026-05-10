@@ -310,6 +310,7 @@
         const ytId = getYouTubeId(videoUrl);
         const ttId = getTikTokId(videoUrl);
         const igId = getInstagramId(videoUrl);
+        const driveId = getDriveId(videoUrl);
         const player = document.getElementById('mainPlayer');
         const origin = window.location.origin;
 
@@ -319,6 +320,8 @@
             player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
         } else if (igId) {
             player.src = `https://www.instagram.com/reels/${igId}/embed/`;
+        } else if (driveId) {
+            player.src = `https://drive.google.com/file/d/${driveId}/preview`;
         } else {
             // Fallback for direct links
             player.style.display = 'none';

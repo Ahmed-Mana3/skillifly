@@ -1418,44 +1418,50 @@ def kashier_webhook(request):
 
 
 def sitemap_view(request):
-    """Return an enhanced sitemap.xml with static pages and deep-linked user portfolios."""
+    """Return an enhanced sitemap.xml. Domain-aware for custom domains."""
     from datetime import date as _date
-    from .models import Project
+    from .models import Project, Profile, CustomUser
 
-    # Static pages
-    SITE_LAUNCH_DATE = _date(2024, 1, 1)
-    static_paths = [
-        ('/', '1.0', 'monthly'),
-        ('/themes/', '0.5', 'monthly'),
-        ('/payment/', '0.8', 'monthly'),
-        ('/contact/', '0.3', 'monthly'),
-        ('/terms/', '0.2', 'monthly'),
-        ('/privacy/', '0.2', 'monthly'),
-    ]
-    
+    # Detect if we're on a custom domain
+    custom_user = getattr(request, 'custom_domain_user', None)
+
     pages = []
-    for path, priority, freq in static_paths:
-        pages.append({
-            'loc': request.build_absolute_uri(path),
-            'lastmod': SITE_LAUNCH_DATE,
-            'changefreq': freq,
-            'priority': priority,
-        })
 
-    # Fetch public profiles
-    public_profiles = (
-        Profile.objects.filter(is_public=True)
-        .select_related('user')
-        .only('user__username', 'updated_at', 'created_at')
-    )
+    # If it's NOT a custom domain, include static main site pages
+    if not custom_user:
+        SITE_LAUNCH_DATE = _date(2024, 1, 1)
+        static_paths = [
+            ('/', '1.0', 'monthly'),
+            ('/themes/', '0.5', 'monthly'),
+            ('/payment/', '0.8', 'monthly'),
+            ('/contact/', '0.3', 'monthly'),
+            ('/terms/', '0.2', 'monthly'),
+            ('/privacy/', '0.2', 'monthly'),
+        ]
+        for path, priority, freq in static_paths:
+            pages.append({
+                'loc': request.build_absolute_uri(path),
+                'lastmod': SITE_LAUNCH_DATE,
+                'changefreq': freq,
+                'priority': priority,
+            })
+
+        # Global sitemap for all public profiles
+        public_profiles = Profile.objects.filter(is_public=True).select_related('user')
+    else:
+        # Custom domain: ONLY show this user's content
+        public_profiles = Profile.objects.filter(user=custom_user, is_public=True).select_related('user')
 
     for profile in public_profiles:
         username = profile.user.username
         lastmod = (profile.updated_at or profile.created_at).date()
         
+        # Determine prefix (empty for custom domain, /@username for main domain)
+        prefix = "" if custom_user else f"/@{username}"
+        
         # Main portfolio page
         pages.append({
-            'loc': request.build_absolute_uri(f'/@{username}/'),
+            'loc': request.build_absolute_uri(f'{prefix}/'),
             'lastmod': lastmod,
             'changefreq': 'weekly',
             'priority': '0.9',
@@ -1463,13 +1469,13 @@ def sitemap_view(request):
         
         # Reels & Long Videos index
         pages.append({
-            'loc': request.build_absolute_uri(f'/@{username}/reels/'),
+            'loc': request.build_absolute_uri(f'{prefix}/reels/'),
             'lastmod': lastmod,
             'changefreq': 'weekly',
             'priority': '0.7',
         })
         pages.append({
-            'loc': request.build_absolute_uri(f'/@{username}/long-videos/'),
+            'loc': request.build_absolute_uri(f'{prefix}/long-videos/'),
             'lastmod': lastmod,
             'changefreq': 'weekly',
             'priority': '0.7',
@@ -1480,7 +1486,7 @@ def sitemap_view(request):
         for project in user_projects:
             if project.slug:
                 pages.append({
-                    'loc': request.build_absolute_uri(f'/@{username}/long-videos/{project.slug}/'),
+                    'loc': request.build_absolute_uri(f'{prefix}/long-videos/{project.slug}/'),
                     'lastmod': lastmod,
                     'changefreq': 'monthly',
                     'priority': '0.6',
@@ -1692,7 +1698,8 @@ def contact_view(request):
 # ------------------------------------------------------------------
 
 import base64
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 @login_required
 def manual_payment_view(request, plan_type):
@@ -1845,13 +1852,12 @@ def manual_payment_view(request, plan_type):
     # --- Gemini Vision Verification ---
     ai_failed_needs_review = False
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-        image_part = {
-            'mime_type': gemini_mime_type,
-            'data': gemini_image_bytes,
-        }
+        image_part = types.Part.from_bytes(
+            data=gemini_image_bytes,
+            mime_type=gemini_mime_type,
+        )
 
         prompt = f"""You are a strict payment verification assistant for a subscription service.
 Carefully examine this payment receipt screenshot and check ALL THREE conditions:
@@ -1869,7 +1875,10 @@ IMPORTANT rules:
 Respond ONLY with this exact JSON format, no extra text:
 {{"verified": true or false, "reason": "perfect error message or success message", "amount_found": "X EGP or not found", "recipient_found": "number or not found", "sender_found": "identifier or not found"}}"""
 
-        response = model.generate_content([prompt, image_part])
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=[prompt, image_part]
+        )
         response_text = response.text.strip()
 
         # Strip markdown code fences if Gemini wraps the JSON

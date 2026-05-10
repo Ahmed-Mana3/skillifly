@@ -454,20 +454,19 @@
     </footer>
 
     <script>
-        function getYouTubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
         document.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
             const url = wrapper.dataset.url;
             const img = wrapper.querySelector('.yt-thumb');
             if (img && url) {
                 const id = getYouTubeId(url);
+                const driveId = getDriveId(url);
                 if (id) {
                     img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
                     img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+                } else if (driveId) {
+                    img.src = 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=1000&auto=format&fit=crop';
+                } else {
+                    img.src = 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000&auto=format&fit=crop';
                 }
             }
         });

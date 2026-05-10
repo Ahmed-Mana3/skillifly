@@ -448,25 +448,12 @@
     </footer>
 
     <script>
-        function getYouTubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-        function getTikTokId(url) {
-            const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
-            return m ? m[1] : null;
-        }
-        function getInstagramId(url) {
-            const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
-            return m ? m[1] : null;
-        }
-
         const videoUrl = "{{ project.url|default:'' }}";
         const player   = document.getElementById('mainPlayer');
         const ytId     = getYouTubeId(videoUrl);
         const ttId     = getTikTokId(videoUrl);
         const igId     = getInstagramId(videoUrl);
+        const driveId  = getDriveId(videoUrl);
 
         if (ytId) {
             player.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&origin=${window.location.origin}`;
@@ -474,6 +461,8 @@
             player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
         } else if (igId) {
             player.src = `https://www.instagram.com/reels/${igId}/embed/`;
+        } else if (driveId) {
+            player.src = `https://drive.google.com/file/d/${driveId}/preview`;
         } else if (videoUrl) {
             player.parentElement.innerHTML = `
                 <div class="player-fallback">

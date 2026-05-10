@@ -5,10 +5,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-{% include "seo/portfolio_seo.html" %}
+  {% include "seo/portfolio_seo.html" %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -30,7 +32,10 @@
       overflow-x: hidden;
     }
 
-    h1, h2, h3, h4 {
+    h1,
+    h2,
+    h3,
+    h4 {
       font-family: 'Space Grotesk', sans-serif;
     }
 
@@ -126,7 +131,7 @@
       cursor: pointer;
       z-index: 1001;
     }
-    
+
     .burger-menu span {
       width: 28px;
       height: 2px;
@@ -174,8 +179,15 @@
     }
 
     @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(30px); }
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(30px);
+      }
     }
 
     .hero-content {
@@ -222,6 +234,7 @@
         opacity: 0;
         transform: translateY(30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -293,8 +306,15 @@
     }
 
     @keyframes bounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(10px); }
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(10px);
+      }
     }
 
     /* Sections */
@@ -372,12 +392,29 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    .project-thumbnail-styles .s0 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .project-thumbnail-styles .s1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-    .project-thumbnail-styles .s2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .project-thumbnail-styles .s3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-    .project-thumbnail-styles .s4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-    .project-thumbnail-styles .s5 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+    .project-thumbnail-styles .s0 {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .project-thumbnail-styles .s1 {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .project-thumbnail-styles .s2 {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .project-thumbnail-styles .s3 {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .project-thumbnail-styles .s4 {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    .project-thumbnail-styles .s5 {
+      background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
 
     .play-badge {
       position: absolute;
@@ -449,56 +486,6 @@
       height: 16px;
     }
 
-    /* Video Embed Modal */
-    .video-modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-
-    .video-modal-overlay.active {
-      display: flex;
-    }
-
-    .video-modal {
-      width: 100%;
-      max-width: 960px;
-      aspect-ratio: 16/9;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .video-modal iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    .video-modal-close {
-      position: absolute;
-      top: -40px;
-      right: 0;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 28px;
-      cursor: pointer;
-      padding: 4px 8px;
-      transition: color 0.2s;
-    }
-
-    .video-modal-close:hover {
-      color: var(--primary);
-    }
-
-
-
     /* Skills Section */
     .skills-grid {
       display: flex;
@@ -535,7 +522,7 @@
       max-width: 100%;
     }
 
-    #experience > div {
+    #experience>div {
       max-width: 1600px;
       margin: 0 auto;
     }
@@ -563,8 +550,15 @@
     }
 
     @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-30px); }
-      to { opacity: 1; transform: translateX(0); }
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .timeline-item::before {
@@ -637,8 +631,13 @@
     }
 
     @keyframes creatorsMove {
-      from { transform: translate3d(0, 0, 0); }
-      to { transform: translate3d(-25%, 0, 0); }
+      from {
+        transform: translate3d(0, 0, 0);
+      }
+
+      to {
+        transform: translate3d(-25%, 0, 0);
+      }
     }
 
     .creator-set {
@@ -807,12 +806,16 @@
       text-align: center;
       position: relative;
     }
-    
+
     footer::before {
       content: '';
       position: absolute;
-      top: 0; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 800px; height: 1px;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 800px;
+      height: 1px;
       background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.3), transparent);
     }
 
@@ -825,7 +828,7 @@
       justify-content: center;
       gap: 1.5rem;
     }
-    
+
     @media (min-width: 768px) {
       .footer-content {
         flex-direction: row-reverse;
@@ -852,7 +855,10 @@
     .skillifly-badge::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(138, 43, 226, 0.1));
       opacity: 0;
       transition: opacity 0.4s ease;
@@ -865,9 +871,14 @@
       box-shadow: 0 15px 35px -10px rgba(0, 217, 255, 0.3), 0 0 0 1px rgba(0, 217, 255, 0.1) inset;
     }
 
-    .skillifly-badge:hover::before { opacity: 1; }
-    
-    .skillifly-badge > * { position: relative; z-index: 1; }
+    .skillifly-badge:hover::before {
+      opacity: 1;
+    }
+
+    .skillifly-badge>* {
+      position: relative;
+      z-index: 1;
+    }
 
     .skillifly-badge .powered-text {
       font-size: 0.75rem;
@@ -911,7 +922,8 @@
     .skillifly-badge:hover .badge-cta {
       color: #fff;
       transform: translateX(4px);
-    }   }
+    }
+    }
 
     /* Noise Overlay */
     body::before {
@@ -924,28 +936,67 @@
       opacity: 0.3;
     }
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #0a0e27; }
-    ::-webkit-scrollbar-thumb { background: rgba(0, 217, 255, 0.3); border-radius: 2px; }
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0a0e27;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 217, 255, 0.3);
+      border-radius: 2px;
+    }
 
     /* Responsive */
     @media (max-width: 1024px) {
-      .timeline::before { left: 15px; }
-      .timeline-item { margin-left: 60px; }
-      .timeline-item::before { left: -50px; }
-      .nav-links { gap: 2rem; }
+      .timeline::before {
+        left: 15px;
+      }
+
+      .timeline-item {
+        margin-left: 60px;
+      }
+
+      .timeline-item::before {
+        left: -50px;
+      }
+
+      .nav-links {
+        gap: 2rem;
+      }
     }
 
     @media (max-width: 768px) {
-      nav { padding: 0 1.5rem; }
-      .nav-container { justify-content: space-between; gap: 1rem; }
-      
-      .burger-menu { display: flex; }
-      .burger-menu.active span:nth-child(1) { transform: translateY(8px) rotate(45deg); background: var(--primary); }
-      .burger-menu.active span:nth-child(2) { opacity: 0; }
-      .burger-menu.active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); background: var(--primary); }
+      nav {
+        padding: 0 1.5rem;
+      }
 
-      .nav-links { 
+      .nav-container {
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .burger-menu {
+        display: flex;
+      }
+
+      .burger-menu.active span:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+        background: var(--primary);
+      }
+
+      .burger-menu.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .burger-menu.active span:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+        background: var(--primary);
+      }
+
+      .nav-links {
         position: absolute;
         top: 70px;
         left: 0;
@@ -959,39 +1010,130 @@
         transform: translateY(-150%);
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         border-bottom: 1px solid var(--border-color);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         z-index: 999;
       }
-      .nav-links.active { transform: translateY(0); }
-      .nav-links a { font-size: 1.1rem; }
 
-      section { padding: 4rem 1.5rem; }
-      .section-title { font-size: 2rem; }
-      .hero h1 { font-size: 2.2rem; }
-      .hero p { font-size: 1rem; padding: 0 10px; }
-      .cta-buttons { flex-direction: column; gap: 1rem; width: 100%; max-width: 300px; margin: 0 auto; }
-      .btn { width: 100%; text-align: center; }
-      .portfolio-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-      .project-thumbnail { height: 200px; }
-      .project-info { padding: 1.5rem; }
-      .cta-final { margin: 2rem 0 0 0; padding: 3rem 1.5rem; }
-      .cta-final h2 { font-size: 1.8rem; }
-      .footer-content { flex-direction: column; gap: 12px; }
-      .timeline::before { left: 10px; }
-      .timeline-item { margin-left: 40px; }
-      .timeline-item::before { left: -39px; width: 16px; height: 16px; }
+      .nav-links.active {
+        transform: translateY(0);
+      }
+
+      .nav-links a {
+        font-size: 1.1rem;
+      }
+
+      section {
+        padding: 4rem 1.5rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+        padding: 0 10px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .portfolio-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .project-thumbnail {
+        height: 200px;
+      }
+
+      .project-info {
+        padding: 1.5rem;
+      }
+
+      .cta-final {
+        margin: 2rem 0 0 0;
+        padding: 3rem 1.5rem;
+      }
+
+      .cta-final h2 {
+        font-size: 1.8rem;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .timeline::before {
+        left: 10px;
+      }
+
+      .timeline-item {
+        margin-left: 40px;
+      }
+
+      .timeline-item::before {
+        left: -39px;
+        width: 16px;
+        height: 16px;
+      }
     }
 
     @media (max-width: 480px) {
-      nav { padding: 0 1rem; }
-      .logo { font-size: 14px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      section { padding: 3rem 1.2rem; }
-      .hero h1 { font-size: 1.8rem; }
-      .section-title { font-size: 1.6rem; }
-      .project-thumbnail { height: 180px; }
-      .timeline-title { font-size: 1.25rem; }
-      .timeline-company { font-size: 1rem; }
-      .timeline-desc { font-size: 0.9rem; }
+      nav {
+        padding: 0 1rem;
+      }
+
+      .logo {
+        font-size: 14px;
+        max-width: 60%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      section {
+        padding: 3rem 1.2rem;
+      }
+
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+
+      .section-title {
+        font-size: 1.6rem;
+      }
+
+      .project-thumbnail {
+        height: 180px;
+      }
+
+      .timeline-title {
+        font-size: 1.25rem;
+      }
+
+      .timeline-company {
+        font-size: 1rem;
+      }
+
+      .timeline-desc {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
@@ -1002,7 +1144,7 @@
   <nav>
     <div class="nav-container">
       <a href="#" class="logo">▶ {{ personal_info.full_name|default:"EDITOR" }}</a>
-      
+
       <div class="burger-menu" id="burger-menu">
         <span></span>
         <span></span>
@@ -1010,7 +1152,8 @@
       </div>
 
       <ul class="nav-links" id="nav-links">
-        {% if projects %}<li><a href="#portfolio">Portfolio</a></li>{% endif %}
+        <li><a href="/{{ username }}/reels/">Reels</a></li>
+        <li><a href="/{{ username }}/long-videos/">Work</a></li>
         {% if skills %}<li><a href="#skills">Skills</a></li>{% endif %}
         {% if experiences %}<li><a href="#experience">Experience</a></li>{% endif %}
         <li><a href="#contact">Contact</a></li>
@@ -1028,18 +1171,19 @@
       {% endif %}
       <div class="cta-buttons">
         {% if personal_info.booking_url %}
-        <a href="{{ personal_info.booking_url }}" class="btn btn-primary" target="_blank" rel="noopener">Get In Touch</a>
+        <a href="{{ personal_info.booking_url }}" class="btn btn-primary" target="_blank" rel="noopener">Get In
+          Touch</a>
         {% elif personal_info.email %}
         <a href="mailto:{{ personal_info.email }}" class="btn btn-primary">Get In Touch</a>
         {% endif %}
         {% if projects %}
-        <a href="#portfolio" class="btn btn-secondary">View My Work</a>
+        <a href="/{{ username }}/long-videos/" class="btn btn-secondary">View My Work</a>
         {% endif %}
       </div>
     </div>
     <div class="scroll-indicator">
       <svg viewBox="0 0 24 24" fill="none">
-        <path d="M12 5v14m0 0l-7-7m7 7l7-7" stroke="currentColor"/>
+        <path d="M12 5v14m0 0l-7-7m7 7l7-7" stroke="currentColor" />
       </svg>
     </div>
   </section>
@@ -1052,8 +1196,9 @@
 
     <div class="portfolio-grid">
       {% for project in projects %}
-      <div class="project-card" data-project-id="{{ project.id }}" {% if project.url %}data-url="{{ project.url }}"{% endif %}>
-        <div class="project-thumbnail {% if project.image %}has-image{% else %}no-image{% endif %}" style="{% if not project.image %}background: linear-gradient(135deg, {% cycle '#667eea, #764ba2' '#f093fb, #f5576c' '#4facfe, #00f2fe' '#43e97b, #38f9d7' '#fa709a, #fee140' '#30cfd0, #330867' %}){% endif %}">
+      <div class="project-card" data-project-id="{{ project.id }}" data-slug="{{ project.slug }}" data-video-type="{{ project.video_type }}" {% if project.url %}data-url="{{ project.url }}"{% endif %}>
+        <div class="project-thumbnail {% if project.image %}has-image{% else %}no-image{% endif %}"
+          style="{% if not project.image %}background: linear-gradient(135deg, {% cycle '#667eea, #764ba2' '#f093fb, #f5576c' '#4facfe, #00f2fe' '#43e97b, #38f9d7' '#fa709a, #fee140' '#30cfd0, #330867' %}){% endif %}">
           {% if project.image %}
           <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
           {% endif %}
@@ -1067,9 +1212,12 @@
           <div class="project-description">{{ project.details }}</div>
           {% endif %}
           {% if project.url %}
-          <a href="{{ project.url }}" target="_blank" rel="noopener" class="project-link" onclick="event.stopPropagation();">
+          <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-link">
             View Project
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
           </a>
           {% endif %}
         </div>
@@ -1125,33 +1273,35 @@
   </section>
   {% endif %}
 
-    {% if creators %}
-    <section id="creators" style="padding-bottom: 0;">
-      <h2 class="section-title">CREATORS</h2>
-      <p class="section-subtitle">Collaborating with the industry's most influential voices to create high-impact visual stories.</p>
-    </section>
+  {% if creators %}
+  <section id="creators" style="padding-bottom: 0;">
+    <h2 class="section-title">CREATORS</h2>
+    <p class="section-subtitle">Collaborating with the industry's most influential voices to create high-impact visual
+      stories.</p>
+  </section>
 
-    <div class="creators-marquee-container">
-      <div class="creators-track">
-        {% for i in "1234" %}
-        <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true"{% endif %}>
-          {% for creator in creators %}
-          <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
-            {% if creator.image %}
-            <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img">
-            {% else %}
-            <canvas class="creator-avatar-canvas creator-img" width="80" height="80" data-name="{{ creator.name }}"></canvas>
-            {% endif %}
-            <span class="creator-name">{{ creator.name }}</span>
-          </{% if creator.url %}a{% else %}div{% endif %}>
-          {% endfor %}
-        </div>
+  <div class="creators-marquee-container">
+    <div class="creators-track">
+      {% for i in "1234" %}
+      <div class="creator-set" {% if forloop.first %}{% else %}aria-hidden="true" {% endif %}>
+        {% for creator in creators %}
+        <{% if creator.url %}a href="{{ creator.url }}" target="_blank" {% else %}div{% endif %} class="creator-pill">
+          {% if creator.image %}
+          <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img">
+          {% else %}
+          <canvas class="creator-avatar-canvas creator-img" width="80" height="80"
+            data-name="{{ creator.name }}"></canvas>
+          {% endif %}
+          <span class="creator-name">{{ creator.name }}</span>
+        </{% if creator.url %}a{% else %}div{% endif %}>
         {% endfor %}
       </div>
+      {% endfor %}
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
 
-    <!-- Education Section -->
+  <!-- Education Section -->
   {% if education %}
   <section id="education">
     <h2 class="section-title">Education</h2>
@@ -1178,9 +1328,15 @@
     <div class="connect-links">
       {% for link in links %}
       <a href="{{ link.url }}" target="_blank" rel="noopener" class="connect-chip">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
         {{ link.platform }}
-        <svg style="width: 12px; height: 12px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        <svg style="width: 12px; height: 12px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
       </a>
       {% endfor %}
     </div>
@@ -1191,11 +1347,13 @@
   <section id="contact" style="padding-top: 2rem;">
     <div class="cta-final">
       <h2>Ready to Bring Your Vision to Life?</h2>
-      <p>Let's create something extraordinary together. Whether you have a concept or raw footage, I'll transform it into a visual masterpiece.</p>
+      <p>Let's create something extraordinary together. Whether you have a concept or raw footage, I'll transform it
+        into a visual masterpiece.</p>
       {% if personal_info.booking_url %}
       <a href="{{ personal_info.booking_url }}" class="btn" target="_blank" rel="noopener">Start Your Project →</a>
       {% elif personal_info.email %}
-      <a href="mailto:{{ personal_info.email }}?subject=Video%20Editing%20Project%20Inquiry" class="btn" target="_blank" rel="noopener">Start Your Project →</a>
+      <a href="mailto:{{ personal_info.email }}?subject=Video%20Editing%20Project%20Inquiry" class="btn" target="_blank"
+        rel="noopener">Start Your Project →</a>
       {% endif %}
     </div>
   </section>
@@ -1209,24 +1367,20 @@
         <span class="brand-name">Skillifly</span>
       </a>
       <div class="flex flex-col items-center md:items-start gap-2">
-        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: center; letter-spacing: 1.5px; margin: 0; text-transform: uppercase; font-weight: 500;">© {% now "Y" %} Skillifly. All rights reserved.</p>
+        <p
+          style="font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: center; letter-spacing: 1.5px; margin: 0; text-transform: uppercase; font-weight: 500;">
+          © {% now "Y" %} Skillifly. All rights reserved.</p>
         <div style="width: 20px; height: 1px; background: rgba(0, 217, 255, 0.3);"></div>
       </div>
     </div>
   </footer>
 
-  <!-- Video Modal -->
-  <div class="video-modal-overlay" id="videoModal">
-    <div class="video-modal">
-      <button class="video-modal-close" onclick="closeVideoModal()">&times;</button>
-      <iframe id="videoFrame" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
-    </div>
-  </div>
+
 
   <script>
     /* ── Smooth scroll for nav links ── */
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
+      anchor.addEventListener('click', function (e) {
         const href = this.getAttribute('href');
         if (href !== '#') {
           e.preventDefault();
@@ -1236,44 +1390,22 @@
       });
     });
 
-    /* ── Video embed helpers ── */
-    function getEmbedUrl(url) {
-      if (!url) return null;
-      // YouTube
-      let match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-      if (match) return 'https://www.youtube.com/embed/' + match[1] + '?autoplay=1';
-      // Vimeo
-      match = url.match(/vimeo\.com\/(\d+)/);
-      if (match) return 'https://player.vimeo.com/video/' + match[1] + '?autoplay=1';
-      return null;
-    }
 
-    function openVideoModal(embedUrl) {
-      document.getElementById('videoFrame').src = embedUrl;
-      document.getElementById('videoModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
 
-    function closeVideoModal() {
-      document.getElementById('videoFrame').src = '';
-      document.getElementById('videoModal').classList.remove('active');
-      document.body.style.overflow = '';
-    }
-
-    document.getElementById('videoModal').addEventListener('click', function(e) {
-      if (e.target === this) closeVideoModal();
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeVideoModal();
-    });
-
-    /* ── Project card click → open link directly ── */
+    /* ── Project card click → open detail page or reels ── */
     document.querySelectorAll('.project-card').forEach(card => {
-      card.addEventListener('click', function() {
-        const url = this.dataset.url;
-        if (url) {
-          window.open(url, '_blank', 'noopener,noreferrer');
+      card.addEventListener('click', function () {
+        const type = this.dataset.videoType;
+        const slug = this.dataset.slug;
+        const username = SF_ANALYTICS.username;
+
+        if (type === 'reel') {
+          window.location.href = `/${username}/reels/`;
+        } else if (slug) {
+          window.location.href = `/${username}/long-videos/${slug}/`;
+        } else {
+          const url = this.dataset.url;
+          if (url) window.open(url, '_blank', 'noopener,noreferrer');
         }
       });
     });
@@ -1313,41 +1445,42 @@
         });
       });
 
-    // --- Creator Initials Avatar Logic ---
-    function drawCreatorAvatars() {
-      const canvases = document.querySelectorAll('.creator-avatar-canvas');
-      canvases.forEach(canvas => {
-        const name = canvas.dataset.name || "C";
-        const ctx = canvas.getContext('2d');
-        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        
-        // Background
-        const colors = ['#00d9ff', '#ff006e', '#8f00ff', '#00ff9d'];
-        const colorIndex = name.length % colors.length;
-        ctx.fillStyle = colors[colorIndex] + '22';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Border
-        ctx.strokeStyle = colors[colorIndex];
-        ctx.lineWidth = 4;
-        ctx.strokeRect(0, 0, canvas.width, canvas.height);
-        
-        // Text
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px Inter';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
-      });
-    }
-    document.addEventListener('DOMContentLoaded', drawCreatorAvatars);
+      // --- Creator Initials Avatar Logic ---
+      function drawCreatorAvatars() {
+        const canvases = document.querySelectorAll('.creator-avatar-canvas');
+        canvases.forEach(canvas => {
+          const name = canvas.dataset.name || "C";
+          const ctx = canvas.getContext('2d');
+          const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+          // Background
+          const colors = ['#00d9ff', '#ff006e', '#8f00ff', '#00ff9d'];
+          const colorIndex = name.length % colors.length;
+          ctx.fillStyle = colors[colorIndex] + '22';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Border
+          ctx.strokeStyle = colors[colorIndex];
+          ctx.lineWidth = 4;
+          ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+          // Text
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 36px Inter';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+        });
+      }
+      document.addEventListener('DOMContentLoaded', drawCreatorAvatars);
     }
   </script>
   <script>
     window.SF_ANALYTICS = {
-        username: "{{ username }}"
+      username: "{{ username }}"
     };
   </script>
   <script src="{% static 'js/sf_analytics.js' %}"></script>
 </body>
+
 </html>
