@@ -10,6 +10,8 @@
 
 <meta name="keywords" content="{% if personal_info.user.seo_settings.meta_keywords %}{{ personal_info.user.seo_settings.meta_keywords }}{% else %}{{ personal_info.full_name }}, video editor, portfolio, skillifly, projects, {{ skills|join:', ' }}{% if project %}, {{ project.title }}{% endif %}{% endif %}">
 <link rel="canonical" href="{{ request.build_absolute_uri }}" />
+<link rel="icon" type="image/png" href="{% static 'img/bird.png' %}">
+<link rel="apple-touch-icon" href="{% static 'img/bird.png' %}">
 
 <!-- Open Graph -->
 <meta property="og:title" content="{% if project %}{{ project.title }} | {{ personal_info.full_name }}{% elif personal_info.user.seo_settings.og_title %}{{ personal_info.user.seo_settings.og_title }}{% else %}{{ personal_info.full_name }} | {{ personal_info.title }}{% endif %}">
