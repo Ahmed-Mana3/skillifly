@@ -5,7 +5,9 @@ Environment variables are loaded from a .env file (python-dotenv).
 Copy .env.example to .env and fill in real values before deployment.
 """
 
+# Affiliate Program Integration
 import os
+
 from pathlib import Path
 from dotenv import load_dotenv
 

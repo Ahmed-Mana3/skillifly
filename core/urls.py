@@ -37,18 +37,21 @@ urlpatterns = [
     path('submit-review-exclusive/', views.submit_review_view, name='submit_review'),
     path('revenue-report-exclusive/', views.revenue_report, name='revenue_report'),
     path('admin-dashboard-exclusive/', views.admin_dashboard, name='admin_dashboard'),
-    path('manage/', views.manage_dashboard, name='manage_dashboard'),
+    
+    # Management - Move more specific ones UP
+    path('manage/affiliates/', views.manage_affiliates, name='manage_affiliates'),
     path('manage/discounts/create/', views.manage_discounts_create, name='manage_discounts_create'),
     path('manage/discounts/delete/<int:pk>/', views.manage_discounts_delete, name='manage_discounts_delete'),
     path('manage/discounts/toggle/<int:pk>/', views.manage_discounts_toggle, name='manage_discounts_toggle'),
     path('manage/banner/update/', views.manage_banner_update, name='manage_banner_update'),
+    path('manage/', views.manage_dashboard, name='manage_dashboard'),
+    
     path('user-activity/', views.user_activity_report, name='user_activity_report'),
     path('affiliate/', views.affiliate_view, name='affiliate'),
     path('affiliate/join/', views.join_affiliate, name='join_affiliate'),
+    
     path('<str:username>/reels/', views.portfolio_reels, name='portfolio_reels'),
     path('<str:username>/long-videos/', views.portfolio_long_videos, name='portfolio_long_videos'),
     path('<str:username>/long-videos/<slug:slug>/', views.portfolio_video_detail, name='portfolio_video_detail'),
     path('<str:username>/', views.preview_view, name='preview'),
 ]
-
-

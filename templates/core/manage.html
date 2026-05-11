@@ -163,7 +163,39 @@
             </div>
         </a>
 
+        <!-- Affiliate Management Hub -->
+        <a href="{% url 'manage_affiliates' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.7s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-yellow-50 flex items-center justify-center mb-8 group-hover:bg-yellow-500 transition-colors">
+                <svg class="w-8 h-8 text-yellow-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Affiliate Hub</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Manage partners, track referral earnings, and monitor payout requests.</p>
+            <div class="flex items-center text-yellow-600 text-xs font-bold uppercase tracking-wider">
+                Manage Program
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
     </div>
+
+    <!-- Quick Actions Footer -->
+    <div class="mt-20 p-10 bg-slate-900 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-8 animate-fadeInUp" style="animation-delay: 0.8s">
+        <div class="text-white">
+            <h4 class="text-xl font-bold mb-1" style="font-family: 'Syne', sans-serif;">Recruit Affiliates</h4>
+            <p class="text-slate-400 text-sm font-medium">Send this link to potential partners to join the program.</p>
+        </div>
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-slate-300 text-sm font-mono truncate max-w-md">
+                https://skillifly.cloud/affiliate/
+            </div>
+            <button onclick="navigator.clipboard.writeText('https://skillifly.cloud/affiliate/'); this.innerText='Copied!'; setTimeout(() => this.innerText='Copy Link', 2000)" class="px-8 py-4 bg-white text-black rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all whitespace-nowrap">
+                Copy Link
+            </button>
+        </div>
+    </div>
+
 
     <!-- Management Sections -->
     <div class="mt-20 space-y-16">

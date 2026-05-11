@@ -2338,6 +2338,37 @@ def process_affiliate_earning(upayment):
             logger.error(f"Error processing affiliate earning: {e}")
 
 
+@user_passes_test(lambda u: u.is_superuser)
+def manage_affiliates(request):
+    """Admin view to manage all affiliates and their earnings."""
+    from .models import AffiliateProfile, DiscountCode
+    from django.db.models import Sum
+    
+    affiliates = AffiliateProfile.objects.select_related('user').all().order_by('-created_at')
+    
+    # Calculate summary stats
+    total_affiliates = affiliates.count()
+    total_balance = affiliates.aggregate(Sum('balance'))['balance__sum'] or 0
+    total_lifetime = affiliates.aggregate(Sum('total_earned'))['total_earned__sum'] or 0
+    
+    # Pre-fetch 28% codes for these users to avoid N+1
+    codes = DiscountCode.objects.filter(owner__in=[a.user for a in affiliates], discount_percentage=28)
+    code_map = {c.owner_id: c.code for c in codes}
+    
+    for affiliate in affiliates:
+        affiliate.promo_code = code_map.get(affiliate.user_id, "NO CODE")
+        
+    context = {
+        'affiliates': affiliates,
+        'total_affiliates': total_affiliates,
+        'total_balance': total_balance,
+        'total_lifetime': total_lifetime,
+        'join_link': request.build_absolute_uri(reverse('affiliate')),
+    }
+    return render(request, 'core/manage_affiliates.html', context)
+
+
+
 
 
 
