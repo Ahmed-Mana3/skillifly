@@ -340,3 +340,13 @@ class Creator(models.Model):
 
     def __str__(self):
         return f"{self.name} (for {self.user.username})"
+
+class AffiliateProfile(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="affiliate_profile")
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_earned = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Affiliate: {self.user.username} (Balance: {self.balance} EGP)"
+

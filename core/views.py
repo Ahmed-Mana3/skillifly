@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 from django.conf import settings
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
@@ -1318,6 +1319,10 @@ def payment_callback(request):
         profile, _ = Profile.objects.get_or_create(user=request.user)
         profile.is_public = True
         profile.save()
+
+        # Process Affiliate Earnings
+        process_affiliate_earning(upayment)
+
         return redirect('payment_success')
     else:
         upayment.status = 'failed'
@@ -1408,6 +1413,10 @@ def kashier_webhook(request):
                 profile, _ = Profile.objects.get_or_create(user=upayment.user)
                 profile.is_public = True
                 profile.save()
+
+                # Process Affiliate Earnings
+                process_affiliate_earning(upayment)
+
                 logger.info('Subscription activated for user %s', upayment.user.username)
     elif event_status in ('FAILED', 'DECLINED', 'CANCELLED', 'CANCELED'):
         if upayment.status == 'pending':
@@ -2245,6 +2254,90 @@ def user_activity_report(request):
         'idle_threshold': idle_threshold,
     }
     return render(request, 'core/user_activity.html', context)
+
+
+@login_required
+def affiliate_view(request):
+    """Render the affiliate dashboard or landing page."""
+    from .models import AffiliateProfile, DiscountCode
+    affiliate_profile = AffiliateProfile.objects.filter(user=request.user).first()
+    
+    discount_code = None
+    if affiliate_profile:
+        # User is already an affiliate, find their specific 28% code
+        discount_code = DiscountCode.objects.filter(owner=request.user, discount_percentage=28).first()
+
+    context = {
+        'affiliate': affiliate_profile,
+        'discount_code': discount_code,
+    }
+    return render(request, 'core/affiliate.html', context)
+
+
+@login_required
+def join_affiliate(request):
+    """Enroll the user in the affiliate program and generate their code."""
+    if request.method == "POST":
+        from .models import AffiliateProfile, DiscountCode
+        
+        # Check if already an affiliate
+        if AffiliateProfile.objects.filter(user=request.user).exists():
+            messages.info(request, "You are already enrolled in the affiliate program.")
+            return redirect('affiliate')
+
+        # 1. Create Affiliate Profile
+        AffiliateProfile.objects.create(user=request.user)
+
+        # 2. Generate Discount Code (username-based, 28% off)
+        code_str = request.user.username.upper()
+        
+        # Ensure code is unique (append random chars if username taken as code)
+        if DiscountCode.objects.filter(code=code_str).exists():
+            code_str = f"{code_str}{uuid.uuid4().hex[:4].upper()}"
+            
+        DiscountCode.objects.create(
+            code=code_str,
+            discount_percentage=28,
+            owner=request.user,
+            is_active=True
+        )
+
+        messages.success(request, f"Welcome to the Affiliate Program! Your personal code {code_str} is now active.")
+        return redirect('affiliate')
+    
+    return redirect('affiliate')
+
+
+def process_affiliate_earning(upayment):
+    """
+    Helper to credit affiliates when their code is used for an annual plan.
+    Reward: 100 EGP.
+    """
+    if not upayment.discount_code_used or upayment.status != 'paid':
+        return
+
+    # Check if it's an annual plan (365 days)
+    if upayment.subscription and upayment.subscription.days == 365:
+        from .models import DiscountCode, AffiliateProfile
+        try:
+            # Find the discount code and its owner
+            discount = DiscountCode.objects.get(code=upayment.discount_code_used.upper())
+            owner = discount.owner
+            
+            # Check if owner has an affiliate profile
+            affiliate, created = AffiliateProfile.objects.get_or_create(user=owner)
+            
+            # Credit the affiliate
+            earning_amount = 100.00
+            affiliate.balance += Decimal(earning_amount)
+            affiliate.total_earned += Decimal(earning_amount)
+            affiliate.save()
+            
+            logger.info(f"Affiliate Earning: {owner.username} earned 100 EGP from {upayment.user.username}")
+        except (DiscountCode.DoesNotExist, Exception) as e:
+            logger.error(f"Error processing affiliate earning: {e}")
+
+
 
 
 
