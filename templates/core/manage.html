@@ -165,11 +165,172 @@
 
     </div>
 
+    <!-- Management Sections -->
+    <div class="mt-20 space-y-16">
+        
+        <!-- Site Banner Management -->
+        <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 animate-fadeInUp" style="animation-delay: 0.7s">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Site Discount Banner</h2>
+                    <p class="text-slate-500 text-sm">Control the global discount announcement shown to users in their dashboard.</p>
+                </div>
+                <div class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider">
+                    Global Settings
+                </div>
+            </div>
+
+            <form action="{% url 'manage_banner_update' %}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Discount %</label>
+                    {{ banner_form.banner_discount_percentage }}
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Coupon Code</label>
+                    {{ banner_form.banner_coupon_code }}
+                </div>
+                <div class="flex items-end gap-4">
+                    <div class="flex-1 space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Is Active</label>
+                        <div class="flex items-center h-[52px] px-4 bg-slate-50 rounded-2xl border border-transparent focus-within:border-blue-500/20 transition-all">
+                            {{ banner_form.banner_is_active }}
+                            <span class="ml-3 text-sm font-medium text-slate-600">Enable Banner</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="h-[52px] px-8 bg-black text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all">
+                        Update Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Discount Codes Management -->
+        <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 animate-fadeInUp" style="animation-delay: 0.8s">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Discount Codes</h2>
+                    <p class="text-slate-500 text-sm">Create and manage exclusive promotional codes for users.</p>
+                </div>
+                <button onclick="document.getElementById('createCodeModal').classList.remove('hidden')" class="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Create New Code
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-slate-50">
+                            <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Code</th>
+                            <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Discount</th>
+                            <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Owner</th>
+                            <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Usage</th>
+                            <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                            <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for code in discount_codes %}
+                        <tr class="group hover:bg-slate-50/50 transition-colors">
+                            <td class="py-6">
+                                <span class="px-3 py-1 bg-slate-100 text-slate-900 rounded-lg font-mono font-bold text-sm">
+                                    {{ code.code }}
+                                </span>
+                            </td>
+                            <td class="py-6">
+                                <span class="text-black font-bold">{{ code.discount_percentage }}%</span>
+                            </td>
+                            <td class="py-6 text-slate-500 text-sm">
+                                {{ code.owner.username }}
+                            </td>
+                            <td class="py-6 text-slate-500 text-sm">
+                                {{ code.usage_count }} times
+                            </td>
+                            <td class="py-6">
+                                {% if code.is_active %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-6 text-right">
+                                <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{% url 'manage_discounts_toggle' code.pk %}" class="p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 text-slate-400 hover:text-black transition-all" title="Toggle Status">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                        </svg>
+                                    </a>
+                                    <a href="{% url 'manage_discounts_delete' code.pk %}" class="p-2 rounded-xl hover:bg-rose-50 border border-transparent hover:border-rose-100 text-slate-400 hover:text-rose-600 transition-all" onclick="return confirm('Are you sure you want to delete this code?')" title="Delete Code">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-slate-400 text-sm italic">
+                                No discount codes created yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Create Code Modal -->
+    <div id="createCodeModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 animate-fadeInUp">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">New Discount</h3>
+                <button onclick="document.getElementById('createCodeModal').classList.add('hidden')" class="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+            <form action="{% url 'manage_discounts_create' %}" method="POST" class="space-y-6">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Promo Code</label>
+                    {{ discount_form.code }}
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Discount %</label>
+                    {{ discount_form.discount_percentage }}
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Owner (Admin)</label>
+                    {{ discount_form.owner }}
+                </div>
+                <div class="flex items-center gap-3 pt-2">
+                    {{ discount_form.is_active }}
+                    <label class="text-sm font-medium text-slate-600">Active Immediately</label>
+                </div>
+                <div class="pt-6">
+                    <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                        Generate Discount Code
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Quick Links Footer -->
-    <div class="mt-20 pt-10 border-t border-slate-100 flex flex-wrap justify-center gap-8 animate-fadeInUp" style="animation-delay: 0.7s">
+    <div class="mt-20 pt-10 border-t border-slate-100 flex flex-wrap justify-center gap-8 animate-fadeInUp" style="animation-delay: 0.9s">
         <a href="{% url 'index' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Back to Home</a>
         <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">User Dashboard</a>
         <a href="/admin/core/showcase/" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Showcase Manager</a>
     </div>
 </div>
 {% endblock %}
+

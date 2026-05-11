@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
-from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain
+from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain, DiscountCode, SiteSettings
 from django import forms
 from django.forms import formset_factory, BaseFormSet
 from django.core.validators import RegexValidator
@@ -493,3 +493,24 @@ class CustomDomainForm(forms.ModelForm):
             raise forms.ValidationError("You cannot use this domain as a custom domain.")
             
         return domain
+
+class DiscountCodeForm(forms.ModelForm):
+    class Meta:
+        model = DiscountCode
+        fields = ['code', 'discount_percentage', 'owner', 'is_active']
+        widgets = {
+            'code': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. SAVE50'}),
+            'discount_percentage': forms.NumberInput(attrs={'class': 'sf-input', 'min': 0, 'max': 100}),
+            'owner': forms.Select(attrs={'class': 'sf-input'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'}),
+        }
+
+class SiteSettingsForm(forms.ModelForm):
+    class Meta:
+        model = SiteSettings
+        fields = ['banner_discount_percentage', 'banner_coupon_code', 'banner_is_active']
+        widgets = {
+            'banner_discount_percentage': forms.NumberInput(attrs={'class': 'sf-input', 'min': 0, 'max': 100}),
+            'banner_coupon_code': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. WELCOME2026'}),
+            'banner_is_active': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'}),
+        }

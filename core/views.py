@@ -2153,7 +2153,69 @@ def admin_dashboard(request):
 @user_passes_test(lambda u: u.is_superuser)
 def manage_dashboard(request):
     """Admin hub for superusers to access all management pages."""
-    return render(request, 'core/manage.html')
+    from .models import DiscountCode, SiteSettings
+    from .forms import DiscountCodeForm, SiteSettingsForm
+    
+    discount_codes = DiscountCode.objects.all().order_by('-created_at')
+    site_settings = SiteSettings.objects.first()
+    if not site_settings:
+        site_settings = SiteSettings.objects.create()
+        
+    discount_form = DiscountCodeForm()
+    banner_form = SiteSettingsForm(instance=site_settings)
+    
+    context = {
+        'discount_codes': discount_codes,
+        'site_settings': site_settings,
+        'discount_form': discount_form,
+        'banner_form': banner_form,
+    }
+    return render(request, 'core/manage.html', context)
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_discounts_create(request):
+    from .forms import DiscountCodeForm
+    if request.method == 'POST':
+        form = DiscountCodeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Discount code created successfully!")
+        else:
+            messages.error(request, f"Error creating discount code: {form.errors.as_text()}")
+    return redirect('manage_dashboard')
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_discounts_delete(request, pk):
+    from .models import DiscountCode
+    discount = get_object_or_404(DiscountCode, pk=pk)
+    code = discount.code
+    discount.delete()
+    messages.success(request, f"Discount code '{code}' deleted.")
+    return redirect('manage_dashboard')
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_discounts_toggle(request, pk):
+    from .models import DiscountCode
+    discount = get_object_or_404(DiscountCode, pk=pk)
+    discount.is_active = not discount.is_active
+    discount.save()
+    status = "activated" if discount.is_active else "deactivated"
+    messages.success(request, f"Discount code '{discount.code}' {status}.")
+    return redirect('manage_dashboard')
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_banner_update(request):
+    from .models import SiteSettings
+    from .forms import SiteSettingsForm
+    site_settings = SiteSettings.objects.first()
+    if request.method == 'POST':
+        form = SiteSettingsForm(request.POST, instance=site_settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Site banner settings updated!")
+        else:
+            messages.error(request, "Error updating banner settings.")
+    return redirect('manage_dashboard')
 
 
 @user_passes_test(lambda u: u.is_superuser)
