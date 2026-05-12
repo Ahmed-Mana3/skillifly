@@ -29,3 +29,33 @@ def auth_providers(request):
         "google_oauth_button_visible": False, # Forced to False as per user request
     }
 
+
+def navbar_profile(request):
+    """Provide the user's profile picture and initials for the navbar."""
+    if not request.user.is_authenticated:
+        return {}
+
+    from core.models import Profile
+
+    nav_picture = None
+    nav_initials = ''
+
+    try:
+        profile = request.user.profile
+        if profile.picture and hasattr(profile.picture, 'url'):
+            nav_picture = profile.picture.url
+    except Profile.DoesNotExist:
+        pass
+
+    user = request.user
+    if user.first_name and user.last_name:
+        nav_initials = (user.first_name[0] + user.last_name[0]).upper()
+    elif user.first_name:
+        nav_initials = user.first_name[:2].upper()
+    else:
+        nav_initials = user.username[:2].upper()
+
+    return {
+        'nav_profile_picture': nav_picture,
+        'nav_user_initials': nav_initials,
+    }

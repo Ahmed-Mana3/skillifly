@@ -61,8 +61,7 @@
           </div>
           {% endif %}
 
-          <button type="button" disabled
-            title="Google authentication is currently disabled"
+          <button type="button" disabled title="Google authentication is currently disabled"
             class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/70 text-gray-500 rounded-xl border border-white/30 font-semibold text-sm cursor-not-allowed">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -79,53 +78,55 @@
                 fill="#EA4335" />
             </svg>
             <span>Continue with Google</span>
-          </button>        <div class="relative flex items-center justify-center my-5">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-slate-200"></div>
+          </button>
+          <div class="relative flex items-center justify-center my-5">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-slate-200"></div>
+            </div>
+            <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">Or sign in with email</div>
           </div>
-          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">Or sign in with email</div>
         </div>
-      </div>
-      {% endif %}
-
-      <div class="mb-4">
-        <label class="sf-label">Email or Username</label>
-        {{ form.username }}
-        {% if form.username.errors %}
-        {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
         {% endif %}
-      </div>
 
-      <div class="mb-3">
-        <div class="flex items-center justify-between mb-1.5">
-          <label class="sf-label mb-0">Password</label>
+        <div class="mb-4">
+          <label class="sf-label">Email or Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
         </div>
-        {{ form.password }}
-        {% if form.password.errors %}
-        {% for error in form.password.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-        {% endif %}
-      </div>
 
-      <!-- Remember me -->
-      <div class="flex items-center gap-2.5 mb-6">
-        <input type="checkbox" id="remember" name="remember"
-          class="w-4 h-4 rounded border-slate-300 bg-slate-50 text-blue-600 accent-blue-600 cursor-pointer">
-        <label for="remember" class="text-sm text-slate-600 cursor-pointer font-medium">Remember me for 30 days</label>
-      </div>
+        <div class="mb-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="sf-label mb-0">Password</label>
+          </div>
+          {{ form.password }}
+          {% if form.password.errors %}
+          {% for error in form.password.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
 
-      <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
-        Sign in
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3 3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-        </svg>
-      </button>
+        <!-- Remember me -->
+        <div class="flex items-center gap-2.5 mb-6">
+          <input type="checkbox" id="remember" name="remember"
+            class="w-4 h-4 rounded border-slate-300 bg-slate-50 text-blue-600 accent-blue-600 cursor-pointer">
+          <label for="remember" class="text-sm text-slate-600 cursor-pointer font-medium">Remember me for 30
+            days</label>
+        </div>
 
-      <p class="text-center text-sm text-slate-600 mt-6 font-medium">
-        Don't have an account?
-        <a href="{% url 'signup' %}"
-          class="text-blue-600 hover:text-blue-700 transition-colors font-bold">Create one for free</a>
-      </p>
+        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
+          Sign in
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3 3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+        </button>
+
+        <p class="text-center text-sm text-slate-600 mt-6 font-medium">
+          Don't have an account?
+          <a href="{% url 'signup' %}" class="text-blue-600 hover:text-blue-700 transition-colors font-bold">Create one
+            for free</a>
+        </p>
 
 
       </form>

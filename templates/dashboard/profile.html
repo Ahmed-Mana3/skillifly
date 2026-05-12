@@ -1,0 +1,459 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}My Profile — Skillifly{% endblock %}
+
+{% block extra_head %}
+<style>
+  .profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: white;
+    position: relative;
+    box-shadow: 0 12px 32px -8px rgba(139, 92, 246, 0.35);
+  }
+
+  .profile-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6, #D946EF);
+    z-index: -1;
+    opacity: 0.4;
+    filter: blur(8px);
+  }
+
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+  }
+
+  .avatar-upload-wrapper {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .avatar-upload-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .avatar-upload-wrapper:hover .avatar-upload-overlay {
+    opacity: 1;
+  }
+
+  .picture-preview-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .remove-picture-btn {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #EF4444;
+    color: white;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  }
+
+  .remove-picture-btn:hover {
+    background: #DC2626;
+    transform: scale(1.1);
+  }
+
+  .field-group {
+    position: relative;
+  }
+
+  .field-group .field-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94A3B8;
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  .field-group input:focus ~ .field-icon,
+  .field-group .sf-input:focus ~ .field-icon {
+    color: #3B82F6;
+  }
+
+  .field-group .sf-input {
+    padding-left: 42px !important;
+  }
+
+  .danger-zone {
+    background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%);
+    border: 1px solid #FECACA;
+  }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white !important;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    box-shadow: 0 8px 20px -5px rgba(239, 68, 68, 0.3);
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 16px 32px -8px rgba(239, 68, 68, 0.45);
+  }
+
+  .btn-danger:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .save-indicator {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s ease;
+  }
+
+  .save-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes checkmark {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(-45deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+
+  .success-check {
+    animation: checkmark 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-6 py-12">
+
+  <!-- Back to Dashboard -->
+  <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-black font-bold mb-8 transition-colors group">
+    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <!-- Profile Header -->
+  <div class="gradient-border rounded-3xl p-8 mb-8 animate-fadeInUp">
+    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <!-- Avatar with upload -->
+      <div class="picture-preview-container">
+        <label for="id_picture_header" class="avatar-upload-wrapper">
+          <div class="profile-avatar flex-shrink-0">
+            {% if profile_picture %}
+              <img id="avatar-preview" src="{{ profile_picture }}" alt="{{ user.first_name }}'s avatar">
+            {% else %}
+              <span id="avatar-initials">{{ user_initials }}</span>
+              <img id="avatar-preview" src="" alt="" style="display: none;">
+            {% endif %}
+            <div class="avatar-upload-overlay">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+        </label>
+        {% if profile_picture %}
+        <button type="button" id="remove-picture-btn" class="remove-picture-btn" title="Remove picture" onclick="removePicture()">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+
+      <!-- User info -->
+      <div class="text-center sm:text-left flex-1 min-w-0">
+        <h1 class="text-2xl sm:text-3xl font-bold text-black mb-1" style="font-family: 'Syne', sans-serif;">
+          {{ user.first_name }} {{ user.last_name }}
+        </h1>
+        <p class="text-slate-500 font-medium text-sm mb-3 truncate">@{{ user.username }}</p>
+        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+          {% if has_active_payment %}
+          <span class="info-chip bg-emerald-500/10 border border-emerald-500/20 text-emerald-700">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            Pro Member
+          </span>
+          {% else %}
+          <span class="info-chip bg-amber-500/10 border border-amber-500/20 text-amber-700">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Free Plan
+          </span>
+          {% endif %}
+          <span class="info-chip bg-blue-500/10 border border-blue-500/20 text-blue-700">
+            Joined {{ user.date_joined|date:"M Y" }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Account Form -->
+  <form method="POST" id="profile-form" enctype="multipart/form-data" class="animate-fadeInUp" style="animation-delay: 0.1s">
+    <!-- Hidden file input for the avatar (triggered by clicking the avatar) -->
+    <input type="file" id="id_picture_header" name="picture" accept="image/*" class="hidden" onchange="previewPicture(this)">
+    <input type="hidden" id="id_remove_picture" name="remove_picture" value="0">
+    {% csrf_token %}
+
+    <div class="gradient-border rounded-3xl p-8 mb-8">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Account Details</h2>
+          <p class="text-xs text-slate-500 font-medium">Update your personal account information</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- First Name -->
+        <div>
+          <label for="id_first_name" class="sf-label">First Name</label>
+          <div class="field-group">
+            <input type="text" id="id_first_name" name="first_name" value="{{ user.first_name }}"
+              class="sf-input" placeholder="John">
+            <svg class="field-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Last Name -->
+        <div>
+          <label for="id_last_name" class="sf-label">Last Name</label>
+          <div class="field-group">
+            <input type="text" id="id_last_name" name="last_name" value="{{ user.last_name }}"
+              class="sf-input" placeholder="Doe">
+            <svg class="field-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="sm:col-span-2">
+          <label for="id_email" class="sf-label">Email Address</label>
+          <div class="field-group">
+            <input type="email" id="id_email" name="email" value="{{ user.email }}"
+              class="sf-input" placeholder="you@example.com">
+            <svg class="field-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          {% if form.email.errors %}
+            {% for error in form.email.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Username (read-only) -->
+        <div class="sm:col-span-2">
+          <label for="id_username" class="sf-label">
+            Username
+            <span class="text-[10px] text-amber-500 ml-1 normal-case tracking-normal">(changing this updates your portfolio URL)</span>
+          </label>
+          <div class="field-group">
+            <input type="text" id="id_username" name="username" value="{{ user.username }}"
+              class="sf-input" placeholder="johndoe" minlength="3" required>
+            <svg class="field-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="flex items-center gap-4 mt-8 pt-6 border-t border-slate-100">
+        <button type="submit" class="btn-primary py-3 px-8 text-sm shadow-xl shadow-blue-500/15">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Save Changes
+        </button>
+        <span id="save-status" class="save-indicator text-sm text-emerald-600 font-bold"></span>
+      </div>
+    </div>
+  </form>
+
+  <!-- Password Change Hint -->
+  <div class="gradient-border rounded-3xl p-8 mb-8 animate-fadeInUp" style="animation-delay: 0.2s">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Security</h2>
+        <p class="text-xs text-slate-500 font-medium">Password & authentication settings</p>
+      </div>
+    </div>
+    <p class="text-sm text-slate-600 font-medium leading-relaxed">
+      To change your password, please sign out and use the 
+      <strong class="text-black">password reset</strong> option on the sign-in page. 
+      This ensures your identity is securely verified.
+    </p>
+  </div>
+
+  <!-- Sign Out Section -->
+  <div class="danger-zone rounded-3xl p-8 animate-fadeInUp" style="animation-delay: 0.3s">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Sign Out</h2>
+        <p class="text-xs text-slate-500 font-medium">End your current session on this device</p>
+      </div>
+    </div>
+    <p class="text-sm text-slate-600 font-medium mb-5 leading-relaxed">
+      You will be redirected to the sign-in page. Your portfolio and data will remain safe.
+    </p>
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-danger">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        Sign Out
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function previewPicture(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('avatar-preview');
+        const initials = document.getElementById('avatar-initials');
+        preview.src = e.target.result;
+        preview.style.display = '';
+        if (initials) initials.style.display = 'none';
+
+        // Show remove button if not already present
+        let removeBtn = document.getElementById('remove-picture-btn');
+        if (!removeBtn) {
+          const container = document.querySelector('.picture-preview-container');
+          removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.id = 'remove-picture-btn';
+          removeBtn.className = 'remove-picture-btn';
+          removeBtn.title = 'Remove picture';
+          removeBtn.onclick = removePicture;
+          removeBtn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>';
+          container.appendChild(removeBtn);
+        }
+
+        // Clear remove flag since we're uploading a new picture
+        document.getElementById('id_remove_picture').value = '0';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function removePicture() {
+    const preview = document.getElementById('avatar-preview');
+    const initials = document.getElementById('avatar-initials');
+    const fileInput = document.getElementById('id_picture_header');
+    const removeFlag = document.getElementById('id_remove_picture');
+    const removeBtn = document.getElementById('remove-picture-btn');
+
+    // Reset preview
+    preview.src = '';
+    preview.style.display = 'none';
+
+    // Show initials if they exist
+    if (initials) {
+      initials.style.display = '';
+    } else {
+      // Create initials span if it doesn't exist (user had a picture on load)
+      const avatar = document.querySelector('.profile-avatar');
+      const span = document.createElement('span');
+      span.id = 'avatar-initials';
+      span.textContent = '{{ user_initials }}';
+      avatar.insertBefore(span, avatar.firstChild);
+    }
+
+    // Clear file input
+    fileInput.value = '';
+
+    // Set remove flag
+    removeFlag.value = '1';
+
+    // Hide remove button
+    if (removeBtn) removeBtn.style.display = 'none';
+  }
+</script>
+{% endblock %}

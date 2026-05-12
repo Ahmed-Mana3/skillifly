@@ -426,6 +426,79 @@ def logout_view(request):
 
 
 @login_required
+def profile_view(request):
+    """User profile page — view & edit account details, sign out"""
+    user = request.user
+    profile, _ = Profile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        username = request.POST.get('username', '').strip()
+
+        errors = {}
+        if email and email != user.email:
+            if CustomUser.objects.filter(email=email).exclude(pk=user.pk).exists():
+                errors['email'] = 'This email address is already in use.'
+        if username and username != user.username:
+            if CustomUser.objects.filter(username=username).exclude(pk=user.pk).exists():
+                errors['username'] = 'This username is already taken.'
+            elif len(username) < 3:
+                errors['username'] = 'Username must be at least 3 characters.'
+
+        if errors:
+            error_msg = ' '.join(errors.values())
+            messages.error(request, error_msg)
+        else:
+            user.first_name = first_name
+            user.last_name = last_name
+            if email:
+                user.email = email
+            if username:
+                user.username = username
+            user.save()
+
+            # Handle profile picture upload (same field used by builder/portfolio)
+            picture = request.FILES.get('picture')
+            if picture:
+                profile.picture = picture
+                profile.save()
+            elif request.POST.get('remove_picture') == '1':
+                profile.picture = None
+                profile.save()
+
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+
+    # Payment info
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    has_active_payment = payment is not None and payment.is_active
+
+    # Profile picture
+    profile_picture = None
+    if profile.picture and hasattr(profile.picture, 'url'):
+        profile_picture = profile.picture.url
+
+    # User initials for avatar fallback
+    initials = ''
+    if user.first_name and user.last_name:
+        initials = (user.first_name[0] + user.last_name[0]).upper()
+    elif user.first_name:
+        initials = user.first_name[:2].upper()
+    else:
+        initials = user.username[:2].upper()
+
+    context = {
+        'profile': profile,
+        'has_active_payment': has_active_payment,
+        'profile_picture': profile_picture,
+        'user_initials': initials,
+    }
+    return render(request, 'dashboard/profile.html', context)
+
+
+@login_required
 def dashboard_view(request):
     """Render the dashboard page"""
     profile, created = Profile.objects.select_related('user', 'theme__category').get_or_create(user=request.user)
