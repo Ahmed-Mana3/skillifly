@@ -1,0 +1,535 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{{ personal_info.full_name }} — Reels</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+
+    <style>
+        body {
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* ─── Reels Container ─── */
+        .reels-container {
+            height: 100dvh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            overscroll-behavior-y: contain;
+            position: relative;
+            z-index: 10;
+        }
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel-slide {
+            height: 100dvh;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        /* ─── Ambient background glow ─── */
+        .ambient-glow {
+            position: absolute; inset: -100px;
+            background-size: cover; background-position: center;
+            filter: blur(100px) brightness(0.18) saturate(1.3);
+            opacity: 0.5;
+            z-index: 0; pointer-events: none;
+        }
+
+        .ambient-solid {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.15), transparent 60%),
+                        radial-gradient(circle at 70% 70%, rgba(5, 255, 141, 0.08), transparent 60%);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* ─── Video Wrapper ─── */
+        .video-wrapper {
+            position: relative;
+            width: 100%; height: 100%;
+            max-width: 440px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            z-index: 2;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .video-content {
+            width: 100%; height: 100%;
+            position: relative; z-index: 1;
+        }
+        .video-content iframe {
+            width: 100%; height: 100%;
+            border: none; pointer-events: auto;
+        }
+
+        /* Loading shimmer */
+        .loading-shimmer {
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, #070e0a 25%, #0e1e16 50%, #070e0a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ─── UI Overlays ─── */
+        .reel-overlay {
+            position: absolute;
+            bottom: 32px; left: 20px; right: 80px;
+            z-index: 20; pointer-events: none;
+        }
+        .reel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+            line-height: 1.2;
+            color: #fff;
+        }
+        .reel-desc {
+            font-size: 0.85rem; color: var(--text-muted);
+            line-height: 1.45; max-height: 55px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+            font-weight: 300;
+        }
+
+        .reel-cta {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--grad);
+            color: var(--bg);
+            padding: 10px 20px; border-radius: 100px;
+            font-weight: 700; font-size: 0.78rem;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none;
+            margin-top: 14px; pointer-events: auto;
+            box-shadow: var(--shadow-accent);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .reel-cta:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(5, 255, 141, 0.25); }
+
+        /* Right action buttons */
+        .reel-actions {
+            position: absolute;
+            right: 18px; bottom: 110px;
+            z-index: 20;
+            display: flex; flex-direction: column; gap: 18px;
+        }
+        .action-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(13, 22, 17, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; pointer-events: auto;
+            transition: transform 0.2s, background 0.2s;
+            color: var(--text); text-decoration: none;
+        }
+        .action-btn:hover { transform: scale(1.12); background: var(--surface-hover); border-color: var(--accent); color: var(--accent-glow); }
+
+        /* Progress dots */
+        .progress-dots {
+            position: fixed;
+            right: 20px; top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .dot {
+            width: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.2);
+            transition: height 0.3s, background 0.3s;
+            height: 4px;
+        }
+        .dot.active {
+            background: var(--accent-glow); height: 20px;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* ─── Fixed Top Nav ─── */
+        .top-nav {
+            position: fixed;
+            top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+            display: flex; gap: 6px; align-items: center;
+            background: rgba(7, 14, 10, 0.7);
+            backdrop-filter: blur(16px);
+            padding: 8px 16px; border-radius: 100px;
+            border: 1px solid var(--border);
+        }
+        .nav-link {
+            text-decoration: none; color: var(--text-muted);
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em;
+            padding: 6px 14px; border-radius: 100px;
+            transition: color 0.3s, background 0.3s;
+        }
+        .nav-link:hover { color: var(--text); }
+        .nav-link.active { color: var(--bg); background: var(--grad); }
+
+        .close-btn {
+            position: fixed;
+            top: 22px; left: 22px;
+            z-index: 100;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(7, 14, 10, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; color: var(--text);
+            font-size: 1.1rem;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .close-btn:hover { border-color: var(--accent); background: var(--surface); color: var(--accent-glow); }
+
+        /* ─── Contact Slide ─── */
+        .contact-slide-inner {
+            text-align: center;
+            padding: 40px 32px;
+            max-width: 500px; width: 100%;
+            pointer-events: auto;
+            z-index: 10; position: relative;
+        }
+        .contact-big {
+            font-size: clamp(2.5rem, 8vw, 4.2rem);
+            line-height: 0.95; letter-spacing: -0.02em;
+            margin-bottom: 40px;
+            font-weight: 800;
+        }
+        .contact-big .grad {
+            background: var(--grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .contact-list { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
+        .c-item { display: flex; flex-direction: column; gap: 4px; }
+        .c-label {
+            font-size: 0.62rem; letter-spacing: 0.3em;
+            text-transform: uppercase; color: var(--accent-glow); font-weight: 700;
+        }
+        .c-val {
+            font-size: 1.15rem; font-weight: 700;
+            color: var(--text); text-decoration: none;
+            transition: color 0.3s; word-break: break-all;
+        }
+        .c-val:hover { color: var(--accent); }
+        .social-row {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-bottom: 40px;
+        }
+        .social-chip {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 8px 18px; border-radius: 100px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: 0.78rem; font-weight: 600;
+            transition: border-color 0.3s, background 0.3s, color 0.3s;
+        }
+        .social-chip:hover { background: var(--surface-hover); border-color: var(--accent); color: #fff; }
+        .contact-big-cta {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 36px;
+            background: var(--grad);
+            color: var(--bg); font-weight: 800; font-size: 0.85rem;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none; border-radius: 100px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: var(--shadow-accent);
+        }
+        .contact-big-cta:hover { transform: translateY(-4px); box-shadow: 0 15px 40px rgba(5, 255, 141, 0.25); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .video-wrapper { max-width: 100%; height: 100dvh; border: none; }
+            .reel-overlay { bottom: 100px; left: 16px; right: 72px; }
+            .reel-actions { right: 12px; bottom: 120px; }
+            .progress-dots { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Close / Back -->
+    {% if request.GET.category_id %}
+    <a href="{% url 'portfolio_category_detail' username=username category_id=request.GET.category_id %}" class="close-btn" title="Back to Collection">
+    {% else %}
+    <a href="{% url 'preview' username=username %}" class="close-btn" title="Back to Portfolio">
+    {% endif %}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </a>
+
+    <!-- Top Nav -->
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/{% if request.GET.category_id %}?category_id={{ request.GET.category_id }}{% endif %}" class="nav-link active">Reels</a>
+        <a href="/{{ username }}/long-videos/{% if request.GET.category_id %}?category_id={{ request.GET.category_id }}{% endif %}" class="nav-link">Work</a>
+        <a href="#contactSlide" class="nav-link">Contact</a>
+    </nav>
+
+    <!-- Progress Dots -->
+    <div class="progress-dots" id="progressDots">
+        {% for project in projects %}
+        <div class="dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}"></div>
+        {% endfor %}
+        <div class="dot" data-index="{{ projects|length }}"></div><!-- contact dot -->
+    </div>
+
+    <!-- Reels Container -->
+    <div class="reels-container" id="reelsContainer">
+
+        {% for project in projects %}
+        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
+            <div class="ambient-glow" id="glow-{{ project.id }}"></div>
+            <div class="ambient-solid"></div>
+
+            <div class="video-wrapper">
+                <div class="loading-shimmer"></div>
+                <div id="player-{{ project.id }}" class="video-content"></div>
+            </div>
+
+            <!-- Info Overlay -->
+            <div class="reel-overlay">
+                <div class="reel-title">{{ project.title }}</div>
+                {% if project.details %}
+                <p class="reel-desc">{{ project.details }}</p>
+                {% endif %}
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="reel-cta" target="_blank" rel="noopener">
+                    Request Similar Reel
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="reel-cta">
+                    Request Similar Reel
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="reel-actions">
+                {% if project.url %}
+                <a href="{{ project.url }}" target="_blank" rel="noopener" class="action-btn" title="Open on source">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="reel-slide">
+            <div class="contact-slide-inner">
+                <p style="color:var(--text-muted); font-size:1rem;">No reels added yet.</p>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Contact Slide -->
+        <div class="reel-slide" id="contactSlide" data-index="{{ projects|length }}">
+            <div class="ambient-solid"></div>
+            <div class="contact-slide-inner">
+                <div class="contact-big">
+                    LET'S<br>CREATE<br><span class="grad">MAGIC.</span>
+                </div>
+
+                <div class="contact-list">
+                    {% if personal_info.email %}
+                    <div class="c-item">
+                        <span class="c-label">Email</span>
+                        <a href="mailto:{{ personal_info.email }}" class="c-val">{{ personal_info.email }}</a>
+                    </div>
+                    {% endif %}
+                    {% if personal_info.phone %}
+                    <div class="c-item">
+                        <span class="c-label">Phone</span>
+                        <a href="tel:{{ personal_info.phone }}" class="c-val">{{ personal_info.phone }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if links %}
+                <div class="social-row">
+                    {% for link in links %}
+                    <a href="{{ link.url }}" target="_blank" rel="noopener" class="social-chip">{{ link.platform }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="contact-big-cta" target="_blank" rel="noopener">
+                    Get In Touch
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="contact-big-cta">
+                    Get In Touch
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+    </div><!-- /reels-container -->
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+    /* 1. Custom Cursor */
+    (function() {
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        if (!dot || !ring) return;
+
+        let mx = 0, my = 0;
+        let rx = 0, ry = 0;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX;
+            my = e.clientY;
+            dot.style.left = mx + 'px';
+            dot.style.top = my + 'px';
+        });
+
+        function animateRing() {
+            rx += (mx - rx) * 0.15;
+            ry += (my - ry) * 0.15;
+            ring.style.left = rx + 'px';
+            ring.style.top = ry + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        const hoverable = document.querySelectorAll('a, button, .action-btn, .social-chip, .close-btn, .nav-link, .dot');
+        hoverable.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1.6)';
+                dot.style.background = 'var(--accent)';
+                ring.style.width = '64px';
+                ring.style.height = '64px';
+                ring.style.borderColor = 'var(--accent-glow)';
+                ring.style.boxShadow = '0 0 15px rgba(5, 255, 141, 0.4)';
+            });
+            el.addEventListener('mouseleave', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1)';
+                dot.style.background = 'var(--accent-glow)';
+                ring.style.width = '40px';
+                ring.style.height = '40px';
+                ring.style.borderColor = 'var(--accent)';
+                ring.style.boxShadow = 'none';
+            });
+        });
+    })();
+
+    /* 2. Video API Loader & Autoplay Swiper logic */
+    const players = {};
+    function onYouTubeIframeAPIReady() { /* YT Ready */ }
+
+    function getYouTubeId(url) {
+        const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
+        return (m && m[2].length === 11) ? m[2] : null;
+    }
+    function getTikTokId(url) {
+        const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+        return m ? m[1] : null;
+    }
+    function getInstagramId(url) {
+        const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
+        return m ? m[1] : null;
+    }
+    function getDriveId(url) {
+        const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/?#&]+)/);
+        return m ? m[1] : null;
+    }
+
+    const container = document.getElementById('reelsContainer');
+    const dots      = document.querySelectorAll('.dot');
+
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const slide = entry.target;
+            const id    = slide.dataset.projectId;
+            const url   = slide.dataset.url || '';
+            const idx   = parseInt(slide.dataset.index ?? -1, 10);
+
+            const playerEl = id ? document.getElementById(`player-${id}`) : null;
+            const shimmer  = slide.querySelector('.loading-shimmer');
+            const glow     = id ? document.getElementById(`glow-${id}`) : null;
+
+            const ytId  = getYouTubeId(url);
+            const ttId  = getTikTokId(url);
+            const igId  = getInstagramId(url);
+            const driveId = getDriveId(url);
+
+            if (entry.isIntersecting) {
+                // Activate dot
+                dots.forEach(d => d.classList.remove('active'));
+                if (idx >= 0 && dots[idx]) dots[idx].classList.add('active');
+
+                if (!id || !playerEl) return;
+
+                if (ytId) {
+                    if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
+                    if (!players[id]) {
+                        players[id] = new YT.Player(`player-${id}`, {
+                            height: '100%', width: '100%', videoId: ytId,
+                            playerVars: { autoplay:1, mute:1, loop:1, playlist:ytId, controls:1, modestbranding:1, rel:0, origin:window.location.origin },
+                            events: { onReady(e) { e.target.playVideo(); if (shimmer) shimmer.style.display = 'none'; } }
+                        });
+                    } else if (players[id].playVideo) { players[id].playVideo(); }
+                } else if (ttId) {
+                    playerEl.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+                    if (shimmer) shimmer.style.display = 'none';
+                } else if (igId) {
+                    playerEl.innerHTML = `<iframe src="https://www.instagram.com/reel/${igId}/embed/" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen></iframe>`;
+                    if (shimmer) shimmer.style.display = 'none';
+                } else if (driveId) {
+                    playerEl.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen></iframe>`;
+                    if (shimmer) shimmer.style.display = 'none';
+                }
+            } else {
+                if (players[id] && players[id].pauseVideo) {
+                    players[id].pauseVideo();
+                } else if ((ttId || igId || driveId) && playerEl) {
+                    playerEl.innerHTML = '';
+                    if (shimmer) shimmer.style.display = 'block';
+                }
+            }
+        });
+    }, { root: container, threshold: 0.75 });
+
+    document.querySelectorAll('.reel-slide').forEach(s => obs.observe(s));
+
+    /* Dot click to jump */
+    dots.forEach((dot, i) => {
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+            const slides = document.querySelectorAll('.reel-slide');
+            if (slides[i]) slides[i].scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+    </script>
+</body>
+</html>

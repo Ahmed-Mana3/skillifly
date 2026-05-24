@@ -14,6 +14,8 @@ urlpatterns = [
     path('dashboard/analytics/', views.analytics_dashboard, name='analytics'),
     path('api/track/', views.track_analytics, name='track_analytics'),
     path('builder/', views.builder_view, name='builder'),
+    path('ajax/save-category/', views.ajax_save_category, name='ajax_save_category'),
+    path('ajax/delete-category/', views.ajax_delete_category, name='ajax_delete_category'),
     path('update_portfolio/', views.update_portfolio_view, name='update_portfolio'),
     path('payment/', views.pricing_view, name='payment'),
     path('pay/<str:plan_type>/', views.create_payment, name='create_payment'),
@@ -54,5 +56,6 @@ urlpatterns = [
     path('<str:username>/reels/', views.portfolio_reels, name='portfolio_reels'),
     path('<str:username>/long-videos/', views.portfolio_long_videos, name='portfolio_long_videos'),
     path('<str:username>/long-videos/<slug:slug>/', views.portfolio_video_detail, name='portfolio_video_detail'),
+    path('<str:username>/category/<int:category_id>/', views.portfolio_category_detail, name='portfolio_category_detail'),
     path('<str:username>/', views.preview_view, name='preview'),
 ]

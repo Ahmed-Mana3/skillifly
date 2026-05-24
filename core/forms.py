@@ -322,6 +322,33 @@ class ExperienceForm(forms.Form):
 
 
 # =========================
+# Project Categories (Formset)
+# =========================
+class ProjectCategoryForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={"class": "category-id-input"}))
+    name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "e.g., Wedding Videos",
+            "required": True,
+        })
+    )
+    thumbnail = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            "accept": "image/*",
+            "class": "thumbnail-input",
+        })
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            "rows": 2,
+            "placeholder": "Describe this category...",
+        })
+    )
+
+# =========================
 # Projects (Formset)
 # =========================
 class ProjectForm(forms.Form):
@@ -363,6 +390,10 @@ class ProjectForm(forms.Form):
         choices=[('long', 'Long Video'), ('reel', 'Short/Reel')],
         initial='long',
         widget=forms.Select(attrs={"class": "sf-input"})
+    )
+    category_id = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(attrs={"class": "project-category-input"})
     )
 
 
@@ -424,6 +455,7 @@ SkillFormSet = formset_factory(SkillForm, extra=1, can_delete=True)
 EducationFormSet = formset_factory(EducationForm, extra=1, can_delete=True)
 ExperienceFormSet = formset_factory(ExperienceForm, extra=1, can_delete=True)
 ProjectFormSet = formset_factory(ProjectForm, extra=1, can_delete=True)
+ProjectCategoryFormSet = formset_factory(ProjectCategoryForm, extra=1, can_delete=True)
 LinkFormSet = formset_factory(LinkForm, extra=1, can_delete=True)
 CreatorFormSet = formset_factory(CreatorForm, extra=1, can_delete=True)
 
@@ -432,6 +464,7 @@ SkillFormSetUpdate = formset_factory(SkillForm, extra=0, can_delete=True)
 EducationFormSetUpdate = formset_factory(EducationForm, extra=0, can_delete=True)
 ExperienceFormSetUpdate = formset_factory(ExperienceForm, extra=0, can_delete=True)
 ProjectFormSetUpdate = formset_factory(ProjectForm, extra=0, can_delete=True)
+ProjectCategoryFormSetUpdate = formset_factory(ProjectCategoryForm, extra=0, can_delete=True)
 LinkFormSetUpdate = formset_factory(LinkForm, extra=0, can_delete=True)
 CreatorFormSetUpdate = formset_factory(CreatorForm, extra=0, can_delete=True)
 # =========================

@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <title>{{ project.title }} | {{ personal_info.full_name|default:username }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+    <style>
+        /* ─── Main Layout ─── */
+        .page-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 130px 5% 80px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 48px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .player-col {}
+
+        .player-box {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            box-shadow: var(--shadow-lg), 0 0 40px rgba(16, 185, 129, 0.08);
+            border: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+        .player-box iframe {
+            width: 100%; height: 100%; border: none;
+        }
+
+        .player-fallback {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--surface-solid);
+        }
+        .player-fallback a {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 36px;
+            background: var(--grad);
+            color: var(--bg); font-weight: 700; font-size: 0.85rem;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none; border-radius: 100px;
+            transition: transform 0.25s, box-shadow 0.25s;
+            box-shadow: var(--shadow-accent);
+        }
+        .player-fallback a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(5, 255, 141, 0.35);
+        }
+
+        .video-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .meta-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+
+        .creator-info {
+            display: flex; align-items: center; gap: 14px;
+        }
+        .creator-avatar {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: var(--grad);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: var(--bg);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .creator-name {
+            font-weight: 700; font-size: 1rem; color: var(--text);
+        }
+        .creator-role {
+            font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;
+        }
+
+        .cta-request {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 12px 24px;
+            background: var(--grad);
+            color: var(--bg); font-weight: 700; font-size: 0.8rem;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none; border-radius: 100px;
+            transition: transform 0.25s, box-shadow 0.25s;
+            box-shadow: var(--shadow-accent);
+        }
+        .cta-request:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(5, 255, 141, 0.25);
+        }
+
+        .desc-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+        }
+        .desc-label {
+            font-size: 0.65rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent-glow);
+            font-weight: 700; margin-bottom: 14px;
+        }
+        .desc-text {
+            font-size: 0.95rem; line-height: 1.8;
+            color: var(--text-muted); white-space: pre-line;
+            font-weight: 300;
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar-col {
+            display: flex; flex-direction: column; gap: 0;
+        }
+
+        .sidebar-header {
+            font-size: 0.65rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent-glow);
+            font-weight: 700; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-header::after {
+            content: ''; flex: 1; height: 1px;
+            background: var(--accent); opacity: 0.2;
+        }
+
+        .related-card {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 14px;
+            text-decoration: none; color: inherit;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.25s;
+        }
+        .related-card:last-child { border-bottom: none; }
+        .related-card:hover { opacity: 0.8; }
+
+        .related-thumb {
+            aspect-ratio: 16/9;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--surface-solid);
+            position: relative;
+        }
+        .related-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .related-card:hover .related-thumb img { transform: scale(1.06); }
+
+        .related-thumb-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--surface-solid);
+            font-size: 1.5rem; color: var(--text-muted);
+        }
+
+        /* Play icon on thumb */
+        .thumb-play {
+            position: absolute;
+            inset: 0; display: flex;
+            align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s;
+            background: rgba(0,0,0,0.3);
+        }
+        .related-card:hover .thumb-play { opacity: 1; }
+        .thumb-play-icon {
+            width: 32px; height: 32px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--bg);
+        }
+
+        .related-info { display: flex; flex-direction: column; justify-content: center; }
+        .related-title {
+            font-size: 0.95rem; font-weight: 700;
+            line-height: 1.3; margin-bottom: 4px;
+            color: #fff;
+        }
+        .related-creator {
+            font-size: 0.75rem; color: var(--text-muted); font-weight: 500;
+        }
+
+        .no-related {
+            padding: 40px 20px; text-align: center;
+            color: var(--text-muted); font-size: 0.9rem;
+            border: 1px dashed var(--border); border-radius: var(--radius);
+        }
+
+        @media (max-width: 1100px) {
+            .page-wrap { grid-template-columns: 1fr; padding-top: 100px; }
+            .sidebar-col { margin-top: 0; border-top: 1px solid var(--border); padding-top: 40px; }
+        }
+        @media (max-width: 600px) {
+            .page-wrap { padding: 90px 4% 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Animated Background Shapes -->
+    <div class="shapes-bg">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav class="navbar" id="navbar">
+        <div style="display: flex; align-items: center; gap: 24px;">
+            {% if request.GET.category_id %}
+            <a href="{% url 'portfolio_category_detail' username=username category_id=request.GET.category_id %}" class="back-link" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s;">
+            {% else %}
+            <a href="{% url 'portfolio_long_videos' username=username %}" class="back-link" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s;">
+            {% endif %}
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back
+            </a>
+            <a href="{% url 'preview' username=username %}" class="nav-brand">
+                <span class="brand-dot"></span>
+                {{ personal_info.full_name|default:username }}
+            </a>
+        </div>
+    </nav>
+
+    <!-- ─── CONTENT WRAPPER ─── -->
+    <div class="page-wrap">
+
+        <!-- Player Column -->
+        <div class="player-col">
+            <div class="player-box reveal-scale">
+                <iframe id="mainPlayer" src="" allow="autoplay; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+
+            <h1 class="video-title reveal">{{ project.title }}</h1>
+
+            <div class="meta-bar reveal">
+                <div class="creator-info">
+                    <div class="creator-avatar">{{ personal_info.full_name|first }}</div>
+                    <div>
+                        <div class="creator-name">{{ personal_info.full_name }}</div>
+                        <div class="creator-role">{{ personal_info.title }}</div>
+                    </div>
+                </div>
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" class="cta-request" target="_blank" rel="noopener">
+                    Request Similar Work
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% elif personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="cta-request">
+                    Request Similar Work
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                </a>
+                {% endif %}
+            </div>
+
+            {% if project.details %}
+            <div class="desc-box reveal">
+                <div class="desc-label">About This Project</div>
+                <p class="desc-text">{{ project.details }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar-col">
+            <div class="sidebar-header reveal">More From {{ personal_info.full_name }}</div>
+
+            {% if other_videos %}
+                {% for other in other_videos %}
+                <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/{% if request.GET.category_id %}?category_id={{ request.GET.category_id }}{% endif %}" class="related-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}0ms">
+                    <div class="related-thumb">
+                        {% if other.image %}
+                            <img src="{{ other.image.url }}" alt="{{ other.title }}">
+                        {% else %}
+                            <div class="related-thumb-placeholder">▶</div>
+                        {% endif %}
+                        <div class="thumb-play">
+                            <div class="thumb-play-icon">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="related-info">
+                        <div class="related-title">{{ other.title }}</div>
+                        <div class="related-creator">{{ personal_info.full_name }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="no-related reveal">No other videos yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ─── JAVASCRIPT ─── -->
+    <script>
+    /* 1. Custom Cursor Trailing Effect */
+    (function() {
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        if (!dot || !ring) return;
+
+        let mx = 0, my = 0;
+        let rx = 0, ry = 0;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX;
+            my = e.clientY;
+            dot.style.left = mx + 'px';
+            dot.style.top = my + 'px';
+        });
+
+        function animateRing() {
+            rx += (mx - rx) * 0.15;
+            ry += (my - ry) * 0.15;
+            ring.style.left = rx + 'px';
+            ring.style.top = ry + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        const hoverable = document.querySelectorAll('a, button, .related-card, .back-link');
+        hoverable.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1.6)';
+                dot.style.background = 'var(--accent)';
+                ring.style.width = '64px';
+                ring.style.height = '64px';
+                ring.style.borderColor = 'var(--accent-glow)';
+                ring.style.boxShadow = '0 0 15px rgba(5, 255, 141, 0.4)';
+            });
+            el.addEventListener('mouseleave', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1)';
+                dot.style.background = 'var(--accent-glow)';
+                ring.style.width = '40px';
+                ring.style.height = '40px';
+                ring.style.borderColor = 'var(--accent)';
+                ring.style.boxShadow = 'none';
+            });
+        });
+    })();
+
+    /* 2. Parallax Blobs */
+    document.addEventListener('mousemove', e => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 35;
+        const y = (e.clientY / window.innerHeight - 0.5) * 35;
+        
+        document.querySelectorAll('.shape').forEach((shape, index) => {
+            const factor = (index + 1) * 0.5;
+            shape.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        });
+    });
+
+    /* 3. Navbar Scroll Hide/Show */
+    (function() {
+        const navbar = document.getElementById('navbar');
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.scrollY;
+            if (currentScroll > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+            if (currentScroll > lastScroll && currentScroll > 150) {
+                navbar.classList.add('hidden');
+            } else {
+                navbar.classList.remove('hidden');
+            }
+            lastScroll = currentScroll;
+        });
+    })();
+
+    /* 4. Scroll Reveal */
+    (function() {
+        const reveals = document.querySelectorAll('.reveal, .reveal-scale');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, i * 65);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        reveals.forEach(r => observer.observe(r));
+    })();
+
+    /* 5. Video URL Embed Resolver */
+    (function() {
+        function getYouTubeId(url) {
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        function getTikTokId(url) {
+            const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+            return m ? m[1] : null;
+        }
+        function getInstagramId(url) {
+            const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
+            return m ? m[1] : null;
+        }
+        function getDriveId(url) {
+            const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/?#&]+)/);
+            return m ? m[1] : null;
+        }
+
+        const videoUrl = "{{ project.url|default:'' }}";
+        const player   = document.getElementById('mainPlayer');
+        if (!player) return;
+
+        const ytId     = getYouTubeId(videoUrl);
+        const ttId     = getTikTokId(videoUrl);
+        const igId     = getInstagramId(videoUrl);
+        const driveId  = getDriveId(videoUrl);
+
+        if (ytId) {
+            player.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&origin=${window.location.origin}`;
+        } else if (ttId) {
+            player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
+        } else if (igId) {
+            player.src = `https://www.instagram.com/reel/${igId}/embed/`;
+        } else if (driveId) {
+            player.src = `https://drive.google.com/file/d/${driveId}/preview`;
+        } else if (videoUrl) {
+            player.parentElement.innerHTML = `
+                <div class="player-fallback">
+                    <a href="${videoUrl}" target="_blank" rel="noopener">
+                        Watch on Source
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>`;
+        }
+    })();
+    </script>
+</body>
+</html>

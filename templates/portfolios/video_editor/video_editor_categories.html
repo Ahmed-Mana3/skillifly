@@ -1,0 +1,538 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Animated Background Shapes -->
+    <div class="shapes-bg">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Floating Software Icons -->
+    <div class="floating-icon icon-pr"><img src="{% static 'img/Adobe_Premiere_Pro_icon.svg' %}" alt="Premiere"></div>
+    <div class="floating-icon icon-ae"><img src="{% static 'img/Adobe_Illustrator_CC_icon.svg' %}" alt="Illustrator"></div>
+    <div class="floating-icon icon-dv"><img src="{% static 'img/DaVinci_Resolve_Studio.png' %}" alt="DaVinci"></div>
+    <div class="floating-icon icon-cc"><img src="{% static 'img/capcut_Icon.jpeg' %}" alt="CapCut"></div>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="nav-brand">
+            <span class="brand-dot"></span>
+            {{ personal_info.full_name|default:portfolio_user.username }}
+        </a>
+        <div class="nav-links">
+            <a href="#work">Work</a>
+            {% if skills %}<a href="#skills">Toolkit</a>{% endif %}
+            {% if experiences %}<a href="#experience">Experience</a>{% endif %}
+            {% if education %}<a href="#education">Education</a>{% endif %}
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- ─── HERO ─── -->
+    <section class="hero">
+        <div class="hero-avatar-box">
+            <div class="avatar-ring"></div>
+            <div class="avatar-ring-2"></div>
+            <div class="hero-avatar">
+                {% if personal_info.user.profile.picture %}
+                <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
+                {% else %}
+                <img src="{% static 'img/myAvatar (1).png' %}" alt="Default Avatar">
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="hero-subtitle">✦ {{ personal_info.title|default:"Video Editor & Creative Producer" }} ✦</div>
+
+        <h1 class="hero-title">
+            Crafting <span>VISUAL STORIES</span>
+        </h1>
+
+        {% if personal_info.bio %}
+        <p class="hero-bio">{{ personal_info.bio }}</p>
+        {% endif %}
+
+        <div class="btn-group">
+            <a href="#work" class="btn-main">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Explore Work
+            </a>
+            <a href="#contact" class="btn-sub">Let's Collaborate</a>
+        </div>
+
+        <div class="scroll-indicator">
+            <div class="scroll-line"></div>
+            <span class="scroll-text">Scroll</span>
+        </div>
+    </section>
+
+    <!-- ─── MARQUEE SKILL STRIP ─── -->
+    <div class="marquee-container">
+        <div class="marquee-track">
+            {% for i in "1234" %}
+            <span class="marquee-item">Video Editing</span>
+            <span class="marquee-item">Color Grading</span>
+            <span class="marquee-item">Cinematic Pacing</span>
+            <span class="marquee-item">Sound Design</span>
+            <span class="marquee-item">Motion Graphics</span>
+            <span class="marquee-item">Storytelling</span>
+            <span class="marquee-item">Montages & Reels</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ─── CATEGORY GRID SECTION ─── -->
+    <section class="section" id="work">
+        <div class="section-header reveal">
+            <span class="section-tag">Portfolio</span>
+            <h2 class="section-title">Selected Collections</h2>
+        </div>
+
+        <div class="category-grid">
+            {% for category in portfolio_user.project_categories.all %}
+            <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=category.id %}" class="category-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
+                <div class="category-img-box">
+                    {% if category.thumbnail %}
+                    <img src="{{ category.thumbnail.url }}" alt="{{ category.name }}" class="category-img" loading="lazy">
+                    {% else %}
+                    <div class="category-img" style="background:#0e1e16; display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-muted)">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg>
+                    </div>
+                    {% endif %}
+                    <div class="category-card-overlay"></div>
+                </div>
+                <div class="category-card-content">
+                    <h3 class="category-card-title">{{ category.name }}</h3>
+                    <div class="category-card-meta">
+                        {{ category.projects.count }} Project{{ category.projects.count|pluralize }}
+                        <span></span>
+                        Explore Collection →
+                    </div>
+                    {% if category.description %}
+                    <p class="category-card-desc">{{ category.description }}</p>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+
+            {% if has_uncategorized_projects %}
+            <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=0 %}" class="category-card reveal-scale" style="transition-delay: {{ portfolio_user.project_categories.all|length }}00ms">
+                <div class="category-img-box">
+                    <div class="category-img" style="background:#0e1e16; display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-muted)">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg>
+                    </div>
+                    <div class="category-card-overlay"></div>
+                </div>
+                <div class="category-card-content">
+                    <h3 class="category-card-title">Other Videos</h3>
+                    <div class="category-card-meta">
+                        {{ uncategorized_count }} Project{{ uncategorized_count|pluralize }}
+                        <span></span>
+                        Explore Collection →
+                    </div>
+                    <p class="category-card-desc">Uncategorized projects and videos.</p>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if not portfolio_user.project_categories.all and not has_uncategorized_projects %}
+            <div class="reveal" style="grid-column:1/-1; text-align:center; padding:80px 24px; color:var(--text-muted)">
+                <h3 class="serif" style="font-size:1.8rem; margin-bottom:10px">No collections found.</h3>
+                <p style="font-weight:300">Start building your categories inside the portfolio editor.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- ─── STATS BAR ─── -->
+    {% if projects or skills %}
+    <div class="reveal">
+        <div class="stats-bar">
+            {% if projects %}
+            <div class="stat-cell">
+                <div class="stat-number" data-count="{{ projects|length }}">0</div>
+                <div class="stat-label">Projects Published</div>
+            </div>
+            {% endif %}
+            {% if portfolio_user.project_categories.count %}
+            <div class="stat-cell">
+                <div class="stat-number" data-count="{{ portfolio_user.project_categories.count }}">0</div>
+                <div class="stat-label">Curated Collections</div>
+            </div>
+            {% endif %}
+            {% if skills %}
+            <div class="stat-cell">
+                <div class="stat-number" data-count="{{ skills|length }}">0</div>
+                <div class="stat-label">Software & Tools</div>
+            </div>
+            {% endif %}
+            <div class="stat-cell">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Client Satisfaction</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ─── CREATORS MARQUEE ─── -->
+    {% if creators %}
+    <section class="section" id="creators">
+        <div class="section-header reveal">
+            <span class="section-tag">Network</span>
+            <h2 class="section-title">Creators I Worked With</h2>
+        </div>
+        <div class="creators-marquee-container reveal-scale">
+            <div class="creators-track">
+                {% for i in "12" %}
+                <div class="creator-set" {% if not forloop.first %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank" rel="noopener"{% else %}div{% endif %} class="creator-card">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img" loading="lazy">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-img" width="88" height="88" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <span class="creator-name">{{ creator.name }}</span>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── SKILLS catalog ─── -->
+    {% if skills %}
+    <section class="section" id="skills">
+        <div class="section-header reveal">
+            <span class="section-tag">Toolkit</span>
+            <h2 class="section-title">Software & Arsenal</h2>
+        </div>
+        <div class="skills-grid">
+            {% for skill in skills %}
+            <span class="skill-pill reveal-scale" style="transition-delay: {{ forloop.counter0 }}0ms">{{ skill.name }}</span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── EXPERIENCE ─── -->
+    {% if experiences %}
+    <section class="section" id="experience">
+        <div class="section-header reveal">
+            <span class="section-tag">Career</span>
+            <h2 class="section-title">Professional Experience</h2>
+        </div>
+        <div class="timeline">
+            {% for exp in experiences %}
+            <div class="timeline-item reveal" style="transition-delay: {{ forloop.counter0 }}00ms">
+                <div class="timeline-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-date">
+                        {{ exp.start_date|date:"M Y" }} — {% if exp.still_working %}Present{% elif exp.end_date %}{{ exp.end_date|date:"M Y" }}{% else %}Present{% endif %}
+                    </div>
+                    <h3 class="timeline-title">{{ exp.title }}</h3>
+                    <div class="timeline-company">@ {{ exp.company }}</div>
+                    {% if exp.details %}
+                    <p class="timeline-desc">{{ exp.details }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── EDUCATION ─── -->
+    {% if education %}
+    <section class="section" id="education">
+        <div class="section-header reveal">
+            <span class="section-tag">Credentials</span>
+            <h2 class="section-title">Academic History</h2>
+        </div>
+        <div class="edu-grid">
+            {% for edu in education %}
+            <div class="edu-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}50ms">
+                <div class="edu-year">{{ edu.grade_year|date:"Y" }}</div>
+                <div class="edu-degree">{{ edu.degree }}</div>
+                {% if edu.field %}
+                <div class="edu-field">{{ edu.field }}</div>
+                {% endif %}
+                <div class="edu-school">{{ edu.school }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── CONTACT SECTION ─── -->
+    <section class="contact-section" id="contact">
+        <div class="contact-inner">
+            <div>
+                <span class="section-tag reveal">Get In Touch</span>
+                <h2 class="contact-big-text reveal">
+                    LET'S CREATE SOMETHING <br><span class="gradient-word">EXTRAORDINARY.</span>
+                </h2>
+
+                <div class="contact-items reveal">
+                    {% if personal_info.email %}
+                    <div class="contact-item">
+                        <span class="c-label">Email</span>
+                        <a href="mailto:{{ personal_info.email }}" class="c-value">{{ personal_info.email }}</a>
+                    </div>
+                    {% endif %}
+                    {% if personal_info.phone %}
+                    <div class="contact-item">
+                        <span class="c-label">Phone & WhatsApp</span>
+                        <a href="tel:{{ personal_info.phone }}" class="c-value">{{ personal_info.phone }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if links %}
+                <div class="social-row reveal">
+                    {% for link in links %}
+                    <a href="{{ link.url }}" target="_blank" rel="noopener" class="social-btn">
+                        {{ link.platform }}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="reveal">
+                <div class="contact-card">
+                    <span class="section-tag" style="margin-bottom: 20px;">Hire Me</span>
+                    <p class="cta-tagline">
+                        Looking for a creative video editor who can capture your brand's essence and tell an unforgettable visual story? Book a call with me today.
+                    </p>
+                    <div>
+                        {% if personal_info.booking_url %}
+                        <a href="{{ personal_info.booking_url }}" target="_blank" rel="noopener" class="big-cta">
+                            Book Creative Session
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                        </a>
+                        {% elif personal_info.email %}
+                        <a href="mailto:{{ personal_info.email }}" class="big-cta">
+                            Send Email Inquiry
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer>
+        <div class="footer-inner">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="powered">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                <span class="brand">Skillifly</span>
+            </a>
+            <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name|default:portfolio_user.username }}. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ─── JAVASCRIPT INTERACTIONS ─── -->
+    <script>
+    /* 1. Custom Cursor Trailing Effect */
+    (function() {
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        if (!dot || !ring) return;
+
+        let mx = 0, my = 0;
+        let rx = 0, ry = 0;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX;
+            my = e.clientY;
+            dot.style.left = mx + 'px';
+            dot.style.top = my + 'px';
+        });
+
+        function animateRing() {
+            rx += (mx - rx) * 0.15;
+            ry += (my - ry) * 0.15;
+            ring.style.left = rx + 'px';
+            ring.style.top = ry + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        const hoverable = document.querySelectorAll('a, button, .category-card, .skill-pill, .creator-card');
+        hoverable.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1.6)';
+                dot.style.background = 'var(--accent)';
+                ring.style.width = '64px';
+                ring.style.height = '64px';
+                ring.style.borderColor = 'var(--accent-glow)';
+                ring.style.boxShadow = '0 0 15px rgba(5, 255, 141, 0.4)';
+            });
+            el.addEventListener('mouseleave', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1)';
+                dot.style.background = 'var(--accent-glow)';
+                ring.style.width = '40px';
+                ring.style.height = '40px';
+                ring.style.borderColor = 'var(--accent)';
+                ring.style.boxShadow = 'none';
+            });
+        });
+    })();
+
+    /* 2. Parallax Blobs */
+    document.addEventListener('mousemove', e => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 35;
+        const y = (e.clientY / window.innerHeight - 0.5) * 35;
+        
+        document.querySelectorAll('.shape').forEach((shape, index) => {
+            const factor = (index + 1) * 0.5;
+            shape.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        });
+
+        document.querySelectorAll('.floating-icon').forEach((icon, index) => {
+            const factor = (index + 1) * 0.8;
+            icon.style.transform = `translate(${x * factor}px, ${y * factor}px) rotate(${factor * 4}deg)`;
+        });
+    });
+
+    /* 3. Navbar Show/Hide on Scroll */
+    (function() {
+        const navbar = document.getElementById('navbar');
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.scrollY;
+            if (currentScroll > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+            if (currentScroll > lastScroll && currentScroll > 150) {
+                navbar.classList.add('hidden');
+            } else {
+                navbar.classList.remove('hidden');
+            }
+            lastScroll = currentScroll;
+        });
+    })();
+
+    /* 4. Scroll Reveal Animations */
+    (function() {
+        const reveals = document.querySelectorAll('.reveal, .reveal-scale');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, i * 65);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        reveals.forEach(r => observer.observe(r));
+    })();
+
+    /* 5. Statistics Rolling Numbers */
+    (function() {
+        const numbers = document.querySelectorAll('.stat-number[data-count]');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const end = parseInt(el.dataset.count, 10);
+                    let current = 0;
+                    const duration = 1200; // ms
+                    const steps = 40;
+                    const increment = end / steps;
+                    const stepTime = duration / steps;
+                    
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= end) {
+                            current = end;
+                            clearInterval(timer);
+                        }
+                        el.textContent = Math.floor(current) + (el.dataset.count.includes('%') ? '%' : '+');
+                    }, stepTime);
+                    observer.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        numbers.forEach(n => observer.observe(n));
+    })();
+
+    /* 6. 3D Tilt Effect on Category Cards */
+    (function() {
+        const cards = document.querySelectorAll('.category-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+                const y = (e.clientY - rect.top) / rect.height - 0.5; // -0.5 to 0.5
+                
+                card.style.transform = `perspective(1000px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+            });
+        });
+    })();
+
+    /* 7. Canvas Creator Initials Generator */
+    (function() {
+        const canvases = document.querySelectorAll('.creator-avatar-canvas');
+        canvases.forEach(canvas => {
+            const name = canvas.dataset.name || "C";
+            const ctx = canvas.getContext('2d');
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            
+            // Modern Luxury emerald gradient background
+            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, '#0d2518');
+            grad.addColorStop(1, '#10b981');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 38px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+        });
+    })();
+    </script>
+
+    <script>
+        window.SF_ANALYTICS = {
+            username: "{{ username }}"
+        };
+    </script>
+    <script src="{% static 'js/sf_analytics.js' %}"></script>
+</body>
+</html>

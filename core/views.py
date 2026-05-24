@@ -12,8 +12,75 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator
 from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
+
+
+@login_required
+@require_POST
+def ajax_save_category(request):
+    """AJAX endpoint to instantly save or update a ProjectCategory."""
+    from core.models import ProjectCategory
+    
+    category_id = request.POST.get('id')
+    name = request.POST.get('name', '').strip()
+    if not name:
+        return JsonResponse({'success': False, 'error': 'Category name is required.'}, status=400)
+    
+    description = request.POST.get('description', '').strip()
+    thumbnail = request.FILES.get('thumbnail')
+    
+    if category_id:
+        # Update existing category
+        cat = get_object_or_404(ProjectCategory, user=request.user, id=category_id)
+        # Prevent renaming to a duplicate name of another category
+        if ProjectCategory.objects.filter(user=request.user, name=name).exclude(id=cat.id).exists():
+            return JsonResponse({'success': False, 'error': 'A category with this name already exists.'}, status=400)
+        cat.name = name
+        cat.description = description
+        if thumbnail:
+            cat.thumbnail = thumbnail
+        cat.save()
+        created = False
+    else:
+        # Prevent duplicates for this user
+        if ProjectCategory.objects.filter(user=request.user, name=name).exists():
+            return JsonResponse({'success': False, 'error': 'A category with this name already exists.'}, status=400)
+        cat = ProjectCategory.objects.create(
+            user=request.user,
+            name=name,
+            description=description,
+            thumbnail=thumbnail
+        )
+        created = True
+    
+    thumb_url = cat.thumbnail.url if cat.thumbnail else None
+    
+    return JsonResponse({
+        'success': True,
+        'id': cat.id,
+        'name': cat.name,
+        'description': cat.description or '',
+        'thumbnail_url': thumb_url,
+        'created': created,
+    })
+
+
+@login_required
+@require_POST
+def ajax_delete_category(request):
+    """AJAX endpoint to instantly delete a ProjectCategory."""
+    from core.models import ProjectCategory
+    category_id = request.POST.get('id')
+    if not category_id:
+        return JsonResponse({'success': False, 'error': 'Category ID is required.'}, status=400)
+    
+    category = get_object_or_404(ProjectCategory, user=request.user, id=category_id)
+    category.delete()
+    return JsonResponse({'success': True})
+
 
 @login_required
 def seo_settings_view(request):
@@ -599,6 +666,7 @@ def themes(request):
     categories = Category.objects.all()
     return render(request, 'dashboard/themes.html', {'themes': themes, 'categories' : categories})
 
+from core.forms import ProjectCategoryFormSet, ProjectCategoryFormSetUpdate
 @login_required
 def builder_view(request):
     if request.method == "POST":
@@ -608,6 +676,7 @@ def builder_view(request):
         education_formset = EducationFormSet(request.POST, prefix="education")
         experience_formset = ExperienceFormSet(request.POST, prefix="experience")
         project_formset = ProjectFormSet(request.POST, request.FILES, prefix="projects")
+        project_category_formset = ProjectCategoryFormSet(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSet(request.POST, prefix="links")
         creator_formset = CreatorFormSet(request.POST, request.FILES, prefix="creators")
 
@@ -621,7 +690,7 @@ def builder_view(request):
             and creator_formset.is_valid()
         ):
 
-            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset)
+            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
 
             # Set profile to public if user has payment
             payment = UserPayment.objects.filter(user=request.user, status='paid').last()
@@ -650,6 +719,7 @@ def builder_view(request):
         education_formset = EducationFormSet(prefix="education")
         experience_formset = ExperienceFormSet(prefix="experience")
         project_formset = ProjectFormSet(prefix="projects")
+        project_category_formset = ProjectCategoryFormSet(prefix="project_categories")
         link_formset = LinkFormSet(prefix="links")
         creator_formset = CreatorFormSet(prefix="creators")
 
@@ -660,6 +730,7 @@ def builder_view(request):
         "education_formset": education_formset,
         "experience_formset": experience_formset,
         "project_formset": project_formset,
+        "project_category_formset": project_category_formset,
         "link_formset": link_formset,
         "creator_formset": creator_formset,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
@@ -696,6 +767,7 @@ def update_portfolio_view(request):
         education_formset = EducationFormSetUpdate(request.POST, prefix="education")
         experience_formset = ExperienceFormSetUpdate(request.POST, prefix="experience")
         project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects")
+        project_category_formset = ProjectCategoryFormSetUpdate(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSetUpdate(request.POST, prefix="links")
         creator_formset = CreatorFormSetUpdate(request.POST, request.FILES, prefix="creators")
 
@@ -708,7 +780,7 @@ def update_portfolio_view(request):
             and link_formset.is_valid()
             and creator_formset.is_valid()
         ):
-            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset)
+            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
             # Set profile to public if user has active payment
             payment = UserPayment.objects.filter(user=request.user, status='paid').last()
             if payment and payment.is_active:
@@ -778,9 +850,20 @@ def update_portfolio_view(request):
             'url': p.url,
             'description': p.details,
             'video_type': p.video_type,
-            'thumbnail': p.image
+            'thumbnail': p.image,
+            'category_id': p.category_id
         } for p in Project.objects.filter(user=user)]
         project_formset = ProjectFormSetUpdate(initial=project_data, prefix="projects")
+
+        # Project Categories
+        from core.models import ProjectCategory
+        category_data = [{
+            'id': c.id,
+            'name': c.name,
+            'description': c.description,
+            'thumbnail': c.thumbnail
+        } for c in ProjectCategory.objects.filter(user=user)]
+        project_category_formset = ProjectCategoryFormSetUpdate(initial=category_data, prefix="project_categories")
 
         # Links
         link_data = [{
@@ -804,6 +887,7 @@ def update_portfolio_view(request):
         "education_formset": education_formset,
         "experience_formset": experience_formset,
         "project_formset": project_formset,
+        "project_category_formset": project_category_formset,
         "link_formset": link_formset,
         "creator_formset": creator_formset,
         "is_update": True,
@@ -827,7 +911,7 @@ def update_portfolio_view(request):
     return render(request, template_name, context)
 
 
-def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset):
+def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None):
             personal_data = personal_form.cleaned_data
 
             skills = [
@@ -927,6 +1011,14 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
             # Cache existing project images to prevent data loss
             existing_images = {p.title: p.image for p in Project.objects.filter(user=request.user) if p.image}
             
+            # --- Project Categories ---
+            # Categories are now saved instantly via AJAX, so we just load existing ones from DB
+            from core.models import ProjectCategory
+            category_mapping = {
+                str(c.id): c
+                for c in ProjectCategory.objects.filter(user=request.user)
+            }
+            
             Project.objects.filter(user=request.user).delete()
             for proj_data in projects:
                 new_image = proj_data.get("thumbnail")
@@ -934,13 +1026,18 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
                 if not new_image:
                     new_image = existing_images.get(proj_data["name"])
 
+                cat_obj = None
+                if proj_data.get("category_id"):
+                    cat_obj = category_mapping.get(str(proj_data["category_id"]))
+                    
                 Project.objects.create(
                     user=request.user,
                     title=proj_data["name"],
                     url=proj_data.get("url"),
                     details=proj_data.get("description"),
                     video_type=proj_data.get("video_type", "long"),
-                    image=new_image
+                    image=new_image,
+                    category=cat_obj
                 )
 
             Link.objects.filter(user=request.user).delete()
@@ -1006,6 +1103,9 @@ def preview_view(request, username):
     project_count = projects.count()
     long_count = projects.filter(video_type='long').count()
     reel_count = projects.filter(video_type='reel').count()
+    uncategorized_projects = projects.filter(category__isnull=True)
+    uncategorized_count = uncategorized_projects.count()
+    has_uncategorized_projects = uncategorized_count > 0
 
     context = {
         'personal_info': personal_info,
@@ -1019,6 +1119,10 @@ def preview_view(request, username):
         'project_count': project_count,
         'long_count': long_count,
         'reel_count': reel_count,
+        'portfolio_user': user,
+        'profile': profile,
+        'uncategorized_count': uncategorized_count,
+        'has_uncategorized_projects': has_uncategorized_projects,
     }
 
     # Dynamic template selection based on theme
@@ -1606,7 +1710,15 @@ def portfolio_reels(request, username):
     profile.visits += 1
     profile.save()
 
-    projects = Project.objects.filter(user=user, video_type='reel')
+    category_id = request.GET.get('category_id')
+    if category_id:
+        if category_id == '0':
+            projects = Project.objects.filter(user=user, video_type='reel', category__isnull=True)
+        else:
+            projects = Project.objects.filter(user=user, video_type='reel', category_id=category_id)
+    else:
+        projects = Project.objects.filter(user=user, video_type='reel')
+
     personal_info = PersonalInfo.objects.filter(user=user).first()
     links = Link.objects.filter(user=user)
     
@@ -1627,6 +1739,7 @@ def portfolio_reels(request, username):
         'username': username,
         'personal_info': personal_info,
         'links': links,
+        'category_id': category_id,
     }
     return render(request, template, context)
 
@@ -1648,7 +1761,15 @@ def portfolio_long_videos(request, username):
     profile.visits += 1
     profile.save()
 
-    projects = Project.objects.filter(user=user, video_type='long')
+    category_id = request.GET.get('category_id')
+    if category_id:
+        if category_id == '0':
+            projects = Project.objects.filter(user=user, video_type='long', category__isnull=True)
+        else:
+            projects = Project.objects.filter(user=user, video_type='long', category_id=category_id)
+    else:
+        projects = Project.objects.filter(user=user, video_type='long')
+
     personal_info = PersonalInfo.objects.filter(user=user).first()
     links = Link.objects.filter(user=user)
     
@@ -1669,6 +1790,7 @@ def portfolio_long_videos(request, username):
         'username': username,
         'personal_info': personal_info,
         'links': links,
+        'category_id': category_id,
     }
     return render(request, template, context)
 
@@ -1687,17 +1809,24 @@ def portfolio_video_detail(request, username, slug):
     if profile and not profile.is_public and request.user != user:
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    profile.visits += 1
-    profile.save()
-
     project = get_object_or_404(Project, user=user, slug=slug)
     personal_info = PersonalInfo.objects.filter(user=user).first()
-    other_videos = Project.objects.filter(user=user, video_type='long').exclude(id=project.id)[:4]
-    
-    # Dynamic template selection
+
+    category_id = request.GET.get('category_id')
+    if category_id:
+        if category_id == '0':
+            other_videos = Project.objects.filter(user=user, video_type='long', category__isnull=True).exclude(id=project.id)
+        else:
+            other_videos = Project.objects.filter(user=user, video_type='long', category_id=category_id).exclude(id=project.id)
+    else:
+        if project.category:
+            other_videos = Project.objects.filter(user=user, video_type='long', category=project.category).exclude(id=project.id)
+        else:
+            other_videos = Project.objects.filter(user=user, video_type='long', category__isnull=True).exclude(id=project.id)
+
     category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
     theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
-    
+
     template = f"portfolios/{category}/{category}_{theme_name}_detail.html"
     try:
         get_template(template)
@@ -1710,6 +1839,7 @@ def portfolio_video_detail(request, username, slug):
         'personal_info': personal_info,
         'other_videos': other_videos,
         'username': username,
+        'category_id': category_id,
     }
     return render(request, template, context)
 
@@ -2445,5 +2575,47 @@ def manage_affiliates(request):
 
 
 
-
+def portfolio_category_detail(request, username, category_id):
+    user = get_object_or_404(CustomUser, username=username)
+    profile = getattr(user, 'profile', None)
+    
+    if int(category_id) == 0:
+        # Mock a category object
+        class MockCategory:
+            id = 0
+            name = 'Other Videos'
+            description = 'Uncategorized projects and videos.'
+        category = MockCategory()
+        projects = Project.objects.filter(user=user, category__isnull=True)
+    else:
+        from core.models import ProjectCategory
+        category = get_object_or_404(ProjectCategory, user=user, id=category_id)
+        projects = Project.objects.filter(user=user, category=category)
+        
+    # simple view tracking
+    cat_key = f'viewed_category_{category.id}'
+    if not request.session.get(cat_key, False):
+        if profile:
+            profile.visits += 1
+            profile.save()
+        request.session[cat_key] = True
+        
+    category_slug = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
+    theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
+    
+    template = f"portfolios/{category_slug}/{category_slug}_{theme_name}_category.html"
+    from django.template.exceptions import TemplateDoesNotExist
+    from django.template.loader import get_template
+    try:
+        get_template(template)
+    except TemplateDoesNotExist:
+        template = f"portfolios/{category_slug}/{category_slug}_category.html"
+        
+    context = {
+        'portfolio_user': user,
+        'profile': profile,
+        'category': category,
+        'projects': projects,
+    }
+    return render(request, template, context)
 

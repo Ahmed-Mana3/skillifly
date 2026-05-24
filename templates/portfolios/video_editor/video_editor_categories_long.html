@@ -1,0 +1,555 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>All Work | {{ personal_info.full_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+
+    <style>
+        /* ─── Fixed Header Nav ─── */
+        .top-nav {
+            position: fixed;
+            top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+            display: flex; gap: 6px; align-items: center;
+            background: rgba(7, 14, 10, 0.7);
+            backdrop-filter: blur(16px);
+            padding: 8px 16px; border-radius: 100px;
+            border: 1px solid var(--border);
+        }
+        .nav-link {
+            text-decoration: none; color: var(--text-muted);
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em;
+            padding: 6px 14px; border-radius: 100px;
+            transition: color 0.3s, background 0.3s;
+        }
+        .nav-link:hover { color: var(--text); }
+        .nav-link.active { color: var(--bg); background: var(--grad); }
+
+        .close-btn {
+            position: fixed;
+            top: 22px; left: 22px;
+            z-index: 100;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(7, 14, 10, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; color: var(--text);
+            font-size: 1.1rem;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .close-btn:hover { border-color: var(--accent); background: var(--surface); color: var(--accent-glow); }
+
+        /* ─── Main Content ─── */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 150px 5% 100px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .page-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            color: var(--text);
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        /* ─── Video Grid ─── */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+            gap: 2.5rem;
+        }
+
+        .video-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: border-color 0.35s, box-shadow 0.35s;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .video-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius);
+            padding: 1.5px;
+            background: linear-gradient(135deg, transparent, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: background 0.35s;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .video-card:hover {
+            border-color: rgba(16, 185, 129, 0.2);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 30px rgba(16, 185, 129, 0.08);
+        }
+        .video-card:hover::before {
+            background: var(--grad);
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            background: var(--surface-solid);
+        }
+
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .video-card:hover .thumbnail-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 14, 10, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 58px;
+            height: 58px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0.85);
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--shadow-lg);
+            color: var(--bg);
+        }
+
+        .video-card:hover .play-btn {
+            transform: scale(1);
+        }
+
+        .video-info {
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            transform: translateZ(20px);
+        }
+
+        .video-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .video-meta {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-weight: 300;
+            margin-bottom: 16px;
+        }
+
+        .watch-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent-glow);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: gap 0.25s;
+            margin-top: auto;
+        }
+        .watch-btn:hover {
+            gap: 10px;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 100px 24px;
+            color: var(--text-muted);
+        }
+        .empty-state h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        /* ─── Contact CTA Section ─── */
+        .contact-cta-section {
+            padding: 100px 5vw;
+            background: radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.06), transparent 70%);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 10;
+        }
+
+        .cta-title {
+            font-size: clamp(2.3rem, 5vw, 4.2rem);
+            margin-bottom: 40px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .cta-title span {
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .big-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--grad);
+            color: var(--bg);
+            padding: 16px 36px;
+            border-radius: 100px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            box-shadow: var(--shadow-accent);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .big-cta-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(5, 255, 141, 0.3);
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            padding: 60px 24px;
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 10;
+            background: var(--surface-solid);
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .skillifly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .skillifly-badge:hover {
+            transform: translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+        .skillifly-badge .s-powered {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .skillifly-badge img {
+            width: 20px;
+            height: 20px;
+        }
+        .skillifly-badge .s-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .footer-copy {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        @media(max-width: 600px) {
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Animated Background Shapes -->
+    <div class="shapes-bg">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Close / Back -->
+    {% if request.GET.category_id %}
+    <a href="{% url 'portfolio_category_detail' username=username category_id=request.GET.category_id %}" class="close-btn" title="Back to Collection">
+    {% else %}
+    <a href="{% url 'preview' username=username %}" class="close-btn" title="Back to Portfolio">
+    {% endif %}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </a>
+
+    <!-- Top Nav -->
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/{% if request.GET.category_id %}?category_id={{ request.GET.category_id }}{% endif %}" class="nav-link">Reels</a>
+        <a href="#" class="nav-link active">Work</a>
+    </nav>
+
+    <main>
+        <h1 class="page-title reveal">Professional Work</h1>
+
+        <div class="video-grid">
+            {% for project in projects %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/{% if request.GET.category_id %}?category_id={{ request.GET.category_id }}{% endif %}" class="video-card reveal-scale" data-project-id="{{ project.id }}" style="transition-delay: {{ forloop.counter0 }}00ms">
+                <div class="thumbnail-wrapper" data-url="{{ project.url }}">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <img class="yt-thumb" src="" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="play-overlay">
+                        <div class="play-btn">
+                            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">{{ project.title }}</h3>
+                    <p class="video-meta">{{ project.details }}</p>
+                    <span class="watch-btn">
+                        Watch Video
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state reveal">
+                <h3>No professional work videos added yet.</h3>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <section class="contact-cta-section">
+        <h2 class="cta-title reveal">READY TO START YOUR <span>NEXT PROJECT?</span></h2>
+        {% if personal_info.booking_url %}
+        <a href="{{ personal_info.booking_url }}" class="big-cta-btn reveal" target="_blank" rel="noopener">
+            Request Similar Work
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4-4 4M3 12h18"/></svg>
+        </a>
+        {% elif personal_info.email %}
+        <a href="mailto:{{ personal_info.email }}" class="big-cta-btn reveal">
+            Get In Touch
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4-4 4M3 12h18"/></svg>
+        </a>
+        {% endif %}
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+                <span class="s-powered">Powered by</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                <span class="s-brand">Skillifly</span>
+            </a>
+            <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. Creative Portfolio.</p>
+        </div>
+    </footer>
+
+    <!-- ─── JAVASCRIPT ─── -->
+    <script>
+    /* 1. Custom Cursor */
+    (function() {
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        if (!dot || !ring) return;
+
+        let mx = 0, my = 0;
+        let rx = 0, ry = 0;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX;
+            my = e.clientY;
+            dot.style.left = mx + 'px';
+            dot.style.top = my + 'px';
+        });
+
+        function animateRing() {
+            rx += (mx - rx) * 0.15;
+            ry += (my - ry) * 0.15;
+            ring.style.left = rx + 'px';
+            ring.style.top = ry + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        const hoverable = document.querySelectorAll('a, button, .video-card, .close-btn, .nav-link');
+        hoverable.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1.6)';
+                dot.style.background = 'var(--accent)';
+                ring.style.width = '64px';
+                ring.style.height = '64px';
+                ring.style.borderColor = 'var(--accent-glow)';
+                ring.style.boxShadow = '0 0 15px rgba(5, 255, 141, 0.4)';
+            });
+            el.addEventListener('mouseleave', () => {
+                dot.style.transform = 'translate(-50%, -50%) scale(1)';
+                dot.style.background = 'var(--accent-glow)';
+                ring.style.width = '40px';
+                ring.style.height = '40px';
+                ring.style.borderColor = 'var(--accent)';
+                ring.style.boxShadow = 'none';
+            });
+        });
+    })();
+
+    /* 2. Parallax Blobs */
+    document.addEventListener('mousemove', e => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 35;
+        const y = (e.clientY / window.innerHeight - 0.5) * 35;
+        
+        document.querySelectorAll('.shape').forEach((shape, index) => {
+            const factor = (index + 1) * 0.5;
+            shape.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        });
+    });
+
+    /* 3. Navbar Scroll Hide/Show */
+    (function() {
+        const navbar = document.querySelector('.top-nav');
+        if (!navbar) return;
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.scrollY;
+            if (currentScroll > lastScroll && currentScroll > 150) {
+                navbar.style.top = '-90px';
+            } else {
+                navbar.style.top = '20px';
+            }
+            lastScroll = currentScroll;
+        });
+    })();
+
+    /* 4. Scroll Reveal */
+    (function() {
+        const reveals = document.querySelectorAll('.reveal, .reveal-scale');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, i * 65);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        reveals.forEach(r => observer.observe(r));
+    })();
+
+    /* 5. 3D Tilt on Cards */
+    (function() {
+        const cards = document.querySelectorAll('.video-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                
+                card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale(1.02)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+            });
+        });
+    })();
+
+    /* 6. Video Thumbnail Resolver */
+    function getYouTubeId(url) {
+        const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
+        return (m && m[2].length === 11) ? m[2] : null;
+    }
+    function getDriveId(url) {
+        const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/?#&]+)/);
+        return m ? m[1] : null;
+    }
+    document.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
+        const url = wrapper.dataset.url;
+        const img = wrapper.querySelector('.yt-thumb');
+        if (img && url) {
+            const id = getYouTubeId(url);
+            const driveId = getDriveId(url);
+            if (id) {
+                img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+                img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+            } else if (driveId) {
+                img.src = 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=1000&auto=format&fit=crop';
+            } else {
+                img.src = 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000&auto=format&fit=crop';
+            }
+        }
+    });
+    </script>
+</body>
+</html>

@@ -96,8 +96,23 @@ class Skill(models.Model):
         return self.name
 
 # 8. Portfolio Projects
+class ProjectCategory(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="project_categories")
+    name = models.CharField(max_length=254)
+    thumbnail = models.ImageField(upload_to='project_categories/', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Project Categories"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
+
 class Project(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="projects")
+    category = models.ForeignKey(ProjectCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects')
     title = models.CharField(max_length=500)
     url = models.CharField(max_length=500, blank=True, null=True)
     details = models.TextField(null=True, blank=True)
