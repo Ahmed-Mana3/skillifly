@@ -42,7 +42,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeInUp" style="animation-delay: 0.2s"
       id="themes-grid">
       {% for theme in themes %}
-      <div class="theme-card group cursor-pointer" data-category-id="{{ theme.category.id }}"
+      <div class="theme-card group cursor-pointer" data-category-id="{{ theme.category.id }}" data-theme-name="{{ theme.name|lower }}"
         onclick="selectTheme('{{ theme.id }}', '{{ theme.category.id }}', this)">
         <div
           class="gradient-border rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
@@ -128,6 +128,31 @@
   </div>
   {% endif %}
 
+  <!-- Notification Popup (Hidden by default) -->
+  <div id="category-notification" class="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl border border-slate-200 p-6 max-w-sm transform translate-y-full opacity-0 transition-all duration-300 z-50 flex flex-col gap-3">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-900">Categorize your videos now!</h4>
+          <p class="text-sm text-slate-500 mt-1">Perfect! To make this theme look its best, you need to group your videos into categories.</p>
+        </div>
+      </div>
+      <button onclick="closeCategoryNotification()" class="text-slate-400 hover:text-slate-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <a href="{% url 'update_portfolio' %}#projects-section" class="w-full btn-primary py-2 text-center text-sm mt-2">
+      Go to Builder Projects Section
+    </a>
+  </div>
+
 </div>
 {% endblock %}
 
@@ -156,6 +181,26 @@
     document.getElementById('selection-msg').textContent = 'Theme selected — click to apply';
     document.getElementById('selection-msg').classList.add('text-blue-600', 'font-bold');
     document.getElementById('selection-msg').classList.remove('text-slate-500');
+
+    // Show notification if it's a categories theme
+    const themeName = el.dataset.themeName;
+    if (themeName && (themeName.includes('categories') || themeName.includes('category'))) {
+      showCategoryNotification();
+    } else {
+      closeCategoryNotification();
+    }
+  }
+
+  function showCategoryNotification() {
+    const notif = document.getElementById('category-notification');
+    notif.classList.remove('translate-y-full', 'opacity-0');
+    notif.classList.add('translate-y-0', 'opacity-100');
+  }
+
+  function closeCategoryNotification() {
+    const notif = document.getElementById('category-notification');
+    notif.classList.add('translate-y-full', 'opacity-0');
+    notif.classList.remove('translate-y-0', 'opacity-100');
   }
 
   function filterCategory(catId) {

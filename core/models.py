@@ -260,10 +260,11 @@ class Review(models.Model):
     content = models.TextField()
     rating = models.PositiveIntegerField(default=5, help_text="1 to 5 stars")
     is_featured = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text="Order of appearance on landing page")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['order', '-created_at']
 
     def __str__(self):
         return f"Review by {self.user_name}"

@@ -425,7 +425,7 @@ def index(request):
     total_visits = Profile.objects.aggregate(Sum('visits'))['visits__sum'] or 0
     
     # Get featured reviews
-    reviews = Review.objects.filter(is_featured=True)[:6]
+    reviews = Review.objects.filter(is_featured=True).order_by('order', '-created_at')[:6]
     
     context = {
         'portfolios_count': portfolios_count,
@@ -598,6 +598,9 @@ def dashboard_view(request):
         profile.is_public = False
         profile.save()
 
+    # Check if we need to show the category notification
+    show_category_notification = request.session.pop('show_category_notification', False)
+
     context = {
         'profile': profile,
         'days_left': days_left,
@@ -607,6 +610,7 @@ def dashboard_view(request):
         'is_developer': is_developer,
         'is_annual_subscriber': is_annual_subscriber,
         'site_settings': site_settings,
+        'show_category_notification': show_category_notification,
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -648,6 +652,10 @@ def themes(request):
         # Update usage count
         theme.use_num += 1
         theme.save()
+
+        # Check if it's a category theme
+        if 'categories' in theme.name.lower() or 'category' in theme.name.lower():
+            request.session['show_category_notification'] = True
 
         # If user has no portfolio data yet, send them to the builder first
         has_data = PersonalInfo.objects.filter(user=request.user).exists()
@@ -2188,9 +2196,9 @@ def revenue_report(request):
             if start_date < platform_launch_date:
                 start_date = platform_launch_date
         except ValueError:
-            start_date = max(platform_launch_date, today - timedelta(days=7))
+            start_date = platform_launch_date
     else:
-        start_date = max(platform_launch_date, today - timedelta(days=7))
+        start_date = platform_launch_date
         
     if end_str:
         try:
@@ -2291,7 +2299,9 @@ def admin_dashboard(request):
     conversion_rate = (total_paid_users / total_users * 100) if total_users > 0 else 0
     
     # Global paid user IDs for the table 'Paid' badge (unfiltered)
-    all_paid_user_ids = UserPayment.objects.filter(status='paid').values_list('user_id', flat=True).distinct()
+    # Check if a user has a payment with status 'paid' that is still active
+    all_payments = UserPayment.objects.filter(status='paid').select_related('subscription')
+    active_paid_user_ids = {p.user_id for p in all_payments if p.is_active}
     
     # 3. Growth Chart Data (Filtered by range and period)
     signup_labels = []
@@ -2347,7 +2357,7 @@ def admin_dashboard(request):
     context = {
         'total_users': total_users,
         'total_paid_users': total_paid_users,
-        'paid_user_ids': list(all_paid_user_ids), # Convert to list for template 'in' check
+        'paid_user_ids': list(active_paid_user_ids), # Convert to list for template 'in' check
         'conversion_rate': round(conversion_rate, 1),
         'signup_labels': json.dumps(signup_labels),
         'signup_values': json.dumps(signup_values),

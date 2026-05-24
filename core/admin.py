@@ -40,7 +40,8 @@ class CustomDomainAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('user_name', 'user_title', 'rating', 'is_featured', 'created_at')
+    list_display = ('user_name', 'user_title', 'rating', 'is_featured', 'order', 'created_at')
+    list_editable = ('order', 'is_featured')
     list_filter = ('is_featured', 'rating')
     search_fields = ('user_name', 'content')
 
