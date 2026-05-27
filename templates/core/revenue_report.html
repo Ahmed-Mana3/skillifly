@@ -5,266 +5,582 @@
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    .date-input {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: #334155;
-        transition: all 0.2s;
-        outline: none;
-    }
-    .date-input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-    .filter-btn {
-        background-color: #0f172a;
-        color: white;
-        padding: 0.5rem 1.5rem;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
-        font-weight: 700;
-        transition: all 0.2s;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    .filter-btn:hover {
-        background-color: #1e293b;
-        transform: translateY(-1px);
-    }
+  /* ── Base ── */
+  .rr-page {
+    min-height: 100vh;
+    background: #f8fafc; /* Added light gray background to contrast with white cards */
+    font-family: 'Inter', sans-serif;
+    padding: 2rem 1rem 4rem;
+  }
+  .rr-wrap { max-width: 1200px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .rr-header { margin-bottom: 2rem; }
+  .rr-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .25rem .75rem; border-radius: 100px;
+    background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
+    color: #065f46; font-size: .65rem; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: .75rem;
+  }
+  .rr-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800; color: #000; line-height: 1.1; margin-bottom: .5rem;
+  }
+  .rr-title .accent { background: linear-gradient(135deg,#2563eb,#7c3aed,#db2777); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .rr-subtitle { color: #334155; font-size: .875rem; font-weight: 600; }
+
+  /* ── Filter Form ── */
+  .rr-filter {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem;
+    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    border-radius: 1.25rem; padding: 1rem 1.25rem; margin-bottom: 2rem;
+  }
+  .rr-filter-group { display: flex; flex-direction: column; gap: .3rem; flex: 1; min-width: 130px; }
+  .rr-filter-label { font-size: .65rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: .1em; }
+  .rr-date-input {
+    background: #f1f5f9; border: 1px solid #cbd5e1;
+    border-radius: .625rem; padding: .5rem .875rem;
+    font-size: .85rem; font-weight: 700; color: #0f172a;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .rr-date-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); background: #ffffff; }
+  .rr-filter-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+    color: #fff; border: none; border-radius: .625rem;
+    padding: .55rem 1.5rem; font-size: .85rem; font-weight: 800;
+    cursor: pointer; white-space: nowrap; transition: opacity .2s, transform .15s; box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+    align-self: flex-end;
+  }
+  .rr-filter-btn:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* ── Stat Cards ── */
+  .rr-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+  @media (min-width: 640px)  { .rr-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 900px)  { .rr-stats { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1100px) { .rr-stats { grid-template-columns: repeat(6, 1fr); } }
+
+  .rr-card {
+    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
+    border-radius: 1.25rem; padding: 1.25rem 1rem;
+    position: relative; overflow: hidden;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
+  }
+  .rr-card:hover { transform: translateY(-2px); border-color: #94a3b8; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.1); }
+  .rr-card-glow {
+    position: absolute; width: 80px; height: 80px;
+    border-radius: 50%; bottom: -20px; right: -20px;
+    filter: blur(28px); opacity: .2; pointer-events: none;
+  }
+  .rr-card-label {
+    font-size: .65rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .1em; color: #1e293b; margin-bottom: .5rem;
+  }
+  .rr-card-value {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    font-weight: 800; color: #000; line-height: 1;
+  }
+  .rr-card-sub { font-size: .75rem; color: #334155; font-weight: 600; margin-top: .3rem; }
+
+  /* Card accent variants */
+  .c-green .rr-card-value { color: #059669; }
+  .c-green .rr-card-glow  { background: #10b981; }
+  .c-blue  .rr-card-value { color: #2563eb; }
+  .c-blue  .rr-card-glow  { background: #3b82f6; }
+  .c-amber .rr-card-value { color: #d97706; }
+  .c-amber .rr-card-glow  { background: #f59e0b; }
+  .c-purple .rr-card-value{ color: #7c3aed; }
+  .c-purple .rr-card-glow { background: #a78bfa; }
+  .c-rose  .rr-card-value { color: #e11d48; }
+  .c-rose  .rr-card-glow  { background: #f43f5e; }
+  .c-teal  .rr-card-value { color: #0d9488; }
+  .c-teal  .rr-card-glow  { background: #2dd4bf; }
+
+  /* ── Charts Row ── */
+  .rr-charts { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  @media (min-width: 900px) { .rr-charts { grid-template-columns: 2fr 1fr; } }
+
+  .rr-chart-card {
+    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
+    border-radius: 1.25rem; padding: 1.5rem;
+  }
+  .rr-chart-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; }
+  .rr-chart-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.1rem; }
+  .rr-chart-legend { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .rr-legend-item { display: flex; align-items: center; gap: .35rem; font-size: .7rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .08em; }
+  .rr-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .rr-canvas-wrap { position: relative; height: 220px; }
+  .rr-donut-wrap  { position: relative; height: 200px; display: flex; align-items: center; justify-content: center; }
+
+  /* Donut centre label */
+  .donut-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .donut-center-pct { font-family:'Syne',sans-serif; font-size: 1.7rem; font-weight: 800; color: #000; }
+  .donut-center-lbl { font-size: .7rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .1em; }
+
+  /* ── Plan Breakdown ── */
+  .rr-plans {
+    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
+    border-radius: 1.25rem; padding: 1.5rem; margin-bottom: 1.25rem;
+  }
+  .rr-plan-row { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+  .rr-plan-row:last-child { margin-bottom: 0; }
+  .rr-plan-bar-bg { flex: 1; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .rr-plan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#2563eb,#7c3aed); transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .rr-plan-name { font-size: .8rem; font-weight: 700; color: #1e293b; min-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rr-plan-count { font-size: .8rem; font-weight: 800; color: #000; min-width: 28px; text-align: right; }
+  .rr-plan-revenue { font-size: .75rem; color: #059669; font-weight: 700; min-width: 80px; text-align: right; white-space: nowrap; }
+
+  /* ── Dual Chart (revenue line + bar) ── */
+  .rr-dual-wrap { position: relative; height: 260px; }
+
+  /* ── Transactions Table ── */
+  .rr-table-card {
+    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
+    border-radius: 1.25rem; overflow: hidden;
+  }
+  .rr-table-header {
+    padding: 1.25rem 1.5rem; border-bottom: 1px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+  }
+  .rr-table-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.1rem; }
+  .rr-table-sub   { font-size: .7rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .1em; }
+
+  .rr-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .rr-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  .rr-table thead tr { background: #f1f5f9; }
+  .rr-table th {
+    padding: .85rem 1.25rem; text-align: left;
+    font-size: .65rem; font-weight: 800; color: #1e293b;
+    text-transform: uppercase; letter-spacing: .1em; white-space: nowrap;
+  }
+  .rr-table tbody tr { border-top: 1px solid #e2e8f0; transition: background .15s; }
+  .rr-table tbody tr:hover { background: #f8fafc; }
+  .rr-table td { padding: .875rem 1.25rem; vertical-align: middle; }
+
+  /* Avatar */
+  .rr-avatar {
+    width: 36px; height: 36px; border-radius: .5rem; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+  }
+
+  /* Badges */
+  .rr-badge-paid {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .25rem .75rem; border-radius: 100px;
+    background: #d1fae5; border: 1px solid #6ee7b7;
+    color: #047857; font-size: .7rem; font-weight: 800;
+  }
+  .rr-badge-free {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .25rem .75rem; border-radius: 100px;
+    background: #fef3c7; border: 1px solid #fcd34d;
+    color: #b45309; font-size: .7rem; font-weight: 800;
+  }
+
+  /* Empty state */
+  .rr-empty { padding: 3rem; text-align: center; color: #334155; }
+  .rr-empty-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+
+  /* ── Animations ── */
+  .fade-up { opacity: 0; transform: translateY(18px); animation: fadeUp .55s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .d1 { animation-delay: .05s; }
+  .d2 { animation-delay: .15s; }
+  .d3 { animation-delay: .25s; }
+  .d4 { animation-delay: .35s; }
+  .d5 { animation-delay: .45s; }
+
+  /* Mobile tweaks */
+  @media (max-width: 480px) {
+    .rr-stats { grid-template-columns: 1fr 1fr; }
+    .rr-card  { padding: 1.25rem .75rem; }
+    .rr-card-value { font-size: 1.15rem; }
+    .rr-card-label { font-size: 0.55rem; }
+    .rr-card-sub { font-size: 0.65rem; }
+    .rr-filter { flex-direction: column; align-items: stretch; }
+    .rr-filter-group { min-width: 100%; }
+    .rr-filter-btn { width: 100%; text-align: center; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-12">
-    <!-- Page header & Filters -->
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10 animate-fadeInUp">
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-3">
-                Internal Reports
-            </div>
-            <h1 class="text-4xl font-bold mb-2 text-black" style="font-family: 'Syne', sans-serif;">
-                Revenue <span class="gradient-text">Insights</span> ✦
-            </h1>
-            <p class="text-slate-600 font-medium">Viewing performance from {{ start_date|date:"M d" }} to {{ end_date|date:"M d, Y" }}.</p>
-        </div>
+<div class="rr-page">
+<div class="rr-wrap">
 
-        <form method="GET" class="flex flex-wrap items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-            <div class="flex flex-col gap-1">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">Start Date</span>
-                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="date-input">
-            </div>
-            <div class="flex flex-col gap-1">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">End Date</span>
-                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="date-input">
-            </div>
-            <button type="submit" class="filter-btn mt-4 lg:mt-0">Apply Filter</button>
-        </form>
+  <!-- ── Header ── -->
+  <div class="rr-header fade-up d1">
+    <div class="rr-badge">⬡ Internal Reports</div>
+    <h1 class="rr-title">Revenue <span class="accent">Insights</span> ✦</h1>
+    <p class="rr-subtitle">
+      {{ start_date|date:"M d" }} → {{ end_date|date:"M d, Y" }} &nbsp;·&nbsp;
+      {{ total_transactions }} activation{{ total_transactions|pluralize }}
+    </p>
+  </div>
+
+  <!-- ── Filter ── -->
+  <form method="GET" class="rr-filter fade-up d1">
+    <div class="rr-filter-group">
+      <span class="rr-filter-label">Start Date</span>
+      <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}"
+             min="{{ min_date|date:'Y-m-d' }}" class="rr-date-input">
+    </div>
+    <div class="rr-filter-group">
+      <span class="rr-filter-label">End Date</span>
+      <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}"
+             min="{{ min_date|date:'Y-m-d' }}" class="rr-date-input">
+    </div>
+    <button type="submit" class="rr-filter-btn">Apply Filter</button>
+  </form>
+
+  <!-- ── Stat Cards ── -->
+  <div class="rr-stats fade-up d2">
+
+    <div class="rr-card c-green">
+      <p class="rr-card-label">Total Revenue</p>
+      <p class="rr-card-value">EGP {{ total_revenue|floatformat:0 }}</p>
+      <p class="rr-card-sub">from paid users only</p>
+      <div class="rr-card-glow"></div>
     </div>
 
-    <!-- Stats row -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
-        <div class="gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Total Revenue</p>
-            <p class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">EGP {{ total_revenue|floatformat:2 }}</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
-        </div>
-        <div class="gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Paid Activations</p>
-            <p class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">{{ total_transactions }}</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors"></div>
-        </div>
-        <div class="gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Average Ticket</p>
-            <p class="text-3xl font-bold text-black" style="font-family: 'Syne', sans-serif;">EGP {{ avg_payment|floatformat:2 }}</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
-        </div>
+    <div class="rr-card c-blue">
+      <p class="rr-card-label">Paid Users</p>
+      <p class="rr-card-value">{{ paid_count }}</p>
+      <p class="rr-card-sub">amount &gt; 0 EGP</p>
+      <div class="rr-card-glow"></div>
     </div>
 
-    <!-- Chart Section -->
-    <div class="gradient-border rounded-2xl bg-white p-8 mb-12 animate-fadeInUp" style="animation-delay: 0.2s">
-        <div class="flex items-center justify-between mb-8">
-            <h3 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Revenue Growth</h3>
-            <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Daily Revenue (EGP)</span>
-            </div>
-        </div>
-        <div class="h-[300px] w-full">
-            <canvas id="revenueChart"></canvas>
-        </div>
+    <div class="rr-card c-amber">
+      <p class="rr-card-label">Free Codes</p>
+      <p class="rr-card-value">{{ free_count }}</p>
+      <p class="rr-card-sub">100% coupon used</p>
+      <div class="rr-card-glow"></div>
     </div>
 
-    <!-- Transactions Table -->
-    <div class="gradient-border rounded-2xl bg-white overflow-hidden animate-fadeInUp" style="animation-delay: 0.3s">
-        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Platform Transactions</h3>
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Manual & Coupon Activations</span>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/50">
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">User</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Method / Code</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Amount</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Plan</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for p in payments %}
-                    <tr class="hover:bg-slate-50/30 transition-colors">
-                        <td class="px-8 py-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold">
-                                    {{ p.user.username|slice:":2"|upper }}
-                                </div>
-                                <div>
-                                    <p class="text-sm font-bold text-black">{{ p.user.username }}</p>
-                                    <p class="text-[10px] text-slate-400 font-medium">{{ p.user.email }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-5">
-                            <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-600">
-                                    {% if 'MANUAL' in p.kashier_order_id %}
-                                        Manual Payment
-                                    {% elif 'COUPON' in p.kashier_order_id %}
-                                        Coupon Activation
-                                    {% else %}
-                                        Other
-                                    {% endif %}
-                                </span>
-                                {% if p.discount_code_used %}
-                                <span class="text-[10px] text-blue-500 font-bold uppercase tracking-tighter">{{ p.discount_code_used }}</span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td class="px-8 py-5">
-                            <p class="text-sm font-bold {% if p.amount > 0 %}text-emerald-600{% else %}text-slate-400{% endif %}">
-                                EGP {{ p.amount|floatformat:2 }}
-                            </p>
-                        </td>
-                        <td class="px-8 py-5">
-                            <p class="text-xs text-slate-600 font-bold">{{ p.subscription.name|default:"Pro Plan" }}</p>
-                        </td>
-                        <td class="px-8 py-5">
-                            <p class="text-xs text-slate-500 font-medium">{{ p.date|date:"M d, Y • H:i" }}</p>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="px-8 py-12 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <svg class="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <p class="text-slate-400 font-medium">No transactions found for the selected period.</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="rr-card c-teal">
+      <p class="rr-card-label">Avg Ticket</p>
+      <p class="rr-card-value">EGP {{ avg_payment|floatformat:0 }}</p>
+      <p class="rr-card-sub">paid only</p>
+      <div class="rr-card-glow"></div>
     </div>
-</div>
+
+    <div class="rr-card c-purple">
+      <p class="rr-card-label">Paid Rate</p>
+      <p class="rr-card-value">{{ conversion_rate }}%</p>
+      <p class="rr-card-sub">paid ÷ total</p>
+      <div class="rr-card-glow"></div>
+    </div>
+
+    <div class="rr-card c-rose">
+      <p class="rr-card-label">Free Rate</p>
+      {% if total_transactions > 0 %}
+      <p class="rr-card-value">{% widthratio free_count total_transactions 100 %}%</p>
+      {% else %}
+      <p class="rr-card-value">0%</p>
+      {% endif %}
+      <p class="rr-card-sub">free ÷ total</p>
+      <div class="rr-card-glow"></div>
+    </div>
+
+  </div><!-- /stats -->
+
+  <!-- ── Charts Row ── -->
+  <div class="rr-charts fade-up d3">
+
+    <!-- Dual Chart: Revenue line + Paid/Free bars -->
+    <div class="rr-chart-card">
+      <div class="rr-chart-header">
+        <span class="rr-chart-title">Daily Activity</span>
+        <div class="rr-chart-legend">
+          <span class="rr-legend-item"><span class="rr-legend-dot" style="background:#10b981"></span>Revenue (EGP)</span>
+          <span class="rr-legend-item"><span class="rr-legend-dot" style="background:#3b82f6"></span>Paid</span>
+          <span class="rr-legend-item"><span class="rr-legend-dot" style="background:#f59e0b"></span>Free</span>
+        </div>
+      </div>
+      <div class="rr-dual-wrap">
+        <canvas id="dualChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut + Plan Breakdown column -->
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- Donut -->
+      <div class="rr-chart-card">
+        <div class="rr-chart-header">
+          <span class="rr-chart-title">Split</span>
+        </div>
+        <div class="rr-donut-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <span class="donut-center-pct">{{ total_transactions }}</span>
+            <span class="donut-center-lbl">Total</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan Breakdown -->
+      {% if plan_breakdown %}
+      <div class="rr-plans">
+        <p class="rr-chart-title" style="margin-bottom:1rem;">Plans</p>
+        {% for plan in plan_breakdown %}
+        {% with max_count=plan_breakdown.0.count %}
+        <div class="rr-plan-row">
+          <span class="rr-plan-name">{{ plan.subscription__name|default:"—" }}</span>
+          <div class="rr-plan-bar-bg">
+            <div class="rr-plan-bar-fill"
+                 style="width:{% widthratio plan.count max_count 100 %}%"></div>
+          </div>
+          <span class="rr-plan-count">{{ plan.count }}</span>
+          <span class="rr-plan-revenue">EGP {{ plan.revenue|floatformat:0 }}</span>
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div><!-- /right column -->
+  </div><!-- /charts row -->
+
+  <!-- ── Transactions Table ── -->
+  <div class="rr-table-card fade-up d4">
+    <div class="rr-table-header">
+      <span class="rr-table-title">All Activations</span>
+      <span class="rr-table-sub">{{ total_transactions }} record{{ total_transactions|pluralize }}</span>
+    </div>
+    <div class="rr-table-scroll">
+      <table class="rr-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Type</th>
+            <th>Code</th>
+            <th>Amount</th>
+            <th>Plan</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payments %}
+          <tr>
+            <!-- User -->
+            <td>
+              <div style="display:flex;align-items:center;gap:.625rem;">
+                <div class="rr-avatar">{{ p.user.username|slice:":2"|upper }}</div>
+                <div>
+                  <p style="font-size:.85rem;font-weight:800;color:#0f172a;white-space:nowrap;">{{ p.user.username }}</p>
+                  <p style="font-size:.7rem;color:#475569;font-weight:600;white-space:nowrap;">{{ p.user.email }}</p>
+                </div>
+              </div>
+            </td>
+
+            <!-- Paid / Free badge -->
+            <td>
+              {% if p.amount > 0 %}
+              <span class="rr-badge-paid">✓ Paid</span>
+              {% else %}
+              <span class="rr-badge-free">◈ Free</span>
+              {% endif %}
+            </td>
+
+            <!-- Discount code -->
+            <td>
+              {% if p.discount_code_used %}
+              <span style="font-size:.75rem;font-weight:800;color:#7c3aed;letter-spacing:.04em;">
+                {{ p.discount_code_used|upper }}
+              </span>
+              {% else %}
+              <span style="font-size:.75rem;font-weight:800;color:#94a3b8;">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Amount -->
+            <td>
+              {% if p.amount > 0 %}
+              <span style="font-size:.9rem;font-weight:800;color:#059669;">EGP {{ p.amount|floatformat:2 }}</span>
+              {% else %}
+              <span style="font-size:.9rem;font-weight:800;color:#d97706;">EGP 0.00</span>
+              {% endif %}
+            </td>
+
+            <!-- Plan -->
+            <td>
+              <span style="font-size:.8rem;font-weight:700;color:#334155;">{{ p.subscription.name|default:"Pro Plan" }}</span>
+            </td>
+
+            <!-- Date -->
+            <td>
+              <span style="font-size:.75rem;font-weight:600;color:#1e293b;white-space:nowrap;">{{ p.date|date:"M d, Y" }}</span><br>
+              <span style="font-size:.65rem;font-weight:600;color:#64748b;">{{ p.date|date:"H:i" }}</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="rr-empty">
+              <div class="rr-empty-icon">📭</div>
+              <p style="font-weight:700;color:#475569;">No activations in this period.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /table -->
+
+</div><!-- /wrap -->
+</div><!-- /page -->
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        const labels = {{ chart_labels|safe }};
-        const values = {{ chart_values|safe }};
+document.addEventListener('DOMContentLoaded', function () {
 
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+  const labels    = {{ chart_labels|safe }};
+  const revenue   = {{ chart_revenue|safe }};
+  const paidCnt   = {{ chart_paid_cnt|safe }};
+  const freeCnt   = {{ chart_free_cnt|safe }};
+  const paidTotal = {{ paid_count }};
+  const freeTotal = {{ free_count }};
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Daily Revenue',
-                    data: values,
-                    borderColor: '#3b82f6',
-                    borderWidth: 3,
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#3b82f6',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: '#3b82f6',
-                    pointHoverBorderColor: '#fff',
-                    pointHoverBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: '#fff',
-                        titleColor: '#000',
-                        bodyColor: '#64748b',
-                        borderColor: '#e2e8f0',
-                        borderWidth: 1,
-                        padding: 12,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return 'EGP ' + context.parsed.y.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f1f5f9' },
-                        ticks: { 
-                            color: '#94a3b8', 
-                            font: { size: 10, weight: 'bold' },
-                            callback: function(value) { return 'EGP ' + value; }
-                        }
-                    }
-                }
+  /* ── Dual Chart ── */
+  const dualCtx = document.getElementById('dualChart').getContext('2d');
+
+  const revGrad = dualCtx.createLinearGradient(0, 0, 0, 260);
+  revGrad.addColorStop(0, 'rgba(16,185,129,.2)');
+  revGrad.addColorStop(1, 'rgba(16,185,129,0)');
+
+  new Chart(dualCtx, {
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'line',
+          label: 'Revenue (EGP)',
+          data: revenue,
+          borderColor: '#10b981',
+          borderWidth: 3,
+          backgroundColor: revGrad,
+          fill: true,
+          tension: 0.45,
+          pointRadius: 4,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#10b981',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6,
+          yAxisID: 'yRevenue',
+          order: 1,
+        },
+        {
+          type: 'bar',
+          label: 'Paid',
+          data: paidCnt,
+          backgroundColor: 'rgba(59,130,246,.85)',
+          borderRadius: 4,
+          yAxisID: 'yCnt',
+          order: 2,
+        },
+        {
+          type: 'bar',
+          label: 'Free',
+          data: freeCnt,
+          backgroundColor: 'rgba(245,158,11,.85)',
+          borderRadius: 4,
+          yAxisID: 'yCnt',
+          order: 3,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#0f172a',
+          bodyColor: '#334155',
+          borderColor: '#cbd5e1',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: ctx => {
+              if (ctx.dataset.label === 'Revenue (EGP)')
+                return ' EGP ' + ctx.parsed.y.toLocaleString();
+              return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y;
             }
-        });
-    });
-</script>
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,.05)' },
+          ticks: { color: '#475569', font: { size: 9, weight: '800' }, maxRotation: 45 }
+        },
+        yRevenue: {
+          position: 'left',
+          grid: { color: 'rgba(0,0,0,.05)' },
+          ticks: {
+            color: '#059669', font: { size: 10, weight: '800' },
+            callback: v => 'EGP ' + v
+          }
+        },
+        yCnt: {
+          position: 'right',
+          grid: { display: false },
+          ticks: { color: '#475569', font: { size: 10, weight: '800' } },
+          beginAtZero: true,
+          stepSize: 1,
+        }
+      }
+    }
+  });
 
-<style>
-    .gradient-brand {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  /* ── Donut Chart ── */
+  const donutCtx = document.getElementById('donutChart').getContext('2d');
+  const hasData = (paidTotal + freeTotal) > 0;
+
+  new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Paid', 'Free Code'],
+      datasets: [{
+        data: hasData ? [paidTotal, freeTotal] : [1, 0],
+        backgroundColor: ['#2563eb', '#f59e0b'],
+        borderColor: '#ffffff',
+        borderWidth: 3,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#0f172a',
+          bodyColor: '#334155',
+          borderColor: '#cbd5e1',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ' ' + ctx.label + ': ' + ctx.raw
+          }
+        }
+      }
     }
-    .gradient-text {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .animate-fadeInUp {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-    }
-    @keyframes fadeInUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-</style>
+  });
+
+});
+</script>
 {% endblock %}

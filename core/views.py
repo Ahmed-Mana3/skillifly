@@ -2176,7 +2176,7 @@ Respond ONLY with this exact JSON format, no extra text:
 
 @login_required
 def manual_payment_pending(request):
-    """Simple holding page (currently unused — verification is instant)."""
+    """Simple holding page (currently unused — verification is instant.)"""
     return render(request, 'payment/payment_success.html')
 
 
@@ -2185,11 +2185,11 @@ def revenue_report(request):
     """Hidden admin-only revenue report with date filtering and graphs."""
     platform_launch_date = timezone.datetime(2026, 5, 1, tzinfo=timezone.get_current_timezone()).date()
     today = timezone.now().date()
-    
-    # Get dates from request or set defaults
+
+    # Date range inputs
     start_str = request.GET.get('start_date')
-    end_str = request.GET.get('end_date')
-    
+    end_str   = request.GET.get('end_date')
+
     if start_str:
         try:
             start_date = timezone.datetime.strptime(start_str, '%Y-%m-%d').date()
@@ -2199,7 +2199,7 @@ def revenue_report(request):
             start_date = platform_launch_date
     else:
         start_date = platform_launch_date
-        
+
     if end_str:
         try:
             end_date = timezone.datetime.strptime(end_str, '%Y-%m-%d').date()
@@ -2210,47 +2210,72 @@ def revenue_report(request):
 
     # Convert to datetime for filtering (inclusive)
     start_dt = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))
-    end_dt = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
-    
+    end_dt   = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
+
     # Fetch UserPayments (Exclude Kashier 'SKF-' gateway payments)
     payments = UserPayment.objects.filter(
-        status='paid', 
+        status='paid',
         date__range=(start_dt, end_dt)
     ).exclude(
         kashier_order_id__startswith='SKF-'
     ).select_related('user', 'subscription').order_by('-date')
-    
-    # Calculate statistics
-    total_revenue = payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    # --- Split: paid (amount > 0) vs free-code (amount = 0) ---
+    paid_payments = payments.filter(amount__gt=0)
+    free_payments = payments.filter(amount=0)
+
+    paid_count         = paid_payments.count()
+    free_count         = free_payments.count()
     total_transactions = payments.count()
-    avg_payment = total_revenue / total_transactions if total_transactions > 0 else 0
-    
-    # Prepare Chart Data (Daily Revenue)
-    chart_labels = []
-    chart_values = []
-    
+
+    # Revenue only from real payments
+    total_revenue = paid_payments.aggregate(total=Sum('amount'))['total'] or 0
+    avg_payment   = total_revenue / paid_count if paid_count > 0 else 0
+    conversion_rate = round((paid_count / total_transactions * 100), 1) if total_transactions > 0 else 0
+
+    # --- Plan breakdown ---
+    from django.db.models import Count
+    plan_breakdown = list(
+        payments.values('subscription__name')
+        .annotate(count=Count('id'), revenue=Sum('amount'))
+        .order_by('-count')
+    )
+
+    # --- Daily chart data ---
+    chart_labels   = []
+    chart_revenue  = []
+    chart_paid_cnt = []
+    chart_free_cnt = []
+
     current_day = start_date
     while current_day <= end_date:
-        day_total = payments.filter(
-            date__date=current_day
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        
+        day_paid = paid_payments.filter(date__date=current_day)
+        day_free = free_payments.filter(date__date=current_day)
+
         chart_labels.append(current_day.strftime('%b %d'))
-        chart_values.append(float(day_total))
+        chart_revenue.append(float(day_paid.aggregate(total=Sum('amount'))['total'] or 0))
+        chart_paid_cnt.append(day_paid.count())
+        chart_free_cnt.append(day_free.count())
         current_day += timedelta(days=1)
-    
+
     context = {
-        'payments': payments,
-        'total_revenue': total_revenue,
+        'payments':          payments,
+        'total_revenue':     total_revenue,
+        'paid_count':        paid_count,
+        'free_count':        free_count,
         'total_transactions': total_transactions,
-        'avg_payment': avg_payment,
-        'start_date': start_date,
-        'end_date': end_date,
-        'min_date': platform_launch_date,
-        'chart_labels': json.dumps(chart_labels),
-        'chart_values': json.dumps(chart_values),
+        'avg_payment':       avg_payment,
+        'conversion_rate':   conversion_rate,
+        'plan_breakdown':    plan_breakdown,
+        'start_date':        start_date,
+        'end_date':          end_date,
+        'min_date':          platform_launch_date,
+        'chart_labels':      json.dumps(chart_labels),
+        'chart_revenue':     json.dumps(chart_revenue),
+        'chart_paid_cnt':    json.dumps(chart_paid_cnt),
+        'chart_free_cnt':    json.dumps(chart_free_cnt),
     }
-    
+
     return render(request, 'core/revenue_report.html', context)
 
 

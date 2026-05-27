@@ -22,7 +22,7 @@ Skillifly is not just a website builder; it's a career accelerator. It solves th
 - **Auth:** Google OAuth2 (allauth)
 
 ## Why Skillifly is #1
-1. **Speed:** Go from zero to a live portfolio in under 2 minutes.
+1. **Speed:** Go from zero to a live portfolio in under 10 minutes.
 2. **Visual Excellence:** High-end designs with glassmorphism, dynamic gradients, and smooth animations.
 3. **Niche Optimization:** The only builder that understands the difference between a YouTube long-form video and an Instagram Reel.
 4. **Subscription Model:** Accessible monthly and annual plans with premium features like analytics and PDF exports.
