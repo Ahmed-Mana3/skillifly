@@ -402,19 +402,19 @@
   <nav class="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/5">
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <!-- Logo -->
-      <a href="{% url 'index' %}" class="flex items-center gap-3">
+      <a href="{{ MAIN_SITE_URL }}{% url 'index' %}" class="flex items-center gap-3">
         <img src="{% static 'img/logo.png' %}" alt="Skillifly" class="h-10 w-auto object-contain">
       </a>
 
       <!-- Desktop nav -->
       <div class="hidden md:flex items-center gap-8">
         {% if user.is_authenticated %}
-        <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
-        <a href="{% url 'themes' %}" class="nav-link">Themes</a>
-        <a href="{% url 'examples' %}" class="nav-link">Live Examples</a>
-        <a href="{% url 'update_portfolio' %}" class="nav-link">Builder</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'themes' %}" class="nav-link">Themes</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="nav-link">Live Examples</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'update_portfolio' %}" class="nav-link">Builder</a>
         <div class="h-4 w-px bg-slate-200"></div>
-        <a href="{% url 'profile' %}" class="flex items-center gap-2.5 nav-link group" title="My Profile">
+        <a href="{{ MAIN_SITE_URL }}{% url 'profile' %}" class="flex items-center gap-2.5 nav-link group" title="My Profile">
           {% if nav_profile_picture %}
           <div class="relative w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 group-hover:shadow-[0_0_12px_rgba(139,92,246,0.4)] transition-all duration-300 group-hover:scale-110">
             <img src="{{ nav_profile_picture }}" alt="Profile" class="w-full h-full rounded-full object-cover border-[1.5px] border-white">
@@ -425,9 +425,9 @@
           <span class="text-sm">Profile</span>
         </a>
         {% else %}
-        <a href="{% url 'examples' %}" class="nav-link">Live Examples</a>
-        <a href="{% url 'signin' %}" class="nav-link">Sign in</a>
-        <a href="{% url 'signup' %}" class="btn-primary text-sm py-2.5 px-5">Get started</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="nav-link">Live Examples</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'signin' %}" class="nav-link">Sign in</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'signup' %}" class="btn-primary text-sm py-2.5 px-5">Get started</a>
         {% endif %}
       </div>
 
@@ -444,19 +444,19 @@
     <div id="mobile-menu" class="md:hidden hidden border-t border-white/5">
       <div class="px-6 py-4 space-y-3">
         {% if user.is_authenticated %}
-        <a href="{% url 'dashboard' %}" class="block nav-link py-2">Dashboard</a>
-        <a href="{% url 'themes' %}" class="block nav-link py-2">Themes</a>
-        <a href="{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
-        <a href="{% url 'update_portfolio' %}" class="block nav-link py-2">Builder</a>
-        <a href="{% url 'profile' %}" class="block nav-link py-2">Profile</a>
-        <form method="POST" action="{% url 'logout' %}">
+        <a href="{{ MAIN_SITE_URL }}{% url 'dashboard' %}" class="block nav-link py-2">Dashboard</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'themes' %}" class="block nav-link py-2">Themes</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'update_portfolio' %}" class="block nav-link py-2">Builder</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'profile' %}" class="block nav-link py-2">Profile</a>
+        <form method="POST" action="{{ MAIN_SITE_URL }}{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit" class="block w-full btn-ghost text-center mt-2 border-none cursor-pointer">Sign out</button>
         </form>
         {% else %}
-        <a href="{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
-        <a href="{% url 'signin' %}" class="block nav-link py-2">Sign in</a>
-        <a href="{% url 'signup' %}" class="block btn-primary text-center py-3 mt-2">Get started</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'signin' %}" class="block nav-link py-2">Sign in</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'signup' %}" class="block btn-primary text-center py-3 mt-2">Get started</a>
         {% endif %}
       </div>
     </div>
@@ -502,9 +502,10 @@
         <span class="text-sm text-slate-500 font-bold" style="font-family: 'Syne', sans-serif;">Skillifly</span>
       </div>
       <div class="flex items-center gap-6 mt-4 md:mt-0">
-        <a href="{% url 'terms' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Terms</a>
-        <a href="{% url 'privacy' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Privacy</a>
-        <a href="{% url 'contact' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Contact</a>
+        <a href="https://blog.skillifly.cloud" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Blog</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'terms' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Terms</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'privacy' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Privacy</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'contact' %}" class="text-xs text-slate-600 hover:text-black transition-colors font-bold">Contact</a>
       </div>
       <p class="text-xs text-slate-400 mt-4 md:mt-0 font-medium">© 2025 Skillifly. All rights reserved.</p>
     </div>

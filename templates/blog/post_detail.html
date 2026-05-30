@@ -1,0 +1,225 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{# ─── SEO: Title & Meta ──────────────────────────────────────────────────── #}
+{% block title %}{{ post.title }} | Skillifly Blog{% endblock %}
+{% block meta_description %}{{ post.meta_description|default:post.title }}{% endblock %}
+{% block meta_keywords %}{{ post.tags.all|join:", " }}, Skillifly Blog{% endblock %}
+
+{# ─── SEO: Open Graph ────────────────────────────────────────────────────── #}
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ post.meta_description|default:post.title }}{% endblock %}
+{% block og_image %}{% if post.featured_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}
+
+{# ─── SEO: Twitter Card ──────────────────────────────────────────────────── #}
+{% block twitter_title %}{{ post.title }}{% endblock %}
+{% block twitter_description %}{{ post.meta_description|default:post.title }}{% endblock %}
+{% block twitter_image %}{% if post.featured_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}
+
+{% block extra_head %}
+{# ─── Canonical & alternate lang ─────────────────────────────────────────── #}
+{% if post.canonical_url %}
+<link rel="canonical" href="{{ post.canonical_url }}">
+{% else %}
+<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/">
+{% endif %}
+{% if post.language == 'ar' %}
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/">
+{% else %}
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/">
+{% endif %}
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/">
+
+{# ─── Arabic font (loaded only for Arabic posts) ────────────────────────── #}
+{% if post.is_rtl %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  .post-arabic {
+    font-family: 'Cairo', 'Noto Naskh Arabic', 'Tahoma', 'Arial', sans-serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 2;
+    font-size: 1.1rem;
+  }
+  .post-arabic h1, .post-arabic h2, .post-arabic h3,
+  .post-arabic h4, .post-arabic h5, .post-arabic h6 {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    line-height: 1.6;
+  }
+  /* Flip arrow directions for RTL */
+  .rtl-mirror { transform: scaleX(-1); display: inline-block; }
+  /* Prose RTL overrides */
+  .prose-rtl blockquote { border-right: 4px solid #8B5CF6; border-left: none; padding-right: 1.25rem; padding-left: 0; }
+  .prose-rtl ul, .prose-rtl ol { padding-right: 1.5rem; padding-left: 0; }
+</style>
+{% endif %}
+
+{# ─── JSON-LD Article Schema ─────────────────────────────────────────────── #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ post.title|escapejs }}",
+  "description": "{{ post.meta_description|default:post.title|escapejs }}",
+  "image": {% if post.featured_image %}"{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}"{% else %}"{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.png' %}"{% endif %},
+  "author": {
+    "@type": "Person",
+    "name": "{{ post.author.get_full_name|default:post.author.username|escapejs }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Skillifly",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.png' %}"
+    }
+  },
+  "datePublished": "{{ post.created_at|date:'c' }}",
+  "dateModified": "{{ post.updated_at|date:'c' }}",
+  "url": "{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/",
+  "inLanguage": "{{ post.language }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/"
+  }{% if post.categories.all %},
+  "articleSection": "{{ post.categories.all|first }}"{% endif %}{% if post.tags.all %},
+  "keywords": "{{ post.tags.all|join:', '|escapejs }}"{% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<article class="max-w-3xl mx-auto px-6 py-12 {% if post.is_rtl %}post-arabic{% endif %}"
+         lang="{{ post.language }}"
+         dir="{% if post.is_rtl %}rtl{% else %}ltr{% endif %}">
+
+  {# ─── Article Header ──────────────────────────────────────────────────── #}
+  <header class="mb-10 {% if post.is_rtl %}text-right{% else %}text-center{% endif %}">
+
+    {# Breadcrumb / meta row #}
+    <div class="flex items-center justify-center flex-wrap gap-3 mb-6 text-sm text-slate-500">
+      <a href="{% url 'blog:post_list' %}" class="hover:text-blue-600 transition-colors font-medium">
+        {% if post.is_rtl %}المدونة{% else %}Blog{% endif %}
+      </a>
+      <span class="opacity-40">{% if post.is_rtl %}›{% else %}›{% endif %}</span>
+      {% if post.categories.all %}
+        {% for cat in post.categories.all %}
+        <a href="{% url 'blog:category_detail' cat.slug %}" class="text-blue-600 hover:underline font-medium">{{ cat.name }}</a>
+        {% if not forloop.last %}<span class="opacity-40">·</span>{% endif %}
+        {% endfor %}
+        <span class="opacity-40">·</span>
+      {% endif %}
+      <time datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"j F Y" }}</time>
+      <span class="opacity-40">·</span>
+      <span>
+        {% if post.is_rtl %}
+          {{ post.reading_time }} دقائق للقراءة
+        {% else %}
+          {{ post.reading_time }} min read
+        {% endif %}
+      </span>
+    </div>
+
+    {# Title #}
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight {% if post.is_rtl %}font-display{% else %}font-display{% endif %}" style="{% if post.is_rtl %}font-family: 'Cairo', sans-serif;{% endif %}">
+      {{ post.title }}
+    </h1>
+
+
+
+    {# Featured image #}
+    {% if post.featured_image %}
+    <div class="rounded-2xl overflow-hidden aspect-video shadow-xl w-full mb-10">
+      <img src="{{ post.featured_image.url }}"
+           alt="{{ post.featured_image_alt|default:post.title }}"
+           loading="eager"
+           class="w-full h-full object-cover">
+    </div>
+    {% endif %}
+  </header>
+
+  {# ─── Article Body ────────────────────────────────────────────────────── #}
+  <div class="prose prose-lg prose-blue max-w-none
+              prose-img:rounded-xl prose-headings:font-display
+              {% if post.is_rtl %}prose-rtl{% endif %}"
+       style="{% if post.is_rtl %}font-family:'Cairo','Noto Naskh Arabic',sans-serif; line-height:2;{% endif %}">
+    {{ post.content|safe }}
+  </div>
+
+  {# ─── Tags ────────────────────────────────────────────────────────────── #}
+  {% if post.tags.all %}
+  <div class="mt-12 pt-8 border-t border-slate-200">
+    <div class="flex items-center flex-wrap gap-3">
+      <span class="font-bold text-slate-700 text-sm tracking-wide">
+        {% if post.is_rtl %}الوسوم:{% else %}Tags:{% endif %}
+      </span>
+      {% for tag in post.tags.all %}
+      <a href="{% url 'blog:tag_detail' tag.slug %}"
+         class="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-sm font-semibold hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md transition-all">
+        #{{ tag.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ─── Share strip ─────────────────────────────────────────────────────── #}
+  <div class="mt-10 pt-8 border-t border-slate-200">
+    <p class="text-sm font-bold text-slate-500 mb-3 {% if post.is_rtl %}text-right{% endif %}">
+      {% if post.is_rtl %}شارك هذا المقال{% else %}Share this article{% endif %}
+    </p>
+    <div class="flex flex-wrap gap-3">
+      {# Twitter/X #}
+      <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.build_absolute_uri }}"
+         target="_blank" rel="noopener noreferrer"
+         class="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-sm font-bold hover:opacity-80 transition-opacity">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.732-8.858L2.252 2.25h6.938l4.264 5.636L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg>
+        X / Twitter
+      </a>
+      {# LinkedIn #}
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}"
+         target="_blank" rel="noopener noreferrer"
+         class="flex items-center gap-2 px-4 py-2 bg-[#0077B5] text-white rounded-xl text-sm font-bold hover:opacity-80 transition-opacity">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        LinkedIn
+      </a>
+      {# Copy link #}
+      <button id="copy-link-btn" onclick="copyPostLink()"
+              class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+        {% if post.is_rtl %}نسخ الرابط{% else %}Copy link{% endif %}
+      </button>
+    </div>
+  </div>
+
+  {# ─── Back link ───────────────────────────────────────────────────────── #}
+  <div class="mt-16 {% if post.is_rtl %}text-right{% else %}text-center{% endif %}">
+    <a href="{% url 'blog:post_list' %}" class="btn-ghost inline-flex items-center gap-2">
+      {% if post.is_rtl %}
+        {% else %}
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      {% endif %}
+      {% if post.is_rtl %}العودة إلى المدونة{% else %}Back to Blog{% endif %}
+      {% if post.is_rtl %}
+        <svg class="w-4 h-4 rtl-mirror" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      {% endif %}
+    </a>
+  </div>
+
+</article>
+
+<script>
+function copyPostLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const btn = document.getElementById('copy-link-btn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> {% if post.is_rtl %}تم النسخ!{% else %}Copied!{% endif %}';
+    btn.classList.add('bg-green-100', 'text-green-700');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('bg-green-100','text-green-700'); }, 2000);
+  });
+}
+</script>
+{% endblock %}

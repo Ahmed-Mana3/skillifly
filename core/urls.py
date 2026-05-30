@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from core import views
 
 urlpatterns = [
@@ -47,6 +47,7 @@ urlpatterns = [
     path('manage/discounts/delete/<int:pk>/', views.manage_discounts_delete, name='manage_discounts_delete'),
     path('manage/discounts/toggle/<int:pk>/', views.manage_discounts_toggle, name='manage_discounts_toggle'),
     path('manage/banner/update/', views.manage_banner_update, name='manage_banner_update'),
+    path('manage/blog/', include('blog.dashboard_urls')),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
     
     path('user-activity/', views.user_activity_report, name='user_activity_report'),

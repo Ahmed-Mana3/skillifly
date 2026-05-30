@@ -48,7 +48,11 @@ class CustomDomainMiddleware:
     MAIN_DOMAINS = frozenset([
         'skillifly.cloud',
         'www.skillifly.cloud',
+        'blog.skillifly.cloud',
         'localhost',
+        'blog.localhost',
+        'lvh.me',
+        'blog.lvh.me',
         '127.0.0.1',
         'testserver',
     ])
@@ -141,3 +145,20 @@ class UpdateLastSeenMiddleware:
         
         response = self.get_response(request)
         return response
+
+
+class SubdomainRoutingMiddleware:
+    """
+    Routes requests arriving on the blog subdomain to the blog_urls configuration.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        host = request.get_host().split(':')[0].lower()
+
+        if host in ('blog.skillifly.cloud', 'blog.localhost', 'blog.lvh.me'):
+            request.urlconf = 'skillifly.blog_urls'
+
+        return self.get_response(request)

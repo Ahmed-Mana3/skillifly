@@ -1,0 +1,496 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} | Skillifly Blog Dashboard{% endblock %}
+
+{% block extra_head %}
+{{ form.media }}
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- TomSelect CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<!-- Cropper.js CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+
+<style>
+  /* Meta description character counter */
+  .char-counter { font-size: 0.72rem; font-weight: 600; transition: color .2s; }
+  .char-counter.ok   { color: #16a34a; }
+  .char-counter.warn { color: #d97706; }
+  .char-counter.bad  { color: #dc2626; }
+
+  /* CKEditor RTL override */
+  .cke_rtl .cke_contents { direction: rtl; text-align: right; }
+  .cke_contents iframe { font-family: 'Cairo', sans-serif !important; }
+
+  /* Language badge in form header */
+  .lang-badge { display: inline-flex; align-items: center; gap: 6px;
+                padding: 4px 10px; border-radius: 99px; font-size: .75rem; font-weight: 700; }
+  .lang-badge.en { background: #eff6ff; color: #1d4ed8; }
+  .lang-badge.ar { background: #f0fdf4; color: #15803d; font-family: 'Cairo', sans-serif; }
+
+  /* SEO score indicator */
+  .seo-pill { display: inline-flex; align-items: center; gap: 4px;
+              padding: 2px 8px; border-radius: 99px; font-size: .7rem; font-weight: 700; }
+
+  /* Custom TomSelect aesthetics to match sf-input */
+  .ts-control { border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.6rem 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+  .ts-control.focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+  .ts-dropdown { border-radius: 0.75rem; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+  
+  /* Upload Zone UI */
+  .upload-zone { border: 2px dashed #cbd5e1; border-radius: 1rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s; background: #f8fafc; }
+  .upload-zone:hover { border-color: #8b5cf6; background: #f5f3ff; }
+  .upload-preview { display: none; margin-top: 1rem; position: relative; border-radius: 1rem; overflow: hidden; aspect-ratio: 16/9; }
+  .upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .upload-remove { position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; padding: 0.5rem; cursor: pointer; hover: background: rgba(0,0,0,0.7); }
+
+  /* Cropper Modal */
+  #crop-modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem; }
+  #crop-modal.active { display: flex; }
+  .crop-container { background: white; padding: 1.5rem; border-radius: 1.5rem; width: 100%; max-width: 800px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+  .img-container { max-height: 60vh; background: #000; border-radius: 0.5rem; overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-12">
+
+  {# ── Header ── #}
+  <div class="mb-8 flex items-center gap-4">
+    <a href="{% url 'blog_dashboard' %}"
+       class="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+    </a>
+    <div class="flex items-center gap-3">
+      <h1 class="text-3xl font-extrabold font-display">{{ title }}</h1>
+      <span id="lang-badge" class="lang-badge en">🇺🇸 English</span>
+    </div>
+  </div>
+
+  <div class="glass-card rounded-2xl p-8 shadow-sm">
+    <form method="post" enctype="multipart/form-data" class="space-y-8" id="post-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="alert-error">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {# ── Section 1: Identity ── #}
+      <fieldset class="space-y-5">
+        <legend class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Content</legend>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <label class="sf-label" for="{{ form.language.id_for_label }}">Language</label>
+            {{ form.language }}
+          </div>
+          <div>
+            <label class="sf-label" for="{{ form.status.id_for_label }}">Status</label>
+            {{ form.status }}
+          </div>
+        </div>
+
+        <div id="title-wrap">
+          <label class="sf-label" for="{{ form.title.id_for_label }}" id="label-title">Title</label>
+          {{ form.title }}
+          {% if form.title.errors %}<div class="error-msg">{{ form.title.errors }}</div>{% endif %}
+        </div>
+
+        <div>
+          <label class="sf-label" for="{{ form.slug.id_for_label }}">
+            URL Slug
+            <span class="ml-2 text-slate-400 font-normal">(auto-generated if blank)</span>
+          </label>
+          {{ form.slug }}
+          {% if form.slug.errors %}<div class="error-msg">{{ form.slug.errors }}</div>{% endif %}
+        </div>
+      </fieldset>
+
+      {# ── Section 2: Body ── #}
+      <fieldset class="space-y-3">
+        <legend class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Body</legend>
+        <label class="sf-label" for="{{ form.content.id_for_label }}" id="label-content">Content</label>
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden" id="editor-wrap">
+          {{ form.content }}
+        </div>
+        {% if form.content.errors %}<div class="error-msg">{{ form.content.errors }}</div>{% endif %}
+      </fieldset>
+
+      {# ── Section 3: Featured Image ── #}
+      <fieldset class="space-y-5">
+        <legend class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Featured Image (16:9)</legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="sf-label">Image file</label>
+            
+            <!-- Hide the real Django input -->
+            <div class="hidden">
+              {{ form.featured_image }}
+            </div>
+
+            <!-- Custom UI for Image Upload -->
+            <div id="upload-zone" class="upload-zone">
+              <svg class="mx-auto h-12 w-12 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="text-sm font-bold text-slate-700">Click to upload image</p>
+              <p class="text-xs text-slate-500 mt-1">PNG, JPG up to 10MB</p>
+              <!-- Hidden proxy input -->
+              <input type="file" id="proxy-image-input" accept="image/*" class="hidden">
+            </div>
+
+            <div id="upload-preview" class="upload-preview shadow-lg">
+              <img id="preview-img" src="{% if form.instance.featured_image %}{{ form.instance.featured_image.url }}{% endif %}">
+              <div id="remove-img" class="upload-remove">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </div>
+            </div>
+            
+            {% if form.featured_image.errors %}<div class="error-msg">{{ form.featured_image.errors }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="sf-label" for="{{ form.featured_image_alt.id_for_label }}" id="label-img-alt">
+              Alt text <span class="ml-1 seo-pill bg-blue-50 text-blue-700">SEO</span>
+            </label>
+            {{ form.featured_image_alt }}
+            {% if form.featured_image_alt.errors %}<div class="error-msg">{{ form.featured_image_alt.errors }}</div>{% endif %}
+          </div>
+        </div>
+      </fieldset>
+
+      {# ── Section 4: SEO ── #}
+      <fieldset class="space-y-5 bg-slate-50 rounded-2xl p-6 border border-slate-200">
+        <legend class="text-xs font-bold text-violet-600 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          SEO Settings
+        </legend>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="sf-label mb-0" for="{{ form.meta_description.id_for_label }}" id="label-meta">
+              Meta Description
+              <span class="ml-1 seo-pill bg-blue-50 text-blue-700">Google snippet</span>
+            </label>
+            <span class="char-counter ok" id="meta-counter">0 / 160</span>
+          </div>
+          {{ form.meta_description }}
+          <p class="text-xs text-slate-400 mt-1" id="meta-hint">
+            Aim for 120–160 characters. This is what appears in Google search results.
+          </p>
+          {% if form.meta_description.errors %}<div class="error-msg">{{ form.meta_description.errors }}</div>{% endif %}
+        </div>
+
+        <div>
+          <label class="sf-label" for="{{ form.canonical_url.id_for_label }}">
+            Canonical URL
+            <span class="ml-1 text-slate-400 font-normal">(optional)</span>
+          </label>
+          {{ form.canonical_url }}
+          <p class="text-xs text-slate-400 mt-1">Leave blank to use the default post URL.</p>
+          {% if form.canonical_url.errors %}<div class="error-msg">{{ form.canonical_url.errors }}</div>{% endif %}
+        </div>
+      </fieldset>
+
+      {# ── Section 5: Taxonomy (TomSelect) ── #}
+      <fieldset class="space-y-5">
+        <legend class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Taxonomy</legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="sf-label" for="{{ form.categories.id_for_label }}">Categories</label>
+            {{ form.categories }}
+            <p class="text-xs text-slate-400 mt-1">Type and press Enter to create a new category.</p>
+            {% if form.categories.errors %}<div class="error-msg">{{ form.categories.errors }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="sf-label" for="{{ form.tags.id_for_label }}">Tags / Keywords</label>
+            {{ form.tags }}
+            <p class="text-xs text-slate-400 mt-1">Type and press Enter to create a new tag.</p>
+            {% if form.tags.errors %}<div class="error-msg">{{ form.tags.errors }}</div>{% endif %}
+          </div>
+        </div>
+      </fieldset>
+
+      {# ── Footer ── #}
+      <div class="pt-6 border-t border-slate-100 flex justify-end gap-4">
+        <a href="{% url 'blog_dashboard' %}" class="btn-ghost">Cancel</a>
+        <button type="submit" name="action" value="draft" class="btn-ghost">
+          💾 Save Draft
+        </button>
+        <button type="submit" class="btn-primary">
+          🚀 Save &amp; Publish
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Cropper Modal -->
+<div id="crop-modal">
+  <div class="crop-container">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-bold font-display">Crop Image</h3>
+      <button type="button" id="crop-cancel" class="text-slate-400 hover:text-slate-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="img-container mb-6">
+      <img id="image-to-crop" src="">
+    </div>
+    <div class="flex justify-end gap-3">
+      <button type="button" id="crop-cancel-btn" class="btn-ghost">Cancel</button>
+      <button type="button" id="crop-confirm-btn" class="btn-primary">Apply Crop</button>
+    </div>
+  </div>
+</div>
+
+<!-- TomSelect JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<!-- Cropper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<script>
+(function () {
+  // ── TomSelect logic (Categories & Tags) ─────────────────────────────────
+  function initTomSelect(elId, createApiUrl) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    new TomSelect(el, {
+      plugins: ['remove_button'],
+      create: function(input, callback) {
+        // Show loading state
+        const originalInput = input;
+        
+        fetch(createApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: JSON.stringify({ name: input })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert('Error creating item: ' + data.error);
+            callback(false);
+          } else {
+            // Add the new option to the actual underlying select element
+            const option = new Option(data.name, data.id, true, true);
+            el.appendChild(option);
+            
+            // Tell TomSelect about it
+            callback({value: data.id, text: data.name});
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          callback(false);
+        });
+      },
+      placeholder: 'Select or type to create...',
+      maxOptions: 50,
+    });
+  }
+
+  initTomSelect('id_categories', '{% url "api_create_category" %}');
+  initTomSelect('id_tags', '{% url "api_create_tag" %}');
+
+
+  // ── Cropper.js logic ────────────────────────────────────────────────────
+  const uploadZone = document.getElementById('upload-zone');
+  const proxyInput = document.getElementById('proxy-image-input');
+  const djangoInput = document.getElementById('{{ form.featured_image.id_for_label }}');
+  const previewBox = document.getElementById('upload-preview');
+  const previewImg = document.getElementById('preview-img');
+  const removeBtn = document.getElementById('remove-img');
+  
+  const cropModal = document.getElementById('crop-modal');
+  const imageToCrop = document.getElementById('image-to-crop');
+  const btnCancelCrop = document.getElementById('crop-cancel');
+  const btnCancelCrop2 = document.getElementById('crop-cancel-btn');
+  const btnConfirmCrop = document.getElementById('crop-confirm-btn');
+  
+  let cropper = null;
+  let currentFilename = '';
+
+  // Show preview if image already exists (edit mode)
+  if (previewImg.src && previewImg.src !== window.location.href) {
+    uploadZone.style.display = 'none';
+    previewBox.style.display = 'block';
+  }
+
+  uploadZone.addEventListener('click', () => proxyInput.click());
+
+  proxyInput.addEventListener('change', function(e) {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      currentFilename = file.name;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        imageToCrop.src = event.target.result;
+        cropModal.classList.add('active');
+        
+        if (cropper) {
+          cropper.destroy();
+        }
+        
+        cropper = new Cropper(imageToCrop, {
+          aspectRatio: 16 / 9,
+          viewMode: 1,
+          autoCropArea: 1,
+          responsive: true,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+    // reset proxy input so same file can be selected again
+    proxyInput.value = '';
+  });
+
+  function closeCropModal() {
+    cropModal.classList.remove('active');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  btnCancelCrop.addEventListener('click', closeCropModal);
+  btnCancelCrop2.addEventListener('click', closeCropModal);
+
+  btnConfirmCrop.addEventListener('click', function() {
+    if (!cropper) return;
+    
+    // Get cropped canvas
+    const canvas = cropper.getCroppedCanvas({
+      width: 1280, // Target max width
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
+    
+    // Convert canvas to blob -> file -> DataTransfer to update the Django file input
+    canvas.toBlob(function(blob) {
+      const file = new File([blob], currentFilename, { type: 'image/jpeg', lastModified: new Date().getTime() });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      
+      // Assign to the hidden django input
+      djangoInput.files = dataTransfer.files;
+      
+      // Update UI preview
+      previewImg.src = URL.createObjectURL(blob);
+      uploadZone.style.display = 'none';
+      previewBox.style.display = 'block';
+      
+      closeCropModal();
+    }, 'image/jpeg', 0.85);
+  });
+
+  removeBtn.addEventListener('click', function() {
+    djangoInput.value = ''; // clear input
+    
+    // In edit mode, there might be a clear checkbox (if django renders it)
+    const clearCheckbox = document.getElementById('{{ form.featured_image.id_for_label }}-clear_id');
+    if (clearCheckbox) clearCheckbox.checked = true;
+
+    previewImg.src = '';
+    previewBox.style.display = 'none';
+    uploadZone.style.display = 'block';
+  });
+
+
+  // ── Meta description character counter ──────────────────────────────────
+  const metaField   = document.getElementById('{{ form.meta_description.id_for_label }}');
+  const metaCounter = document.getElementById('meta-counter');
+
+  function updateCounter() {
+    if (!metaField || !metaCounter) return;
+    const len = metaField.value.length;
+    metaCounter.textContent = `${len} / 160`;
+    metaCounter.className = 'char-counter ' + (len < 50 ? 'warn' : len <= 160 ? 'ok' : 'bad');
+  }
+  metaField?.addEventListener('input', updateCounter);
+  updateCounter();
+
+  // ── Language ↔ RTL / CKEditor sync ─────────────────────────────────────
+  const langSelect = document.getElementById('{{ form.language.id_for_label }}');
+  const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+  const badge      = document.getElementById('lang-badge');
+  const metaHint   = document.getElementById('meta-hint');
+  const labelTitle = document.getElementById('label-title');
+  const labelMeta  = document.getElementById('label-meta');
+  const labelAlt   = document.getElementById('label-img-alt');
+
+  const LABELS_AR = {
+    title:   'العنوان',
+    meta:    'الوصف التعريفي (محرك البحث)',
+    alt:     'النص البديل للصورة (SEO)',
+    hint:    'الهدف 120–160 حرفاً – هذا ما يظهر في نتائج Google.',
+  };
+  const LABELS_EN = {
+    title:   'Title',
+    meta:    'Meta Description',
+    alt:     'Alt text (SEO)',
+    hint:    'Aim for 120–160 characters. This is what appears in Google search results.',
+  };
+
+  function applyLanguage(lang) {
+    const isAr = lang === 'ar';
+    const dir  = isAr ? 'rtl' : 'ltr';
+    const lbl  = isAr ? LABELS_AR : LABELS_EN;
+
+    // Update badge
+    badge.textContent = isAr ? '🇸🇦 العربية' : '🇺🇸 English';
+    badge.className   = 'lang-badge ' + lang;
+
+    // Update title field direction
+    if (titleInput) {
+      titleInput.dir         = dir;
+      titleInput.style.textAlign = isAr ? 'right' : 'left';
+      titleInput.style.fontFamily = isAr ? "'Cairo', sans-serif" : '';
+      if (labelTitle) labelTitle.firstChild.textContent = lbl.title + ' ';
+    }
+
+    // Update meta description
+    if (metaField) {
+      metaField.dir = dir;
+      metaField.style.textAlign  = isAr ? 'right' : 'left';
+      metaField.style.fontFamily = isAr ? "'Cairo', sans-serif" : '';
+    }
+    if (metaHint)  metaHint.textContent  = lbl.hint;
+
+    // CKEditor instance – switch content direction and language
+    if (typeof CKEDITOR !== 'undefined') {
+      const editorName = '{{ form.content.id_for_label }}';
+      const inst = CKEDITOR.instances[editorName];
+      if (inst) {
+        inst.config.contentsLangDirection = dir;
+        inst.config.language = isAr ? 'ar' : 'en';
+        // Force body direction inside the iframe
+        try {
+          const body = inst.document.getBody().$;
+          body.dir = dir;
+          body.style.textAlign  = isAr ? 'right' : 'left';
+          body.style.fontFamily = isAr ? "'Cairo','Noto Naskh Arabic',sans-serif" : '';
+          body.style.lineHeight = isAr ? '2' : '';
+        } catch(e) {}
+      }
+    }
+  }
+
+  langSelect?.addEventListener('change', function () { applyLanguage(this.value); });
+
+  const initLang = langSelect?.value || 'en';
+  if (typeof CKEDITOR !== 'undefined') {
+    CKEDITOR.on('instanceReady', function () { applyLanguage(initLang); });
+  } else {
+    window.addEventListener('load', function () { applyLanguage(initLang); });
+  }
+})();
+</script>
+{% endblock %}

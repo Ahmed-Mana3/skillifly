@@ -71,12 +71,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.sitemaps',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'django_celery_results',
     'core',
+    'ckeditor',
+    'ckeditor_uploader',
+    'blog',
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -90,6 +94,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'core.middleware.CustomDomainMiddleware',
+    'core.middleware.SubdomainRoutingMiddleware',
     'django.middleware.common.CommonMiddleware',
     'core.middleware.DynamicCsrfTrustedOriginsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -99,6 +104,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.UpdateLastSeenMiddleware',
 ]
+
+# Share sessions across subdomains
+if DEBUG:
+    # Browsers block cross-subdomain cookies on 'localhost'.
+    # To test locally, access the site via http://lvh.me:8000 instead of localhost.
+    SESSION_COOKIE_DOMAIN = '.lvh.me'
+    CSRF_COOKIE_DOMAIN = '.lvh.me'
+else:
+    SESSION_COOKIE_DOMAIN = '.skillifly.cloud'
+    CSRF_COOKIE_DOMAIN = '.skillifly.cloud'
 
 ROOT_URLCONF = 'skillifly.urls'
 
@@ -114,6 +129,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.auth_providers',
                 'core.context_processors.navbar_profile',
+                'core.context_processors.site_globals',
             ],
         },
     },
@@ -411,5 +427,52 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+    },
+}
+
+# ---------------------------------------------------------------------------
+# CKEditor Configuration
+# ---------------------------------------------------------------------------
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Source'],
+            ['Styles', 'Format', 'Font', 'FontSize'],
+            ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript'],
+            ['TextColor', 'BGColor'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['BidiLtr', 'BidiRtl'],          # ← RTL / LTR toggle buttons
+            ['Link', 'Unlink', 'Anchor'],
+            ['Image', 'Flash', 'Table', 'HorizontalRule', 'SpecialChar'],
+            ['Maximize'],
+        ],
+        'height': 400,
+        'width': '100%',
+        'extraPlugins': 'bidi',              # ← bidirectional text plugin
+        'language': 'en',                   # default UI; overridden by JS per post
+        'contentsLangDirection': 'ltr',     # overridden by JS per post
+    },
+    'rtl': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Source'],
+            ['Styles', 'Format', 'Font', 'FontSize'],
+            ['Bold', 'Italic', 'Underline', 'Strike'],
+            ['TextColor', 'BGColor'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['BidiLtr', 'BidiRtl'],
+            ['Link', 'Unlink', 'Anchor'],
+            ['Image', 'Table', 'HorizontalRule', 'SpecialChar'],
+            ['Maximize'],
+        ],
+        'height': 400,
+        'width': '100%',
+        'extraPlugins': 'bidi',
+        'language': 'ar',
+        'contentsLangDirection': 'rtl',
     },
 }

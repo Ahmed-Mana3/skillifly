@@ -1,0 +1,176 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if category %}{{ category.name }} | {% elif tag %}#{{ tag.name }} | {% endif %}Skillifly Blog
+{% endblock %}
+{% block meta_description %}
+  {% if category %}
+    Articles in {{ category.name }} on the Skillifly Blog.
+  {% elif tag %}
+    Articles tagged #{{ tag.name }} on the Skillifly Blog.
+  {% else %}
+    Read the latest career tips, tutorials, and portfolio advice on the Skillifly Blog.
+  {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+{# Sitemap discovery #}
+<link rel="alternate" type="application/rss+xml" title="Skillifly Blog" href="/sitemap.xml">
+{# Arabic font preload – only loaded if any post on the page is Arabic #}
+{% for post in page_obj %}{% if post.is_rtl %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+{% endif %}{% endfor %}
+
+{# JSON-LD ItemList for the listing page #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Skillifly Blog",
+  "url": "{{ request.scheme }}://{{ request.get_host }}/",
+  "description": "Career tips, portfolio building tutorials, and professional growth guides.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Skillifly",
+    "logo": { "@type": "ImageObject", "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.png' %}" }
+  },
+  "blogPost": [
+    {% for post in page_obj %}
+    {
+      "@type": "BlogPosting",
+      "headline": "{{ post.title|escapejs }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}/{{ post.slug }}/",
+      "datePublished": "{{ post.created_at|date:'c' }}",
+      "inLanguage": "{{ post.language }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-12">
+
+  {# ─── Hero header ───────────────────────────────────────────────────────── #}
+  <div class="text-center mb-16 animate-fadeInUp">
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-4 font-display">
+      {% if category %}
+        <span class="gradient-text">{{ category.name }}</span>
+      {% elif tag %}
+        #<span class="gradient-text">{{ tag.name }}</span>
+      {% else %}
+        Skillifly <span class="gradient-text">Blog</span>
+      {% endif %}
+    </h1>
+    <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+      {% if category %}
+        Articles in the <strong>{{ category.name }}</strong> category.
+      {% elif tag %}
+        All articles tagged <strong>#{{ tag.name }}</strong>.
+      {% else %}
+        Career insights, portfolio tips, and professional growth guides.
+      {% endif %}
+    </p>
+  </div>
+
+  {# ─── Post list ─────────────────────────────────────────────────────────── #}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for post in page_obj %}
+    <article class="glass-card flex flex-col rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group"
+             lang="{{ post.language }}"
+             dir="{% if post.is_rtl %}rtl{% else %}ltr{% endif %}">
+
+      {# Featured image #}
+      {% if post.featured_image %}
+      <a href="/{{ post.slug }}/" class="block aspect-video w-full overflow-hidden shrink-0">
+        <img src="{{ post.featured_image.url }}"
+             alt="{{ post.featured_image_alt|default:post.title }}"
+             loading="lazy"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+      </a>
+      {% endif %}
+
+      <div class="p-6 flex flex-col flex-grow">
+        {# Meta row #}
+        <div class="flex items-center flex-wrap gap-2 mb-3 text-xs text-slate-500
+                    {% if post.is_rtl %}flex-row-reverse justify-end{% endif %}">
+          <time datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"j M Y" }}</time>
+          <span class="opacity-40">·</span>
+
+          {% if post.is_rtl %}<span class="opacity-40">·</span>{% endif %}
+          <span>{{ post.reading_time }}{% if post.is_rtl %} د{% else %} min{% endif %}</span>
+          {% if post.categories.all %}
+          <span class="opacity-40">·</span>
+          <div class="flex gap-1">
+            {% for cat in post.categories.all %}
+            <a href="/category/{{ cat.slug }}/" class="text-violet-600 hover:underline font-medium">{{ cat.name }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {# Language badge #}
+          {% if post.language == 'ar' %}
+          <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold">AR</span>
+          {% endif %}
+        </div>
+
+        {# Title #}
+        <h2 class="text-xl font-bold mb-3 {% if post.is_rtl %}text-right{% endif %}"
+            style="{% if post.is_rtl %}font-family:'Cairo',sans-serif;{% else %}font-family:'Syne',sans-serif;{% endif %}">
+          <a href="/{{ post.slug }}/"
+             class="hover:text-violet-600 transition-colors">{{ post.title }}</a>
+        </h2>
+
+        {# Excerpt #}
+        <p class="text-sm text-slate-600 mb-6 flex-grow leading-relaxed {% if post.is_rtl %}text-right{% endif %}"
+           style="{% if post.is_rtl %}font-family:'Cairo',sans-serif;{% endif %}">
+          {{ post.meta_description|default:post.content|striptags|truncatewords:20 }}
+        </p>
+
+        {# Read more link #}
+        <div class="mt-auto pt-4 border-t border-slate-100 {% if post.is_rtl %}text-right{% endif %}">
+            <a href="/{{ post.slug }}/"
+               class="inline-flex items-center gap-2 text-violet-600 text-sm font-bold hover:gap-3 transition-all group/link
+                      {% if post.is_rtl %}flex-row-reverse{% endif %}">
+              {% if post.is_rtl %}اقرأ المزيد{% else %}Read More{% endif %}
+              <svg class="w-4 h-4 {% if post.is_rtl %}rotate-180{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </a>
+        </div>
+      </div>
+    </article>
+    {% empty %}
+    <div class="col-span-full text-center py-20 text-slate-400">
+      <svg class="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+      </svg>
+      <p class="text-xl font-semibold">No posts yet</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ─── Pagination ────────────────────────────────────────────────────────── #}
+  {% if page_obj.has_other_pages %}
+  <nav aria-label="Pagination" class="mt-16 flex justify-center items-center gap-3">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="btn-ghost px-5 py-2.5 text-sm">
+      ← Prev
+    </a>
+    {% endif %}
+    <span class="px-5 py-2.5 bg-violet-50 text-violet-700 rounded-xl font-bold text-sm border border-violet-100">
+      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="btn-ghost px-5 py-2.5 text-sm">
+      Next →
+    </a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

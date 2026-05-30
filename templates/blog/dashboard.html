@@ -1,0 +1,185 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Blog Dashboard | Skillifly{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  {# ── Header ── #}
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold font-display">Blog Dashboard</h1>
+      <p class="text-slate-500 mt-1">Manage your posts on <span class="font-bold text-violet-600">blog.skillifly.cloud</span></p>
+    </div>
+    <a href="{% url 'post_create' %}" class="btn-primary">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      New Post
+    </a>
+  </div>
+
+  {# ── Stats row ── #}
+  {% with total=posts|length %}
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Posts</p>
+      <p class="text-3xl font-extrabold gradient-text">{{ total }}</p>
+    </div>
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Published</p>
+      <p class="text-3xl font-extrabold text-green-600">{{ posts|dictsort:"status"|length }}</p>
+    </div>
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Arabic (RTL)</p>
+      <p class="text-3xl font-extrabold text-emerald-600">
+        {% with count=0 %}
+          {% for p in posts %}{% if p.language == 'ar' %}{% with count=count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+          {{ posts|dictsort:"language"|length }}
+        {% endwith %}
+      </p>
+    </div>
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">SEO Issues</p>
+      <p class="text-3xl font-extrabold text-amber-500">
+        {% with issues=0 %}
+          {% for p in posts %}{% if not p.meta_description %}*{% endif %}{% endfor %}
+        {% endwith %}
+        {% for p in posts %}{% if not p.meta_description %}⚠{% endif %}{% endfor %}
+      </p>
+    </div>
+  </div>
+  {% endwith %}
+
+  {# ── Posts table ── #}
+  <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+    {% if posts %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <th class="p-4">Title</th>
+            <th class="p-4">Lang</th>
+            <th class="p-4">Status</th>
+            <th class="p-4">SEO</th>
+            <th class="p-4">Updated</th>
+            <th class="p-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for post in posts %}
+          <tr class="hover:bg-slate-50/60 transition-colors">
+
+            {# Title + slug #}
+            <td class="p-4 max-w-xs">
+              <div class="font-bold text-slate-800 truncate"
+                   style="{% if post.is_rtl %}font-family:'Cairo',sans-serif; direction:rtl;{% endif %}">
+                {{ post.title }}
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5 font-mono">/{{ post.slug }}/</div>
+            </td>
+
+            {# Language badge #}
+            <td class="p-4">
+              {% if post.language == 'ar' %}
+              <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold">🇸🇦 AR</span>
+              {% else %}
+              <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold">🇺🇸 EN</span>
+              {% endif %}
+            </td>
+
+            {# Status #}
+            <td class="p-4">
+              {% if post.status == 'published' %}
+              <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✓ Published</span>
+              {% else %}
+              <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">Draft</span>
+              {% endif %}
+            </td>
+
+            {# SEO completeness #}
+            <td class="p-4">
+              {% if post.meta_description and post.featured_image_alt %}
+              <span class="px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold">✓ Good</span>
+              {% elif post.meta_description or post.featured_image_alt %}
+              <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold">⚠ Partial</span>
+              {% else %}
+              <span class="px-2 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold">✗ Missing</span>
+              {% endif %}
+            </td>
+
+            {# Date #}
+            <td class="p-4 text-sm text-slate-500">{{ post.updated_at|date:"d M Y" }}</td>
+
+            {# Actions #}
+            <td class="p-4">
+              <div class="flex justify-end gap-1">
+                {% if post.status == 'published' %}
+                <a href="https://blog.skillifly.cloud/{{ post.slug }}/" target="_blank"
+                   class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="View live">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                </a>
+                {% endif %}
+                <a href="{% url 'post_update' post.pk %}"
+                   class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors" title="Edit">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </a>
+                <a href="{% url 'post_delete' post.pk %}"
+                   class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-16 text-center">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-violet-50 mb-6">
+        <svg class="w-10 h-10 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2"/>
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">No posts yet</h3>
+      <p class="text-slate-500 mb-8 max-w-sm mx-auto">Create your first blog post in English or Arabic — we'll handle the RTL layout automatically.</p>
+      <a href="{% url 'post_create' %}" class="btn-primary">✍️ Write Your First Post</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Quick SEO tips panel ── #}
+  <div class="mt-8 glass-card rounded-2xl p-6">
+    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
+      📈 SEO Checklist for every post
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div class="flex items-start gap-3">
+        <span class="mt-0.5 w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+        <p class="text-slate-600"><strong>Meta description</strong> — 120–160 chars. Your Google search snippet.</p>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="mt-0.5 w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
+        <p class="text-slate-600"><strong>Featured image alt text</strong> — helps Google Images and screen readers.</p>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="mt-0.5 w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
+        <p class="text-slate-600"><strong>URL slug</strong> — short, descriptive, hyphenated. Arabic slugs are auto-transliterated.</p>
+      </div>
+    </div>
+    <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-400">
+      Blog sitemap auto-generated at
+      <a href="https://blog.skillifly.cloud/sitemap.xml" target="_blank" class="text-violet-500 hover:underline font-mono">blog.skillifly.cloud/sitemap.xml</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

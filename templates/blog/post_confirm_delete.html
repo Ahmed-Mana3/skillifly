@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Delete Post | Skillifly Blog Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto px-6 py-20">
+    <div class="glass-card rounded-2xl p-8 text-center shadow-sm">
+        <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        
+        <h1 class="text-2xl font-bold font-display mb-2">Delete Blog Post</h1>
+        <p class="text-slate-600 mb-8">Are you sure you want to delete "<strong>{{ post.title }}</strong>"? This action cannot be undone.</p>
+        
+        <form method="post" class="flex justify-center gap-4">
+            {% csrf_token %}
+            <a href="{% url 'blog_dashboard' %}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-600/30">
+                Yes, Delete Post
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

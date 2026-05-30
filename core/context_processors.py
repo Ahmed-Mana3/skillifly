@@ -59,3 +59,13 @@ def navbar_profile(request):
         'nav_profile_picture': nav_picture,
         'nav_user_initials': nav_initials,
     }
+
+def site_globals(request):
+    """Provide the main site URL for cross-subdomain linking."""
+    host = request.get_host()
+    # If we are on the blog, links should go to main site
+    if host.startswith('blog.'):
+        main_host = host.replace('blog.', '', 1)
+        return {'MAIN_SITE_URL': f"{request.scheme}://{main_host}"}
+    return {'MAIN_SITE_URL': ''}
+
