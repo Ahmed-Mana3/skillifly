@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.shortcuts import redirect
 from .models import CustomDomain
 
 
@@ -161,4 +163,27 @@ class SubdomainRoutingMiddleware:
         if host in ('blog.skillifly.cloud', 'blog.localhost', 'blog.lvh.me'):
             request.urlconf = 'skillifly.blog_urls'
 
+        return self.get_response(request)
+
+
+class LocalhostRedirectMiddleware:
+    """
+    In local development (DEBUG=True), redirect requests on 'localhost' or '127.0.0.1'
+    to 'lvh.me' so that session/CSRF cookies (which are configured for '.lvh.me' to
+    support subdomains) are correctly set by the browser.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if settings.DEBUG:
+            host_port = request.get_host()
+            host = host_port.split(':')[0].lower()
+            if host in ('localhost', '127.0.0.1'):
+                # Replace host with lvh.me, keeping the port if present
+                new_host_port = host_port.replace(host, 'lvh.me')
+                # Reconstruct absolute URI
+                scheme = 'https' if request.is_secure() else 'http'
+                new_url = f"{scheme}://{new_host_port}{request.get_full_path()}"
+                return redirect(new_url)
         return self.get_response(request)

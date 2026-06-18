@@ -371,16 +371,27 @@
         });
     })();
 
-    /* 2. Parallax Blobs */
-    document.addEventListener('mousemove', e => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 35;
-        const y = (e.clientY / window.innerHeight - 0.5) * 35;
-        
-        document.querySelectorAll('.shape').forEach((shape, index) => {
-            const factor = (index + 1) * 0.5;
-            shape.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+    /* 2. Parallax Blobs — throttled via rAF to prevent 60+ DOM writes/sec */
+    (function() {
+        let rafPending = false;
+        let mx = 0, my = 0;
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX;
+            my = e.clientY;
+            if (!rafPending) {
+                rafPending = true;
+                requestAnimationFrame(() => {
+                    const x = (mx / window.innerWidth - 0.5) * 35;
+                    const y = (my / window.innerHeight - 0.5) * 35;
+                    document.querySelectorAll('.shape').forEach((shape, index) => {
+                        const factor = (index + 1) * 0.5;
+                        shape.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+                    });
+                    rafPending = false;
+                });
+            }
         });
-    });
+    })();
 
     /* 3. Navbar Scroll Hide/Show */
     (function() {

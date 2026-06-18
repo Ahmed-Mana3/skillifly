@@ -99,10 +99,11 @@ h1, h2, h3, h4, .serif {
 }
 .shape {
     position: absolute;
-    filter: blur(140px);
+    filter: blur(80px);
     opacity: 0.18;
     pointer-events: none;
     animation: morph 25s ease-in-out infinite alternate;
+    will-change: transform;
 }
 .shape-1 {
     width: 50vw;
@@ -156,6 +157,7 @@ h1, h2, h3, h4, .serif {
     z-index: 0;
     pointer-events: none;
     animation: floatIcon 8s ease-in-out infinite;
+    will-change: transform;
 }
 .floating-icon img {
     width: 100%;

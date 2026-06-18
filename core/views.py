@@ -14,7 +14,7 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory
 from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
 
 
@@ -1080,39 +1080,47 @@ def preview_view(request, username):
     # Handle optional @ prefix from sitemap or direct links
     clean_username = username.lstrip('@')
     user = get_object_or_404(CustomUser, username=clean_username)
-    
-    # Increment visit counter
+
+    # Increment visit counter (update only the visits field to avoid a full model save)
     profile, created = Profile.objects.get_or_create(user=user)
-    
+
     # Visibility Check
     payment = UserPayment.objects.filter(user=user, status='paid').last()
     has_active_subscription = payment and payment.is_active
-    
+
     # Auto-flip to private if not subscribed
     if not has_active_subscription and profile.is_public:
         profile.is_public = False
-        profile.save()
+        profile.save(update_fields=['is_public'])
 
     if not profile.is_public and request.user != user:
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
     profile.visits += 1
-    profile.save()
+    profile.save(update_fields=['visits'])
 
     personal_info = PersonalInfo.objects.filter(user=user).select_related('user').first()
     experiences = Experience.objects.filter(user=user).select_related('user')
     education = Education.objects.filter(user=user).select_related('user')
     skills = Skill.objects.filter(user=user).select_related('user')
-    projects = Project.objects.filter(user=user).select_related('user')
+    projects = Project.objects.filter(user=user).select_related('user', 'category')
     links = Link.objects.filter(user=user).select_related('user')
     creators = Creator.objects.filter(user=user).select_related('user')
 
+    # Prefetch categories with annotated project counts in a SINGLE query — eliminates N+1
+    project_categories = list(
+        ProjectCategory.objects.filter(user=user)
+        .annotate(project_count=Count('projects'))
+        .order_by('id')
+    )
+
     # Cinematic/video-editor themes need safe numeric highlights
-    project_count = projects.count()
-    long_count = projects.filter(video_type='long').count()
-    reel_count = projects.filter(video_type='reel').count()
-    uncategorized_projects = projects.filter(category__isnull=True)
-    uncategorized_count = uncategorized_projects.count()
+    # Use cached querysets to avoid re-hitting the DB
+    projects_list = list(projects)
+    project_count = len(projects_list)
+    long_count = sum(1 for p in projects_list if p.video_type == 'long')
+    reel_count = sum(1 for p in projects_list if p.video_type == 'reel')
+    uncategorized_count = sum(1 for p in projects_list if p.category_id is None)
     has_uncategorized_projects = uncategorized_count > 0
 
     context = {
@@ -1131,18 +1139,21 @@ def preview_view(request, username):
         'profile': profile,
         'uncategorized_count': uncategorized_count,
         'has_uncategorized_projects': has_uncategorized_projects,
+        # Pre-evaluated list with annotated counts — no extra DB queries in templates
+        'project_categories': project_categories,
+        'project_categories_count': len(project_categories),
     }
 
     # Dynamic template selection based on theme
     template_name = 'portfolios/developer/developer_minimal.html'  # Default fallback
     profile = getattr(user, 'profile', None)
-    
+
     if profile and profile.theme:
         category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"
         theme_name = profile.theme.name.lower().replace(" ", "_")
         # Template folder structure: portfolios/category/category_theme.html
         specific_template = f"portfolios/{category}/{category}_{theme_name}.html"
-        
+
         try:
             # Check if template exists
             get_template(specific_template)
@@ -1710,13 +1721,13 @@ def portfolio_reels(request, username):
 
     if not has_active_subscription and profile and profile.is_public:
         profile.is_public = False
-        profile.save()
+        profile.save(update_fields=['is_public'])
 
     if profile and not profile.is_public and request.user != user:
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
     profile.visits += 1
-    profile.save()
+    profile.save(update_fields=['visits'])
 
     category_id = request.GET.get('category_id')
     if category_id:
@@ -1761,13 +1772,13 @@ def portfolio_long_videos(request, username):
 
     if not has_active_subscription and profile and profile.is_public:
         profile.is_public = False
-        profile.save()
+        profile.save(update_fields=['is_public'])
 
     if profile and not profile.is_public and request.user != user:
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
     profile.visits += 1
-    profile.save()
+    profile.save(update_fields=['visits'])
 
     category_id = request.GET.get('category_id')
     if category_id:
@@ -1812,7 +1823,7 @@ def portfolio_video_detail(request, username, slug):
 
     if not has_active_subscription and profile and profile.is_public:
         profile.is_public = False
-        profile.save()
+        profile.save(update_fields=['is_public'])
 
     if profile and not profile.is_public and request.user != user:
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
@@ -2632,7 +2643,7 @@ def portfolio_category_detail(request, username, category_id):
     if not request.session.get(cat_key, False):
         if profile:
             profile.visits += 1
-            profile.save()
+            profile.save(update_fields=['visits'])
         request.session[cat_key] = True
         
     category_slug = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"

@@ -105,3 +105,21 @@
     };
 </script>
 <script src="{% static 'js/sf_analytics.js' %}" defer></script>
+
+<style>
+/* Hide large native play buttons on mobile devices for a perfect reels experience */
+video::-webkit-media-controls {
+    display: none !important;
+}
+video::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    -webkit-appearance: none;
+}
+video::-webkit-media-controls-panel {
+    display: none !important;
+    -webkit-appearance: none;
+}
+video {
+    -webkit-media-controls-enclosure: none !important;
+}
+</style>
