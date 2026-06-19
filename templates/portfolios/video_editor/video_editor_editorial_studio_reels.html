@@ -21,6 +21,8 @@
             --muted: rgba(16, 17, 20, 0.55);
             --display: 'Space Grotesk', sans-serif;
             --body: 'Inter', sans-serif;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bot: env(safe-area-inset-bottom, 0px);
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -220,13 +222,16 @@
                 height: 36px;
             }
             .reel-info {
-                bottom: 80px;
+                bottom: calc(115px + var(--safe-bot));
                 left: 12px;
                 right: 12px;
                 padding: 16px 20px;
                 background: var(--paper);
                 border-radius: 12px;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+            .reel-actions {
+                bottom: calc(130px + var(--safe-bot));
             }
             .reel-title {
                 color: var(--ink);
@@ -390,19 +395,70 @@
                         videoEl.onclick = toggleMute;
                         volIndicator.onclick = toggleMute;
 
-                        videoEl.onerror = () => {
-                            // If direct streaming fails (due to virus scan warning for files > 100MB or rate limiting), fall back to preview iframe
-                            playerEl.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+                        const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+                        let replaced = false;
+
+                        const swapToIframe = (reason) => {
+                            if (replaced) return;
+                            replaced = true;
+                            clearTimeout(stallTimer);
+                            console.warn('[Drive] ' + reason + ' → preview iframe scaled');
+                            playerEl.innerHTML = `
+                                <div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">
+                                    <iframe src="${previewUrl}" 
+                                            style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;" 
+                                            allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>
+                                </div>`;
                         };
+
+                        videoEl.onerror = () => {
+                            swapToIframe('direct stream error');
+                        };
+
+                        videoEl.addEventListener('loadedmetadata', () => {
+                            if (replaced) return;
+                            clearTimeout(stallTimer);
+                        }, { once: true });
+
+                        videoEl.addEventListener('canplay', () => {
+                            // nothing needed, just to be sure
+                        }, { once: true });
+
+                        const stallTimer = setTimeout(() => {
+                            swapToIframe('stall timeout (8 s)');
+                        }, 8000);
                     }
                 } else {
                     if (players[id] && players[id].pauseVideo) players[id].pauseVideo();
                     else if ((ttId || igId || driveId) && playerEl) playerEl.innerHTML = '';
                 }
             });
-        }, { root: container, threshold: 0.75 });
+        }, { root: container, threshold: 0.6 });
 
         document.querySelectorAll('.reel-slide').forEach(s => obs.observe(s));
+
+        /* Keyboard navigation (↑↓ arrows) */
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                var cur = getCurrentSlideIndex();
+                var slides = document.querySelectorAll('.reel-slide');
+                if (cur < slides.length - 1) slides[cur + 1].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                var cur = getCurrentSlideIndex();
+                var slides = document.querySelectorAll('.reel-slide');
+                if (cur > 0) slides[cur - 1].scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        function getCurrentSlideIndex() {
+            var slides = Array.from(document.querySelectorAll('.reel-slide'));
+            var mid = window.innerHeight / 2;
+            for (var i = 0; i < slides.length; i++) {
+                var r = slides[i].getBoundingClientRect();
+                if (r.top <= mid && r.bottom >= mid) return i;
+            }
+            return 0;
+        }
     </script>
 </body>
 </html>

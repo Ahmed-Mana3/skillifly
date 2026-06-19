@@ -1,43 +1,60 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     {% include "seo/portfolio_seo.html" %}
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>{{ personal_info.full_name }} — Reels</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-        :root {
-            --bg:      #04040a;
-            --surface: #0c0c18;
-            --glass:   rgba(255,255,255,0.04);
-            --border:  rgba(255,255,255,0.08);
-            --accent:  #ff3d6b;
-            --accent2: #ff8c00;
-            --text:    #f0f0f8;
-            --dim:     rgba(240,240,248,0.5);
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
+        :root {
+            --bg: #04040a;
+            --surface: #0c0c18;
+            --glass: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #ff3d6b;
+            --accent2: #ff8c00;
+            --text: #f0f0f8;
+            --dim: rgba(240, 240, 248, 0.55);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bot: env(safe-area-inset-bottom, 0px);
+        }
+
+        html,
         body {
+            height: 100%;
+            overflow: hidden;
             background: var(--bg);
             color: var(--text);
             font-family: 'Outfit', sans-serif;
-            overflow: hidden;
         }
 
         /* ─── Noise Overlay ─── */
         body::before {
             content: '';
-            position: fixed; inset: 0;
+            position: fixed;
+            inset: 0;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            pointer-events: none; z-index: 1000; opacity: 0.35;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.35;
         }
 
         /* ─── Reels Container ─── */
@@ -49,7 +66,10 @@
             scrollbar-width: none;
             overscroll-behavior-y: contain;
         }
-        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reels-container::-webkit-scrollbar {
+            display: none;
+        }
 
         .reel-slide {
             height: 100dvh;
@@ -65,283 +85,764 @@
 
         /* ─── Ambient background glow ─── */
         .ambient-glow {
-            position: absolute; inset: -100px;
-            background-size: cover; background-position: center;
+            position: absolute;
+            inset: -100px;
+            background-size: cover;
+            background-position: center;
             filter: blur(90px) brightness(0.25) saturate(1.5);
             opacity: 0.6;
-            z-index: 0; pointer-events: none;
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
 
-        /* Red orb accent for slides without image */
         .ambient-solid {
-            position: absolute; inset: 0;
-            background: radial-gradient(circle at 30% 40%, rgba(255,61,107,0.18), transparent 60%),
-                        radial-gradient(circle at 70% 70%, rgba(255,140,0,0.12), transparent 60%);
-            pointer-events: none; z-index: 0;
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 40%, rgba(255, 61, 107, 0.18), transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(255, 140, 0, 0.12), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         /* ─── Video Wrapper ─── */
         .video-wrapper {
             position: relative;
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             max-width: 440px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
             z-index: 2;
         }
-        @media (max-width: 768px) { .video-wrapper { max-width: 100%; } }
 
         .video-content {
-            width: 100%; height: 100%;
-            position: relative; z-index: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
         }
+
         .video-content iframe {
-            width: 100%; height: 100%;
-            border: none; pointer-events: auto;
+            width: 100%;
+            height: 100%;
+            border: none;
+            pointer-events: auto;
+            display: block;
         }
-        .video-content video { width: 100%; height: 100%; object-fit: cover; background: #000; }
-        .video-content video::-webkit-media-controls { display: none !important; }
-        .video-content video::-webkit-media-controls-start-playback-button { display: none !important; }
-        .video-content video::-webkit-media-controls-panel { display: none !important; }
-        .video-content video::-webkit-media-controls-overlay-play-button { display: none !important; }
 
-        /* Loading shimmer */
+        .video-content video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+            display: block;
+        }
+
+        /* Hide all native browser controls */
+        .video-content video::-webkit-media-controls,
+        .video-content video::-webkit-media-controls-panel,
+        .video-content video::-webkit-media-controls-start-playback-button,
+        .video-content video::-webkit-media-controls-overlay-play-button {
+            display: none !important;
+        }
+
+        /* ─── Loading Shimmer ─── */
         .loading-shimmer {
-            position: absolute; inset: 0;
-            background: linear-gradient(90deg, #0a0a18 25%, #12122a 50%, #0a0a18 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer {
-            0%   { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            background: linear-gradient(135deg, #060612 0%, #0e0e24 40%, #060612 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
         }
 
-        /* ─── UI Overlays ─── */
-        /* Bottom info */
+        .shimmer-ring {
+            width: 52px;
+            height: 52px;
+            border: 3px solid rgba(255, 61, 107, 0.15);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .shimmer-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--dim);
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── Tap Ring (play/pause feedback) ─── */
+        .tap-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            transition: transform 0.18s ease, opacity 0.28s ease;
+        }
+
+        .tap-ring.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .tap-ring.hide {
+            transform: translate(-50%, -50%) scale(1.25);
+            opacity: 0;
+        }
+
+        /* ─── Custom Drive Controls ─── */
+        /* Controls live at the very bottom of the video wrapper,
+           BELOW the reel-overlay which is positioned on the .reel-slide */
+        .drive-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 15;
+            padding: 20px 12px 8px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .drive-controls.vis {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drive-progress-wrap {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 3px;
+            cursor: pointer;
+            margin-bottom: 7px;
+            position: relative;
+        }
+
+        .drive-progress-wrap::before {
+            content: '';
+            position: absolute;
+            inset: -6px 0;
+        }
+
+        .drive-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        .drive-progress-thumb {
+            position: absolute;
+            top: 50%;
+            right: -1%;
+            transform: translate(50%, -50%);
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 5px rgba(255, 61, 107, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .drive-controls.vis .drive-progress-thumb {
+            opacity: 1;
+        }
+
+        .drive-btns {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .drive-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .drive-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .drive-btn:active {
+            transform: scale(0.9);
+        }
+
+        .drive-time {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.03em;
+        }
+
+        .drive-fs-btn {
+            margin-left: auto;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            transition: background 0.2s;
+        }
+
+        .drive-fs-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ─── Reel Info Overlay ─── */
+        /* Positioned on the .reel-slide so it sits ABOVE the video-wrapper's drive controls */
         .reel-overlay {
             position: absolute;
-            bottom: 32px; left: 20px; right: 80px;
-            z-index: 20; pointer-events: none;
+            bottom: calc(32px + var(--safe-bot));
+            left: 20px;
+            right: 80px;
+            z-index: 20;
+            pointer-events: none;
         }
+
         .reel-title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.6rem; letter-spacing: 0.05em;
-            margin-bottom: 6px;
-            text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+            font-size: 1.6rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 16px rgba(0, 0, 0, 0.85);
             line-height: 1.1;
         }
+
         .reel-desc {
-            font-size: 0.85rem; color: var(--dim);
-            line-height: 1.45; max-height: 55px;
+            font-size: 0.82rem;
+            color: var(--dim);
+            line-height: 1.5;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
         }
 
-        /* Request btn */
         .reel-cta {
-            display: inline-flex; align-items: center; gap: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
             color: #fff;
-            padding: 11px 22px; border-radius: 4px;
-            font-weight: 700; font-size: 0.78rem;
-            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.76rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
             text-decoration: none;
-            margin-top: 14px; pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(255,61,107,0.3);
+            margin-top: 12px;
+            pointer-events: auto;
+            box-shadow: 0 8px 26px rgba(255, 61, 107, 0.28);
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        .reel-cta:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(255,61,107,0.5); }
+
+        .reel-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 36px rgba(255, 61, 107, 0.5);
+        }
 
         /* Right action buttons */
         .reel-actions {
             position: absolute;
-            right: 18px; bottom: 110px;
+            right: 16px;
+            bottom: calc(110px + var(--safe-bot));
             z-index: 20;
-            display: flex; flex-direction: column; gap: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
         }
-        .action-btn {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.12);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; pointer-events: auto;
-            transition: transform 0.2s, background 0.2s;
-            color: var(--text); text-decoration: none;
-        }
-        .action-btn:hover { transform: scale(1.12); background: rgba(255,61,107,0.3); border-color: var(--accent); }
 
-        /* Progress dots */
+        .action-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.2s, background 0.2s, border-color 0.2s;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.12);
+            background: rgba(255, 61, 107, 0.3);
+            border-color: var(--accent);
+        }
+
+        /* ─── Progress Dots (desktop sidebar) ─── */
         .progress-dots {
             position: fixed;
-            right: 20px; top: 50%;
+            right: 8px;
+            top: 50%;
             transform: translateY(-50%);
             z-index: 100;
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 4px;
         }
+
         .dot {
-            width: 4px; border-radius: 2px;
-            background: rgba(255,255,255,0.2);
-            transition: height 0.3s, background 0.3s;
+            width: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: height 0.3s cubic-bezier(.34, 1.56, .64, 1), background 0.3s;
             height: 4px;
         }
+
         .dot.active {
-            background: var(--accent); height: 20px;
+            background: var(--accent);
+            height: 22px;
         }
 
         /* ─── Fixed Top Nav ─── */
         .top-nav {
             position: fixed;
-            top: 20px; left: 50%; transform: translateX(-50%);
+            top: calc(16px + var(--safe-top));
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 100;
-            display: flex; gap: 6px; align-items: center;
-            background: rgba(4,4,10,0.7);
-            backdrop-filter: blur(16px);
-            padding: 8px 16px; border-radius: 100px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            background: rgba(4, 4, 10, 0.75);
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            padding: 6px 12px;
+            border-radius: 100px;
             border: 1px solid var(--border);
+            white-space: nowrap;
         }
+
         .nav-link {
-            text-decoration: none; color: var(--dim);
-            font-size: 0.72rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.15em;
-            padding: 6px 14px; border-radius: 100px;
-            transition: color 0.3s, background 0.3s;
+            text-decoration: none;
+            color: var(--dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 6px 12px;
+            border-radius: 100px;
+            transition: color 0.25s, background 0.25s;
         }
-        .nav-link:hover { color: var(--text); }
-        .nav-link.active { color: var(--accent); background: rgba(255,61,107,0.12); }
+
+        .nav-link:hover {
+            color: var(--text);
+        }
+
+        .nav-link.active {
+            color: var(--accent);
+            background: rgba(255, 61, 107, 0.12);
+        }
+
+        .nav-sep {
+            width: 1px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.12);
+        }
 
         .close-btn {
             position: fixed;
-            top: 22px; left: 22px;
-            z-index: 100;
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(4,4,10,0.7);
+            top: calc(18px + var(--safe-top));
+            left: 18px;
+            z-index: 101;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(4, 4, 10, 0.75);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            text-decoration: none; color: var(--text);
-            font-size: 1.1rem;
-            transition: border-color 0.3s, background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--dim);
+            transition: border-color 0.25s, color 0.25s, background 0.25s;
         }
-        .close-btn:hover { border-color: var(--accent); background: rgba(255,61,107,0.15); color: var(--accent); }
+
+        .close-btn:hover {
+            border-color: var(--accent);
+            background: rgba(255, 61, 107, 0.15);
+            color: var(--accent);
+        }
+
+        /* ─── Slide Counter (mobile) ─── */
+        .slide-counter {
+            position: fixed;
+            bottom: calc(20px + var(--safe-bot));
+            right: 20px;
+            z-index: 90;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--dim);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ─── Swipe Hint ─── */
+        .swipe-hint {
+            position: fixed;
+            bottom: calc(44px + var(--safe-bot));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            animation: hintFade 3.5s ease forwards;
+            pointer-events: none;
+        }
+
+        .swipe-hint-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .swipe-hint-arrow span {
+            display: block;
+            width: 2px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 1px;
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+
+        .swipe-hint-arrow span:nth-child(2) {
+            animation-delay: 0.15s;
+            opacity: 0.65;
+        }
+
+        .swipe-hint-arrow span:nth-child(3) {
+            animation-delay: 0.3s;
+            opacity: 0.35;
+        }
+
+        .swipe-hint-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        @keyframes hintFade {
+            0% {
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            75% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(-3px);
+            }
+
+            50% {
+                transform: translateY(3px);
+            }
+        }
 
         /* ─── Contact Slide ─── */
         .contact-slide-inner {
             text-align: center;
-            padding: 40px 32px;
-            max-width: 500px; width: 100%;
+            padding: 48px 32px calc(48px + var(--safe-bot));
+            max-width: 500px;
+            width: 100%;
             pointer-events: auto;
-            z-index: 10; position: relative;
+            z-index: 10;
+            position: relative;
         }
+
         .contact-big {
             font-family: 'Bebas Neue', sans-serif;
             font-size: clamp(3rem, 8vw, 5rem);
-            line-height: 0.9; letter-spacing: 0.03em;
+            line-height: 0.9;
+            letter-spacing: 0.03em;
             margin-bottom: 40px;
         }
+
         .contact-big .grad {
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .contact-list { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
-        .c-item { display: flex; flex-direction: column; gap: 4px; }
+
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            margin-bottom: 36px;
+        }
+
+        .c-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         .c-label {
-            font-size: 0.62rem; letter-spacing: 0.35em;
-            text-transform: uppercase; color: var(--accent); font-weight: 700;
+            font-size: 0.6rem;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
         }
+
         .c-val {
-            font-size: 1.05rem; font-weight: 700;
-            color: var(--text); text-decoration: none;
-            transition: color 0.3s; word-break: break-all;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.25s;
+            word-break: break-all;
         }
-        .c-val:hover { color: var(--accent); }
+
+        .c-val:hover {
+            color: var(--accent);
+        }
+
         .social-row {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-            margin-bottom: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 36px;
         }
+
         .social-chip {
-            background: var(--glass); border: 1px solid var(--border);
-            padding: 9px 18px; border-radius: 100px;
-            color: var(--text); text-decoration: none;
-            font-size: 0.78rem; font-weight: 600;
-            transition: border-color 0.3s, background 0.3s, color 0.3s;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 100px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.76rem;
+            font-weight: 600;
+            transition: border-color 0.25s, background 0.25s, color 0.25s;
         }
-        .social-chip:hover { background: rgba(255,61,107,0.15); border-color: var(--accent); color: var(--accent); }
+
+        .social-chip:hover {
+            background: rgba(255, 61, 107, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .contact-big-cta {
-            display: inline-flex; align-items: center; gap: 14px;
-            padding: 18px 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 36px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff; font-weight: 800; font-size: 0.95rem;
-            letter-spacing: 0.1em; text-transform: uppercase;
-            text-decoration: none; border-radius: 6px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 6px;
             transition: transform 0.3s, box-shadow 0.3s;
         }
-        .contact-big-cta:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(255,61,107,0.5); }
+
+        .contact-big-cta:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(255, 61, 107, 0.5);
+        }
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
-            .video-wrapper { max-width: 100%; height: 100dvh; }
-            .reel-overlay { bottom: 100px; left: 16px; right: 72px; }
-            .reel-actions { right: 12px; bottom: 120px; }
-            .progress-dots { display: none; }
+            .video-wrapper {
+                max-width: 100%;
+                height: 100dvh;
+            }
+
+            .reel-overlay {
+                bottom: calc(115px + var(--safe-bot));
+                left: 14px;
+                right: 66px;
+            }
+
+            .reel-actions {
+                right: 8px;
+                bottom: calc(130px + var(--safe-bot));
+                gap: 12px;
+            }
+
+            .progress-dots {
+                display: none;
+            }
+
+            .top-nav {
+                max-width: calc(100vw - 72px);
+            }
         }
 
         @media (min-width: 769px) {
-            /* Desktop: constrained width, desktop feel */
-            .video-wrapper { max-width: 440px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+            .video-wrapper {
+                max-width: 440px;
+                border-left: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+            }
+
+            .slide-counter {
+                display: none;
+            }
+
+            .swipe-hint {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- Close / Back -->
     <a href="/{{ personal_info.user.username }}/" class="close-btn" title="Back to Portfolio">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
     </a>
 
     <!-- Top Nav -->
     <nav class="top-nav">
         <a href="/{{ username }}/reels/" class="nav-link active">Reels</a>
+        <span class="nav-sep"></span>
         <a href="/{{ username }}/long-videos/" class="nav-link">Work</a>
-        <a href="#contactSlide" class="nav-link">Contact</a>
+        <span class="nav-sep"></span>
+        <a href="#" class="nav-link" id="contactNavLink">Contact</a>
     </nav>
 
-    <!-- Progress Dots -->
+    <!-- Progress Dots (desktop) -->
     <div class="progress-dots" id="progressDots">
         {% for project in projects %}
         <div class="dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}"></div>
         {% endfor %}
-        <div class="dot" data-index="{{ projects|length }}"></div><!-- contact dot -->
+        <div class="dot" data-index="{{ projects|length }}"></div>
+    </div>
+
+    <!-- Slide Counter (mobile) -->
+    <div class="slide-counter" id="slideCounter">1 / {{ projects|length|add:1 }}</div>
+
+    <!-- Swipe Hint (mobile, auto-fades after 3.5 s) -->
+    <div class="swipe-hint" id="swipeHint">
+        <div class="swipe-hint-arrow">
+            <span></span><span></span><span></span>
+        </div>
+        <span class="swipe-hint-label">Swipe up</span>
     </div>
 
     <!-- Reels Container -->
     <div class="reels-container" id="reelsContainer">
 
         {% for project in projects %}
-        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
+        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}"
+            data-index="{{ forloop.counter0 }}">
             <div class="ambient-glow" id="glow-{{ project.id }}"></div>
             <div class="ambient-solid"></div>
 
             <div class="video-wrapper">
-                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer" id="shimmer-{{ project.id }}">
+                    <div class="shimmer-ring"></div>
+                    <span class="shimmer-label">Loading</span>
+                </div>
                 <div id="player-{{ project.id }}" class="video-content"></div>
             </div>
 
-            <!-- Info Overlay -->
+            <!-- Info Overlay (sits above drive controls thanks to bottom offset) -->
             <div class="reel-overlay">
                 <h3 class="reel-title">{{ project.title }}</h3>
+                {% if project.description %}
+                <p class="reel-desc">{{ project.description }}</p>
+                {% endif %}
                 {% if personal_info.booking_url %}
                 <a href="{{ personal_info.booking_url }}" class="reel-cta" target="_blank" rel="noopener">
                     Request Similar Reel
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M17 8l4 4-4 4M3 12h18" />
+                    </svg>
                 </a>
                 {% elif personal_info.email %}
                 <a href="mailto:{{ personal_info.email }}" class="reel-cta">
                     Request Similar Reel
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M17 8l4 4-4 4M3 12h18" />
+                    </svg>
                 </a>
                 {% endif %}
             </div>
@@ -349,14 +850,17 @@
             <!-- Action Buttons -->
             <div class="reel-actions">
                 {% if project.url %}
-                <a href="{{ project.url }}" target="_blank" class="action-btn" title="Open on source">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                <a href="{{ project.url }}" target="_blank" class="action-btn" title="Open original">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                    </svg>
                 </a>
                 {% endif %}
             </div>
         </div>
         {% empty %}
         <div class="reel-slide">
+            <div class="ambient-solid"></div>
             <div class="contact-slide-inner">
                 <p style="color:var(--dim); font-size:1rem;">No reels added yet.</p>
             </div>
@@ -370,7 +874,6 @@
                 <div class="contact-big">
                     LET'S<br>CREATE<br><span class="grad">MAGIC.</span>
                 </div>
-
                 <div class="contact-list">
                     {% if personal_info.email %}
                     <div class="c-item">
@@ -385,7 +888,6 @@
                     </div>
                     {% endif %}
                 </div>
-
                 {% if links %}
                 <div class="social-row">
                     {% for link in links %}
@@ -393,16 +895,21 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-
                 {% if personal_info.booking_url %}
                 <a href="{{ personal_info.booking_url }}" class="contact-big-cta" target="_blank" rel="noopener">
                     Get In Touch
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M17 8l4 4-4 4M3 12h18" />
+                    </svg>
                 </a>
                 {% elif personal_info.email %}
                 <a href="mailto:{{ personal_info.email }}" class="contact-big-cta">
                     Get In Touch
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M17 8l4 4-4 4M3 12h18" />
+                    </svg>
                 </a>
                 {% endif %}
             </div>
@@ -410,142 +917,384 @@
 
     </div><!-- /reels-container -->
 
+    <!-- YouTube IFrame API — must load before our script -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        const players = {};
-
-        function onYouTubeIframeAPIReady() { /* YT API Ready */ }
-
-        function getYouTubeId(url) {
-            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
-            return (m && m[2].length === 11) ? m[2] : null;
-        }
-        function getTikTokId(url) {
-            const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
-            return m ? m[1] : null;
-        }
-        function getInstagramId(url) {
-            const m = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
-            return m ? m[1] : null;
+        /* ─────────────────────────────────────────────────────────
+           onYouTubeIframeAPIReady MUST be a global function
+           so the YT API can call it after async load.
+        ───────────────────────────────────────────────────────── */
+        var _ytReadyQueue = [];
+        function onYouTubeIframeAPIReady() {
+            _ytReadyQueue.forEach(function (fn) { fn(); });
+            _ytReadyQueue = [];
         }
 
-        /* ─── IntersectionObserver for lazy-load + autoplay ─── */
-        const container = document.getElementById('reelsContainer');
-        const dots      = document.querySelectorAll('.dot');
+        (function () {
+            'use strict';
 
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const slide = entry.target;
-                const id    = slide.dataset.projectId;
-                const url   = slide.dataset.url || '';
-                const idx   = parseInt(slide.dataset.index ?? -1, 10);
+            /* ══════════════════════════════════════════════
+               URL PARSERS
+            ══════════════════════════════════════════════ */
+            function getYouTubeId(url) {
+                if (!url) return null;
+                const m = url.match(/^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+                return (m && m[2].length === 11) ? m[2] : null;
+            }
+            function getTikTokId(url) {
+                if (!url) return null;
+                const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+                return m ? m[1] : null;
+            }
+            function getInstagramId(url) {
+                if (!url) return null;
+                const m = url.match(/instagram\.com\/(?:reels?|p)\/([^/?#&]+)/);
+                return m ? m[1] : null;
+            }
+            function getDriveId(url) {
+                if (!url) return null;
+                // /file/d/<id>/...
+                let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]{25,})/);
+                if (m) return m[1];
+                // ?id=<id> or &id=<id>
+                m = url.match(/[?&]id=([a-zA-Z0-9_-]{25,})/);
+                if (m) return m[1];
+                return null;
+            }
 
-                const playerEl = id ? document.getElementById(`player-${id}`) : null;
-                const shimmer  = slide.querySelector('.loading-shimmer');
-                const glow     = id ? document.getElementById(`glow-${id}`) : null;
+            /* ══════════════════════════════════════════════
+               YOUTUBE PLAYER
+            ══════════════════════════════════════════════ */
+            const ytPlayers = {};
 
-                const ytId  = getYouTubeId(url);
-                const ttId  = getTikTokId(url);
-                const igId  = getInstagramId(url);
-                const driveId = getDriveId(url);
-
-                if (entry.isIntersecting) {
-                    // Activate dot
-                    dots.forEach(d => d.classList.remove('active'));
-                    if (idx >= 0 && dots[idx]) dots[idx].classList.add('active');
-
-                    if (!id || !playerEl) return;
-
-                    if (ytId) {
-                        if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
-                        if (!players[id]) {
-                            players[id] = new YT.Player(`player-${id}`, {
-                                height: '100%', width: '100%', videoId: ytId,
-                                playerVars: { autoplay:1, mute:1, loop:1, playlist:ytId, controls:1, modestbranding:1, rel:0, origin:window.location.origin },
-                                events: { onReady(e) { e.target.playVideo(); if (shimmer) shimmer.style.display = 'none'; } }
-                            });
-                        } else if (players[id].playVideo) { players[id].playVideo(); }
-                    } else if (ttId) {
-                        playerEl.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
-                        if (shimmer) shimmer.style.display = 'none';
-                    } else if (igId) {
-                        playerEl.innerHTML = `<iframe src="https://www.instagram.com/p/${igId}/embed/" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen></iframe>`;
-                        if (shimmer) shimmer.style.display = 'none';
-                    } else if (driveId) {
-                        // Try loading direct stream link in HTML5 video tag for perfect reels presentation
-                        const directUrl = `https://drive.google.com/uc?export=download&confirm=t&id=${driveId}`;
-                        playerEl.innerHTML = `
-                            <div style="position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-                                <video src="${directUrl}" style="width:100%; height:100%; object-fit:contain; background:#000;" 
-                                       autoplay muted loop playsinline></video>
-                                <div class="mute-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.9); background:rgba(0,0,0,0.6); border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index:10;">
-                                    <svg class="mute-icon" style="width:30px; height:30px; fill:#fff;" viewBox="0 0 24 24">
-                                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>
-                                    </svg>
-                                </div>
-                                <div class="vol-indicator" style="position:absolute; bottom:15px; right:15px; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.15); z-index:10; cursor:pointer;">
-                                    <svg class="vol-indicator-icon" style="width:18px; height:18px; fill:#fff;" viewBox="0 0 24 24">
-                                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        `;
-                        const videoEl = playerEl.querySelector('video');
-                        const muteOverlay = playerEl.querySelector('.mute-overlay');
-                        const muteIcon = playerEl.querySelector('.mute-icon');
-                        const volIndicator = playerEl.querySelector('.vol-indicator');
-                        const volIndicatorIcon = playerEl.querySelector('.vol-indicator-icon');
-
-                        const mutePath = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>';
-                        const soundPath = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
-
-                        const toggleMute = (e) => {
-                            if (e) e.stopPropagation();
-                            videoEl.muted = !videoEl.muted;
-                            if (videoEl.paused) videoEl.play();
-                            
-                            const path = videoEl.muted ? mutePath : soundPath;
-                            muteIcon.innerHTML = path;
-                            volIndicatorIcon.innerHTML = path;
-                            
-                            muteOverlay.style.opacity = '1';
-                            muteOverlay.style.transform = 'translate(-50%, -50%) scale(1.1)';
-                            setTimeout(() => {
-                                muteOverlay.style.opacity = '0';
-                                muteOverlay.style.transform = 'translate(-50%, -50%) scale(0.9)';
-                            }, 500);
-                        };
-
-                        videoEl.onclick = toggleMute;
-                        volIndicator.onclick = toggleMute;
-
-                        videoEl.onerror = () => {
-                            // If direct streaming fails (due to virus scan warning for files > 100MB or rate limiting), fall back to preview iframe
-                            playerEl.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
-                        };
-                        if (shimmer) shimmer.style.display = 'none';
+            function loadYouTube(ytId, projectId, shimmer) {
+                function init() {
+                    if (ytPlayers[projectId]) {
+                        try { ytPlayers[projectId].playVideo(); } catch (e) { }
+                        return;
                     }
-                } else {
-                    if (players[id] && players[id].pauseVideo) {
-                        players[id].pauseVideo();
-                    } else if ((ttId || igId || driveId) && playerEl) {
-                        playerEl.innerHTML = '';
-                        if (shimmer) shimmer.style.display = 'block';
+                    ytPlayers[projectId] = new YT.Player('player-' + projectId, {
+                        height: '100%', width: '100%', videoId: ytId,
+                        playerVars: {
+                            autoplay: 1, mute: 1, loop: 1, playlist: ytId,
+                            controls: 1, modestbranding: 1, rel: 0,
+                            origin: window.location.origin, playsinline: 1,
+                        },
+                        events: {
+                            onReady: function (e) {
+                                e.target.playVideo();
+                                if (shimmer) shimmer.style.display = 'none';
+                            }
+                        }
+                    });
+                }
+                // YT API may not be ready yet; queue if needed
+                if (window.YT && window.YT.Player) { init(); }
+                else { _ytReadyQueue.push(init); }
+            }
+
+            /* ══════════════════════════════════════════════
+               GOOGLE DRIVE PLAYER
+            ══════════════════════════════════════════════ */
+            function formatTime(sec) {
+                if (!isFinite(sec) || sec < 0) return '0:00';
+                const m = Math.floor(sec / 60);
+                const s = Math.floor(sec % 60).toString().padStart(2, '0');
+                return m + ':' + s;
+            }
+
+            function buildDrivePlayer(playerEl, shimmer, driveId) {
+                // Guard flag — prevents stall timer AND error event from both replacing innerHTML
+                let replaced = false;
+
+                const directUrl = 'https://drive.google.com/uc?export=download&confirm=t&id=' + driveId;
+                const previewUrl = 'https://drive.google.com/file/d/' + driveId + '/preview';
+                const pid = playerEl.id;
+
+                // Build the custom player DOM
+                playerEl.innerHTML =
+                    '<div style="position:relative;width:100%;height:100%;background:#000;" id="dw-' + pid + '">' +
+                    '<video id="dv-' + pid + '" playsinline muted loop preload="metadata"' +
+                    ' style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;"></video>' +
+                    '<div class="tap-ring" id="tr-' + pid + '">' +
+                    '<svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>' +
+                    '</div>' +
+                    '<div class="drive-controls" id="dc-' + pid + '">' +
+                    '<div class="drive-btns">' +
+                    '<button class="drive-btn" id="dplay-' + pid + '" title="Play/Pause" aria-label="Play/Pause">' +
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="white" id="dpi-' + pid + '"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>' +
+                    '</button>' +
+                    '<button class="drive-fs-btn" id="dfs-' + pid + '" title="Fullscreen" aria-label="Fullscreen">' +
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>' +
+                    '</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+
+                // ── Grab refs ──
+                const vid = document.getElementById('dv-' + pid);
+                const ctrl = document.getElementById('dc-' + pid);
+                const playBtn = document.getElementById('dplay-' + pid);
+                const playIcon = document.getElementById('dpi-' + pid);
+                const fsBtn = document.getElementById('dfs-' + pid);
+                const tapRing = document.getElementById('tr-' + pid);
+                const wrap = document.getElementById('dw-' + pid);
+
+                const PATH = {
+                    play: '<path d="M8 5v14l11-7z"/>',
+                    pause: '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>',
+                    mute: '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>',
+                    sound: '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
+                };
+
+                let ctrlTimer = null;
+                let isLoaded = false;
+
+                // ── Show / hide controls ──
+                function showCtrl(autoHide) {
+                    ctrl.classList.add('vis');
+                    clearTimeout(ctrlTimer);
+                    if (autoHide !== false) {
+                        ctrlTimer = setTimeout(function () {
+                            if (!vid.paused) ctrl.classList.remove('vis');
+                        }, 2800);
                     }
                 }
-            });
-        }, { root: container, threshold: 0.75 });
 
-        document.querySelectorAll('.reel-slide').forEach(s => obs.observe(s));
+                // ── Icon helpers ──
+                function syncPlayIcon() { playIcon.innerHTML = vid.paused ? PATH.play : PATH.pause; }
 
-        /* ─── Dot click to jump ─── */
-        dots.forEach((dot, i) => {
-            dot.style.cursor = 'pointer';
-            dot.addEventListener('click', () => {
-                const slides = document.querySelectorAll('.reel-slide');
-                if (slides[i]) slides[i].scrollIntoView({ behavior: 'smooth' });
+                // ── Tap ring (play/pause centre feedback) ──
+                function flashRing(isPlaying) {
+                    tapRing.querySelector('svg').innerHTML = isPlaying ? PATH.play : PATH.pause;
+                    tapRing.classList.remove('hide');
+                    tapRing.classList.add('show');
+                    setTimeout(function () {
+                        tapRing.classList.remove('show');
+                        tapRing.classList.add('hide');
+                        setTimeout(function () { tapRing.classList.remove('hide'); }, 300);
+                    }, 380);
+                }
+
+
+
+                // ── Event listeners ──
+                vid.addEventListener('click', function () {
+                    if (vid.paused) { vid.play(); flashRing(true); }
+                    else { vid.pause(); flashRing(false); }
+                    syncPlayIcon();
+                    showCtrl();
+                });
+
+                wrap.addEventListener('touchstart', function () { showCtrl(); }, { passive: true });
+                wrap.addEventListener('mousemove', function () { showCtrl(); });
+
+                playBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (vid.paused) { vid.play(); } else { vid.pause(); }
+                    syncPlayIcon(); showCtrl();
+                });
+
+
+
+                // Fullscreen
+                fsBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen && document.exitFullscreen();
+                    } else {
+                        var el = wrap;
+                        (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || function () { })
+                            .call(el);
+                    }
+                    showCtrl();
+                });
+
+
+                vid.addEventListener('play', function () { syncPlayIcon(); });
+                vid.addEventListener('pause', function () { syncPlayIcon(); showCtrl(false); });
+                vid.addEventListener('ended', function () { syncPlayIcon(); });
+
+                // ── Helper: swap to iframe fallback safely ──
+                function swapToIframe(reason) {
+                    if (replaced) return; // prevent double-replace
+                    replaced = true;
+                    clearTimeout(stallTimer);
+                    console.warn('[Drive] ' + reason + ' → preview iframe cropped');
+                    playerEl.innerHTML =
+                        '<div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">' +
+                        '<iframe src="' + previewUrl + '"' +
+                        ' style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;"' +
+                        ' allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer">' +
+                        '</iframe>' +
+                        '</div>';
+                    if (shimmer) shimmer.style.display = 'none';
+                }
+
+                // ── Load video source ──
+                vid.src = directUrl;
+                vid.load();
+
+                // Success path
+                vid.addEventListener('loadedmetadata', function () {
+                    if (replaced) return;
+                    isLoaded = true;
+                    clearTimeout(stallTimer);
+                    if (shimmer) shimmer.style.display = 'none';
+                    vid.play().catch(function () { });
+                    syncPlayIcon();
+                    showCtrl();
+                }, { once: true });
+
+                vid.addEventListener('canplay', function () {
+                    if (shimmer && !replaced) shimmer.style.display = 'none';
+                }, { once: true });
+
+                // Error path (e.g. quota exceeded, CORS, private file)
+                vid.addEventListener('error', function () {
+                    swapToIframe('direct stream error');
+                }, { once: true });
+
+                // Stall detection: no metadata within 8 s → fall back
+                var stallTimer = setTimeout(function () {
+                    swapToIframe('stall timeout (8 s)');
+                }, 8000);
+            }
+
+            /* ══════════════════════════════════════════════
+               INTERSECTION OBSERVER — Lazy load + autoplay
+            ══════════════════════════════════════════════ */
+            const container = document.getElementById('reelsContainer');
+            const dots = document.querySelectorAll('.dot');
+            const counter = document.getElementById('slideCounter');
+            const totalSlides = dots.length;
+
+            function updateCounter(idx) {
+                if (counter) counter.textContent = (idx + 1) + ' / ' + totalSlides;
+            }
+
+            // Prevent double-init per slide
+            const loaded = new Set();
+
+            const obs = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    const slide = entry.target;
+                    const projectId = slide.dataset.projectId;
+                    const url = slide.dataset.url || '';
+                    const idx = parseInt(slide.dataset.index != null ? slide.dataset.index : -1, 10);
+
+                    const playerEl = projectId ? document.getElementById('player-' + projectId) : null;
+                    const shimmer = projectId ? document.getElementById('shimmer-' + projectId) : null;
+                    const glow = projectId ? document.getElementById('glow-' + projectId) : null;
+
+                    const ytId = getYouTubeId(url);
+                    const ttId = getTikTokId(url);
+                    const igId = getInstagramId(url);
+                    const driveId = getDriveId(url);
+
+                    if (entry.isIntersecting) {
+                        // Update nav indicators
+                        dots.forEach(function (d) { d.classList.remove('active'); });
+                        if (idx >= 0 && dots[idx]) dots[idx].classList.add('active');
+                        updateCounter(idx >= 0 ? idx : totalSlides - 1);
+
+                        if (!projectId || !playerEl) return;
+
+                        if (loaded.has(projectId)) {
+                            // Already initialized — just resume
+                            if (ytId && ytPlayers[projectId]) {
+                                try { ytPlayers[projectId].playVideo(); } catch (e) { }
+                            } else {
+                                const v = playerEl.querySelector('video');
+                                if (v && v.paused) v.play().catch(function () { });
+                            }
+                            return;
+                        }
+                        loaded.add(projectId);
+
+                        if (ytId) {
+                            if (glow) glow.style.backgroundImage =
+                                'url(https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg)';
+                            loadYouTube(ytId, projectId, shimmer);
+
+                        } else if (ttId) {
+                            playerEl.innerHTML =
+                                '<iframe src="https://www.tiktok.com/embed/v2/' + ttId + '"' +
+                                ' style="width:100%;height:100%;border:none;"' +
+                                ' allow="autoplay;fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>';
+                            if (shimmer) shimmer.style.display = 'none';
+
+                        } else if (igId) {
+                            playerEl.innerHTML =
+                                '<iframe src="https://www.instagram.com/p/' + igId + '/embed/"' +
+                                ' style="width:100%;height:100%;border:none;"' +
+                                ' allow="autoplay;fullscreen" allowfullscreen></iframe>';
+                            if (shimmer) shimmer.style.display = 'none';
+
+                        } else if (driveId) {
+                            buildDrivePlayer(playerEl, shimmer, driveId);
+
+                        } else {
+                            if (shimmer) shimmer.style.display = 'none';
+                        }
+
+                    } else {
+                        // Pause on exit
+                        if (ytId && ytPlayers[projectId]) {
+                            try { ytPlayers[projectId].pauseVideo(); } catch (e) { }
+                        } else if (playerEl) {
+                            const v = playerEl.querySelector('video');
+                            if (v && !v.paused) v.pause();
+                        }
+                    }
+                });
+            }, { root: container, threshold: 0.6 });
+
+            document.querySelectorAll('.reel-slide').forEach(function (s) { obs.observe(s); });
+
+            /* ── Dot click: jump to slide ── */
+            dots.forEach(function (dot, i) {
+                dot.addEventListener('click', function () {
+                    const slides = document.querySelectorAll('.reel-slide');
+                    if (slides[i]) slides[i].scrollIntoView({ behavior: 'smooth' });
+                });
             });
-        });
+
+            /* ── Contact nav link ── */
+            var contactNavLink = document.getElementById('contactNavLink');
+            if (contactNavLink) {
+                contactNavLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var cs = document.getElementById('contactSlide');
+                    if (cs) cs.scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+
+            /* ── Keyboard navigation (↑↓ arrows) ── */
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                    var cur = getCurrentSlideIndex();
+                    var slides = document.querySelectorAll('.reel-slide');
+                    if (cur < slides.length - 1) slides[cur + 1].scrollIntoView({ behavior: 'smooth' });
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                    var cur = getCurrentSlideIndex();
+                    var slides = document.querySelectorAll('.reel-slide');
+                    if (cur > 0) slides[cur - 1].scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+
+            function getCurrentSlideIndex() {
+                var slides = Array.from(document.querySelectorAll('.reel-slide'));
+                var mid = window.innerHeight / 2;
+                for (var i = 0; i < slides.length; i++) {
+                    var r = slides[i].getBoundingClientRect();
+                    if (r.top <= mid && r.bottom >= mid) return i;
+                }
+                return 0;
+            }
+
+        })();
     </script>
 </body>
+
 </html>

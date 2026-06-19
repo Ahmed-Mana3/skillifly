@@ -17,6 +17,8 @@
             --text: #ffffff;
             --text-dim: rgba(255, 255, 255, 0.6);
             --primary: #00d9ff;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bot: env(safe-area-inset-bottom, 0px);
         }
 
         * {
@@ -272,8 +274,8 @@
                 max-width: 100%; 
                 height: 100dvh;
             }
-            .reel-overlay { bottom: 100px; right: 60px; }
-            .reel-actions { bottom: 120px; right: 15px; }
+            .reel-overlay { bottom: calc(115px + var(--safe-bot)); right: 60px; }
+            .reel-actions { bottom: calc(130px + var(--safe-bot)); right: 15px; }
             .request-btn {
                 padding: 10px 14px;
                 font-size: 0.75rem;
@@ -379,7 +381,6 @@
 
             <div class="reel-overlay">
                 <h3 class="reel-title">{{ project.title }}</h3>
-                {% endif %}
                 {% if personal_info.booking_url %}
                 <a href="{{ personal_info.booking_url }}" class="request-btn" target="_blank" rel="noopener">
                     Request Similar Work
@@ -567,11 +568,40 @@
                         videoEl.onclick = toggleMute;
                         volIndicator.onclick = toggleMute;
 
-                        videoEl.onerror = () => {
-                            // If direct streaming fails (due to virus scan warning for files > 100MB or rate limiting), fall back to preview iframe
-                            playerContainer.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+                        const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+                        let replaced = false;
+
+                        const swapToIframe = (reason) => {
+                            if (replaced) return;
+                            replaced = true;
+                            clearTimeout(stallTimer);
+                            console.warn('[Drive] ' + reason + ' → preview iframe scaled');
+                            playerContainer.innerHTML = `
+                                <div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">
+                                    <iframe src="${previewUrl}" 
+                                            style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;" 
+                                            allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>
+                                </div>`;
+                            if (shimmer) shimmer.style.display = 'none';
                         };
-                        if (shimmer) shimmer.style.display = 'none';
+
+                        videoEl.onerror = () => {
+                            swapToIframe('direct stream error');
+                        };
+
+                        videoEl.addEventListener('loadedmetadata', () => {
+                            if (replaced) return;
+                            clearTimeout(stallTimer);
+                            if (shimmer) shimmer.style.display = 'none';
+                        }, { once: true });
+
+                        videoEl.addEventListener('canplay', () => {
+                            if (shimmer && !replaced) shimmer.style.display = 'none';
+                        }, { once: true });
+
+                        const stallTimer = setTimeout(() => {
+                            swapToIframe('stall timeout (8 s)');
+                        }, 8000);
                     }
                 } else {
                     if (players[id] && typeof players[id].pauseVideo === 'function') {
@@ -590,6 +620,29 @@
                 if (reel.dataset.projectId) observer.observe(reel);
             });
         });
+
+        /* Keyboard navigation (↑↓ arrows) */
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                var cur = getCurrentSlideIndex();
+                var slides = document.querySelectorAll('.reel-slide');
+                if (cur < slides.length - 1) slides[cur + 1].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                var cur = getCurrentSlideIndex();
+                var slides = document.querySelectorAll('.reel-slide');
+                if (cur > 0) slides[cur - 1].scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        function getCurrentSlideIndex() {
+            var slides = Array.from(document.querySelectorAll('.reel-slide'));
+            var mid = window.innerHeight / 2;
+            for (var i = 0; i < slides.length; i++) {
+                var r = slides[i].getBoundingClientRect();
+                if (r.top <= mid && r.bottom >= mid) return i;
+            }
+            return 0;
+        }
     </script>
 
     <script>

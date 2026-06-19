@@ -19,6 +19,8 @@
             --text-dim: #4b5563;
             --border: rgba(0, 0, 0, 0.08);
             --grad: linear-gradient(135deg, #ff3366, #00c9ff);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bot: env(safe-area-inset-bottom, 0px);
         }
 
         * {
@@ -246,8 +248,8 @@
                 max-width: 100%; 
                 height: 100dvh;
             }
-            .reel-overlay { bottom: 100px; right: 60px; }
-            .reel-actions { bottom: 120px; right: 15px; }
+            .reel-overlay { bottom: calc(115px + var(--safe-bot)); right: 60px; }
+            .reel-actions { bottom: calc(130px + var(--safe-bot)); right: 15px; }
         }
 
         /* ─── Contact Slide ─── */
@@ -453,7 +455,7 @@
 
         const observerOptions = {
             root: document.getElementById('reelsContainer'),
-            threshold: 0.8
+            threshold: 0.6
         };
 
         const observer = new IntersectionObserver((entries) => {
@@ -537,11 +539,40 @@
                         videoEl.onclick = toggleMute;
                         volIndicator.onclick = toggleMute;
 
-                        videoEl.onerror = () => {
-                            // If direct streaming fails (due to virus scan warning for files > 100MB or rate limiting), fall back to preview iframe
-                            playerContainer.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+                        const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+                        let replaced = false;
+
+                        const swapToIframe = (reason) => {
+                            if (replaced) return;
+                            replaced = true;
+                            clearTimeout(stallTimer);
+                            console.warn('[Drive] ' + reason + ' → preview iframe scaled');
+                            playerContainer.innerHTML = `
+                                <div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">
+                                    <iframe src="${previewUrl}" 
+                                            style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;" 
+                                            allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>
+                                </div>`;
+                            if (shimmer) shimmer.style.display = 'none';
                         };
-                        if (shimmer) shimmer.style.display = 'none';
+
+                        videoEl.onerror = () => {
+                            swapToIframe('direct stream error');
+                        };
+
+                        videoEl.addEventListener('loadedmetadata', () => {
+                            if (replaced) return;
+                            clearTimeout(stallTimer);
+                            if (shimmer) shimmer.style.display = 'none';
+                        }, { once: true });
+
+                        videoEl.addEventListener('canplay', () => {
+                            if (shimmer && !replaced) shimmer.style.display = 'none';
+                        }, { once: true });
+
+                        const stallTimer = setTimeout(() => {
+                            swapToIframe('stall timeout (8 s)');
+                        }, 8000);
                     }
                 } else {
                     if (players[id] && typeof players[id].pauseVideo === 'function') {
@@ -578,6 +609,21 @@
             requestAnimationFrame(animateRing);
         }
         animateRing();
+
+        /* ── Arrow-key navigation ── */
+        const reelsContainer = document.getElementById('reelsContainer');
+        document.addEventListener('keydown', (e) => {
+            const slides = Array.from(document.querySelectorAll('.reel-slide'));
+            if (!slides.length) return;
+            const slideH = slides[0].offsetHeight;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                reelsContainer.scrollBy({ top: slideH, behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                reelsContainer.scrollBy({ top: -slideH, behavior: 'smooth' });
+            }
+        });
 
         document.querySelectorAll('a, button, .action-btn, .social-icon').forEach(el => {
             el.addEventListener('mouseenter', () => {
