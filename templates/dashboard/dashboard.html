@@ -12,6 +12,21 @@
   .banner-animate {
     animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+  @keyframes wave {
+    0% { transform: rotate(0.0deg) }
+    10% { transform: rotate(14.0deg) }
+    20% { transform: rotate(-8.0deg) }
+    30% { transform: rotate(14.0deg) }
+    40% { transform: rotate(-4.0deg) }
+    50% { transform: rotate(10.0deg) }
+    60% { transform: rotate(0.0deg) }
+    100% { transform: rotate(0.0deg) }
+  }
+  .wave-emoji {
+    display: inline-block;
+    animation: wave 2.5s infinite;
+    transform-origin: 70% 70%;
+  }
 </style>
 {% endblock %}
 
@@ -120,9 +135,9 @@
 
   <!-- Page header -->
   <div class="mb-10 animate-fadeInUp">
-    <p class="text-sm text-purple-400 font-medium mb-1">Welcome back</p>
+    <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-1">Welcome back</p>
     <h1 class="text-4xl font-bold mb-2 text-black" style="font-family: 'Syne', sans-serif;">
-      {{ user.first_name|default:user.username }} <span class="gradient-text">✦</span>
+      {{ user.first_name|default:user.username }} <span class="wave-emoji">👋</span>
     </h1>
     <p class="text-slate-600 font-medium">Manage and grow your professional portfolio from here.</p>
   </div>

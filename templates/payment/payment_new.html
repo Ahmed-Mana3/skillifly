@@ -181,34 +181,5 @@
     window.location.href = url;
   }
 
-  /* ── Kashier flow (preserved, currently not active) ─────────────────────
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return "";
-  }
-  function handleCheckout(plan) {
-     const form = document.createElement('form');
-     form.method = 'POST';
-     form.action = `/pay/${plan}/`;
-     const csrfField = document.createElement('input');
-     csrfField.type = 'hidden';
-     csrfField.name = 'csrfmiddlewaretoken';
-     csrfField.value = getCookie('csrftoken');
-     form.appendChild(csrfField);
-     const couponInput = document.getElementById('couponCode');
-     if(couponInput && couponInput.value.trim() !== '') {
-        const couponField = document.createElement('input');
-        couponField.type = 'hidden';
-        couponField.name = 'coupon';
-        couponField.value = couponInput.value.trim();
-        form.appendChild(couponField);
-     }
-     document.body.style.cursor = 'wait';
-     document.body.appendChild(form);
-     form.submit();
-  }
-  ── end Kashier ────────────────────────────────────────────────────────── */
 </script>
 {% endblock %}

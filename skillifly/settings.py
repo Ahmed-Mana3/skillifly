@@ -81,6 +81,8 @@ INSTALLED_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'blog',
+    'payments',
+    'portfolios',
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -267,17 +269,7 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         }
     }
 
-# ---------------------------------------------------------------------------
-# Payment — Kashier
-# ---------------------------------------------------------------------------
-# All Kashier credentials MUST come from environment variables.
-# Never commit real keys to git.
 
-KASHIER_MERCHANT_ID = os.environ.get("KASHIER_MERCHANT_ID", "")
-KASHIER_API_KEY = os.environ.get("KASHIER_API_KEY", "")
-KASHIER_WEBHOOK_SECRET = os.environ.get("KASHIER_WEBHOOK_SECRET", "")
-# 'test' uses test-api.kashier.io; 'live' uses api.kashier.io
-KASHIER_MODE = os.environ.get("KASHIER_MODE", "test")
 
 # Optional coupon code to bypass payment (e.g. for staging/testing).
 # Leave empty to disable.
@@ -287,7 +279,7 @@ SKILLIFLY_COUPON_CODE = os.environ.get("SKILLIFLY_COUPON_CODE", "")
 # Payment — Manual (InstaPay / Vodafone Cash) + Gemini AI Verification
 # ---------------------------------------------------------------------------
 # Gemini Vision API key used to verify receipt screenshots.
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBuaN3NrcOg63zZC9pDDl6kJ1y5d3frM5c")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
 
 # The recipient phone number users must send money to.
 MANUAL_PAYMENT_RECIPIENT = os.environ.get("MANUAL_PAYMENT_RECIPIENT", "+201020966071")

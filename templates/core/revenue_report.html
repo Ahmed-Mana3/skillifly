@@ -10,112 +10,144 @@
   /* ── Base ── */
   .rr-page {
     min-height: 100vh;
-    background: #f8fafc; /* Added light gray background to contrast with white cards */
+    background: radial-gradient(circle at top left, #f8fafc 0%, #f1f5f9 100%);
     font-family: 'Inter', sans-serif;
-    padding: 2rem 1rem 4rem;
+    padding: 2.5rem 1.5rem 5rem;
+    position: relative;
   }
-  .rr-wrap { max-width: 1200px; margin: 0 auto; }
+  .rr-wrap { max-width: 1280px; margin: 0 auto; z-index: 10; position: relative; }
 
   /* ── Header ── */
-  .rr-header { margin-bottom: 2rem; }
+  .rr-header { margin-bottom: 2.5rem; }
   .rr-badge {
     display: inline-flex; align-items: center; gap: .4rem;
-    padding: .25rem .75rem; border-radius: 100px;
-    background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
-    color: #065f46; font-size: .65rem; font-weight: 800;
-    letter-spacing: .1em; text-transform: uppercase; margin-bottom: .75rem;
+    padding: .35rem .85rem; border-radius: 100px;
+    background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #4f46e5; font-size: .7rem; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase; margin-bottom: .75rem;
   }
   .rr-title {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    font-weight: 800; color: #000; line-height: 1.1; margin-bottom: .5rem;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 800; color: #0f172a; line-height: 1.05; margin-bottom: .5rem;
+    letter-spacing: -0.02em;
   }
-  .rr-title .accent { background: linear-gradient(135deg,#2563eb,#7c3aed,#db2777); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .rr-subtitle { color: #334155; font-size: .875rem; font-weight: 600; }
+  .rr-title .accent { background: linear-gradient(135deg,#3b82f6 0%,#8b5cf6 50%,#ec4899 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .rr-subtitle { color: #475569; font-size: .9rem; font-weight: 600; }
 
   /* ── Filter Form ── */
   .rr-filter {
-    display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem;
-    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    border-radius: 1.25rem; padding: 1rem 1.25rem; margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 35px -10px rgba(0,0,0,0.03);
+    border-radius: 1.5rem; padding: 1.25rem 1.5rem; margin-bottom: 2.5rem;
+    align-items: flex-end;
   }
-  .rr-filter-group { display: flex; flex-direction: column; gap: .3rem; flex: 1; min-width: 130px; }
-  .rr-filter-label { font-size: .65rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: .1em; }
+  .rr-filter-group { display: flex; flex-direction: column; gap: .4rem; }
+  .rr-filter-label { font-size: .68rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: .08em; }
   .rr-date-input {
-    background: #f1f5f9; border: 1px solid #cbd5e1;
-    border-radius: .625rem; padding: .5rem .875rem;
-    font-size: .85rem; font-weight: 700; color: #0f172a;
-    outline: none; transition: border-color .2s, box-shadow .2s;
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: .75rem; padding: .65rem 1rem;
+    font-size: .88rem; font-weight: 700; color: #0f172a;
+    outline: none; transition: all .2s ease;
   }
-  .rr-date-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); background: #ffffff; }
+  .rr-date-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.12); background: #ffffff; }
   .rr-filter-btn {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
-    color: #fff; border: none; border-radius: .625rem;
-    padding: .55rem 1.5rem; font-size: .85rem; font-weight: 800;
-    cursor: pointer; white-space: nowrap; transition: opacity .2s, transform .15s; box-shadow: 0 4px 12px rgba(37,99,235,0.25);
-    align-self: flex-end;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
+    color: #fff; border: none; border-radius: .75rem;
+    padding: .75rem 1.75rem; font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 800;
+    cursor: pointer; white-space: nowrap; transition: all .25s ease; box-shadow: 0 8px 20px -5px rgba(59,130,246,0.3);
+    text-align: center;
   }
-  .rr-filter-btn:hover { opacity: .9; transform: translateY(-1px); }
+  .rr-filter-btn:hover { opacity: .95; transform: translateY(-1px); box-shadow: 0 12px 25px -5px rgba(139,92,246,0.45); }
 
   /* ── Stat Cards ── */
-  .rr-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+  .rr-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
   @media (min-width: 640px)  { .rr-stats { grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 900px)  { .rr-stats { grid-template-columns: repeat(3, 1fr); } }
   @media (min-width: 1100px) { .rr-stats { grid-template-columns: repeat(6, 1fr); } }
 
   .rr-card {
-    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
-    border-radius: 1.25rem; padding: 1.25rem 1rem;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-radius: 1.5rem; padding: 1.5rem 1.25rem;
     position: relative; overflow: hidden;
-    transition: border-color .25s, transform .25s, box-shadow .25s;
+    display: flex; flex-direction: column; justify-content: space-between; min-height: 140px;
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .rr-card:hover { transform: translateY(-2px); border-color: #94a3b8; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.1); }
-  .rr-card-glow {
-    position: absolute; width: 80px; height: 80px;
-    border-radius: 50%; bottom: -20px; right: -20px;
-    filter: blur(28px); opacity: .2; pointer-events: none;
-  }
+  .rr-card:hover { transform: translateY(-4px); border-color: rgba(99, 102, 241, 0.25); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08); }
+  
+  .rr-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
   .rr-card-label {
-    font-size: .65rem; font-weight: 800; text-transform: uppercase;
-    letter-spacing: .1em; color: #1e293b; margin-bottom: .5rem;
+    font-size: .68rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .08em; color: #475569;
+  }
+  .rr-card-icon {
+    width: 32px; height: 32px; border-radius: .5rem;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.03); color: #475569;
   }
   .rr-card-value {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(1.2rem, 3vw, 1.6rem);
-    font-weight: 800; color: #000; line-height: 1;
+    font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+    font-weight: 800; color: #0f172a; line-height: 1.1;
   }
-  .rr-card-sub { font-size: .75rem; color: #334155; font-weight: 600; margin-top: .3rem; }
+  .rr-card-sub { font-size: .75rem; color: #64748b; font-weight: 600; margin-top: .4rem; }
 
-  /* Card accent variants */
+  /* Card Color Schemes */
+  .c-green { border-left: 4px solid #10b981; }
+  .c-green .rr-card-icon { background: rgba(16, 185, 129, 0.08); color: #059669; }
   .c-green .rr-card-value { color: #059669; }
-  .c-green .rr-card-glow  { background: #10b981; }
-  .c-blue  .rr-card-value { color: #2563eb; }
-  .c-blue  .rr-card-glow  { background: #3b82f6; }
+
+  .c-blue { border-left: 4px solid #3b82f6; }
+  .c-blue .rr-card-icon { background: rgba(59, 130, 246, 0.08); color: #2563eb; }
+  .c-blue .rr-card-value { color: #2563eb; }
+
+  .c-purple { border-left: 4px solid #8b5cf6; }
+  .c-purple .rr-card-icon { background: rgba(139, 92, 246, 0.08); color: #7c3aed; }
+  .c-purple .rr-card-value { color: #7c3aed; }
+
+  .c-rose { border-left: 4px solid #f43f5e; }
+  .c-rose .rr-card-icon { background: rgba(244, 63, 94, 0.08); color: #e11d48; }
+  .c-rose .rr-card-value { color: #e11d48; }
+
+  .c-teal { border-left: 4px solid #14b8a6; }
+  .c-teal .rr-card-icon { background: rgba(20, 184, 166, 0.08); color: #0d9488; }
+  .c-teal .rr-card-value { color: #0d9488; }
+
+  .c-amber { border-left: 4px solid #f59e0b; }
+  .c-amber .rr-card-icon { background: rgba(245, 158, 11, 0.08); color: #d97706; }
   .c-amber .rr-card-value { color: #d97706; }
-  .c-amber .rr-card-glow  { background: #f59e0b; }
-  .c-purple .rr-card-value{ color: #7c3aed; }
-  .c-purple .rr-card-glow { background: #a78bfa; }
-  .c-rose  .rr-card-value { color: #e11d48; }
-  .c-rose  .rr-card-glow  { background: #f43f5e; }
-  .c-teal  .rr-card-value { color: #0d9488; }
-  .c-teal  .rr-card-glow  { background: #2dd4bf; }
 
   /* ── Charts Row ── */
-  .rr-charts { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .rr-charts { display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-bottom: 2rem; }
   @media (min-width: 900px) { .rr-charts { grid-template-columns: 2fr 1fr; } }
 
   .rr-chart-card {
-    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
-    border-radius: 1.25rem; padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
+    border-radius: 1.5rem; padding: 1.75rem;
   }
-  .rr-chart-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; }
-  .rr-chart-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.1rem; }
+  .rr-chart-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+  .rr-chart-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.15rem; letter-spacing: -0.01em; }
   .rr-chart-legend { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-  .rr-legend-item { display: flex; align-items: center; gap: .35rem; font-size: .7rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .08em; }
-  .rr-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .rr-legend-item { display: flex; align-items: center; gap: .4rem; font-size: .68rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: .08em; }
+  .rr-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-  .rr-canvas-wrap { position: relative; height: 220px; }
-  .rr-donut-wrap  { position: relative; height: 200px; display: flex; align-items: center; justify-content: center; }
+  .rr-canvas-wrap { position: relative; height: 260px; }
+  .rr-donut-wrap  { position: relative; height: 210px; display: flex; align-items: center; justify-content: center; }
 
   /* Donut centre label */
   .donut-center {
@@ -123,77 +155,86 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     pointer-events: none;
   }
-  .donut-center-pct { font-family:'Syne',sans-serif; font-size: 1.7rem; font-weight: 800; color: #000; }
-  .donut-center-lbl { font-size: .7rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .1em; }
+  .donut-center-pct { font-family:'Syne',sans-serif; font-size: 1.85rem; font-weight: 800; color: #0f172a; line-height: 1.1; }
+  .donut-center-lbl { font-size: .65rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .1em; margin-top: .15rem; }
 
   /* ── Plan Breakdown ── */
   .rr-plans {
-    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
-    border-radius: 1.25rem; padding: 1.5rem; margin-bottom: 1.25rem;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
+    border-radius: 1.5rem; padding: 1.5rem;
   }
-  .rr-plan-row { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+  .rr-plan-row { display: flex; align-items: center; gap: .85rem; margin-bottom: 1rem; }
   .rr-plan-row:last-child { margin-bottom: 0; }
-  .rr-plan-bar-bg { flex: 1; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
-  .rr-plan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#2563eb,#7c3aed); transition: width .8s cubic-bezier(.4,0,.2,1); }
-  .rr-plan-name { font-size: .8rem; font-weight: 700; color: #1e293b; min-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rr-plan-count { font-size: .8rem; font-weight: 800; color: #000; min-width: 28px; text-align: right; }
-  .rr-plan-revenue { font-size: .75rem; color: #059669; font-weight: 700; min-width: 80px; text-align: right; white-space: nowrap; }
+  .rr-plan-bar-bg { flex: 1; height: 10px; background: rgba(0,0,0,0.05); border-radius: 99px; overflow: hidden; }
+  .rr-plan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#3b82f6,#8b5cf6); transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .rr-plan-name { font-size: .82rem; font-weight: 700; color: #334155; min-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rr-plan-count { font-size: .82rem; font-weight: 800; color: #0f172a; min-width: 28px; text-align: right; }
+  .rr-plan-revenue { font-size: .8rem; color: #059669; font-weight: 700; min-width: 80px; text-align: right; white-space: nowrap; }
 
   /* ── Dual Chart (revenue line + bar) ── */
   .rr-dual-wrap { position: relative; height: 260px; }
 
   /* ── Transactions Table ── */
   .rr-table-card {
-    background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
-    border-radius: 1.25rem; overflow: hidden;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
+    border-radius: 1.5rem; overflow: hidden;
   }
   .rr-table-header {
-    padding: 1.25rem 1.5rem; border-bottom: 1px solid #cbd5e1;
+    padding: 1.5rem 1.75rem; border-bottom: 1px solid rgba(0,0,0,0.06);
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
   }
-  .rr-table-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.1rem; }
-  .rr-table-sub   { font-size: .7rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .1em; }
+  .rr-table-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.15rem; letter-spacing: -0.01em; }
+  .rr-table-sub   { font-size: .68rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .08em; }
 
   .rr-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .rr-table { width: 100%; border-collapse: collapse; min-width: 560px; }
-  .rr-table thead tr { background: #f1f5f9; }
+  .rr-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  .rr-table thead tr { background: rgba(0,0,0,0.02); }
   .rr-table th {
-    padding: .85rem 1.25rem; text-align: left;
-    font-size: .65rem; font-weight: 800; color: #1e293b;
-    text-transform: uppercase; letter-spacing: .1em; white-space: nowrap;
+    padding: 1rem 1.5rem; text-align: left;
+    font-size: .68rem; font-weight: 800; color: #475569;
+    text-transform: uppercase; letter-spacing: .08em; white-space: nowrap;
   }
-  .rr-table tbody tr { border-top: 1px solid #e2e8f0; transition: background .15s; }
-  .rr-table tbody tr:hover { background: #f8fafc; }
-  .rr-table td { padding: .875rem 1.25rem; vertical-align: middle; }
+  .rr-table tbody tr { border-top: 1px solid rgba(0,0,0,0.04); transition: all .2s; }
+  .rr-table tbody tr:hover { background: rgba(99, 102, 241, 0.02); }
+  .rr-table td { padding: 1rem 1.5rem; vertical-align: middle; }
 
   /* Avatar */
   .rr-avatar {
-    width: 36px; height: 36px; border-radius: .5rem; flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: .6rem; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: .75rem; font-weight: 800; color: #fff;
-    background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+    font-size: .78rem; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg,#3b82f6,#8b5cf6,#d946ef);
+    box-shadow: 0 4px 10px -2px rgba(139,92,246,0.3);
   }
 
   /* Badges */
   .rr-badge-paid {
-    display: inline-flex; align-items: center; gap: .3rem;
-    padding: .25rem .75rem; border-radius: 100px;
-    background: #d1fae5; border: 1px solid #6ee7b7;
-    color: #047857; font-size: .7rem; font-weight: 800;
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .3rem .8rem; border-radius: 100px;
+    background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #059669; font-size: .68rem; font-weight: 800;
   }
   .rr-badge-free {
-    display: inline-flex; align-items: center; gap: .3rem;
-    padding: .25rem .75rem; border-radius: 100px;
-    background: #fef3c7; border: 1px solid #fcd34d;
-    color: #b45309; font-size: .7rem; font-weight: 800;
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .3rem .8rem; border-radius: 100px;
+    background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #d97706; font-size: .68rem; font-weight: 800;
   }
 
   /* Empty state */
-  .rr-empty { padding: 3rem; text-align: center; color: #334155; }
-  .rr-empty-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .rr-empty { padding: 4rem 2rem; text-align: center; color: #475569; }
+  .rr-empty-icon { font-size: 3rem; margin-bottom: 1rem; }
 
-  /* ── Animations ── */
-  .fade-up { opacity: 0; transform: translateY(18px); animation: fadeUp .55s ease forwards; }
+  /* Animations */
+  .fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp .6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
   .d1 { animation-delay: .05s; }
   .d2 { animation-delay: .15s; }
@@ -201,16 +242,60 @@
   .d4 { animation-delay: .35s; }
   .d5 { animation-delay: .45s; }
 
-  /* Mobile tweaks */
+  /* ── Mobile & Responsive Design ── */
+  @media (max-width: 1100px) {
+    .rr-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+  
+  @media (max-width: 768px) {
+    .rr-stats { grid-template-columns: repeat(2, 1fr); }
+    .rr-filter { grid-template-columns: 1fr; gap: 1rem; padding: 1.25rem; }
+    .rr-filter-btn { width: 100%; }
+    
+    /* Responsive Table to Cards toggle */
+    .rr-table-scroll { display: none !important; }
+    .rr-mobile-records { display: block; }
+  }
+
   @media (max-width: 480px) {
-    .rr-stats { grid-template-columns: 1fr 1fr; }
-    .rr-card  { padding: 1.25rem .75rem; }
-    .rr-card-value { font-size: 1.15rem; }
-    .rr-card-label { font-size: 0.55rem; }
-    .rr-card-sub { font-size: 0.65rem; }
-    .rr-filter { flex-direction: column; align-items: stretch; }
-    .rr-filter-group { min-width: 100%; }
-    .rr-filter-btn { width: 100%; text-align: center; }
+    .rr-stats { grid-template-columns: 1fr; }
+    .rr-card { padding: 1.25rem 1rem; min-height: 120px; }
+    .rr-card-value { font-size: 1.4rem; }
+    .rr-page { padding: 1.5rem 1rem 3rem; }
+    .rr-header { margin-bottom: 1.5rem; }
+    .rr-title { font-size: 1.85rem; }
+  }
+
+  /* Mobile Record Elements styling */
+  .rr-mobile-records { display: none; padding: 0; }
+  .rr-mobile-record-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 20px -5px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .rr-mobile-record-card:hover { transform: translateY(-3px); border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 12px 25px -5px rgba(0,0,0,0.06); }
+  .rr-mobile-record-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .rr-mobile-record-user { display: flex; align-items: center; gap: 0.85rem; overflow: hidden; }
+  .rr-mobile-user-info { display: flex; flex-direction: column; overflow: hidden; }
+  .rr-mobile-user-name { font-size: .9rem; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
+  .rr-mobile-user-email { font-size: .75rem; color: #475569; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rr-mobile-record-amount { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800; text-align: right; flex-shrink: 0; }
+  .rr-mobile-record-details { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  .rr-mobile-plan-badge { font-size: .75rem; font-weight: 800; color: #334155; background: rgba(0,0,0,0.04); padding: .25rem .65rem; border-radius: .4rem; }
+  .rr-mobile-discount-badge { font-size: .75rem; font-weight: 800; color: #7c3aed; letter-spacing: .05em; background: rgba(124,58,237,0.08); padding: .25rem .65rem; border-radius: .4rem; }
+  .rr-mobile-record-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.75rem; color: #64748b; font-weight: 600;
+    border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 0.85rem; margin-top: 0.25rem;
   }
 </style>
 {% endblock %}
@@ -247,50 +332,88 @@
   <!-- ── Stat Cards ── -->
   <div class="rr-stats fade-up d2">
 
+    <!-- Card 1 -->
     <div class="rr-card c-green">
-      <p class="rr-card-label">Total Revenue</p>
-      <p class="rr-card-value">EGP {{ total_revenue|floatformat:0 }}</p>
-      <p class="rr-card-sub">from paid users only</p>
-      <div class="rr-card-glow"></div>
+      <div class="rr-card-top">
+        <span class="rr-card-label">Total Revenue</span>
+        <div class="rr-card-icon">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+      </div>
+      <div>
+        <p class="rr-card-value">EGP {{ total_revenue|floatformat:0 }}</p>
+        <p class="rr-card-sub">from paid users only</p>
+      </div>
     </div>
 
+    <!-- Card 2 -->
     <div class="rr-card c-blue">
-      <p class="rr-card-label">Paid Users</p>
-      <p class="rr-card-value">{{ paid_count }}</p>
-      <p class="rr-card-sub">amount &gt; 0 EGP</p>
-      <div class="rr-card-glow"></div>
+      <div class="rr-card-top">
+        <span class="rr-card-label">Paid Users</span>
+        <div class="rr-card-icon">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+      </div>
+      <div>
+        <p class="rr-card-value">{{ unique_paid_users }}</p>
+        <p class="rr-card-sub">unique paying customers</p>
+      </div>
     </div>
 
-    <div class="rr-card c-amber">
-      <p class="rr-card-label">Free Codes</p>
-      <p class="rr-card-value">{{ free_count }}</p>
-      <p class="rr-card-sub">100% coupon used</p>
-      <div class="rr-card-glow"></div>
-    </div>
-
-    <div class="rr-card c-teal">
-      <p class="rr-card-label">Avg Ticket</p>
-      <p class="rr-card-value">EGP {{ avg_payment|floatformat:0 }}</p>
-      <p class="rr-card-sub">paid only</p>
-      <div class="rr-card-glow"></div>
-    </div>
-
+    <!-- Card 3 -->
     <div class="rr-card c-purple">
-      <p class="rr-card-label">Paid Rate</p>
-      <p class="rr-card-value">{{ conversion_rate }}%</p>
-      <p class="rr-card-sub">paid ÷ total</p>
-      <div class="rr-card-glow"></div>
+      <div class="rr-card-top">
+        <span class="rr-card-label">Conversion Rate</span>
+        <div class="rr-card-icon">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+        </div>
+      </div>
+      <div>
+        <p class="rr-card-value">{{ conversion_rate }}%</p>
+        <p class="rr-card-sub">paying ÷ total signups</p>
+      </div>
     </div>
 
+    <!-- Card 4 -->
     <div class="rr-card c-rose">
-      <p class="rr-card-label">Free Rate</p>
-      {% if total_transactions > 0 %}
-      <p class="rr-card-value">{% widthratio free_count total_transactions 100 %}%</p>
-      {% else %}
-      <p class="rr-card-value">0%</p>
-      {% endif %}
-      <p class="rr-card-sub">free ÷ total</p>
-      <div class="rr-card-glow"></div>
+      <div class="rr-card-top">
+        <span class="rr-card-label">Monthly / Annual</span>
+        <div class="rr-card-icon">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        </div>
+      </div>
+      <div>
+        <p class="rr-card-value">{{ monthly_paid_count }} : {{ annual_paid_count }}</p>
+        <p class="rr-card-sub">split: {{ monthly_pct|floatformat:0 }}% / {{ annual_pct|floatformat:0 }}%</p>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="rr-card c-teal">
+      <div class="rr-card-top">
+        <span class="rr-card-label">Avg Ticket</span>
+        <div class="rr-card-icon">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M6 20h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        </div>
+      </div>
+      <div>
+        <p class="rr-card-value">EGP {{ avg_payment|floatformat:0 }}</p>
+        <p class="rr-card-sub">paid only</p>
+      </div>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="rr-card c-amber">
+      <div class="rr-card-top">
+        <span class="rr-card-label">Free Codes</span>
+        <div class="rr-card-icon">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+        </div>
+      </div>
+      <div>
+        <p class="rr-card-value">{{ free_count }}</p>
+        <p class="rr-card-sub">100% coupon used</p>
+      </div>
     </div>
 
   </div><!-- /stats -->
@@ -319,13 +442,13 @@
       <!-- Donut -->
       <div class="rr-chart-card">
         <div class="rr-chart-header">
-          <span class="rr-chart-title">Split</span>
+          <span class="rr-chart-title">Plan Split</span>
         </div>
         <div class="rr-donut-wrap">
           <canvas id="donutChart"></canvas>
           <div class="donut-center">
-            <span class="donut-center-pct">{{ total_transactions }}</span>
-            <span class="donut-center-lbl">Total</span>
+            <span class="donut-center-pct">{{ total_paid_subs }}</span>
+            <span class="donut-center-lbl">Paid Subs</span>
           </div>
         </div>
       </div>
@@ -436,6 +559,58 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Records List (Visible on mobile viewports only) -->
+    <div class="rr-mobile-records">
+      {% for p in payments %}
+      <div class="rr-mobile-record-card">
+        <div class="rr-mobile-record-header">
+          <div class="rr-mobile-record-user">
+            <div class="rr-avatar">{{ p.user.username|slice:":2"|upper }}</div>
+            <div class="rr-mobile-user-info">
+              <p class="rr-mobile-user-name">{{ p.user.username }}</p>
+              <p class="rr-mobile-user-email">{{ p.user.email }}</p>
+            </div>
+          </div>
+          <div class="rr-mobile-record-amount">
+            {% if p.amount > 0 %}
+            <span style="color:#059669;">EGP {{ p.amount|floatformat:0 }}</span>
+            {% else %}
+            <span style="color:#d97706;">EGP 0</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="rr-mobile-record-details">
+          {% if p.amount > 0 %}
+          <span class="rr-badge-paid">✓ Paid</span>
+          {% else %}
+          <span class="rr-badge-free">◈ Free</span>
+          {% endif %}
+          
+          <span class="rr-mobile-plan-badge">
+            {{ p.subscription.name|default:"Pro Plan" }}
+          </span>
+
+          {% if p.discount_code_used %}
+          <span class="rr-mobile-discount-badge">
+            {{ p.discount_code_used|upper }}
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="rr-mobile-record-meta">
+          <span>Activated Plan</span>
+          <span>{{ p.date|date:"M d, Y" }} &nbsp;·&nbsp; {{ p.date|date:"H:i" }}</span>
+        </div>
+      </div>
+      {% empty %}
+      <div class="rr-empty">
+        <div class="rr-empty-icon">📭</div>
+        <p style="font-weight:700;color:#475569;">No activations in this period.</p>
+      </div>
+      {% endfor %}
+    </div>
   </div><!-- /table -->
 
 </div><!-- /wrap -->
@@ -450,12 +625,15 @@ document.addEventListener('DOMContentLoaded', function () {
   const freeCnt   = {{ chart_free_cnt|safe }};
   const paidTotal = {{ paid_count }};
   const freeTotal = {{ free_count }};
+  const monthlyTotal = {{ monthly_paid_count }};
+  const sixMonthTotal = {{ six_month_paid_count }};
+  const annualTotal = {{ annual_paid_count }};
 
   /* ── Dual Chart ── */
   const dualCtx = document.getElementById('dualChart').getContext('2d');
 
   const revGrad = dualCtx.createLinearGradient(0, 0, 0, 260);
-  revGrad.addColorStop(0, 'rgba(16,185,129,.2)');
+  revGrad.addColorStop(0, 'rgba(16,185,129,0.25)');
   revGrad.addColorStop(1, 'rgba(16,185,129,0)');
 
   new Chart(dualCtx, {
@@ -470,12 +648,15 @@ document.addEventListener('DOMContentLoaded', function () {
           borderWidth: 3,
           backgroundColor: revGrad,
           fill: true,
-          tension: 0.45,
+          tension: 0.4,
           pointRadius: 4,
           pointBackgroundColor: '#ffffff',
           pointBorderColor: '#10b981',
           pointBorderWidth: 2,
           pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#10b981',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2,
           yAxisID: 'yRevenue',
           order: 1,
         },
@@ -483,19 +664,25 @@ document.addEventListener('DOMContentLoaded', function () {
           type: 'bar',
           label: 'Paid',
           data: paidCnt,
-          backgroundColor: 'rgba(59,130,246,.85)',
-          borderRadius: 4,
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          hoverBackgroundColor: '#2563eb',
+          borderRadius: 6,
           yAxisID: 'yCnt',
           order: 2,
+          barPercentage: 0.6,
+          categoryPercentage: 0.5,
         },
         {
           type: 'bar',
           label: 'Free',
           data: freeCnt,
-          backgroundColor: 'rgba(245,158,11,.85)',
-          borderRadius: 4,
+          backgroundColor: 'rgba(245, 158, 11, 0.8)',
+          hoverBackgroundColor: '#d97706',
+          borderRadius: 6,
           yAxisID: 'yCnt',
           order: 3,
+          barPercentage: 0.6,
+          categoryPercentage: 0.5,
         },
       ]
     },
@@ -506,38 +693,42 @@ document.addEventListener('DOMContentLoaded', function () {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
           titleColor: '#0f172a',
-          bodyColor: '#334155',
-          borderColor: '#cbd5e1',
+          bodyColor: '#475569',
+          titleFont: { family: 'Syne', size: 12, weight: 'bold' },
+          bodyFont: { family: 'Inter', size: 12 },
+          borderColor: 'rgba(0,0,0,0.08)',
           borderWidth: 1,
           padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
           callbacks: {
             label: ctx => {
               if (ctx.dataset.label === 'Revenue (EGP)')
-                return ' EGP ' + ctx.parsed.y.toLocaleString();
-              return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y;
+                return ' Revenue: EGP ' + ctx.parsed.y.toLocaleString();
+              return ' ' + ctx.dataset.label + ' Activations: ' + ctx.parsed.y;
             }
           }
         }
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,.05)' },
-          ticks: { color: '#475569', font: { size: 9, weight: '800' }, maxRotation: 45 }
+          grid: { color: 'rgba(0,0,0,0.03)' },
+          ticks: { color: '#64748b', font: { family: 'Inter', size: 10, weight: '600' } }
         },
         yRevenue: {
           position: 'left',
-          grid: { color: 'rgba(0,0,0,.05)' },
+          grid: { color: 'rgba(0,0,0,0.03)' },
           ticks: {
-            color: '#059669', font: { size: 10, weight: '800' },
+            color: '#059669', font: { family: 'Inter', size: 10, weight: '700' },
             callback: v => 'EGP ' + v
           }
         },
         yCnt: {
           position: 'right',
           grid: { display: false },
-          ticks: { color: '#475569', font: { size: 10, weight: '800' } },
+          ticks: { color: '#64748b', font: { family: 'Inter', size: 10, weight: '700' } },
           beginAtZero: true,
           stepSize: 1,
         }
@@ -545,17 +736,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  /* ── Donut Chart ── */
+  /* ── Donut Chart (Plan Split) ── */
   const donutCtx = document.getElementById('donutChart').getContext('2d');
-  const hasData = (paidTotal + freeTotal) > 0;
+  const hasPlanData = (monthlyTotal + sixMonthTotal + annualTotal) > 0;
 
   new Chart(donutCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Paid', 'Free Code'],
+      labels: ['Monthly', '6 Months', 'Annual'],
       datasets: [{
-        data: hasData ? [paidTotal, freeTotal] : [1, 0],
-        backgroundColor: ['#2563eb', '#f59e0b'],
+        data: hasPlanData ? [monthlyTotal, sixMonthTotal, annualTotal] : [1, 0, 0],
+        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
         borderColor: '#ffffff',
         borderWidth: 3,
         hoverOffset: 6,
@@ -564,17 +755,22 @@ document.addEventListener('DOMContentLoaded', function () {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '72%',
+      cutout: '76%',
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
           titleColor: '#0f172a',
-          bodyColor: '#334155',
-          borderColor: '#cbd5e1',
+          bodyColor: '#475569',
+          titleFont: { family: 'Syne', size: 12, weight: 'bold' },
+          bodyFont: { family: 'Inter', size: 12 },
+          borderColor: 'rgba(0,0,0,0.08)',
           borderWidth: 1,
+          padding: 10,
+          boxPadding: 6,
+          usePointStyle: true,
           callbacks: {
-            label: ctx => ' ' + ctx.label + ': ' + ctx.raw
+            label: ctx => ' ' + ctx.label + ': ' + ctx.raw + ' plans'
           }
         }
       }

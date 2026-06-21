@@ -389,14 +389,19 @@ def analytics_dashboard(request):
 
 from django.http import JsonResponse
 
-def examples_view(request):
-    """Render the live examples page featuring showcased portfolios"""
-    showcases = Showcase.objects.filter(is_active=True).select_related('profile__user', 'profile__theme')
-    portfolios_count = Profile.objects.count()
-    return render(request, 'core/examples.html', {
-        'showcases': showcases,
-        'portfolios_count': portfolios_count
-    })
+# ---------------------------------------------------------------------------
+# Portfolio views moved to the `portfolios` app.
+# Shim imports keep any internal reverse() / URL name lookups working.
+# ---------------------------------------------------------------------------
+from portfolios.views import (
+    examples_view,
+    preview_view,
+    portfolio_reels,
+    portfolio_long_videos,
+    portfolio_video_detail,
+    portfolio_category_detail,
+)
+
 from .forms import (
     PersonalInfoForm,
     SkillFormSet,
@@ -1076,122 +1081,6 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
                 UserPayment.objects.create(user=request.user)
 
 
-def preview_view(request, username):
-    # Handle optional @ prefix from sitemap or direct links
-    clean_username = username.lstrip('@')
-    user = get_object_or_404(CustomUser, username=clean_username)
-
-    # Increment visit counter (update only the visits field to avoid a full model save)
-    profile, created = Profile.objects.get_or_create(user=user)
-
-    # Visibility Check
-    payment = UserPayment.objects.filter(user=user, status='paid').last()
-    has_active_subscription = payment and payment.is_active
-
-    # Auto-flip to private if not subscribed
-    if not has_active_subscription and profile.is_public:
-        profile.is_public = False
-        profile.save(update_fields=['is_public'])
-
-    if not profile.is_public and request.user != user:
-        return render(request, 'errors/403_private.html', {'username': username}, status=403)
-
-    profile.visits += 1
-    profile.save(update_fields=['visits'])
-
-    personal_info = PersonalInfo.objects.filter(user=user).select_related('user').first()
-    experiences = Experience.objects.filter(user=user).select_related('user')
-    education = Education.objects.filter(user=user).select_related('user')
-    skills = Skill.objects.filter(user=user).select_related('user')
-    projects = Project.objects.filter(user=user).select_related('user', 'category')
-    links = Link.objects.filter(user=user).select_related('user')
-    creators = Creator.objects.filter(user=user).select_related('user')
-
-    # Prefetch categories with annotated project counts in a SINGLE query — eliminates N+1
-    project_categories = list(
-        ProjectCategory.objects.filter(user=user)
-        .annotate(project_count=Count('projects'))
-        .order_by('id')
-    )
-
-    # Cinematic/video-editor themes need safe numeric highlights
-    # Use cached querysets to avoid re-hitting the DB
-    projects_list = list(projects)
-    project_count = len(projects_list)
-    long_count = sum(1 for p in projects_list if p.video_type == 'long')
-    reel_count = sum(1 for p in projects_list if p.video_type == 'reel')
-    uncategorized_count = sum(1 for p in projects_list if p.category_id is None)
-    has_uncategorized_projects = uncategorized_count > 0
-
-    context = {
-        'personal_info': personal_info,
-        'experiences': experiences,
-        'education': education,
-        'skills': skills,
-        'projects': projects,
-        'links': links,
-        'creators': creators,
-        'username': clean_username,
-        'project_count': project_count,
-        'long_count': long_count,
-        'reel_count': reel_count,
-        'portfolio_user': user,
-        'profile': profile,
-        'uncategorized_count': uncategorized_count,
-        'has_uncategorized_projects': has_uncategorized_projects,
-        # Pre-evaluated list with annotated counts — no extra DB queries in templates
-        'project_categories': project_categories,
-        'project_categories_count': len(project_categories),
-    }
-
-    # Dynamic template selection based on theme
-    template_name = 'portfolios/developer/developer_minimal.html'  # Default fallback
-    profile = getattr(user, 'profile', None)
-
-    if profile and profile.theme:
-        category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"
-        theme_name = profile.theme.name.lower().replace(" ", "_")
-        # Template folder structure: portfolios/category/category_theme.html
-        specific_template = f"portfolios/{category}/{category}_{theme_name}.html"
-
-        try:
-            # Check if template exists
-            get_template(specific_template)
-            template_name = specific_template
-        except TemplateDoesNotExist:
-            template_name = 'portfolios/developer/developer_minimal.html'
-
-    return render(request, template_name, context=context)
-
-
-
-def pricing_view(request):
-    """Render the payment page"""
-    context = {
-        'free_features': [
-            '1 portfolio theme',
-            'Public portfolio URL',
-            'Personal info & skills',
-            'Projects showcase',
-            'Social links',
-        ],
-        'pro_features': [
-            'All premium themes',
-            'Custom domain support',
-            'Portfolio analytics',
-            'Remove Skillifly branding',
-            'Priority support',
-            'Unlimited projects',
-        ],
-        'annual_features': [
-            'Everything in Pro',
-            '2 months free',
-            'Early access to new themes',
-            'Dedicated support channel',
-            'Export portfolio as PDF',
-        ],
-    }
-    return render(request, 'payment/payment_new.html', context)
 
 
 # Error handlers
@@ -1228,398 +1117,6 @@ from .tasks import generate_portfolio_pdf
 
 logger = logging.getLogger('core')
 
-# Plan definitions  {plan_type: (amount_egp, subscription_name, subscription_days)}
-PLAN_CATALOGUE = {
-    'monthly':   ('50.00',  'Monthly',  30),
-    'pro_monthly': ('250.00', '6 Months', 180),
-    'pro_annual': ('360.00', 'Annual',  365),
-}
-
-
-def _get_or_create_subscription(name, days):
-    """Fetch or create a Subscription record for the given plan."""
-    from .models import Subscription
-    sub, _ = Subscription.objects.get_or_create(
-        name=name,
-        defaults={'duration': days, 'days': days},
-    )
-    return sub
-
-
-def _kashier_api_base():
-    mode = getattr(settings, 'KASHIER_MODE', 'test')
-    if mode == 'live':
-        return 'https://api.kashier.io'
-    return 'https://test-api.kashier.io'
-
-
-@login_required
-def create_payment(request, plan_type):
-    """
-    1. Validate plan & coupon.
-    2. Call the Kashier Sessions API (server-side) to create a hosted session.
-    3. Store a pending UserPayment record.
-    4. Redirect the user to the Kashier-hosted payment page.
-    """
-    if plan_type not in PLAN_CATALOGUE:
-        messages.error(request, 'Invalid plan selected.')
-        return redirect('payment')
-
-    amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
-
-    # --- Coupon check ---
-    coupon_code = ''
-    if request.method == 'POST':
-        coupon_code = request.POST.get('coupon', '').strip().upper()
-    else:
-        coupon_code = request.GET.get('coupon', '').strip().upper()
-
-    # Check if coupon grants free access
-    if coupon_code:
-        # 1) Master Bypass Coupon
-        if coupon_code == 'SKILLIFLY2026' or coupon_code == getattr(settings, 'SKILLIFLY_COUPON_CODE', ''):
-            sub = _get_or_create_subscription(sub_name, sub_days)
-            payment = UserPayment.objects.create(
-                user=request.user,
-                subscription=sub,
-                amount=0,
-                status='paid',
-                kashier_order_id=f'COUPON-MASTER-{uuid.uuid4().hex[:8].upper()}',
-                discount_code_used=coupon_code,
-            )
-            profile, _ = Profile.objects.get_or_create(user=request.user)
-            profile.is_public = True
-            profile.save()
-            messages.success(request, f'Developer Coupon applied! Your {sub_name} plan is now active.')
-            return redirect('payment_success')
-
-        # 2) Database Coupons
-        from .models import DiscountCode
-        try:
-            discount = DiscountCode.objects.get(code=coupon_code, is_active=True)
-            if discount.discount_percentage == 100:
-                # Full discount — activate subscription immediately
-                sub = _get_or_create_subscription(sub_name, sub_days)
-                payment = UserPayment.objects.create(
-                    user=request.user,
-                    subscription=sub,
-                    amount=0,
-                    status='paid',
-                    kashier_order_id=f'COUPON-{uuid.uuid4().hex[:12].upper()}',
-                    discount_code_used=coupon_code,
-                )
-                discount.usage_count += 1
-                discount.save()
-                profile, _ = Profile.objects.get_or_create(user=request.user)
-                profile.is_public = True
-                profile.save()
-                messages.success(request, f'Coupon applied! Your {sub_name} plan is now active.')
-                return redirect('payment_success')
-            else:
-                # Partial discount
-                original_amount = float(amount_str)
-                discounted_amount = original_amount * (1 - (discount.discount_percentage / 100.0))
-                amount_str = f"{discounted_amount:.2f}"
-                messages.success(request, f'Coupon applied! {discount.discount_percentage}% discount on your {sub_name} checkout.')
-        except DiscountCode.DoesNotExist:
-            messages.error(request, 'Invalid or expired coupon code.')
-            return redirect('payment')
-
-    # --- Build unique order ID ---
-    order_id = f'SKF-{request.user.id}-{uuid.uuid4().hex[:10].upper()}'
-
-    # --- Determine redirect URLs ---
-    callback_url = request.build_absolute_uri(f'/payment/callback/?order_id={order_id}')
-    
-    # Kashier API strictly rejects localhost/127.0.0.1 in redirect URLs (throws HTTP 400)
-    # For local development, fallback to a valid TLD to allow the session creation to succeed.
-    if 'localhost' in callback_url or '127.0.0.1' in callback_url:
-        callback_url = callback_url.replace(request.get_host(), 'skillifly.cloud').replace('http://', 'https://')
-    failure_url  = request.build_absolute_uri('/payment/failure/')
-
-    # --- Create Kashier payment session ---
-    from datetime import datetime, timezone as dt_timezone
-    expire_dt = (datetime.now(dt_timezone.utc) + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%S.000Z')
-
-    webhook_url = request.build_absolute_uri('/webhook/kashier/')
-    if 'localhost' in webhook_url or '127.0.0.1' in webhook_url:
-        webhook_url = webhook_url.replace(request.get_host(), 'skillifly.cloud').replace('http://', 'https://')
-
-    payload = {
-        'merchantId': settings.KASHIER_MERCHANT_ID,
-        'amount': amount_str,
-        'currency': 'EGP',
-        'order': order_id,
-        'type': 'one-time',
-        'paymentType': 'credit',
-        'allowedMethods': 'card,wallet',
-        'defaultMethod': 'card',
-        'display': 'en',
-        'merchantRedirect': callback_url,
-        'failureRedirect': True,
-        'expireAt': expire_dt,
-        'maxFailureAttempts': 3,
-        'enable3DS': True,
-        'serverWebhook': webhook_url,
-        'description': f'Skillifly {sub_name} subscription',
-        'customer': {
-            'email': request.user.email,
-            'reference': str(request.user.id),
-        },
-        'metaData': {
-            'plan_type': plan_type,
-            'user_id': request.user.id,
-        },
-    }
-
-    api_base = _kashier_api_base()
-    headers = {
-        'Authorization': settings.KASHIER_WEBHOOK_SECRET,
-        'api-key': settings.KASHIER_API_KEY,
-        'Content-Type': 'application/json',
-    }
-
-    # Setup retry strategy for network flakiness
-    import requests
-    from requests.adapters import HTTPAdapter
-    from urllib3.util.retry import Retry
-
-    session = requests.Session()
-    retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
-
-    try:
-        resp = session.post(
-            f'{api_base}/v3/payment/sessions',
-            json=payload,
-            headers=headers,
-            timeout=15,
-        )
-        if resp.status_code != 200:
-            logger.error('Kashier error: %s', resp.text)
-            messages.error(request, f'Kashier API Error: {resp.text}')
-            return redirect('payment')
-        resp.raise_for_status()
-        data = resp.json()
-    except requests.exceptions.ConnectionError as exc:
-        logger.error('Kashier network/DNS error: %s', exc)
-        messages.error(request, 'Network error: Unable to reach the payment gateway. Please check your internet connection or try again later.')
-        return redirect('payment')
-    except requests.exceptions.Timeout as exc:
-        logger.error('Kashier timeout error: %s', exc)
-        messages.error(request, 'Payment gateway is taking too long to respond. Please try again.')
-        return redirect('payment')
-    except Exception as exc:
-        err_msg = str(exc)
-        if hasattr(exc, 'response') and exc.response is not None:
-            err_msg = exc.response.text
-        logger.error('Kashier session creation failed: %s', err_msg)
-        messages.error(request, f'Payment gateway unavailable. {err_msg}')
-        return redirect('payment')
-
-    session_url = data.get('sessionUrl')
-    session_id  = data.get('_id', '')
-    if not session_url:
-        logger.error('Kashier returned no sessionUrl: %s', data)
-        messages.error(request, 'Could not initiate payment. Please try again.')
-        return redirect('payment')
-
-    # --- Save pending payment record ---
-    sub = _get_or_create_subscription(sub_name, sub_days)
-    UserPayment.objects.filter(
-        user=request.user, status='pending'
-    ).delete()  # Clean up stale pending records
-    UserPayment.objects.create(
-        user=request.user,
-        subscription=sub,
-        amount=amount_str,
-        status='pending',
-        kashier_order_id=order_id,
-        kashier_session_id=session_id,
-        discount_code_used=coupon_code or None,
-    )
-
-    # Redirect to Kashier hosted payment page
-    return redirect(session_url)
-
-
-@login_required
-def payment_callback(request):
-    """
-    Kashier redirects the user here after paying.
-    We verify the payment by querying the Kashier session status API.
-    """
-    order_id   = request.GET.get('order_id', '').strip()
-    session_id = request.GET.get('sessionId', '').strip()
-
-    if not order_id:
-        return redirect('payment')
-
-    try:
-        upayment = UserPayment.objects.get(
-            user=request.user,
-            kashier_order_id=order_id,
-        )
-    except UserPayment.DoesNotExist:
-        messages.error(request, 'Payment record not found.')
-        return redirect('payment')
-
-    # If already activated (e.g. webhook beat us), go straight to success
-    if upayment.status == 'paid':
-        return redirect('payment_success')
-
-    # Query Kashier for the actual status
-    api_base = _kashier_api_base()
-    sid = session_id or upayment.kashier_session_id
-    
-    import requests
-    from requests.adapters import HTTPAdapter
-    from urllib3.util.retry import Retry
-
-    session = requests.Session()
-    retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
-    
-    try:
-        resp = session.get(
-            f'{api_base}/v3/payment/sessions/{sid}/payment',
-            headers={'Authorization': settings.KASHIER_WEBHOOK_SECRET},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        data = resp.json().get('data', {})
-        status_from_kashier = data.get('status', '').upper()
-    except Exception as exc:
-        logger.error('Kashier status check failed: %s', exc)
-        # Fallback: trust redirect (not ideal; webhook is the canonical source)
-        status_from_kashier = 'PAID'
-
-    if status_from_kashier in ('PAID', 'CAPTURED', 'SUCCESS', 'COMPLETED'):
-        upayment.status = 'paid'
-        upayment.save()
-
-        if upayment.discount_code_used and upayment.discount_code_used != 'SKILLIFLY2026':
-            from .models import DiscountCode
-            try:
-                disc = DiscountCode.objects.get(code=upayment.discount_code_used)
-                disc.usage_count += 1
-                disc.save()
-            except DiscountCode.DoesNotExist:
-                pass
-
-        # Activate portfolio
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-        profile.is_public = True
-        profile.save()
-
-        # Process Affiliate Earnings
-        process_affiliate_earning(upayment)
-
-        return redirect('payment_success')
-    else:
-        upayment.status = 'failed'
-        upayment.save()
-        return redirect('payment_failure')
-
-
-@login_required
-def payment_success(request):
-    return render(request, 'payment/payment_success.html')
-
-
-@login_required
-def payment_failure(request):
-    error_message = request.session.pop('payment_error', "We couldn't process your payment. Please ensure your details are correct and try again.")
-    return render(request, 'payment/payment_failure.html', {'error_message': error_message})
-
-
-@csrf_exempt
-def kashier_webhook(request):
-    """
-    Server-side webhook from Kashier.
-    Verifies HMAC signature then activates/updates the subscription.
-    """
-    if request.method != 'POST':
-        return HttpResponse('Method not allowed', status=405)
-
-    raw_body = request.body
-
-    # --- Signature verification ---
-    sig_header = request.headers.get('x-signature', '') or request.GET.get('signature', '')
-    secret = settings.KASHIER_WEBHOOK_SECRET
-    if secret and sig_header:
-        expected = hmac.new(
-            secret.encode(),
-            raw_body,
-            hashlib.sha256,
-        ).hexdigest()
-        if not hmac.compare_digest(expected, sig_header):
-            logger.warning('Kashier webhook signature mismatch')
-            return HttpResponse('Invalid signature', status=403)
-
-    try:
-        data = json.loads(raw_body)
-    except (json.JSONDecodeError, ValueError):
-        return HttpResponse('Bad JSON', status=400)
-
-    order_id = (
-        data.get('order_id')
-        or data.get('merchantOrderId')
-        or data.get('order')
-        or ''
-    )
-    event_status = (
-        data.get('status')
-        or data.get('transactionStatus')
-        or ''
-    ).upper()
-
-    logger.info('Kashier webhook: order=%s status=%s', order_id, event_status)
-
-    if not order_id:
-        return HttpResponse('OK', status=200)
-
-    try:
-        upayment = UserPayment.objects.select_related('user').get(
-            kashier_order_id=order_id
-        )
-    except UserPayment.DoesNotExist:
-        logger.warning('Kashier webhook: unknown order %s', order_id)
-        return HttpResponse('OK', status=200)
-
-    if event_status in ('PAID', 'CAPTURED', 'SUCCESS', 'COMPLETED'):
-        if upayment.status != 'paid':
-            upayment.status = 'paid'
-            upayment.save()
-            
-            if upayment.discount_code_used and upayment.discount_code_used != 'SKILLIFLY2026':
-                from .models import DiscountCode
-                try:
-                    disc = DiscountCode.objects.get(code=upayment.discount_code_used)
-                    disc.usage_count += 1
-                    disc.save()
-                except DiscountCode.DoesNotExist:
-                    pass
-
-            if upayment.user:
-                profile, _ = Profile.objects.get_or_create(user=upayment.user)
-                profile.is_public = True
-                profile.save()
-
-                # Process Affiliate Earnings
-                process_affiliate_earning(upayment)
-
-                logger.info('Subscription activated for user %s', upayment.user.username)
-    elif event_status in ('FAILED', 'DECLINED', 'CANCELLED', 'CANCELED'):
-        if upayment.status == 'pending':
-            upayment.status = 'failed'
-            upayment.save()
-
-    return HttpResponse('OK', status=200)
 
 
 def sitemap_view(request):
@@ -1707,161 +1204,6 @@ def robots_txt_view(request):
     return HttpResponse(content, content_type="text/plain")
 
 
-# ------------------------------------------------------------------
-# Portfolio Video Details & Sub-pages
-# ------------------------------------------------------------------
-
-def portfolio_reels(request, username):
-    clean_username = username.lstrip('@')
-    user = get_object_or_404(CustomUser, username=clean_username)
-    # Visibility Check
-    profile = getattr(user, 'profile', None)
-    payment = UserPayment.objects.filter(user=user, status='paid').last()
-    has_active_subscription = payment and payment.is_active
-
-    if not has_active_subscription and profile and profile.is_public:
-        profile.is_public = False
-        profile.save(update_fields=['is_public'])
-
-    if profile and not profile.is_public and request.user != user:
-        return render(request, 'errors/403_private.html', {'username': username}, status=403)
-
-    profile.visits += 1
-    profile.save(update_fields=['visits'])
-
-    category_id = request.GET.get('category_id')
-    if category_id:
-        if category_id == '0':
-            projects = Project.objects.filter(user=user, video_type='reel', category__isnull=True)
-        else:
-            projects = Project.objects.filter(user=user, video_type='reel', category_id=category_id)
-    else:
-        projects = Project.objects.filter(user=user, video_type='reel')
-
-    personal_info = PersonalInfo.objects.filter(user=user).first()
-    links = Link.objects.filter(user=user)
-    
-    # Dynamic template selection
-    category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
-    theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
-    
-    template = f"portfolios/{category}/{category}_{theme_name}_reels.html"
-    try:
-        get_template(template)
-    except TemplateDoesNotExist:
-        template = f"portfolios/{category}/{category}_reels.html"
-
-    context = {
-        'projects': projects,
-        'type': 'Reels',
-        'profile_user': user,
-        'username': username,
-        'personal_info': personal_info,
-        'links': links,
-        'category_id': category_id,
-    }
-    return render(request, template, context)
-
-def portfolio_long_videos(request, username):
-    clean_username = username.lstrip('@')
-    user = get_object_or_404(CustomUser, username=clean_username)
-    # Visibility Check
-    profile = getattr(user, 'profile', None)
-    payment = UserPayment.objects.filter(user=user, status='paid').last()
-    has_active_subscription = payment and payment.is_active
-
-    if not has_active_subscription and profile and profile.is_public:
-        profile.is_public = False
-        profile.save(update_fields=['is_public'])
-
-    if profile and not profile.is_public and request.user != user:
-        return render(request, 'errors/403_private.html', {'username': username}, status=403)
-
-    profile.visits += 1
-    profile.save(update_fields=['visits'])
-
-    category_id = request.GET.get('category_id')
-    if category_id:
-        if category_id == '0':
-            projects = Project.objects.filter(user=user, video_type='long', category__isnull=True)
-        else:
-            projects = Project.objects.filter(user=user, video_type='long', category_id=category_id)
-    else:
-        projects = Project.objects.filter(user=user, video_type='long')
-
-    personal_info = PersonalInfo.objects.filter(user=user).first()
-    links = Link.objects.filter(user=user)
-    
-    # Dynamic template selection
-    category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
-    theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
-    
-    template = f"portfolios/{category}/{category}_{theme_name}_long.html"
-    try:
-        get_template(template)
-    except TemplateDoesNotExist:
-        template = f"portfolios/{category}/{category}_long.html"
-
-    context = {
-        'projects': projects,
-        'type': 'Long Videos',
-        'profile_user': user,
-        'username': username,
-        'personal_info': personal_info,
-        'links': links,
-        'category_id': category_id,
-    }
-    return render(request, template, context)
-
-def portfolio_video_detail(request, username, slug):
-    clean_username = username.lstrip('@')
-    user = get_object_or_404(CustomUser, username=clean_username)
-    # Visibility Check
-    profile = getattr(user, 'profile', None)
-    payment = UserPayment.objects.filter(user=user, status='paid').last()
-    has_active_subscription = payment and payment.is_active
-
-    if not has_active_subscription and profile and profile.is_public:
-        profile.is_public = False
-        profile.save(update_fields=['is_public'])
-
-    if profile and not profile.is_public and request.user != user:
-        return render(request, 'errors/403_private.html', {'username': username}, status=403)
-
-    project = get_object_or_404(Project, user=user, slug=slug)
-    personal_info = PersonalInfo.objects.filter(user=user).first()
-
-    category_id = request.GET.get('category_id')
-    if category_id:
-        if category_id == '0':
-            other_videos = Project.objects.filter(user=user, video_type='long', category__isnull=True).exclude(id=project.id)
-        else:
-            other_videos = Project.objects.filter(user=user, video_type='long', category_id=category_id).exclude(id=project.id)
-    else:
-        if project.category:
-            other_videos = Project.objects.filter(user=user, video_type='long', category=project.category).exclude(id=project.id)
-        else:
-            other_videos = Project.objects.filter(user=user, video_type='long', category__isnull=True).exclude(id=project.id)
-
-    category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
-    theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
-
-    template = f"portfolios/{category}/{category}_{theme_name}_detail.html"
-    try:
-        get_template(template)
-    except TemplateDoesNotExist:
-        template = f"portfolios/{category}/{category}_detail.html"
-    
-    context = {
-        'project': project,
-        'profile_user': user,
-        'personal_info': personal_info,
-        'other_videos': other_videos,
-        'username': username,
-        'category_id': category_id,
-    }
-    return render(request, template, context)
-
 
 # ------------------------------------------------------------------
 # PDF Export Views
@@ -1925,271 +1267,6 @@ def contact_view(request):
 
 
 # ------------------------------------------------------------------
-# Manual Payment — InstaPay / Vodafone Cash + Gemini AI Verification
-# ------------------------------------------------------------------
-
-import base64
-from google import genai
-from google.genai import types
-
-@login_required
-def manual_payment_view(request, plan_type):
-    """
-    GET  — show payment instructions + upload form.
-    POST — verify receipt with Gemini AI and activate subscription if valid.
-    """
-    if plan_type not in PLAN_CATALOGUE:
-        messages.error(request, 'Invalid plan selected.')
-        return redirect('payment')
-
-    amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
-    recipient_number = getattr(settings, 'MANUAL_PAYMENT_RECIPIENT', '+201020966071')
-
-    # --- Coupon check (GET param so user can come from pricing page) ---
-    coupon_code = request.POST.get('coupon', request.GET.get('coupon', '')).strip().upper()
-    discount_applied = ''
-
-    from .models import SiteSettings
-    site_settings = SiteSettings.objects.first()
-    if not site_settings:
-        site_settings = SiteSettings.objects.create()
-
-    master_code = site_settings.banner_coupon_code.upper()
-    master_percent = site_settings.banner_discount_percentage
-
-    if coupon_code:
-        # 1) Master Settings Coupon
-        if coupon_code == master_code:
-            if master_percent >= 100:
-                # Full bypass
-                sub = _get_or_create_subscription(sub_name, sub_days)
-                UserPayment.objects.create(
-                    user=request.user,
-                    subscription=sub,
-                    amount=0,
-                    status='paid',
-                    kashier_order_id=f'MANUAL-MASTER-{uuid.uuid4().hex[:8].upper()}',
-                    discount_code_used=coupon_code,
-                )
-                profile, _ = Profile.objects.get_or_create(user=request.user)
-                profile.is_public = True
-                profile.save()
-                messages.success(request, f'Master Coupon applied! Your {sub_name} plan is now active.')
-                return redirect('payment_success')
-            else:
-                # Partial discount
-                original_amount = float(amount_str)
-                discounted_amount = original_amount * (1 - (master_percent / 100.0))
-                amount_str = f"{discounted_amount:.2f}"
-                discount_applied = f'{master_percent}% discount applied (Master Code)!'
-        
-        else:
-            # 2) Database Coupons
-            from .models import DiscountCode
-            try:
-                discount = DiscountCode.objects.get(code=coupon_code, is_active=True)
-                if discount.discount_percentage == 100:
-                    # Full discount — activate immediately
-                    sub = _get_or_create_subscription(sub_name, sub_days)
-                    UserPayment.objects.create(
-                        user=request.user,
-                        subscription=sub,
-                        amount=0,
-                        status='paid',
-                        kashier_order_id=f'MANUAL-COUPON-{uuid.uuid4().hex[:12].upper()}',
-                        discount_code_used=coupon_code,
-                    )
-                    discount.usage_count += 1
-                    discount.save()
-                    profile, _ = Profile.objects.get_or_create(user=request.user)
-                    profile.is_public = True
-                    profile.save()
-                    messages.success(request, f'Coupon applied! Your {sub_name} plan is now active.')
-                    return redirect('payment_success')
-                else:
-                    # Partial discount — reduce amount
-                    original_amount = float(amount_str)
-                    discounted_amount = original_amount * (1 - (discount.discount_percentage / 100.0))
-                    amount_str = f"{discounted_amount:.2f}"
-                    discount_applied = f'{discount.discount_percentage}% discount applied!'
-            except DiscountCode.DoesNotExist:
-                if request.method == 'POST':
-                    messages.error(request, 'Invalid or expired coupon code.')
-                    return redirect('payment')
-                # On GET, just ignore invalid coupon silently
-
-    context = {
-        'plan_type': plan_type,
-        'plan_name': sub_name,
-        'amount': amount_str,
-        'recipient_number': recipient_number,
-        'coupon_code': coupon_code,
-        'discount_applied': discount_applied,
-    }
-
-    if request.method == 'GET':
-        return render(request, 'payment/manual_payment.html', context)
-
-    # --- POST: process the uploaded receipt ---
-    payment_method = request.POST.get('payment_method', 'vodafone').strip()
-    sender_identifier = request.POST.get('sender_identifier', '').strip()
-    receipt_file = request.FILES.get('receipt_image')
-
-    if not sender_identifier:
-        messages.error(request, 'Please enter your phone number or InstaPay handle.')
-        return render(request, 'payment/manual_payment.html', context)
-
-    if not receipt_file:
-        messages.error(request, 'Please upload a screenshot of your payment receipt.')
-        return render(request, 'payment/manual_payment.html', context)
-
-    # --- Standardize Image for Gemini using PIL ---
-    import io
-    from PIL import Image
-
-    try:
-        receipt_file.seek(0)
-        with Image.open(receipt_file) as img:
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
-            # Resize to max 1024x1024 to save bandwidth and ensure compatibility
-            img.thumbnail((1024, 1024))
-            
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format='JPEG')
-            gemini_image_bytes = img_byte_arr.getvalue()
-            gemini_mime_type = 'image/jpeg'
-    except Exception as e:
-        logger.error('Invalid image uploaded by %s: %s', request.user.username, e)
-        messages.error(request, 'The uploaded image is invalid or corrupted. Please upload a valid image file.')
-        return render(request, 'payment/manual_payment.html', context)
-
-    # Reset file pointer for Django's model save
-    receipt_file.seek(0)
-
-    # Save the ManualPayment record
-    from .models import ManualPayment
-    manual_pay = ManualPayment.objects.create(
-        user=request.user,
-        plan_type=plan_type,
-        amount_expected=amount_str,
-        payment_method=payment_method,
-        sender_identifier=sender_identifier,
-        receipt_image=receipt_file,
-        status='pending',
-        discount_code_used=coupon_code or None,
-    )
-
-    # --- Gemini Vision Verification ---
-    ai_failed_needs_review = False
-    try:
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
-
-        image_part = types.Part.from_bytes(
-            data=gemini_image_bytes,
-            mime_type=gemini_mime_type,
-        )
-
-        prompt = f"""You are a strict payment verification assistant for a subscription service.
-Carefully examine this payment receipt screenshot and check ALL THREE conditions:
-
-1. RECIPIENT: The money was sent TO the number containing "201020966071" or "+201020966071" or "01020966071" OR the InstaPay handle "ahmed_medhat_06@instapay"
-2. SENDER: The sender's identifier (phone number or InstaPay handle) contains or matches "{sender_identifier}"  
-3. AMOUNT: The total amount paid is AT LEAST {amount_str} EGP (you may accept amounts greater than or equal to {amount_str} EGP)
-
-IMPORTANT rules:
-- If the image is blurry, unreadable, or not a payment receipt, set verified=false
-- All THREE conditions must be true for verified=true
-- Be strict — do not approve if any condition is unclear or missing
-- For the reason field, if verification fails, provide a perfect, user-friendly error message explaining exactly which condition failed. For example: "The receipt shows an amount less than the required {amount_str} EGP", "The sender handle does not match {sender_identifier}", or "The recipient number is incorrect".
-
-Respond ONLY with this exact JSON format, no extra text:
-{{"verified": true or false, "reason": "perfect error message or success message", "amount_found": "X EGP or not found", "recipient_found": "number or not found", "sender_found": "identifier or not found"}}"""
-
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=[prompt, image_part]
-        )
-        response_text = response.text.strip()
-
-        # Strip markdown code fences if Gemini wraps the JSON
-        if response_text.startswith('```'):
-            lines = response_text.split('\n')
-            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
-
-        result = json.loads(response_text)
-        verified = result.get('verified', False)
-        reason = result.get('reason', 'Verification could not be completed.')
-
-        logger.info(
-            'Gemini receipt verification for user %s plan %s: verified=%s reason=%s',
-            request.user.username, plan_type, verified, reason
-        )
-
-    except json.JSONDecodeError:
-        logger.error('Gemini returned non-JSON response: %s', response_text if 'response_text' in dir() else 'N/A')
-        verified = True
-        reason = 'AI returned non-JSON response. Sent for manual review.'
-        ai_failed_needs_review = True
-    except Exception as exc:
-        logger.exception('Gemini verification error for user %s', request.user.username)
-        verified = True
-        reason = f'AI Error: {str(exc)}. Sent for manual review.'
-        ai_failed_needs_review = True
-
-    if verified:
-        # Activate subscription
-        sub = _get_or_create_subscription(sub_name, sub_days)
-        UserPayment.objects.create(
-            user=request.user,
-            subscription=sub,
-            amount=amount_str,
-            status='paid',
-            kashier_order_id=f'MANUAL-{uuid.uuid4().hex[:12].upper()}',
-            discount_code_used=coupon_code or None,
-        )
-
-        # Increment discount usage if partial coupon was used
-        if coupon_code and coupon_code not in ('SKILLIFLY2026', getattr(settings, 'SKILLIFLY_COUPON_CODE', '')):
-            from .models import DiscountCode
-            try:
-                disc = DiscountCode.objects.get(code=coupon_code)
-                disc.usage_count += 1
-                disc.save()
-            except DiscountCode.DoesNotExist:
-                pass
-
-        # Mark manual payment as verified or needs_review
-        if ai_failed_needs_review:
-            manual_pay.status = 'needs_review'
-            manual_pay.rejection_reason = reason
-        else:
-            manual_pay.status = 'verified'
-        manual_pay.save()
-
-        # Make portfolio public
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-        profile.is_public = True
-        profile.save()
-
-        logger.info('Manual payment verified and subscription activated for user %s', request.user.username)
-        messages.success(request, f'Payment verified! Your {sub_name} subscription is now active.')
-        return redirect('payment_success')
-    else:
-        # Mark as rejected
-        manual_pay.status = 'rejected'
-        manual_pay.rejection_reason = reason
-        manual_pay.save()
-
-        request.session['payment_error'] = reason
-        return redirect('payment_failure')
-
-
-@login_required
-def manual_payment_pending(request):
-    """Simple holding page (currently unused — verification is instant.)"""
-    return render(request, 'payment/payment_success.html')
-
 
 @user_passes_test(lambda u: u.is_superuser)
 def revenue_report(request):
@@ -2242,7 +1319,22 @@ def revenue_report(request):
     # Revenue only from real payments
     total_revenue = paid_payments.aggregate(total=Sum('amount'))['total'] or 0
     avg_payment   = total_revenue / paid_count if paid_count > 0 else 0
-    conversion_rate = round((paid_count / total_transactions * 100), 1) if total_transactions > 0 else 0
+    
+    # Calculate conversion metrics
+    from .models import CustomUser
+    total_signups = CustomUser.objects.filter(date_joined__range=(start_dt, end_dt)).count()
+    unique_paid_users = paid_payments.values('user').distinct().count()
+    conversion_rate = round((unique_paid_users / total_signups * 100), 1) if total_signups > 0 else 0
+
+    # Calculate Monthly vs Annual plan breakdown
+    monthly_paid_count = paid_payments.filter(subscription__days=30).count()
+    six_month_paid_count = paid_payments.filter(subscription__days=180).count()
+    annual_paid_count = paid_payments.filter(subscription__days=365).count()
+    total_paid_subs = monthly_paid_count + six_month_paid_count + annual_paid_count
+    
+    total_monthly_annual = monthly_paid_count + annual_paid_count
+    monthly_pct = (monthly_paid_count / total_monthly_annual * 100) if total_monthly_annual > 0 else 0
+    annual_pct = (annual_paid_count / total_monthly_annual * 100) if total_monthly_annual > 0 else 0
 
     # --- Plan breakdown ---
     from django.db.models import Count
@@ -2276,7 +1368,15 @@ def revenue_report(request):
         'free_count':        free_count,
         'total_transactions': total_transactions,
         'avg_payment':       avg_payment,
+        'total_signups':     total_signups,
+        'unique_paid_users': unique_paid_users,
         'conversion_rate':   conversion_rate,
+        'monthly_paid_count': monthly_paid_count,
+        'six_month_paid_count': six_month_paid_count,
+        'annual_paid_count':  annual_paid_count,
+        'total_paid_subs':    total_paid_subs,
+        'monthly_pct':        monthly_pct,
+        'annual_pct':         annual_pct,
         'plan_breakdown':    plan_breakdown,
         'start_date':        start_date,
         'end_date':          end_date,
@@ -2328,6 +1428,7 @@ def admin_dashboard(request):
     # Paid users = unique users who made a successful payment in this period
     paid_user_ids_in_period = UserPayment.objects.filter(
         status='paid', 
+        amount__gt=0,
         date__date__range=(start_date, end_date)
     ).values_list('user_id', flat=True).distinct()
     
@@ -2336,8 +1437,14 @@ def admin_dashboard(request):
     
     # Global paid user IDs for the table 'Paid' badge (unfiltered)
     # Check if a user has a payment with status 'paid' that is still active
-    all_payments = UserPayment.objects.filter(status='paid').select_related('subscription')
+    all_payments = UserPayment.objects.filter(status='paid', amount__gt=0).select_related('subscription')
     active_paid_user_ids = {p.user_id for p in all_payments if p.is_active}
+    
+    # Total revenue in period
+    total_revenue = UserPayment.objects.filter(
+        status='paid',
+        date__date__range=(start_date, end_date)
+    ).aggregate(total=Sum('amount'))['total'] or 0
     
     # 3. Growth Chart Data (Filtered by range and period)
     signup_labels = []
@@ -2359,6 +1466,7 @@ def admin_dashboard(request):
             # 2. New Paid Users (payments made in interval)
             paid_count = UserPayment.objects.filter(
                 status='paid',
+                amount__gt=0,
                 date__date__gte=current_dt,
                 date__date__lt=next_dt
             ).values('user').distinct().count()
@@ -2377,6 +1485,7 @@ def admin_dashboard(request):
             # 2. New Paid Users
             paid_count = UserPayment.objects.filter(
                 status='paid',
+                amount__gt=0,
                 date__date=current_dt
             ).values('user').distinct().count()
             
@@ -2388,13 +1497,16 @@ def admin_dashboard(request):
     # 4. Users Table Data (NOW FILTERED BY RANGE)
     users_list = CustomUser.objects.filter(
         date_joined__date__range=(start_date, end_date)
-    ).select_related('profile', 'personal_info').order_by('-date_joined')
+    ).select_related('profile', 'personal_info').annotate(
+        total_spent=Sum('userpayment__amount')
+    ).order_by('-date_joined')
     
     context = {
         'total_users': total_users,
         'total_paid_users': total_paid_users,
         'paid_user_ids': list(active_paid_user_ids), # Convert to list for template 'in' check
         'conversion_rate': round(conversion_rate, 1),
+        'total_revenue': total_revenue,
         'signup_labels': json.dumps(signup_labels),
         'signup_values': json.dumps(signup_values),
         'paid_values': json.dumps(paid_values),
@@ -2429,51 +1541,6 @@ def manage_dashboard(request):
         'banner_form': banner_form,
     }
     return render(request, 'core/manage.html', context)
-
-@user_passes_test(lambda u: u.is_superuser)
-def manage_discounts_create(request):
-    from .forms import DiscountCodeForm
-    if request.method == 'POST':
-        form = DiscountCodeForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Discount code created successfully!")
-        else:
-            messages.error(request, f"Error creating discount code: {form.errors.as_text()}")
-    return redirect('manage_dashboard')
-
-@user_passes_test(lambda u: u.is_superuser)
-def manage_discounts_delete(request, pk):
-    from .models import DiscountCode
-    discount = get_object_or_404(DiscountCode, pk=pk)
-    code = discount.code
-    discount.delete()
-    messages.success(request, f"Discount code '{code}' deleted.")
-    return redirect('manage_dashboard')
-
-@user_passes_test(lambda u: u.is_superuser)
-def manage_discounts_toggle(request, pk):
-    from .models import DiscountCode
-    discount = get_object_or_404(DiscountCode, pk=pk)
-    discount.is_active = not discount.is_active
-    discount.save()
-    status = "activated" if discount.is_active else "deactivated"
-    messages.success(request, f"Discount code '{discount.code}' {status}.")
-    return redirect('manage_dashboard')
-
-@user_passes_test(lambda u: u.is_superuser)
-def manage_banner_update(request):
-    from .models import SiteSettings
-    from .forms import SiteSettingsForm
-    site_settings = SiteSettings.objects.first()
-    if request.method == 'POST':
-        form = SiteSettingsForm(request.POST, instance=site_settings)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Site banner settings updated!")
-        else:
-            messages.error(request, "Error updating banner settings.")
-    return redirect('manage_dashboard')
 
 
 @user_passes_test(lambda u: u.is_superuser)

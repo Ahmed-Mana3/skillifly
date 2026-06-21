@@ -8,7 +8,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('profile/', views.profile_view, name='profile'),
     path('themes/', views.themes, name='themes'),
-    path('examples/', views.examples_view, name='examples'),
     path('dashboard/seo/', views.seo_settings_view, name='seo_settings'),
     path('dashboard/domain/', views.custom_domain_view, name='custom_domain'),
     path('dashboard/analytics/', views.analytics_dashboard, name='analytics'),
@@ -17,15 +16,6 @@ urlpatterns = [
     path('ajax/save-category/', views.ajax_save_category, name='ajax_save_category'),
     path('ajax/delete-category/', views.ajax_delete_category, name='ajax_delete_category'),
     path('update_portfolio/', views.update_portfolio_view, name='update_portfolio'),
-    path('payment/', views.pricing_view, name='payment'),
-    path('pay/<str:plan_type>/', views.create_payment, name='create_payment'),
-    path('manual-pay/<str:plan_type>/', views.manual_payment_view, name='manual_payment'),
-    path('manual-pay/pending/', views.manual_payment_pending, name='manual_payment_pending'),
-    path('payment/success/', views.payment_success, name='payment_success'),
-    path('payment/failure/', views.payment_failure, name='payment_failure'),
-    path('payment/callback/', views.payment_callback, name='payment_callback'),
-    path('webhook/kashier/', views.kashier_webhook, name='kashier_webhook'),
-
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
     path('sitemap.xml', views.sitemap_view, name='sitemap'),
@@ -43,20 +33,10 @@ urlpatterns = [
     
     # Management - Move more specific ones UP
     path('manage/affiliates/', views.manage_affiliates, name='manage_affiliates'),
-    path('manage/discounts/create/', views.manage_discounts_create, name='manage_discounts_create'),
-    path('manage/discounts/delete/<int:pk>/', views.manage_discounts_delete, name='manage_discounts_delete'),
-    path('manage/discounts/toggle/<int:pk>/', views.manage_discounts_toggle, name='manage_discounts_toggle'),
-    path('manage/banner/update/', views.manage_banner_update, name='manage_banner_update'),
     path('manage/blog/', include('blog.dashboard_urls')),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
     
     path('user-activity/', views.user_activity_report, name='user_activity_report'),
     path('affiliate/', views.affiliate_view, name='affiliate'),
     path('affiliate/join/', views.join_affiliate, name='join_affiliate'),
-    
-    path('<str:username>/reels/', views.portfolio_reels, name='portfolio_reels'),
-    path('<str:username>/long-videos/', views.portfolio_long_videos, name='portfolio_long_videos'),
-    path('<str:username>/long-videos/<slug:slug>/', views.portfolio_video_detail, name='portfolio_video_detail'),
-    path('<str:username>/category/<int:category_id>/', views.portfolio_category_detail, name='portfolio_category_detail'),
-    path('<str:username>/', views.preview_view, name='preview'),
 ]
