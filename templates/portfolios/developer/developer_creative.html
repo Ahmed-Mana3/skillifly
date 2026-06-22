@@ -831,10 +831,10 @@
         <div class="marquee-track">
             {# Duplicated for seamless infinite loop #}
             {% for skill in skills %}
-            <span class="marquee-item">{{ skill.name }}<span class="sep"><img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain"></span></span>
+            <span class="marquee-item">{{ skill.name }}<span class="sep">✦</span></span>
             {% endfor %}
             {% for skill in skills %}
-            <span class="marquee-item">{{ skill.name }}<span class="sep"><img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain"></span></span>
+            <span class="marquee-item">{{ skill.name }}<span class="sep">✦</span></span>
             {% endfor %}
         </div>
     </div>
