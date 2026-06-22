@@ -644,6 +644,7 @@ def contact_view(request):
 @user_passes_test(lambda u: u.is_superuser)
 def revenue_report(request):
     """Hidden admin-only revenue report with date filtering and graphs."""
+    from django.db.models import Sum, Count
     platform_launch_date = timezone.datetime(2026, 5, 1, tzinfo=timezone.get_current_timezone()).date()
     today = timezone.now().date()
 
@@ -703,16 +704,15 @@ def revenue_report(request):
     monthly_paid_count = paid_payments.filter(subscription__days=30).count()
     six_month_paid_count = paid_payments.filter(subscription__days=180).count()
     annual_paid_count = paid_payments.filter(subscription__days=365).count()
-    total_paid_subs = monthly_paid_count + six_month_paid_count + annual_paid_count
+    total_paid_subs = monthly_paid_count + annual_paid_count
     
     total_monthly_annual = monthly_paid_count + annual_paid_count
     monthly_pct = (monthly_paid_count / total_monthly_annual * 100) if total_monthly_annual > 0 else 0
     annual_pct = (annual_paid_count / total_monthly_annual * 100) if total_monthly_annual > 0 else 0
 
     # --- Plan breakdown ---
-    from django.db.models import Count
     plan_breakdown = list(
-        payments.values('subscription__name')
+        paid_payments.values('subscription__name')
         .annotate(count=Count('id'), revenue=Sum('amount'))
         .order_by('-count')
     )

@@ -738,15 +738,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ── Donut Chart (Plan Split) ── */
   const donutCtx = document.getElementById('donutChart').getContext('2d');
-  const hasPlanData = (monthlyTotal + sixMonthTotal + annualTotal) > 0;
+  const hasPlanData = (monthlyTotal + annualTotal) > 0;
 
   new Chart(donutCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Monthly', '6 Months', 'Annual'],
+      labels: ['Monthly', 'Annual'],
       datasets: [{
-        data: hasPlanData ? [monthlyTotal, sixMonthTotal, annualTotal] : [1, 0, 0],
-        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+        data: hasPlanData ? [monthlyTotal, annualTotal] : [1, 0],
+        backgroundColor: ['#3b82f6', '#10b981'],
         borderColor: '#ffffff',
         borderWidth: 3,
         hoverOffset: 6,
