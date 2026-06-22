@@ -10,8 +10,6 @@ urlpatterns = [
     path('themes/', views.themes, name='themes'),
     path('dashboard/seo/', views.seo_settings_view, name='seo_settings'),
     path('dashboard/domain/', views.custom_domain_view, name='custom_domain'),
-    path('dashboard/analytics/', views.analytics_dashboard, name='analytics'),
-    path('api/track/', views.track_analytics, name='track_analytics'),
 
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
@@ -32,8 +30,6 @@ urlpatterns = [
     path('manage/affiliates/', views.manage_affiliates, name='manage_affiliates'),
     path('manage/blog/', include('blog.dashboard_urls')),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
-    
-    path('user-activity/', views.user_activity_report, name='user_activity_report'),
     path('affiliate/', views.affiliate_view, name='affiliate'),
     path('affiliate/join/', views.join_affiliate, name='join_affiliate'),
 ]
