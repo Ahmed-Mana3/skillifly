@@ -24,6 +24,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     path('ckeditor/', include('ckeditor_uploader.urls')),
     path('', include('payments.urls')),
+    path('builder/', include('builder.urls')),
     path('', include('core.urls')),
     path('', include('portfolios.urls')),  # must be last — contains <username>/ catch-all
 ]

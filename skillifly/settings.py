@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'blog',
     'payments',
     'portfolios',
+    'builder',
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

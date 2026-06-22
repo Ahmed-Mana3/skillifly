@@ -247,7 +247,7 @@ const Builder = {
             wrapper.appendChild(btn);
         }
 
-        container.appendChild(wrapper);
+        container.prepend(wrapper);
         totalFormsInput.value = count + 1;
 
         this.setupImagePreviews();

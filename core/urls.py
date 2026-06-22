@@ -12,10 +12,7 @@ urlpatterns = [
     path('dashboard/domain/', views.custom_domain_view, name='custom_domain'),
     path('dashboard/analytics/', views.analytics_dashboard, name='analytics'),
     path('api/track/', views.track_analytics, name='track_analytics'),
-    path('builder/', views.builder_view, name='builder'),
-    path('ajax/save-category/', views.ajax_save_category, name='ajax_save_category'),
-    path('ajax/delete-category/', views.ajax_delete_category, name='ajax_delete_category'),
-    path('update_portfolio/', views.update_portfolio_view, name='update_portfolio'),
+
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
     path('sitemap.xml', views.sitemap_view, name='sitemap'),
