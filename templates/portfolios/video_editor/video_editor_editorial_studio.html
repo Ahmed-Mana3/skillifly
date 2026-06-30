@@ -1251,7 +1251,7 @@
 
         <div class="project-grid">
           {% for project in projects %}
-          <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-card" data-tilt>
+          <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/#reel-{{ project.id }}{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-card" data-tilt>
             <div class="project-rec">REC</div>
             <div class="project-tc">00:14:02:18</div>
             <div class="project-media">

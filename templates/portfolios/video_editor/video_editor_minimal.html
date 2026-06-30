@@ -1212,7 +1212,7 @@
           <div class="project-description">{{ project.details }}</div>
           {% endif %}
           {% if project.url %}
-          <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-link">
+          <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/#reel-{{ project.id }}{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-link">
             View Project
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1398,9 +1398,10 @@
         const type = this.dataset.videoType;
         const slug = this.dataset.slug;
         const username = SF_ANALYTICS.username;
+        const projectId = this.dataset.projectId;
 
         if (type === 'reel') {
-          window.location.href = `/${username}/reels/`;
+          window.location.href = `/${username}/reels/#reel-${projectId}`;
         } else if (slug) {
           window.location.href = `/${username}/long-videos/${slug}/`;
         } else {

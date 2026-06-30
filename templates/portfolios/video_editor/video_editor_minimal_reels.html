@@ -372,7 +372,7 @@
 
     <div class="reels-container" id="reelsContainer">
         {% for project in projects %}
-        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}">
+        <div class="reel-slide" id="reel-{{ project.id }}" data-project-id="{{ project.id }}" data-url="{{ project.url }}">
             <div class="ambient-glow" id="glow-{{ project.id }}"></div>
             <div class="video-wrapper">
                 <div class="loading-shimmer"></div>
@@ -650,6 +650,55 @@
             username: "{{ username }}"
         };
     </script>
-    <script src="{% static 'js/sf_analytics.js' %}"></script>
+    <script src="{% static 'js/sf_analytics.js' %}">
+            // Auto-reorder reels based on URL hash so clicked reel is first, rest follow below
+            if (window.location.hash) {
+                var targetSlide = document.querySelector(window.location.hash);
+                if (targetSlide && targetSlide.classList.contains('reel-slide')) {
+                    var reelContainer = document.getElementById('reelsContainer') || document.querySelector('.reels-container');
+                    
+                    // Disable smooth scrolling temporarily to prevent glitches
+                    var originalBehavior = getComputedStyle(reelContainer).scrollBehavior;
+                    reelContainer.style.scrollBehavior = 'auto';
+
+                    var allSlides = Array.from(reelContainer.querySelectorAll('.reel-slide'));
+                    var targetIdx = allSlides.indexOf(targetSlide);
+
+                    if (targetIdx > 0) {
+                        var contactSlide = document.getElementById('contactSlide');
+                        var reelSlides = contactSlide ? allSlides.filter(function(s) { return s !== contactSlide; }) : allSlides;
+                        var targetReelIdx = reelSlides.indexOf(targetSlide);
+
+                        if (targetReelIdx > 0) {
+                            var reordered = reelSlides.slice(targetReelIdx).concat(reelSlides.slice(0, targetReelIdx));
+                            if (contactSlide) reordered.push(contactSlide);
+
+                            reordered.forEach(function(slide, i) {
+                                slide.dataset.index = i;
+                                reelContainer.appendChild(slide);
+                            });
+
+                            if (typeof obs !== 'undefined' && obs.disconnect) {
+                                obs.disconnect();
+                                reordered.forEach(function(s) { obs.observe(s); });
+                            }
+
+                            var dotEls = document.querySelectorAll('.dot');
+                            if (dotEls.length > 0) {
+                                dotEls.forEach(function(d) { d.classList.remove('active'); });
+                                dotEls[0].classList.add('active');
+                            }
+                        }
+                    }
+                    
+                    // Force scrollTop to 0 instantly
+                    reelContainer.scrollTop = 0;
+                    setTimeout(function() {
+                        reelContainer.scrollTop = 0;
+                        reelContainer.style.scrollBehavior = originalBehavior === 'smooth' ? 'smooth' : '';
+                    }, 50);
+                }
+            }
+    </script>
 </body>
 </html>

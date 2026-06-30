@@ -190,7 +190,7 @@
         <div class="projects-grid">
             {% for project in projects %}
             {% if project.video_type == 'reel' %}
-            <a href="/{{ personal_info.user.username }}/reels/" class="project-card reveal-scale" data-project-id="{{ project.id }}" style="transition-delay:{% if forloop.counter0 < 4 %}{{ forloop.counter0|add:"1" }}00ms{% else %}400ms{% endif %}">
+            <a href="/{{ personal_info.user.username }}/reels/#reel-{{ project.id }}" class="project-card reveal-scale" data-project-id="{{ project.id }}" style="transition-delay:{% if forloop.counter0 < 4 %}{{ forloop.counter0|add:"1" }}00ms{% else %}400ms{% endif %}">
             {% else %}
             <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="project-card reveal-scale" data-project-id="{{ project.id }}" style="transition-delay:{% if forloop.counter0 < 4 %}{{ forloop.counter0|add:"1" }}00ms{% else %}400ms{% endif %}">
             {% endif %}
