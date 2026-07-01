@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/cyan.css' %}">
+    <style>
+        :root {
+            --bg: #00E5FF;
+            --surface: #ffffff;
+            --accent: #000000;
+            --text: #000000;
+            --text-dim: #2d2d2d;
+            --border: #000000;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        .navbar {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--border);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 800;
+            transition: all 0.2s;
+            border: 3px solid var(--border);
+            padding: 8px 16px;
+            box-shadow: 3px 3px 0px var(--border);
+            text-transform: uppercase;
+        }
+
+        .back-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px var(--border);
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        /* Header */
+        .category-header {
+            text-align: center;
+            padding: 80px 20px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .category-eyebrow {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .category-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .category-desc {
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 5% 100px;
+        }
+
+        .project-card {
+            background: var(--surface);
+            border: 3px solid var(--border);
+            box-shadow: 6px 6px 0px var(--border);
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 10px 10px 0px var(--border);
+        }
+
+        .project-thumb {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            overflow: hidden;
+            border-bottom: 3px solid var(--border);
+        }
+
+        .project-thumb img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: filter 0.4s, transform 0.4s;
+        }
+
+        .project-card:hover .project-thumb img {
+            filter: grayscale(0%);
+            transform: scale(1.05);
+        }
+
+        .play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border: 3px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s;
+            color: #000;
+        }
+
+        .project-card:hover .play-btn {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .project-info {
+            padding: 24px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-type {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .project-title-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .project-desc-text {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive Styles */
+        @media(max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px 20px;
+                align-items: center;
+            }
+            .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .category-header {
+                padding: 40px 20px 20px;
+            }
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Animated Background Shapes -->
+    <div class="shapes-bg">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <nav class="navbar">
+        <a href="{% url 'preview' username=portfolio_user.username %}#projects" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back to Portfolio
+        </a>
+    </nav>
+
+    <header class="category-header">
+        <span class="category-eyebrow">Collection</span>
+        <h1 class="category-title">{{ category.name }}</h1>
+        {% if category.description %}
+        <p class="category-desc">{{ category.description }}</p>
+        {% endif %}
+    </header>
+
+    <main class="projects-grid">
+        {% for project in projects %}
+        <a href="{% if project.video_type == 'long' %}{% url 'portfolio_video_detail' username=portfolio_user.username slug=project.slug %}?category_id={{ category.id }}{% else %}{% url 'portfolio_reels' username=portfolio_user.username %}?category_id={{ category.id }}{% endif %}" class="project-card">
+            <div class="project-thumb">
+                {% if project.image %}
+                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                {% else %}
+                <div style="width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Bebas Neue'; font-size:3rem">▶</div>
+                {% endif %}
+                <div class="play-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+            </div>
+            <div class="project-info">
+                <span class="project-type">{{ project.get_video_type_display }}</span>
+                <h3 class="project-title-text">{{ project.title }}</h3>
+                {% if project.details %}
+                <p class="project-desc-text">{{ project.details|truncatechars:100 }}</p>
+                {% endif %}
+            </div>
+        </a>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-dim); border: 3px solid var(--border); box-shadow: 6px 6px 0px var(--border); background: var(--surface);">
+            <h3>No projects in this collection yet.</h3>
+        </div>
+        {% endfor %}
+    </main>
+
+    <footer class="footer">
+        <a href="/" class="skillifly-tag" target="_blank" rel="noopener">
+            <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+            <span>Powered by Skillifly</span>
+        </a>
+    </footer>
+
+    <script>
+        /* Custom Cursor */
+        const cursor = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            ring.style.left = ringX + 'px';
+            ring.style.top = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        document.querySelectorAll('a, button, .project-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                ring.style.width = '60px';
+                ring.style.height = '60px';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                ring.style.width = '40px';
+                ring.style.height = '40px';
+            });
+        });
+    </script>
+</body>
+</html>

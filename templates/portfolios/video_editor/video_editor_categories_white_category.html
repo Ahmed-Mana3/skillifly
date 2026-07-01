@@ -200,23 +200,30 @@
             flex-direction: column;
             flex-grow: 1;
             transform: translateZ(20px);
+            border-top: 1px solid rgba(0,0,0,0.06);
+            background: #ffffff;
         }
         .project-title {
-            font-size: 1.35rem;
-            font-weight: 700;
-            line-height: 1.3;
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1.25;
             margin-bottom: 8px;
-            color: #fff;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+            transition: color 0.25s;
+        }
+        .project-card:hover .project-title {
+            color: var(--accent-glow);
         }
         .project-desc {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            line-height: 1.5;
+            font-size: 0.875rem;
+            color: #475569;
+            line-height: 1.55;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            font-weight: 300;
+            font-weight: 400;
         }
         .project-link {
             display: inline-flex;
@@ -292,7 +299,7 @@
     <div class="projects-grid">
         {% for project in projects %}
         {% if project.video_type == 'reel' %}
-        <a href="/{{ portfolio_user.username }}/reels/?category_id={{ category.id }}" class="project-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
+        <a href="/{{ portfolio_user.username }}/reels/?category_id={{ category.id }}#reel-{{ project.id }}" class="project-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
         {% else %}
         <a href="/{{ portfolio_user.username }}/long-videos/{{ project.slug }}/?category_id={{ category.id }}" class="project-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
         {% endif %}
@@ -319,9 +326,6 @@
 
             <div class="project-info">
                 <h3 class="project-title">{{ project.title }}</h3>
-                {% if project.details %}
-                <p class="project-desc">{{ project.details }}</p>
-                {% endif %}
                 <span class="project-link">
                     {% if project.video_type == 'reel' %}Watch Reels{% else %}Watch Video{% endif %}
                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

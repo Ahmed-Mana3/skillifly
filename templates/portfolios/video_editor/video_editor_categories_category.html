@@ -292,7 +292,7 @@
     <div class="projects-grid">
         {% for project in projects %}
         {% if project.video_type == 'reel' %}
-        <a href="/{{ portfolio_user.username }}/reels/?category_id={{ category.id }}" class="project-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
+        <a href="/{{ portfolio_user.username }}/reels/?category_id={{ category.id }}#reel-{{ project.id }}" class="project-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
         {% else %}
         <a href="/{{ portfolio_user.username }}/long-videos/{{ project.slug }}/?category_id={{ category.id }}" class="project-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
         {% endif %}
@@ -319,9 +319,6 @@
 
             <div class="project-info">
                 <h3 class="project-title">{{ project.title }}</h3>
-                {% if project.details %}
-                <p class="project-desc">{{ project.details }}</p>
-                {% endif %}
                 <span class="project-link">
                     {% if project.video_type == 'reel' %}Watch Reels{% else %}Watch Video{% endif %}
                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

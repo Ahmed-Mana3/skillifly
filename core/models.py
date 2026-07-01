@@ -139,6 +139,23 @@ class Project(models.Model):
     def __str__(self):
         return f"{self.title} ({self.get_video_type_display()})"
 
+    @property
+    def youtube_id(self):
+        import re
+        if not self.url: return None
+        if 'youtu' in self.url:
+            m = re.search(r'(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=))([^"&?\/\s]{11})', self.url)
+            return m.group(1) if m else None
+        return None
+
+    @property
+    def vimeo_id(self):
+        import re
+        if not self.url: return None
+        if 'vimeo' in self.url:
+            m = re.search(r'vimeo\.com\/(?:video\/)?([0-9]+)', self.url)
+            return m.group(1) if m else None
+        return None
 # 9. Social/External Links
 class Link(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="links")

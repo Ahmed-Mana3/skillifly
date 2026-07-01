@@ -18,15 +18,20 @@
             --safe-bot: env(safe-area-inset-bottom, 0px);
         }
 
-        body {
+        html, body {
             overflow: hidden;
+            overflow-x: hidden;
+            max-width: 100%;
             background: #000;
         }
 
         /* ─── Reels Container ─── */
         .reels-container {
             height: 100dvh;
+            width: 100%;
+            max-width: 100vw;
             overflow-y: scroll;
+            overflow-x: hidden;
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
             scrollbar-width: none;
@@ -39,6 +44,8 @@
         .reel-slide {
             height: 100dvh;
             width: 100%;
+            max-width: 100vw;
+            overflow: hidden;
             scroll-snap-align: start;
             scroll-snap-stop: always;
             position: relative;
@@ -218,58 +225,87 @@
         .close-btn:hover { border-color: var(--accent); background: var(--surface); color: var(--accent-glow); }
 
         /* ─── Contact Slide ─── */
+        #contactSlide {
+            background: radial-gradient(ellipse at 20% 50%, rgba(16,185,129,0.22) 0%, transparent 55%),
+                        radial-gradient(ellipse at 80% 30%, rgba(5,255,141,0.12) 0%, transparent 50%),
+                        #020d07;
+        }
         .contact-slide-inner {
             text-align: center;
             padding: 40px 32px;
-            max-width: 500px; width: 100%;
+            max-width: 520px; width: 100%;
             pointer-events: auto;
             z-index: 10; position: relative;
+            background: rgba(7, 24, 14, 0.55);
+            border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 28px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 80px rgba(5,255,141,0.1), 0 30px 60px rgba(0,0,0,0.5);
+        }
+        .contact-eyebrow {
+            display: inline-block;
+            font-size: 0.62rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent-glow);
+            font-weight: 800; margin-bottom: 20px;
+            border: 1px solid rgba(5,255,141,0.3);
+            padding: 5px 16px; border-radius: 100px;
+            background: rgba(5,255,141,0.06);
         }
         .contact-big {
-            font-size: clamp(2.5rem, 8vw, 4.2rem);
-            line-height: 0.95; letter-spacing: -0.02em;
-            margin-bottom: 40px;
-            font-weight: 800;
+            font-size: clamp(2.8rem, 10vw, 5rem);
+            line-height: 0.92; letter-spacing: -0.03em;
+            margin-bottom: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 2px 40px rgba(0,0,0,0.6);
         }
         .contact-big .grad {
-            background: var(--grad);
+            background: linear-gradient(135deg, #05ff8d 0%, #10b981 50%, #34d399 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(5,255,141,0.5));
         }
-        .contact-list { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
+        .contact-divider {
+            width: 48px; height: 2px;
+            background: var(--grad);
+            margin: 0 auto 28px;
+            border-radius: 2px;
+            box-shadow: 0 0 12px rgba(5,255,141,0.4);
+        }
+        .contact-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 32px; }
         .c-item { display: flex; flex-direction: column; gap: 4px; }
         .c-label {
-            font-size: 0.62rem; letter-spacing: 0.3em;
-            text-transform: uppercase; color: var(--accent-glow); font-weight: 700;
+            font-size: 0.58rem; letter-spacing: 0.35em;
+            text-transform: uppercase; color: var(--accent-glow); font-weight: 800;
         }
         .c-val {
-            font-size: 1.15rem; font-weight: 700;
-            color: var(--text); text-decoration: none;
+            font-size: 1.05rem; font-weight: 700;
+            color: rgba(255,255,255,0.9); text-decoration: none;
             transition: color 0.3s; word-break: break-all;
         }
-        .c-val:hover { color: var(--accent); }
+        .c-val:hover { color: var(--accent-glow); }
         .social-row {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-            margin-bottom: 40px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            margin-bottom: 32px;
         }
         .social-chip {
-            background: var(--surface); border: 1px solid var(--border);
-            padding: 8px 18px; border-radius: 100px;
-            color: var(--text-muted); text-decoration: none;
-            font-size: 0.78rem; font-weight: 600;
+            background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+            padding: 7px 16px; border-radius: 100px;
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            font-size: 0.75rem; font-weight: 600;
             transition: border-color 0.3s, background 0.3s, color 0.3s;
         }
-        .social-chip:hover { background: var(--surface-hover); border-color: var(--accent); color: #fff; }
+        .social-chip:hover { background: rgba(16,185,129,0.18); border-color: var(--accent); color: #fff; }
         .contact-big-cta {
             display: inline-flex; align-items: center; gap: 10px;
             padding: 16px 36px;
-            background: var(--grad);
-            color: var(--bg); font-weight: 800; font-size: 0.85rem;
-            letter-spacing: 0.08em; text-transform: uppercase;
+            background: linear-gradient(135deg, #05ff8d, #10b981);
+            color: #020d07; font-weight: 900; font-size: 0.82rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
             text-decoration: none; border-radius: 100px;
             transition: transform 0.3s, box-shadow 0.3s;
-            box-shadow: var(--shadow-accent);
+            box-shadow: 0 0 30px rgba(5,255,141,0.35), 0 8px 24px rgba(0,0,0,0.4);
         }
-        .contact-big-cta:hover { transform: translateY(-4px); box-shadow: 0 15px 40px rgba(5, 255, 141, 0.25); }
+        .contact-big-cta:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 0 50px rgba(5,255,141,0.5), 0 16px 40px rgba(0,0,0,0.5); }
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
@@ -314,7 +350,7 @@
     <div class="reels-container" id="reelsContainer">
 
         {% for project in projects %}
-        <div class="reel-slide" data-project-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
+        <div class="reel-slide" id="reel-{{ project.id }}" data-project-id="{{ project.id }}" data-url="{{ project.url }}" data-index="{{ forloop.counter0 }}">
             <div class="ambient-glow" id="glow-{{ project.id }}"></div>
             <div class="ambient-solid"></div>
 
@@ -360,9 +396,11 @@
         <div class="reel-slide" id="contactSlide" data-index="{{ projects|length }}">
             <div class="ambient-solid"></div>
             <div class="contact-slide-inner">
+                <span class="contact-eyebrow">✦ Let's Work Together ✦</span>
                 <div class="contact-big">
                     LET'S<br>CREATE<br><span class="grad">MAGIC.</span>
                 </div>
+                <div class="contact-divider"></div>
 
                 <div class="contact-list">
                     {% if personal_info.email %}
@@ -627,6 +665,33 @@
             container.scrollBy({ top: -slideH, behavior: 'smooth' });
         }
     });
+
+    /* On load: move clicked reel to front so it appears as the first reel */
+    (function() {
+        if (!window.location.hash) return;
+        const hash = window.location.hash;             // e.g. #reel-123
+        const targetSlide = document.querySelector(hash);
+        if (!targetSlide || !targetSlide.classList.contains('reel-slide')) return;
+        if (targetSlide.id === 'contactSlide') return;  // never reorder the contact slide
+
+        const contactSlide = document.getElementById('contactSlide');
+
+        // Move the target reel to be the very first child
+        container.insertBefore(targetSlide, container.firstChild);
+
+        // Always keep contact slide last
+        if (contactSlide) container.appendChild(contactSlide);
+
+        // Re-sync data-index on every slide so the observer dot logic stays correct
+        const allSlides = Array.from(container.querySelectorAll('.reel-slide'));
+        allSlides.forEach((slide, i) => { slide.dataset.index = i; });
+
+        // Reset dots: first dot active
+        dots.forEach((d, i) => d.classList.toggle('active', i === 0));
+
+        // Snap container to top (no animation — instant display of the chosen reel)
+        container.scrollTo({ top: 0, behavior: 'instant' });
+    })();
     </script>
 </body>
 </html>

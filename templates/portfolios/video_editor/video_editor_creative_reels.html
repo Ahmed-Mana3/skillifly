@@ -105,7 +105,6 @@
             z-index: 0;
         }
 
-        /* ─── Video Wrapper ─── */
         .video-wrapper {
             position: relative;
             width: 100%;
@@ -116,6 +115,14 @@
             justify-content: center;
             overflow: hidden;
             z-index: 2;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+        }
+
+        .reel-slide.is-active .video-wrapper {
+            transform: scale(1);
+            opacity: 1;
         }
 
         .video-content {
@@ -344,6 +351,14 @@
             right: 80px;
             z-index: 20;
             pointer-events: none;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+        }
+
+        .reel-slide.is-active .reel-overlay {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .reel-title {
@@ -399,6 +414,14 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+        }
+
+        .reel-slide.is-active .reel-actions {
+            opacity: 1;
+            transform: translateX(0);
         }
 
         .action-btn {
@@ -450,6 +473,38 @@
         .dot.active {
             background: var(--accent);
             height: 22px;
+        }
+
+        /* ─── Swipe Guide ─── */
+        .swipe-guide {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.6;
+            z-index: 5;
+            animation: pulse-guide 2.5s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes pulse-guide {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, 0); }
+            50% { opacity: 0.8; transform: translate(-50%, -10px); }
+        }
+
+        .swipe-guide svg { stroke: var(--text); width: 24px; height: 24px; }
+        .swipe-text { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: white;}
+
+        @media (max-width: 768px) {
+            .pagination { display: none; }
+            .ui-overlay { padding: calc(var(--safe-top) + 20px) 24px calc(var(--safe-bot) + 30px); }
+            .video-title { font-size: 1.25rem; }
+            .back-btn { padding: 6px 12px; font-size: 0.85rem; }
+            .video-wrapper { max-width: calc(100% - 32px); margin: 16px auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); }
         }
 
         /* ─── Fixed Top Nav ─── */
@@ -1004,123 +1059,63 @@
             }
 
             function buildDrivePlayer(playerEl, shimmer, driveId) {
-                // Guard flag — prevents stall timer AND error event from both replacing innerHTML
-                let replaced = false;
-
                 const directUrl = 'https://drive.google.com/uc?export=download&confirm=t&id=' + driveId;
-                const previewUrl = 'https://drive.google.com/file/d/' + driveId + '/preview';
-                const pid = playerEl.id;
+                playerEl.innerHTML = `
+                    <div style="position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                        <video src="${directUrl}" style="width:100%; height:100%; object-fit:contain; background:#000;" 
+                               autoplay muted loop playsinline></video>
+                        <div class="mute-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.9); background:rgba(0,0,0,0.6); border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index:10;">
+                            <svg class="mute-icon" style="width:30px; height:30px; fill:#fff;" viewBox="0 0 24 24">
+                                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>
+                            </svg>
+                        </div>
+                        <div class="vol-indicator" style="position:absolute; bottom:15px; right:15px; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.15); z-index:10; cursor:pointer;">
+                            <svg class="vol-indicator-icon" style="width:18px; height:18px; fill:#fff;" viewBox="0 0 24 24">
+                                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                `;
+                const videoEl = playerEl.querySelector('video');
+                const muteOverlay = playerEl.querySelector('.mute-overlay');
+                const muteIcon = playerEl.querySelector('.mute-icon');
+                const volIndicator = playerEl.querySelector('.vol-indicator');
+                const volIndicatorIcon = playerEl.querySelector('.vol-indicator-icon');
 
-                // Build the custom player DOM
-                playerEl.innerHTML =
-                    '<div style="position:relative;width:100%;height:100%;background:#000;" id="dw-' + pid + '">' +
-                    '<video id="dv-' + pid + '" playsinline muted loop preload="metadata"' +
-                    ' style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;"></video>' +
-                    '<div class="tap-ring" id="tr-' + pid + '">' +
-                    '<svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>' +
-                    '</div>' +
-                    '<div class="drive-controls" id="dc-' + pid + '">' +
-                    '<div class="drive-btns">' +
-                    '<button class="drive-btn" id="dplay-' + pid + '" title="Play/Pause" aria-label="Play/Pause">' +
-                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="white" id="dpi-' + pid + '"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>' +
-                    '</button>' +
-                    '<button class="drive-fs-btn" id="dfs-' + pid + '" title="Fullscreen" aria-label="Fullscreen">' +
-                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>' +
-                    '</button>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>';
+                const mutePath = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>';
+                const soundPath = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
 
-                // ── Grab refs ──
-                const vid = document.getElementById('dv-' + pid);
-                const ctrl = document.getElementById('dc-' + pid);
-                const playBtn = document.getElementById('dplay-' + pid);
-                const playIcon = document.getElementById('dpi-' + pid);
-                const fsBtn = document.getElementById('dfs-' + pid);
-                const tapRing = document.getElementById('tr-' + pid);
-                const wrap = document.getElementById('dw-' + pid);
-
-                const PATH = {
-                    play: '<path d="M8 5v14l11-7z"/>',
-                    pause: '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>',
-                    mute: '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.57 14.92 21 13.51 21 12c0-4.06-2.53-7.44-6-8.84v2.06c2.34 1.28 4 3.84 4 6.78zM12 4L9.91 6.09 12 8.18V4zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3z"/>',
-                    sound: '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
+                const toggleMute = (e) => {
+                    if (e) e.stopPropagation();
+                    videoEl.muted = !videoEl.muted;
+                    if (videoEl.paused) videoEl.play();
+                    
+                    const path = videoEl.muted ? mutePath : soundPath;
+                    muteIcon.innerHTML = path;
+                    volIndicatorIcon.innerHTML = path;
+                    
+                    muteOverlay.style.opacity = '1';
+                    muteOverlay.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                    setTimeout(() => {
+                        muteOverlay.style.opacity = '0';
+                        muteOverlay.style.transform = 'translate(-50%, -50%) scale(0.9)';
+                    }, 500);
                 };
 
-                let ctrlTimer = null;
-                let isLoaded = false;
+                videoEl.onclick = toggleMute;
+                volIndicator.onclick = toggleMute;
 
-                // ── Show / hide controls ──
-                function showCtrl(autoHide) {
-                    ctrl.classList.add('vis');
-                    clearTimeout(ctrlTimer);
-                    if (autoHide !== false) {
-                        ctrlTimer = setTimeout(function () {
-                            if (!vid.paused) ctrl.classList.remove('vis');
-                        }, 2800);
-                    }
-                }
-
-                // ── Icon helpers ──
-                function syncPlayIcon() { playIcon.innerHTML = vid.paused ? PATH.play : PATH.pause; }
-
-                // ── Tap ring (play/pause centre feedback) ──
-                function flashRing(isPlaying) {
-                    tapRing.querySelector('svg').innerHTML = isPlaying ? PATH.play : PATH.pause;
-                    tapRing.classList.remove('hide');
-                    tapRing.classList.add('show');
-                    setTimeout(function () {
-                        tapRing.classList.remove('show');
-                        tapRing.classList.add('hide');
-                        setTimeout(function () { tapRing.classList.remove('hide'); }, 300);
-                    }, 380);
-                }
-
-
-
-                // ── Event listeners ──
-                vid.addEventListener('click', function () {
-                    if (vid.paused) { vid.play(); flashRing(true); }
-                    else { vid.pause(); flashRing(false); }
-                    syncPlayIcon();
-                    showCtrl();
-                });
-
-                wrap.addEventListener('touchstart', function () { showCtrl(); }, { passive: true });
-                wrap.addEventListener('mousemove', function () { showCtrl(); });
-
-                playBtn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    if (vid.paused) { vid.play(); } else { vid.pause(); }
-                    syncPlayIcon(); showCtrl();
-                });
-
-
-
-                // Fullscreen
-                fsBtn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    if (document.fullscreenElement) {
-                        document.exitFullscreen && document.exitFullscreen();
-                    } else {
-                        var el = wrap;
-                        (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || function () { })
-                            .call(el);
-                    }
-                    showCtrl();
-                });
-
-
-                vid.addEventListener('play', function () { syncPlayIcon(); });
-                vid.addEventListener('pause', function () { syncPlayIcon(); showCtrl(false); });
-                vid.addEventListener('ended', function () { syncPlayIcon(); });
-
-                // ── Helper: swap to iframe fallback safely ──
-                function swapToIframe(reason) {
-                    if (replaced) return; // prevent double-replace
-                    replaced = true;
-                    clearTimeout(stallTimer);
-                    console.warn('[Drive] ' + reason + ' → preview iframe cropped');
+                videoEl.addEventListener('loadedmetadata', function () {
+                    if (shimmer) shimmer.style.display = 'none';
+                    videoEl.play().catch(() => {});
+                }, { once: true });
+                
+                videoEl.addEventListener('canplay', function () {
+                    if (shimmer) shimmer.style.display = 'none';
+                }, { once: true });
+                
+                videoEl.addEventListener('error', function () {
+                    const previewUrl = 'https://drive.google.com/file/d/' + driveId + '/preview';
                     playerEl.innerHTML =
                         '<div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">' +
                         '<iframe src="' + previewUrl + '"' +
@@ -1129,35 +1124,21 @@
                         '</iframe>' +
                         '</div>';
                     if (shimmer) shimmer.style.display = 'none';
-                }
-
-                // ── Load video source ──
-                vid.src = directUrl;
-                vid.load();
-
-                // Success path
-                vid.addEventListener('loadedmetadata', function () {
-                    if (replaced) return;
-                    isLoaded = true;
-                    clearTimeout(stallTimer);
-                    if (shimmer) shimmer.style.display = 'none';
-                    vid.play().catch(function () { });
-                    syncPlayIcon();
-                    showCtrl();
                 }, { once: true });
-
-                vid.addEventListener('canplay', function () {
-                    if (shimmer && !replaced) shimmer.style.display = 'none';
-                }, { once: true });
-
-                // Error path (e.g. quota exceeded, CORS, private file)
-                vid.addEventListener('error', function () {
-                    swapToIframe('direct stream error');
-                }, { once: true });
-
-                // Stall detection: no metadata within 8 s → fall back
-                var stallTimer = setTimeout(function () {
-                    swapToIframe('stall timeout (8 s)');
+                
+                // Fallback stall detection
+                setTimeout(function () {
+                    if (shimmer && shimmer.style.display !== 'none') {
+                        const previewUrl = 'https://drive.google.com/file/d/' + driveId + '/preview';
+                        playerEl.innerHTML =
+                            '<div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">' +
+                            '<iframe src="' + previewUrl + '"' +
+                            ' style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;"' +
+                            ' allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer">' +
+                            '</iframe>' +
+                            '</div>';
+                        shimmer.style.display = 'none';
+                    }
                 }, 8000);
             }
 
@@ -1193,6 +1174,7 @@
                     const driveId = getDriveId(url);
 
                     if (entry.isIntersecting) {
+                        slide.classList.add('is-active');
                         // Update nav indicators
                         dots.forEach(function (d) { d.classList.remove('active'); });
                         if (idx >= 0 && dots[idx]) dots[idx].classList.add('active');
@@ -1239,6 +1221,7 @@
                         }
 
                     } else {
+                        slide.classList.remove('is-active');
                         // Pause on exit
                         if (ytId && ytPlayers[projectId]) {
                             try { ytPlayers[projectId].pauseVideo(); } catch (e) { }

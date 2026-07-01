@@ -1,0 +1,1167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <title>{{ personal_info.full_name|default:"Cinematic Editor" }} | Portfolio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satoshi:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #03020a;
+            --surface: #0e0b1f;
+            --surface-hover: #181335;
+            --accent: #7c3aed;
+            --accent-glow: #a78bfa;
+            --accent2: #f59e0b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 12px;
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            --shadow-accent: 0 0 30px rgba(124, 58, 237, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Satoshi', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Noise Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(14, 11, 31, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            background: rgba(14, 11, 31, 0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: rgba(124, 58, 237, 0.3);
+        }
+
+        .brand-name {
+            font-size: 1.25rem;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .brand-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px 60px;
+            position: relative;
+        }
+        
+        .hero-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, rgba(3,2,10,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .hero-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            padding: 4px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .hero-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 1;
+            margin-bottom: 24px;
+            letter-spacing: -0.04em;
+            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            color: var(--accent-glow);
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .hero-bio {
+            max-width: 600px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-accent);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.5);
+        }
+
+        /* Filmstrip Divider */
+        .filmstrip {
+            width: 100%;
+            height: 40px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin: 60px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .film-hole {
+            width: 12px;
+            height: 20px;
+            background: var(--bg);
+            border-radius: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Section Global */
+        .section {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-tag {
+            color: var(--accent2);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        /* Category Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .category-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            aspect-ratio: 4/5;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(124, 58, 237, 0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(124,58,237,0.15);
+        }
+
+        .category-img-box {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .category-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s;
+        }
+
+        .category-card:hover .category-img-box img {
+            transform: scale(1.08);
+        }
+
+        .category-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(3,2,10,0.95) 0%, rgba(3,2,10,0.4) 50%, rgba(3,2,10,0.1) 100%);
+            z-index: 2;
+        }
+
+        .category-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .category-title {
+            font-size: 2rem;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .category-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .category-badge {
+            background: rgba(124, 58, 237, 0.2);
+            color: var(--accent-glow);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            padding: 60px 20px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Skills */
+        /* Software & Tools */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .skill-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(124,58,237,0.08) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+
+        .skill-card:hover {
+            border-color: rgba(124, 58, 237, 0.45);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3), 0 0 20px rgba(124,58,237,0.12);
+        }
+
+        .skill-card:hover::before { opacity: 1; }
+
+        .skill-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(167,139,250,0.1) 100%);
+            border: 1px solid rgba(124,58,237,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent-glow);
+            flex-shrink: 0;
+            transition: all 0.35s;
+        }
+
+        .skill-card:hover .skill-icon {
+            background: linear-gradient(135deg, rgba(124,58,237,0.35) 0%, rgba(167,139,250,0.2) 100%);
+            box-shadow: 0 0 16px rgba(124,58,237,0.3);
+        }
+
+        .skill-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            line-height: 1.3;
+            transition: color 0.3s;
+        }
+
+        .skill-card:hover .skill-name { color: var(--text); }
+
+        /* Timeline */
+        .timeline {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 20px;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 40px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 13px;
+            top: 6px;
+            width: 16px;
+            height: 16px;
+            background: var(--bg);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+        }
+
+        .edu-dot {
+            border-color: var(--accent2);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent2);
+        }
+
+        .timeline-date {
+            color: var(--accent2);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .timeline-company {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        /* Contact */
+        .contact-section {
+            padding: 80px 20px;
+        }
+
+        .contact-wrap {
+            text-align: center;
+            background: var(--surface);
+            padding: 72px 48px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-wrap::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .contact-wrap h2 {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            margin-bottom: 12px;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-tagline {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .contact-link {
+            padding: 14px 28px;
+            min-height: 52px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            color: var(--text);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .contact-link:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+        }
+
+        .contact-link-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: var(--shadow-accent);
+        }
+
+        .contact-link-primary:hover {
+            background: #6d28d9;
+            border-color: #6d28d9;
+            box-shadow: 0 8px 30px rgba(124,58,237,0.5);
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+        }
+
+        .skillifly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 100px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .skillifly-badge:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .skillifly-badge img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Marquee Skill Strip */
+        .marquee-container {
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
+            margin: 0;
+        }
+        .marquee-track {
+            display: flex;
+            gap: 40px;
+            animation: marquee-scroll 30s linear infinite;
+            width: max-content;
+        }
+        @keyframes marquee-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .marquee-item {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .marquee-item:nth-child(odd) { color: var(--accent-glow); }
+
+        /* Creators Marquee */
+        .creators-marquee-container {
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0;
+        }
+        .creators-marquee-container::before,
+        .creators-marquee-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 160px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .creators-marquee-container::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg) 0%, transparent 100%);
+        }
+        .creators-marquee-container::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg) 0%, transparent 100%);
+        }
+        .creators-track {
+            display: flex;
+            gap: 0;
+            width: max-content;
+            animation: creators-infinite 35s linear infinite;
+        }
+        .creators-marquee-container:hover .creators-track {
+            animation-play-state: paused;
+        }
+        @keyframes creators-infinite {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .creator-set {
+            display: flex;
+            gap: 32px;
+            padding-right: 32px;
+            flex-shrink: 0;
+        }
+        .creator-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .creator-card:hover { transform: translateY(-6px) scale(1.05); }
+        .creator-card:hover .creator-img {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
+        }
+        .creator-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .creator-name {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 90px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.3s;
+        }
+        .creator-card:hover .creator-name { color: var(--text); }
+
+        /* Education Grid */
+        .edu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .edu-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            transition: all 0.3s;
+        }
+        .edu-card:hover {
+            border-color: rgba(124, 58, 237, 0.4);
+            transform: translateY(-4px);
+        }
+        .edu-year {
+            color: var(--accent2);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+        }
+        .edu-degree {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .edu-field {
+            color: var(--accent-glow);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .edu-school {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-subtitle { font-size: 1rem; }
+            .nav-links { display: none; }
+            .category-grid { grid-template-columns: 1fr; padding: 0 24px; }
+            .stats-bar { flex-direction: column; gap: 30px; padding: 60px 24px; }
+            .section { padding: 60px 24px; }
+            .contact-section { padding: 60px 20px; }
+            .contact-wrap { padding: 48px 24px; border-radius: 20px; }
+            .timeline-item { padding-left: 45px; }
+            .timeline::before { left: 10px; }
+            .timeline-dot { left: 3px; }
+            .filmstrip { margin: 30px 0; }
+            .edu-grid { grid-template-columns: 1fr; }
+            .skills-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .skills-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .skill-card { padding: 18px 12px; border-radius: 14px; }
+            .skill-icon { width: 44px; height: 44px; font-size: 1.1rem; border-radius: 11px; }
+            .skill-name { font-size: 0.82rem; }
+        }
+        @media (max-width: 480px) {
+            .hero-avatar { width: 100px; height: 100px; }
+            .btn-primary { padding: 14px 24px; font-size: 0.9rem; }
+            /* Contact full-width buttons on small phones */
+            .contact-section { padding: 40px 16px; }
+            .contact-wrap { padding: 40px 20px; border-radius: 16px; }
+            .contact-links { flex-direction: column; align-items: stretch; gap: 12px; }
+            .contact-link { width: 100%; justify-content: center; min-height: 56px; font-size: 1rem; padding: 16px 24px; border-radius: 14px; }
+            .contact-tagline { font-size: 0.92rem; }
+            /* Skills compact on small phones */
+            .skills-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .skill-card { padding: 16px 10px; border-radius: 12px; }
+            .skill-icon { width: 40px; height: 40px; font-size: 1rem; border-radius: 10px; }
+            .skill-name { font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-glow"></div>
+
+    <nav class="navbar" id="navbar">
+        <a href="#" class="brand-name">
+            <span class="brand-dot"></span>
+            {{ personal_info.full_name|default:portfolio_user.username }}
+        </a>
+        <div class="nav-links">
+            <a href="#work">Work</a>
+            {% if skills %}<a href="#skills">Skills</a>{% endif %}
+            {% if experiences %}<a href="#experience">Experience</a>{% endif %}
+            {% if education %}<a href="#education">Education</a>{% endif %}
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-avatar reveal">
+            {% if personal_info.user.profile.picture %}
+            <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
+            {% else %}
+            <img src="{% static 'img/myAvatar (1).png' %}" alt="Avatar">
+            {% endif %}
+        </div>
+        
+        <h2 class="hero-subtitle reveal" style="transition-delay: 100ms;">✦ {{ personal_info.title|default:"Cinematic Editor" }} ✦</h2>
+        <h1 class="hero-title reveal" style="transition-delay: 200ms;">CRAFTING <br> VISUAL STORIES</h1>
+        
+        {% if personal_info.bio %}
+        <p class="hero-bio reveal" style="transition-delay: 300ms;">{{ personal_info.bio }}</p>
+        {% endif %}
+
+        <div class="reveal" style="transition-delay: 400ms;">
+            <a href="#work" class="btn-primary">
+                Explore Portfolios
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ─── MARQUEE SKILL STRIP ─── -->
+    <div class="marquee-container">
+        <div class="marquee-track">
+            {% for i in "1234" %}
+            <span class="marquee-item">Video Editing</span>
+            <span class="marquee-item">Color Grading</span>
+            <span class="marquee-item">Cinematic Pacing</span>
+            <span class="marquee-item">Sound Design</span>
+            <span class="marquee-item">Motion Graphics</span>
+            <span class="marquee-item">Storytelling</span>
+            <span class="marquee-item">Montages &amp; Reels</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Filmstrip Divider -->
+    <div class="filmstrip">
+        {% for _ in "x"|ljust:"20" %}
+        <div class="film-hole"></div>
+        {% endfor %}
+    </div>
+
+    <!-- Category Grid -->
+    <section class="section" id="work">
+        <div class="section-header reveal">
+            <span class="section-tag">Collections</span>
+            <h2 class="section-title">Selected Works</h2>
+        </div>
+
+        <div class="category-grid">
+            {% for category in project_categories %}
+            <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=category.id %}" class="category-card reveal">
+                <div class="category-img-box">
+                    {% if category.thumbnail %}
+                    <img src="{{ category.thumbnail.url }}" alt="{{ category.name }}" loading="lazy">
+                    {% else %}
+                    <div style="width:100%; height:100%; background:#1a1533; display:flex; align-items:center; justify-content:center;">
+                        <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="category-overlay"></div>
+                <div class="category-content">
+                    <span class="category-badge">{{ category.project_count }} Project{{ category.project_count|pluralize }}</span>
+                    <h3 class="category-title">{{ category.name }}</h3>
+                    <div class="category-meta">
+                        Explore Collection →
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+
+            {% if has_uncategorized_projects %}
+            <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=0 %}" class="category-card reveal">
+                <div class="category-img-box">
+                    <div style="width:100%; height:100%; background:#1a1533; display:flex; align-items:center; justify-content:center;">
+                        <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+                    </div>
+                </div>
+                <div class="category-overlay"></div>
+                <div class="category-content">
+                    <span class="category-badge">{{ uncategorized_count }} Project{{ uncategorized_count|pluralize }}</span>
+                    <h3 class="category-title">Other Videos</h3>
+                    <div class="category-meta">
+                        Explore Collection →
+                    </div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if not project_categories and not has_uncategorized_projects %}
+            <div class="reveal" style="grid-column:1/-1; text-align:center; padding:80px 24px; color:var(--text-muted)">
+                <h3 style="font-size:1.8rem; margin-bottom:10px;">No collections found.</h3>
+                <p style="font-weight:300">Start building your categories inside the portfolio editor.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+
+
+    <!-- Skills -->
+    {% if skills %}
+    <section class="section" id="skills">
+        <div class="section-header reveal">
+            <span class="section-tag">Arsenal</span>
+            <h2 class="section-title">Software &amp; Tools</h2>
+        </div>
+        <div class="skills-grid">
+            {% for skill in skills %}
+            <div class="skill-card reveal" style="transition-delay: {{ forloop.counter0 }}40ms">
+                <div class="skill-icon">{{ skill.name|first|upper }}</div>
+                <div class="skill-name">{{ skill.name }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Experience -->
+    {% if experiences %}
+    <section class="section" id="experience">
+        <div class="section-header reveal">
+            <span class="section-tag">Career</span>
+            <h2 class="section-title">Experience</h2>
+        </div>
+        <div class="timeline">
+            {% for exp in experiences %}
+            <div class="timeline-item reveal">
+                <div class="timeline-dot"></div>
+                <div class="timeline-date">{{ exp.start_date|date:"M Y" }} — {% if exp.still_working %}Present{% elif exp.end_date %}{{ exp.end_date|date:"M Y" }}{% else %}Present{% endif %}</div>
+                <h3 class="timeline-title">{{ exp.title }}</h3>
+                <div class="timeline-company">{{ exp.company }}</div>
+                {% if exp.details %}
+                <p style="color: var(--text-muted); line-height: 1.6;">{{ exp.details }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── EDUCATION ─── -->
+    {% if education %}
+    <section class="section" id="education">
+        <div class="section-header reveal">
+            <span class="section-tag">Credentials</span>
+            <h2 class="section-title">Academic History</h2>
+        </div>
+        <div class="timeline">
+            {% for edu in education %}
+            <div class="timeline-item reveal" style="transition-delay: {{ forloop.counter0 }}00ms">
+                <div class="timeline-dot edu-dot">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+                </div>
+                <div class="timeline-date">{{ edu.grade_year|date:"Y" }}</div>
+                <h3 class="timeline-title">{{ edu.degree }}</h3>
+                {% if edu.field %}
+                <div class="timeline-company">{{ edu.field }}</div>
+                {% endif %}
+                <div class="timeline-company" style="color: var(--accent-glow);">{{ edu.school }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── CREATORS MARQUEE ─── -->
+    {% if creators %}
+    <section class="section" id="creators">
+        <div class="section-header reveal">
+            <span class="section-tag">Network</span>
+            <h2 class="section-title">Creators I Worked With</h2>
+        </div>
+        <div class="creators-marquee-container">
+            <div class="creators-track">
+                {# Duplicate 4× so the loop is guaranteed seamless regardless of creator count #}
+                {% for i in "1234" %}
+                <div class="creator-set" {% if not forloop.first %}aria-hidden="true"{% endif %}>
+                    {% for creator in creators %}
+                    <{% if creator.url %}a href="{{ creator.url }}" target="_blank" rel="noopener"{% else %}div{% endif %} class="creator-card">
+                        {% if creator.image %}
+                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img" loading="lazy">
+                        {% else %}
+                        <canvas class="creator-avatar-canvas creator-img" width="88" height="88" data-name="{{ creator.name }}"></canvas>
+                        {% endif %}
+                        <span class="creator-name">{{ creator.name }}</span>
+                    </{% if creator.url %}a{% else %}div{% endif %}>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Contact -->
+    <section class="contact-section" id="contact">
+        <div class="contact-wrap reveal">
+            <span class="section-tag">Let's Talk</span>
+            <h2>Ready to create<br>something cinematic?</h2>
+            <p class="contact-tagline">Looking for a video editor who can bring your vision to life? Let's make something extraordinary together.</p>
+
+            <div class="contact-links">
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" target="_blank" rel="noopener" class="contact-link contact-link-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Book a Session
+                </a>
+                {% endif %}
+                {% if personal_info.email %}
+                <a href="mailto:{{ personal_info.email }}" class="contact-link {% if not personal_info.booking_url %}contact-link-primary{% endif %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Email Me
+                </a>
+                {% endif %}
+                {% if personal_info.phone %}
+                <a href="tel:{{ personal_info.phone }}" class="contact-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    Call Me
+                </a>
+                {% endif %}
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener" class="contact-link">
+                    {{ link.platform }}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
+            <span style="color:var(--text-muted); font-size:0.8rem;">Powered by</span>
+            <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+            <strong>Skillifly</strong>
+        </a>
+        <p style="margin-top: 16px; color: var(--text-muted); font-size: 0.85rem;">© {% now "Y" %} {{ personal_info.full_name|default:portfolio_user.username }}. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+
+        // Scroll Reveal
+        const reveals = document.querySelectorAll('.reveal');
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            const elementVisible = 100;
+            
+            reveals.forEach(reveal => {
+                const elementTop = reveal.getBoundingClientRect().top;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveal.classList.add('active');
+                }
+            });
+        };
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Trigger on load
+
+        // Statistics Rolling Numbers
+        (function() {
+            const numbers = document.querySelectorAll('.stat-num[data-count]');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const end = parseInt(el.dataset.count, 10);
+                        let current = 0;
+                        const duration = 1200;
+                        const steps = 40;
+                        const increment = end / steps;
+                        const stepTime = duration / steps;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= end) {
+                                current = end;
+                                clearInterval(timer);
+                            }
+                            el.textContent = Math.floor(current) + '+';
+                        }, stepTime);
+                        observer.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.5 });
+            numbers.forEach(n => observer.observe(n));
+        })();
+
+        // Canvas Creator Initials Generator
+        (function() {
+            const canvases = document.querySelectorAll('.creator-avatar-canvas');
+            canvases.forEach(canvas => {
+                const name = canvas.dataset.name || 'C';
+                const ctx = canvas.getContext('2d');
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                grad.addColorStop(0, '#1e0b3e');
+                grad.addColorStop(1, '#7c3aed');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 34px Syne, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+            });
+        })();
+    </script>
+</body>
+</html>

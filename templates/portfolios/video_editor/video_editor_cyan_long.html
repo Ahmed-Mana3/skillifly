@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/cyan.css' %}">
+    <style>
+        :root {
+            --bg: #00E5FF;
+            --surface: #ffffff;
+            --accent: #000000;
+            --text: #000000;
+            --text-dim: #2d2d2d;
+            --border: #000000;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ─── Header ─── */
+        header {
+            padding: 40px 5%;
+            border-bottom: 3px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            color: var(--text);
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text);
+        }
+
+        /* ─── Main Content ─── */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 80px 5%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 6vw, 5rem);
+            margin-bottom: 40px;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        /* ─── Video Grid ─── */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+            gap: 40px;
+        }
+
+        .video-card {
+            background: var(--surface);
+            text-decoration: none;
+            color: inherit;
+            border: 3px solid var(--border);
+            box-shadow: 6px 6px 0px var(--border);
+            overflow: hidden;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 10px 10px 0px var(--border);
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            background: #e2e8f0;
+            border-bottom: 3px solid var(--border);
+        }
+
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: filter 0.4s, transform 0.4s;
+        }
+
+        .video-card:hover .thumbnail-wrapper img {
+            filter: grayscale(0%);
+            transform: scale(1.05);
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border: 3px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            transform: scale(0.8);
+            transition: all 0.2s;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        .video-card:hover .play-btn {
+            transform: scale(1);
+        }
+
+        .video-info {
+            padding: 24px;
+            flex-grow: 1;
+        }
+
+        .video-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .video-meta {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--text-dim);
+            font-weight: 800;
+            border: 3px solid var(--border);
+            box-shadow: 6px 6px 0px var(--border);
+        }
+
+        /* Responsive Styles */
+        @media(max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 16px;
+                padding: 20px;
+            }
+            .nav-links {
+                gap: 20px;
+            }
+            main {
+                padding: 40px 20px;
+            }
+            .video-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            .page-title {
+                margin-bottom: 24px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <header>
+        <a href="/{{ personal_info.user.username }}/" class="logo">{{ personal_info.full_name|default:"Portfolio" }}</a>
+        <div class="nav-links">
+            <a href="/{{ username }}/reels/" class="nav-link">Reels</a>
+            <a href="/{{ username }}/long-videos/" class="nav-link active">Work</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Animated Background Shapes -->
+        <div class="shapes-bg">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+
+        <h1 class="page-title">Long-form Videos</h1>
+
+        {% if projects %}
+        <div class="video-grid">
+            {% for project in projects %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
+                <div class="thumbnail-wrapper">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    {% else %}
+                    <div style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Bebas Neue';font-size:3rem">▶</div>
+                    {% endif %}
+                    <div class="play-overlay">
+                        <div class="play-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">{{ project.title }}</h3>
+                    <p class="video-meta">{% if project.category %}{{ project.category.name }}{% else %}Film{% endif %}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No long-form videos added yet.</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <footer class="footer">
+        <a href="/" target="_blank" class="skillifly-tag">
+            <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+            <span>Powered by Skillifly</span>
+        </a>
+    </footer>
+
+    <script>
+    /* Custom Cursor */
+    const cursor = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+    document.addEventListener('mousemove', e => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top = mouseY + 'px';
+    });
+
+    function animateRing() {
+        ringX += (mouseX - ringX) * 0.15;
+        ringY += (mouseY - ringY) * 0.15;
+        ring.style.left = ringX + 'px';
+        ring.style.top = ringY + 'px';
+        requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, .video-card').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+            ring.style.width = '60px';
+            ring.style.height = '60px';
+        });
+        el.addEventListener('mouseleave', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            ring.style.width = '40px';
+            ring.style.height = '40px';
+        });
+    });
+    </script>
+</body>
+</html>

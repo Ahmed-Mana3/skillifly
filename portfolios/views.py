@@ -325,10 +325,14 @@ def portfolio_category_detail(request, username, category_id):
     except TemplateDoesNotExist:
         template = f"portfolios/{category_slug}/{category_slug}_category.html"
 
+    personal_info = PersonalInfo.objects.filter(user=user).first()
+    
     context = {
         'portfolio_user': user,
         'profile': profile,
         'category': category,
         'projects': projects,
+        'personal_info': personal_info,
+        'username': username,
     }
     return render(request, template, context)
