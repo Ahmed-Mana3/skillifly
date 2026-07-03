@@ -1,3 +1,4 @@
+import logging
 import os
 from decimal import Decimal
 from django.conf import settings
@@ -16,6 +17,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory
 from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
+
+logger = logging.getLogger('core')
 
 
 
@@ -66,7 +69,7 @@ def custom_domain_view(request):
     from .forms import CustomDomainForm
     import socket
 
-    custom_domain, created = CustomDomain.objects.get_or_create(user=request.user)
+    custom_domain, created = CustomDomain.objects.get_or_create(user=request.user, defaults={'domain': ''})
     
     # The actual IP of the Skillifly VPS
     server_ip = '156.67.217.227'
