@@ -6,7 +6,7 @@ from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, Q
 from datetime import timedelta
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -771,7 +771,11 @@ def admin_dashboard(request):
     """Hidden admin-only dashboard with user stats, growth charts, and user list."""
     # Absolute minimum date allowed
     min_date = timezone.datetime(2026, 4, 16, tzinfo=timezone.get_current_timezone()).date()
-    today = timezone.now().date()
+    
+    try:
+        today = timezone.localdate()
+    except Exception:
+        today = timezone.now().date()
     
     # 1. Date Filtering Logic
     start_str = request.GET.get('start_date')
@@ -784,10 +788,14 @@ def admin_dashboard(request):
             if start_date < min_date:
                 start_date = min_date
         except ValueError:
-            start_date = timezone.datetime(2026, 5, 1).date()
+            start_date = today.replace(day=1)
+            if start_date < min_date:
+                start_date = min_date
     else:
-        # Default to the first of the current month (May 2026)
-        start_date = timezone.datetime(2026, 5, 1).date()
+        # Default to the first of the current month
+        start_date = today.replace(day=1)
+        if start_date < min_date:
+            start_date = min_date
         
     if end_str:
         try:
@@ -797,15 +805,22 @@ def admin_dashboard(request):
     else:
         end_date = today
 
+    if start_date > end_date:
+        start_date = end_date
+
+    # Convert to aware datetimes for index-friendly filtering
+    start_dt = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))
+    end_dt   = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
+
     # 2. High-level Stats (Now filtered by range)
     # Total Users = New signups in this period
-    total_users = CustomUser.objects.filter(date_joined__date__range=(start_date, end_date)).count()
+    total_users = CustomUser.objects.filter(date_joined__range=(start_dt, end_dt)).count()
     
     # Paid users = unique users who made a successful payment in this period
     paid_user_ids_in_period = UserPayment.objects.filter(
         status='paid', 
         amount__gt=0,
-        date__date__range=(start_date, end_date)
+        date__range=(start_dt, end_dt)
     ).values_list('user_id', flat=True).distinct()
     
     total_paid_users = len(paid_user_ids_in_period)
@@ -819,33 +834,36 @@ def admin_dashboard(request):
     # Total revenue in period
     total_revenue = UserPayment.objects.filter(
         status='paid',
-        date__date__range=(start_date, end_date)
+        date__range=(start_dt, end_dt)
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     # 3. Growth Chart Data (Filtered by range and period)
     signup_labels = []
     signup_values = []
-    paid_values = [] # Track unique users who paid in each interval
+    paid_values = [] # Track count of payments made in each interval
     
     if period == 'week':
         # Grouping by 7-day intervals starting from start_date
         current_dt = start_date
         while current_dt <= end_date:
             next_dt = current_dt + timedelta(days=7)
+            if next_dt > end_date + timedelta(days=1):
+                next_dt = end_date + timedelta(days=1)
+            
+            interval_start_dt = timezone.make_aware(timezone.datetime.combine(current_dt, timezone.datetime.min.time()))
+            interval_end_dt = timezone.make_aware(timezone.datetime.combine(next_dt - timedelta(days=1), timezone.datetime.max.time()))
             
             # 1. New Signups in interval
             signup_count = CustomUser.objects.filter(
-                date_joined__date__gte=current_dt,
-                date_joined__date__lt=next_dt
+                date_joined__range=(interval_start_dt, interval_end_dt)
             ).count()
             
-            # 2. New Paid Users (payments made in interval)
+            # 2. Payments in interval
             paid_count = UserPayment.objects.filter(
                 status='paid',
                 amount__gt=0,
-                date__date__gte=current_dt,
-                date__date__lt=next_dt
-            ).values('user').distinct().count()
+                date__range=(interval_start_dt, interval_end_dt)
+            ).count()
             
             signup_labels.append(f"Wk: {current_dt.strftime('%b %d')}")
             signup_values.append(signup_count)
@@ -855,15 +873,18 @@ def admin_dashboard(request):
         # Default: Daily grouping
         current_dt = start_date
         while current_dt <= end_date:
-            # 1. New Signups
-            signup_count = CustomUser.objects.filter(date_joined__date=current_dt).count()
+            day_start_dt = timezone.make_aware(timezone.datetime.combine(current_dt, timezone.datetime.min.time()))
+            day_end_dt = timezone.make_aware(timezone.datetime.combine(current_dt, timezone.datetime.max.time()))
             
-            # 2. New Paid Users
+            # 1. New Signups
+            signup_count = CustomUser.objects.filter(date_joined__range=(day_start_dt, day_end_dt)).count()
+            
+            # 2. Payments
             paid_count = UserPayment.objects.filter(
                 status='paid',
                 amount__gt=0,
-                date__date=current_dt
-            ).values('user').distinct().count()
+                date__range=(day_start_dt, day_end_dt)
+            ).count()
             
             signup_labels.append(current_dt.strftime('%b %d'))
             signup_values.append(signup_count)
@@ -872,9 +893,9 @@ def admin_dashboard(request):
         
     # 4. Users Table Data (NOW FILTERED BY RANGE)
     users_list = CustomUser.objects.filter(
-        date_joined__date__range=(start_date, end_date)
+        date_joined__range=(start_dt, end_dt)
     ).select_related('profile', 'personal_info').annotate(
-        total_spent=Sum('userpayment__amount')
+        total_spent=Sum('userpayment__amount', filter=Q(userpayment__status='paid'))
     ).order_by('-date_joined')
     
     context = {
