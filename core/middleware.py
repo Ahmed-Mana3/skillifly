@@ -67,11 +67,16 @@ class CustomDomainMiddleware:
 
         if host not in self.MAIN_DOMAINS:
             try:
+                # Route any known custom domain — verified or not — to the
+                # correct user's portfolio.  The is_active flag is used only
+                # for SSL provisioning / canonical URL display; it should NOT
+                # block routing, otherwise an unverified domain shows the
+                # Skillifly homepage instead of the user's portfolio.
                 cd = CustomDomain.objects.select_related('user').get(
-                    domain=host, is_active=True,
+                    domain=host,
                 )
             except CustomDomain.DoesNotExist:
-                # Unknown host — let Django handle it normally (may 404)
+                # Completely unknown host — let Django handle it normally (may 404)
                 return self.get_response(request)
             except Exception:
                 return self.get_response(request)
