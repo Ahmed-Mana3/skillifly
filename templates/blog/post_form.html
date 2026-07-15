@@ -17,10 +17,28 @@
   .char-counter.ok   { color: #16a34a; }
   .char-counter.warn { color: #d97706; }
   .char-counter.bad  { color: #dc2626; }
-
-  /* CKEditor RTL override */
-  .cke_rtl .cke_contents { direction: rtl; text-align: right; }
-  .cke_contents iframe { font-family: 'Cairo', sans-serif !important; }
+  /* CKEditor 5 UI overrides */
+  .django-ckeditor-5-wrapper, .ck.ck-editor {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .ck.ck-editor__main>.ck-editor__editable {
+    min-height: 400px;
+    border-bottom-left-radius: 0.75rem !important;
+    border-bottom-right-radius: 0.75rem !important;
+    border-color: #e2e8f0 !important;
+  }
+  .ck.ck-toolbar {
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    flex-wrap: wrap !important;
+  }
+  .ck.ck-editor__editable.ck-focused {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+  }
 
   /* Language badge in form header */
   .lang-badge { display: inline-flex; align-items: center; gap: 6px;
@@ -112,7 +130,7 @@
       <fieldset class="space-y-3">
         <legend class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Body</legend>
         <label class="sf-label" for="{{ form.content.id_for_label }}" id="label-content">Content</label>
-        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden" id="editor-wrap">
+        <div class="mt-2" id="editor-wrap">
           {{ form.content }}
         </div>
         {% if form.content.errors %}<div class="error-msg">{{ form.content.errors }}</div>{% endif %}
@@ -464,33 +482,10 @@
     }
     if (metaHint)  metaHint.textContent  = lbl.hint;
 
-    // CKEditor instance – switch content direction and language
-    if (typeof CKEDITOR !== 'undefined') {
-      const editorName = '{{ form.content.id_for_label }}';
-      const inst = CKEDITOR.instances[editorName];
-      if (inst) {
-        inst.config.contentsLangDirection = dir;
-        inst.config.language = isAr ? 'ar' : 'en';
-        // Force body direction inside the iframe
-        try {
-          const body = inst.document.getBody().$;
-          body.dir = dir;
-          body.style.textAlign  = isAr ? 'right' : 'left';
-          body.style.fontFamily = isAr ? "'Cairo','Noto Naskh Arabic',sans-serif" : '';
-          body.style.lineHeight = isAr ? '2' : '';
-        } catch(e) {}
-      }
-    }
   }
 
   langSelect?.addEventListener('change', function () { applyLanguage(this.value); });
-
-  const initLang = langSelect?.value || 'en';
-  if (typeof CKEDITOR !== 'undefined') {
-    CKEDITOR.on('instanceReady', function () { applyLanguage(initLang); });
-  } else {
-    window.addEventListener('load', function () { applyLanguage(initLang); });
-  }
+  window.addEventListener('load', function () { applyLanguage(langSelect?.value || 'en'); });
 })();
 </script>
 {% endblock %}

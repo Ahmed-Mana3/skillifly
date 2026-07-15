@@ -4,6 +4,8 @@ from core import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('signup/', views.signup_view, name='signup'),
+    path('verify-email/', views.verify_otp_view, name='verify_otp'),
+    path('resend-otp/', views.resend_otp_view, name='resend_otp'),
     path('signin/', views.signin_view, name='signin'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('profile/', views.profile_view, name='profile'),

@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify as django_slugify
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 
 User = get_user_model()
 
@@ -67,7 +67,7 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True, blank=True, allow_unicode=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts')
-    content = RichTextUploadingField()
+    content = CKEditor5Field(config_name='extends')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='en')
     featured_image = models.ImageField(upload_to='blog_images/', blank=True, null=True)

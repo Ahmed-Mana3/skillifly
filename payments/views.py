@@ -107,7 +107,7 @@ def manual_payment_view(request, plan_type):
                     subscription=sub,
                     amount=0,
                     status='paid',
-                    kashier_order_id=f'MANUAL-MASTER-{uuid.uuid4().hex[:8].upper()}',
+                    fawaterk_intent_key=f'MANUAL-MASTER-{uuid.uuid4().hex[:8].upper()}',
                     discount_code_used=coupon_code,
                 )
                 profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -135,7 +135,7 @@ def manual_payment_view(request, plan_type):
                         subscription=sub,
                         amount=0,
                         status='paid',
-                        kashier_order_id=f'MANUAL-COUPON-{uuid.uuid4().hex[:12].upper()}',
+                        fawaterk_intent_key=f'MANUAL-COUPON-{uuid.uuid4().hex[:12].upper()}',
                         discount_code_used=coupon_code,
                     )
                     discount.usage_count += 1
@@ -224,7 +224,7 @@ def manual_payment_view(request, plan_type):
         subscription=sub,
         amount=amount_str,
         status='paid',
-        kashier_order_id=f'MANUAL-{uuid.uuid4().hex[:12].upper()}',
+        fawaterk_intent_key=f'MANUAL-{uuid.uuid4().hex[:12].upper()}',
         discount_code_used=coupon_code or None,
     )
 
@@ -307,3 +307,148 @@ def payment_success(request):
 def payment_failure(request):
     error_message = request.session.pop('payment_error', "We couldn't process your payment. Please ensure your details are correct and try again.")
     return render(request, 'payment/payment_failure.html', {'error_message': error_message})
+
+
+# --- FAWATERK VIEWS ---
+from payments import fawaterk as fw_service
+
+@login_required
+def fawaterk_checkout(request, plan_type):
+    if plan_type not in PLAN_CATALOGUE:
+        messages.error(request, 'Invalid plan selected.')
+        return redirect('payment')
+
+    amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
+    user = request.user
+
+    first_name = user.first_name or user.username
+    last_name  = user.last_name  or 'User'
+    phone = getattr(user.profile, 'phone_number', '') or '01000000000'
+
+    try:
+        result = fw_service.create_transaction(
+            cart_total=amount_str,
+            currency='EGP',
+            customer={
+                'first_name': first_name,
+                'last_name':  last_name,
+                'email':      user.email,
+                'phone':      phone,
+            },
+            cart_items=[{
+                'name':     f'Skillifly {sub_name} Plan',
+                'price':    amount_str,
+                'quantity': 1,
+            }],
+            pay_load={
+                'plan_type': plan_type,
+                'user_id':   user.id,
+            },
+            redirection_urls={
+                'successUrl': request.build_absolute_uri(reverse('fawaterk_success')),
+                'failUrl':    request.build_absolute_uri(reverse('payment_failure')),
+                'pendingUrl': request.build_absolute_uri(reverse('fawaterk_pending')),
+                'backUrl':    request.build_absolute_uri(reverse('payment')),
+                'webhookUrl': request.build_absolute_uri(reverse('fawaterk_webhook')),
+            },
+        )
+    except Exception as e:
+        logger.error('Fawaterk createTransaction error: %s', e)
+        messages.error(request, 'Payment service unavailable.')
+        return redirect('payment')
+
+    if result.get('status') != 'success':
+        messages.error(request, 'Could not initiate payment.')
+        return redirect('payment')
+
+    intent_key = result['data']['intent_key']
+    checkout_url = result['data']['url']
+
+    request.session['fawaterk_intent_key'] = intent_key
+
+    sub = _get_or_create_subscription(sub_name, sub_days)
+    UserPayment.objects.create(
+        user=user,
+        subscription=sub,
+        amount=amount_str,
+        status='pending',
+        fawaterk_intent_key=intent_key,
+    )
+
+    env_type = getattr(settings, 'FAWATERK_ENV', 'live')
+    return render(request, 'payment/fawaterk_iframe.html', {
+        'checkout_url': checkout_url,
+        'env_type': env_type
+    })
+
+@login_required
+def fawaterk_success(request):
+    intent_key = request.session.get('fawaterk_intent_key')
+    if intent_key:
+        try:
+            tx_data = fw_service.get_transaction_data(intent_key)
+            if tx_data.get('data', {}).get('payment_status') == 'paid':
+                _activate_subscription_by_intent(intent_key, request.user)
+        except Exception as e:
+            logger.warning('Verify fail on success redirect: %s', e)
+    return render(request, 'payment/payment_success.html')
+
+@login_required
+def fawaterk_pending(request):
+    return render(request, 'payment/fawaterk_pending.html')
+
+@csrf_exempt
+def fawaterk_webhook(request):
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponse(status=400)
+
+    if not fw_service.verify_paid_webhook(payload):
+        return HttpResponse(status=403)
+
+    if payload.get('payment_status') == 'paid':
+        intent_key = payload.get('invoice_key', '')
+        user_id = payload.get('pay_load', {}).get('user_id')
+        plan_type = payload.get('pay_load', {}).get('plan_type')
+
+        if user_id and plan_type:
+            try:
+                user = CustomUser.objects.get(pk=user_id)
+                _activate_subscription_by_intent(intent_key, user, plan_type)
+            except CustomUser.DoesNotExist:
+                pass
+
+    return HttpResponse(status=200)
+
+def _activate_subscription_by_intent(intent_key: str, user, plan_type: str = None):
+    try:
+        payment = UserPayment.objects.get(fawaterk_intent_key=intent_key)
+        if payment.status == 'paid': return
+        payment.status = 'paid'
+        payment.save()
+        profile, _ = Profile.objects.get_or_create(user=user)
+        profile.is_public = True
+        profile.save()
+    except UserPayment.DoesNotExist:
+        if plan_type and plan_type in PLAN_CATALOGUE:
+            amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
+            sub = _get_or_create_subscription(sub_name, sub_days)
+            UserPayment.objects.create(
+                user=user, subscription=sub, amount=amount_str,
+                status='paid', fawaterk_intent_key=intent_key,
+            )
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.is_public = True
+            profile.save()
+
+
+@login_required
+def fawaterk_api_reference(request):
+    """
+    Renders the Fawaterak API Reference (Scalar documentation).
+    """
+    return render(request, 'payment/fawaterk_api_reference.html')
+

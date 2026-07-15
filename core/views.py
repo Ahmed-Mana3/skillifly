@@ -15,8 +15,11 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP
 from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
+import random
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 logger = logging.getLogger('core')
 
@@ -221,9 +224,29 @@ def signup_view(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect(next_url)
+            user = form.save(commit=False)
+            user.is_active = False  # Require OTP verification
+            user.save()
+            
+            # Generate OTP
+            otp_code = str(random.randint(100000, 999999))
+            EmailOTP.objects.create(user=user, otp=otp_code)
+            
+            # Send HTML Email
+            plain_text = f'Your Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
+            html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
+            send_mail(
+                subject='Verify your Skillifly Account',
+                message=plain_text,
+                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            
+            request.session['verification_user_id'] = user.id
+            request.session['next_url'] = next_url
+            return redirect('verify_otp')
         else:
             message = form.errors
     else:
@@ -250,6 +273,15 @@ def signin_view(request):
             login(request, form.get_user())
             return redirect(next_url)
         else:
+            username = request.POST.get('username')
+            try:
+                user = CustomUser.objects.get(Q(username=username) | Q(email=username))
+                if not user.is_active:
+                    request.session['verification_user_id'] = user.id
+                    request.session['next_url'] = next_url
+                    return redirect('verify_otp')
+            except CustomUser.DoesNotExist:
+                pass
             message = form.errors
     else:
         form = LoginForm()
@@ -261,6 +293,69 @@ def signin_view(request):
         'next': next_url
     }
     return render(request, 'auth/signin.html', context)
+
+
+def verify_otp_view(request):
+    user_id = request.session.get('verification_user_id')
+    if not user_id:
+        return redirect('signin')
+        
+    user = get_object_or_404(CustomUser, id=user_id)
+    
+    if request.method == "POST":
+        entered_otp = request.POST.get('otp', '').strip()
+        try:
+            otp_record = EmailOTP.objects.get(user=user)
+            if otp_record.is_expired():
+                messages.error(request, 'OTP has expired. Please request a new one.')
+            elif otp_record.otp == entered_otp:
+                user.is_active = True
+                user.save()
+                otp_record.delete()
+                
+                # Also verify in allauth if present
+                from allauth.account.models import EmailAddress
+                EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
+                
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                next_url = request.session.pop('next_url', 'dashboard')
+                messages.success(request, 'Email verified successfully!')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Invalid OTP code.')
+        except EmailOTP.DoesNotExist:
+            messages.error(request, 'No OTP found. Please resend.')
+            
+    return render(request, 'auth/verify_otp.html', {'email': user.email})
+
+
+def resend_otp_view(request):
+    user_id = request.session.get('verification_user_id')
+    if not user_id:
+        return redirect('signin')
+        
+    user = get_object_or_404(CustomUser, id=user_id)
+    
+    if user.is_active:
+        return redirect('signin')
+        
+    # Generate new OTP
+    otp_code = str(random.randint(100000, 999999))
+    EmailOTP.objects.update_or_create(user=user, defaults={'otp': otp_code, 'created_at': timezone.now()})
+    
+    plain_text = f'Your new Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
+    html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
+    send_mail(
+        subject='Verify your Skillifly Account',
+        message=plain_text,
+        from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
+        recipient_list=[user.email],
+        html_message=html_message,
+        fail_silently=False,
+    )
+    
+    messages.success(request, 'A new OTP has been sent to your email.')
+    return redirect('verify_otp')
 
 
 def logout_view(request):
@@ -677,12 +772,10 @@ def revenue_report(request):
     start_dt = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))
     end_dt   = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
 
-    # Fetch UserPayments (Exclude Kashier 'SKF-' gateway payments)
+    # Fetch UserPayments
     payments = UserPayment.objects.filter(
         status='paid',
         date__range=(start_dt, end_dt)
-    ).exclude(
-        kashier_order_id__startswith='SKF-'
     ).select_related('user', 'subscription').order_by('-date')
 
     # --- Split: paid (amount > 0) vs free-code (amount = 0) ---

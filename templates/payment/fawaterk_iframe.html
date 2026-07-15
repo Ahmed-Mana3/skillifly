@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+
+{% block title %}Complete Payment — Skillifly{% endblock %}
+
+{% block content %}
+<section class="min-h-screen px-6 py-12 flex flex-col items-center">
+  <div class="text-center mb-8 animate-fadeInUp">
+    <h1 class="text-3xl md:text-4xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">
+      Complete your <span class="gradient-text">payment</span>
+    </h1>
+    <p class="text-slate-600 font-medium">Please enter your payment details below securely.</p>
+  </div>
+
+  <div class="w-full max-w-3xl bg-white rounded-3xl shadow-sm border border-slate-200 p-2 md:p-6 animate-fadeInUp" style="animation-delay: 0.1s">
+    <!-- Fawaterk Iframe Container -->
+    <div id="fawaterkDivId" class="w-full min-h-[500px]"></div>
+  </div>
+
+  <div class="text-center mt-8 animate-fadeInUp" style="animation-delay: 0.2s">
+    <a href="{% url 'payment' %}" class="text-sm text-slate-500 hover:text-blue-600 transition-colors font-bold">
+      ← Cancel and return to plans
+    </a>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://app.fawaterk.com/fawaterkPlugin/fawaterkPlugin.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    fawaterkCheckoutV2({
+      envType: "{{ env_type }}",
+      intentUrl: "{{ checkout_url|safe }}"
+    });
+  });
+</script>
+{% endblock %}

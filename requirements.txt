@@ -46,7 +46,7 @@ cryptography==46.0.7
 google-genai==2.0.1
 
 # Rich Text Editor for Blog
-django-ckeditor==6.7.1
+django-ckeditor-5==0.2.20
 
 # Arabic-aware slug generation (transliterates Arabic text for URL slugs)
 python-slugify==8.0.4

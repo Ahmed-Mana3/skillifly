@@ -11,6 +11,16 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+class EmailOTP(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_otp')
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        from django.utils import timezone
+        import datetime
+        return timezone.now() > self.created_at + datetime.timedelta(minutes=10)
+
 # 2. Categories for Themes (e.g., Creative, Corporate, Minimal)
 class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
@@ -178,8 +188,7 @@ class UserPayment(models.Model):
     subscription = models.ForeignKey(Subscription, blank=True, null=True, on_delete=models.SET_NULL)
     amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, default='pending')
-    kashier_order_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    kashier_session_id = models.CharField(max_length=255, null=True, blank=True)
+    fawaterk_intent_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
     discount_code_used = models.CharField(max_length=50, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
 

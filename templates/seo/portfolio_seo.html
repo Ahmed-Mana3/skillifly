@@ -10,7 +10,7 @@
 {% endif %}
 
 <meta name="keywords" content="{% if personal_info.user.seo_settings.meta_keywords %}{{ personal_info.user.seo_settings.meta_keywords }}{% else %}{{ personal_info.full_name }}, video editor, portfolio, skillifly, projects, {{ skills|join:', ' }}{% if project %}, {{ project.title }}{% endif %}{% endif %}">
-<link rel="canonical" href="{{ request.build_absolute_uri }}" />
+<link rel="canonical" href="{{ request.canonical_url|default:request.build_absolute_uri }}" />
 <link rel="icon" type="image/png" href="{% static 'img/bird.png' %}">
 <link rel="apple-touch-icon" href="{% static 'img/bird.png' %}">
 
@@ -18,7 +18,7 @@
 <meta property="og:title" content="{% if project %}{{ project.title }} | {{ personal_info.full_name }}{% elif personal_info.user.seo_settings.og_title %}{{ personal_info.user.seo_settings.og_title }}{% else %}{{ personal_info.full_name }} | {{ personal_info.title }}{% endif %}">
 <meta property="og:description" content="{% if project %}{{ project.details|truncatewords:20 }}{% elif personal_info.user.seo_settings.og_description %}{{ personal_info.user.seo_settings.og_description }}{% else %}View my latest projects and work experience on Skillifly.{% endif %}">
 <meta property="og:image" content="{% if project and project.image %}{{ project.image.url }}{% elif personal_info.user.seo_settings.og_image %}{{ personal_info.user.seo_settings.og_image.url }}{% elif personal_info.picture %}{{ personal_info.picture.url }}{% else %}{% static 'img/logo.png' %}{% endif %}">
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:url" content="{{ request.canonical_url|default:request.build_absolute_uri }}">
 <meta property="og:type" content="{% if project %}video.other{% else %}profile{% endif %}">
 <meta property="profile:username" content="{{ personal_info.user.username }}">
 

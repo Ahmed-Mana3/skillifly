@@ -11,4 +11,9 @@ urlpatterns = [
     path('manage/discounts/delete/<int:pk>/', views.manage_discounts_delete, name='manage_discounts_delete'),
     path('manage/discounts/toggle/<int:pk>/', views.manage_discounts_toggle, name='manage_discounts_toggle'),
     path('manage/banner/update/', views.manage_banner_update, name='manage_banner_update'),
+    path('fawaterk/checkout/<str:plan_type>/', views.fawaterk_checkout, name='fawaterk_checkout'),
+    path('fawaterk/success/', views.fawaterk_success, name='fawaterk_success'),
+    path('fawaterk/pending/', views.fawaterk_pending, name='fawaterk_pending'),
+    path('fawaterk/api-reference/', views.fawaterk_api_reference, name='fawaterk_api_reference'),
+    path('webhooks/fawaterak_json/', views.fawaterk_webhook, name='fawaterk_webhook'),
 ]

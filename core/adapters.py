@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import user_email
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialAccount
@@ -7,6 +8,15 @@ from allauth.utils import get_user_model
 
 
 User = get_user_model()
+
+
+class SkillliflyAccountAdapter(DefaultAccountAdapter):
+    """
+    Override the post-password-change redirect to send users back to their profile page.
+    """
+
+    def get_password_change_redirect_url(self, request):
+        return "/profile/"
 
 
 class SkilliflySocialAccountAdapter(DefaultSocialAccountAdapter):

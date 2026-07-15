@@ -63,6 +63,9 @@ class CustomDomainMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Capture the original URL before any path rewriting for canonical tags
+        request.canonical_url = request.build_absolute_uri()
+
         host = request.get_host().split(':')[0].lower()
 
         if host not in self.MAIN_DOMAINS:

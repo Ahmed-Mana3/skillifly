@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load .env file if it exists (ignored in production where env vars are set
 # at the OS/systemd level).
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -78,8 +78,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'django_celery_results',
     'core',
-    'ckeditor',
-    'ckeditor_uploader',
+    'django_ckeditor_5',
     'blog',
     'payments',
     'portfolios',
@@ -245,12 +244,14 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'signin'
 
 # allauth settings
+ACCOUNT_ADAPTER = "core.adapters.SkillliflyAccountAdapter"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
-SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_ADAPTER = "core.adapters.SkilliflySocialAccountAdapter"
@@ -276,6 +277,18 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 # Optional coupon code to bypass payment (e.g. for staging/testing).
 # Leave empty to disable.
 SKILLIFLY_COUPON_CODE = os.environ.get("SKILLIFLY_COUPON_CODE", "")
+
+# ---------------------------------------------------------------------------
+# Fawaterk Payment Gateway
+# ---------------------------------------------------------------------------
+FAWATERK_CLIENT_ID = os.environ.get('FAWATERK_CLIENT_ID', '')
+FAWATERK_CLIENT_SECRET = os.environ.get('FAWATERK_CLIENT_SECRET', '')
+FAWATERK_VENDOR_KEY = os.environ.get('FAWATERK_VENDOR_API_KEY', '')
+FAWATERK_ENV = os.environ.get('FAWATERK_ENV', 'test')
+FAWATERK_BASE_URL = (
+    'https://app.fawaterk.com' if FAWATERK_ENV == 'live'
+    else 'https://staging.fawaterk.com'
+)
 
 # ---------------------------------------------------------------------------
 # Payment — Manual (InstaPay / Vodafone Cash) + Gemini AI Verification
@@ -347,16 +360,18 @@ if not DEBUG:
 # ---------------------------------------------------------------------------
 # In production, uses SMTP. In development (DEBUG=True), logs to console.
 
-if DEBUG:
+# Support testing actual emails even in development if EMAIL_HOST is provided
+if DEBUG and not os.environ.get("EMAIL_HOST"):
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
-    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
-    EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", default=True)
-    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.hostinger.com")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "465"))
+    EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", default=True)
+    EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", default=False)
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "social@skillifly.cloud")
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-    DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Skillifly <noreply@skillifly.cloud>")
+    DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Skillifly <social@skillifly.cloud>")
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -426,48 +441,129 @@ LOGGING = {
 }
 
 # ---------------------------------------------------------------------------
-# CKEditor Configuration
+# CKEditor 5 Configuration
 # ---------------------------------------------------------------------------
-CKEDITOR_UPLOAD_PATH = "uploads/"
-CKEDITOR_CONFIGS = {
+customColorPalette = [
+    {
+        'color': 'hsl(4, 90%, 58%)',
+        'label': 'Red'
+    },
+    {
+        'color': 'hsl(340, 82%, 52%)',
+        'label': 'Pink'
+    },
+    {
+        'color': 'hsl(291, 64%, 42%)',
+        'label': 'Purple'
+    },
+    {
+        'color': 'hsl(262, 52%, 47%)',
+        'label': 'Deep Purple'
+    },
+    {
+        'color': 'hsl(231, 48%, 48%)',
+        'label': 'Indigo'
+    },
+    {
+        'color': 'hsl(207, 90%, 54%)',
+        'label': 'Blue'
+    },
+]
+
+CKEDITOR_5_UPLOADS_FOLDER = 'uploads/'
+
+CKEDITOR_5_CONFIGS = {
     'default': {
-        'toolbar': 'Custom',
-        'toolbar_Custom': [
-            ['Source'],
-            ['Styles', 'Format', 'Font', 'FontSize'],
-            ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript'],
-            ['TextColor', 'BGColor'],
-            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
-            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-            ['BidiLtr', 'BidiRtl'],          # ← RTL / LTR toggle buttons
-            ['Link', 'Unlink', 'Anchor'],
-            ['Image', 'Flash', 'Table', 'HorizontalRule', 'SpecialChar'],
-            ['Maximize'],
+        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
+                    'bulletedList', 'numberedList', 'blockQuote', 'imageUpload', ],
+    },
+    'extends': {
+        'blockToolbar': [
+            'paragraph', 'heading1', 'heading2', 'heading3',
+            '|',
+            'bulletedList', 'numberedList',
+            '|',
+            'blockQuote',
         ],
-        'height': 400,
-        'width': '100%',
-        'extraPlugins': 'bidi',              # ← bidirectional text plugin
-        'language': 'en',                   # default UI; overridden by JS per post
-        'contentsLangDirection': 'ltr',     # overridden by JS per post
+        'toolbar': {
+            'items': [
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'link', 'insertImage', 'imageUpload', 'mediaEmbed', '|',
+                'bulletedList', 'numberedList', 'todoList', '|',
+                'outdent', 'indent', 'blockQuote', '|',
+                'insertTable', 'codeBlock', 'sourceEditing', '|',
+                'fontSize', 'fontColor', 'fontBackgroundColor', 'removeFormat',
+            ],
+            'shouldNotGroupWhenFull': False,
+        },
+        'image': {
+            'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft',
+                        'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side',  '|'],
+            'styles': [
+                'full',
+                'side',
+                'alignLeft',
+                'alignRight',
+                'alignCenter',
+            ]
+        },
+        'table': {
+            'contentToolbar': [ 'tableColumn', 'tableRow', 'mergeTableCells',
+            'tableProperties', 'tableCellProperties' ],
+            'formatBlocks': [
+                {
+                    'name': 'Normal',
+                    'value': 'p',
+                },
+                {
+                    'name': 'Heading 1',
+                    'value': 'h1',
+                },
+                {
+                    'name': 'Heading 2',
+                    'value': 'h2',
+                },
+                {
+                    'name': 'Heading 3',
+                    'value': 'h3',
+                },
+                {
+                    'name': 'Heading 4',
+                    'value': 'h4',
+                },
+                {
+                    'name': 'Heading 5',
+                    'value': 'h5',
+                },
+                {
+                    'name': 'Heading 6',
+                    'value': 'h6',
+                }
+            ]
+        },
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'}
+            ]
+        }
     },
     'rtl': {
-        'toolbar': 'Custom',
-        'toolbar_Custom': [
-            ['Source'],
-            ['Styles', 'Format', 'Font', 'FontSize'],
-            ['Bold', 'Italic', 'Underline', 'Strike'],
-            ['TextColor', 'BGColor'],
-            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
-            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-            ['BidiLtr', 'BidiRtl'],
-            ['Link', 'Unlink', 'Anchor'],
-            ['Image', 'Table', 'HorizontalRule', 'SpecialChar'],
-            ['Maximize'],
-        ],
-        'height': 400,
-        'width': '100%',
-        'extraPlugins': 'bidi',
+        'toolbar': {
+            'items': [
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'link', 'insertImage', 'imageUpload', 'mediaEmbed', '|',
+                'bulletedList', 'numberedList', 'todoList', '|',
+                'outdent', 'indent', 'blockQuote', '|',
+                'insertTable', 'codeBlock', 'sourceEditing', '|',
+                'fontSize', 'fontColor', 'fontBackgroundColor', 'removeFormat',
+            ],
+            'shouldNotGroupWhenFull': False,
+        },
         'language': 'ar',
-        'contentsLangDirection': 'rtl',
-    },
+    }
 }

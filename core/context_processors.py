@@ -26,7 +26,7 @@ def auth_providers(request):
     return {
         # Show a UI button in DEBUG for testing, but only generate a real login URL when configured.
         "google_oauth_configured": google_configured,
-        "google_oauth_button_visible": False, # Forced to False as per user request
+        "google_oauth_button_visible": google_configured,
     }
 
 

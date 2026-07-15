@@ -1,0 +1,89 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Complete Registration — Skillifly{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-20">
+
+  <!-- Background decoration -->
+  <div class="absolute top-1/3 right-1/4 w-64 h-64 rounded-full opacity-[0.06]"
+    style="background: radial-gradient(circle, #3B82F6, transparent 70%); filter: blur(60px);"></div>
+
+  <div class="w-full max-w-md relative z-10">
+
+    <!-- Card -->
+    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <a href="{% url 'index' %}" class="inline-flex items-center gap-2 mb-6">
+          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
+          <span class="text-xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">Skillifly</span>
+        </a>
+        <h1 class="text-2xl font-bold mb-1" style="font-family: 'Syne', sans-serif;">Almost there!</h1>
+        <p class="text-gray-500 text-sm">Choose a username for your portfolio.</p>
+      </div>
+
+      <!-- Error messages -->
+      {% if form.non_field_errors %}
+      <div class="alert-error mb-6 flex items-start gap-2">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <div>
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Form -->
+      <form method="POST" action="{% url 'socialaccount_signup' %}" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+          <div class="mb-4 {% if field.is_hidden %}hidden{% endif %}">
+            {% if not field.is_hidden %}
+              <label class="sf-label">{{ field.label }}</label>
+            {% endif %}
+            
+            {{ field }}
+            
+            {% if field.help_text and not field.is_hidden %}
+              <p class="text-xs text-slate-500 mt-1.5">{{ field.help_text }}</p>
+            {% endif %}
+            
+            {% if field.errors %}
+              {% for error in field.errors %}
+                <p class="error-msg">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10 mt-2">
+          Complete Registration
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('input[type="text"], input[type="email"]').forEach(el => {
+    el.classList.add('sf-input');
+  });
+</script>
+{% endblock %}

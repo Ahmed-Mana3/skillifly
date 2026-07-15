@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<section class="min-h-screen px-6 py-24 flex items-center justify-center relative">
+  <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-sm border border-slate-200 text-center relative z-10 animate-fadeInUp">
+    <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+    
+    <h1 class="text-2xl font-display font-bold text-black mb-4">Payment Pending</h1>
+    <p class="text-slate-600 mb-6 font-medium">
+      Your payment reference has been created successfully. Please complete the payment at the nearest supported outlet (e.g. Fawry, Aman).
+    </p>
+    <p class="text-slate-500 text-sm mb-8">
+      Your subscription will activate automatically once payment is confirmed.
+    </p>
+    
+    <a href="{% url 'dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors w-full">
+      Return to Dashboard
+    </a>
+  </div>
+</section>
+{% endblock %}

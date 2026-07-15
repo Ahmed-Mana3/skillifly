@@ -340,7 +340,7 @@
     </div>
   </form>
 
-  <!-- Password Change Hint -->
+  <!-- Password Change -->
   <div class="gradient-border rounded-3xl p-8 mb-8 animate-fadeInUp" style="animation-delay: 0.2s">
     <div class="flex items-center gap-3 mb-4">
       <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -350,15 +350,28 @@
       </div>
       <div>
         <h2 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Security</h2>
-        <p class="text-xs text-slate-500 font-medium">Password & authentication settings</p>
+        <p class="text-xs text-slate-500 font-medium">Password &amp; authentication settings</p>
       </div>
     </div>
-    <p class="text-sm text-slate-600 font-medium leading-relaxed">
-      To change your password, please sign out and use the 
-      <strong class="text-black">password reset</strong> option on the sign-in page. 
-      This ensures your identity is securely verified.
+    <p class="text-sm text-slate-600 font-medium leading-relaxed mb-5">
+      Keep your account secure by using a strong, unique password. You can change your password directly or receive a reset link to your email.
     </p>
+    <div class="flex flex-wrap gap-3">
+      <a href="/accounts/password/change/" class="btn-primary py-2.5 px-5 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+        Change password
+      </a>
+      <a href="/accounts/password/reset/" class="btn-ghost py-2.5 px-5 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Reset via email
+      </a>
+    </div>
   </div>
+
 
   <!-- Sign Out Section -->
   <div class="danger-zone rounded-3xl p-8 animate-fadeInUp" style="animation-delay: 0.3s">

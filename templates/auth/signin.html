@@ -38,31 +38,13 @@
       </div>
       {% endif %}
 
-      <!-- Form -->
-      <form method="POST" novalidate>
-        {% csrf_token %}
-
-        {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
-
-        {% if google_oauth_button_visible %}
-        <div class="mb-6">
-          {% if not google_oauth_configured and debug %}
-          <div class="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs">
-            <div class="flex gap-2">
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span><strong>Developer Hint:</strong> Google Auth credentials are missing or set to placeholders in your
-                <code>.env</code> file. Sign-in will not work until real keys are provided.</span>
-            </div>
-          </div>
-          {% endif %}
-
-          <button type="button" disabled title="Google authentication is currently disabled"
-            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/70 text-gray-500 rounded-xl border border-white/30 font-semibold text-sm cursor-not-allowed">
+      <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
+      {% if google_oauth_button_visible %}
+      <div class="mb-6">
+        <form action="{% provider_login_url 'google' %}" method="post">
+          {% csrf_token %}
+          <button type="submit"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z"
@@ -79,13 +61,22 @@
             </svg>
             <span>Continue with Google</span>
           </button>
-          <div class="relative flex items-center justify-center my-5">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-slate-200"></div>
-            </div>
-            <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">Or sign in with email</div>
+        </form>
+        <div class="relative flex items-center justify-center my-5">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200"></div>
           </div>
+          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">Or sign in with email</div>
         </div>
+      </div>
+      {% endif %}
+
+      <!-- Email / Password Form -->
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
         {% endif %}
 
         <div class="mb-4">
@@ -106,12 +97,12 @@
           {% endif %}
         </div>
 
-        <!-- Remember me -->
-        <div class="flex items-center gap-2.5 mb-6">
-          <input type="checkbox" id="remember" name="remember"
-            class="w-4 h-4 rounded border-slate-300 bg-slate-50 text-blue-600 accent-blue-600 cursor-pointer">
-          <label for="remember" class="text-sm text-slate-600 cursor-pointer font-medium">Remember me for 30
-            days</label>
+        <!-- Forgot password -->
+        <div class="mb-6">
+          <a href="{% url 'account_reset_password' %}"
+            class="text-sm text-blue-600 hover:text-blue-700 transition-colors">
+            Forgot password?
+          </a>
         </div>
 
         <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
