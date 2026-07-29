@@ -580,6 +580,18 @@
                     playerEl.innerHTML = `<iframe src="https://www.instagram.com/reel/${igId}/embed/" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen" allowfullscreen></iframe>`;
                     if (shimmer) shimmer.style.display = 'none';
                 } else if (driveId) {
+                    const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+                    const isAlreadyPreview = url.includes('/preview') || url.includes('drive.google.com');
+
+                    if (isAlreadyPreview) {
+                        playerEl.innerHTML = `
+                            <div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">
+                                <iframe src="${previewUrl}"
+                                        style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;"
+                                        allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>
+                            </div>`;
+                        if (shimmer) shimmer.style.display = 'none';
+                    } else {
                     // Try loading direct stream link in HTML5 video tag for perfect reels presentation
                     const directUrl = `https://drive.google.com/uc?export=download&confirm=t&id=${driveId}`;
                     playerEl.innerHTML = `
@@ -627,7 +639,6 @@
                     videoEl.onclick = toggleMute;
                     volIndicator.onclick = toggleMute;
 
-                    const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
                     let replaced = false;
 
                     const swapToIframe = (reason) => {
@@ -657,6 +668,7 @@
                     }, { once: true });
 
                     const stallTimer = setTimeout(() => swapToIframe('stall timeout (8 s)'), 8000);
+                    }
                 }
             } else {
                 if (players[id] && players[id].pauseVideo) {

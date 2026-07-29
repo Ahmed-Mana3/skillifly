@@ -430,9 +430,10 @@
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         const players = {};
+        let ytApiReady = false;
         
         function onYouTubeIframeAPIReady() {
-            // API Loaded
+            ytApiReady = true;
         }
 
         function getYouTubeId(url) {
@@ -452,6 +453,14 @@
             const match = url.match(regExp);
             return match ? match[1] : null;
         }
+
+        function getDriveId(url) {
+            if (!url) return null;
+            const regExp = /drive\.google\.com\/(?:file\/d\/|open\?id=|file\/u\/\d+\/d\/)([^/?#&]+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
 
         const observerOptions = {
             root: document.getElementById('reelsContainer'),
@@ -476,14 +485,38 @@
                 if (entry.isIntersecting) {
                     if (ytId) {
                         if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
-                        if (!players[id]) {
-                            players[id] = new YT.Player(`player-${id}`, {
-                                height: '100%', width: '100%', videoId: ytId,
-                                playerVars: { 'autoplay': 1, 'mute': 1, 'loop': 1, 'playlist': ytId, 'controls': 1, 'modestbranding': 1, 'rel': 0, 'origin': window.location.origin },
-                                events: { 'onReady': (event) => { event.target.playVideo(); if (shimmer) shimmer.style.display = 'none'; } }
-                            });
-                        } else if (typeof players[id].playVideo === 'function') {
-                            players[id].playVideo();
+                        
+                        const initPlayer = () => {
+                            if (!players[id]) {
+                                players[id] = new YT.Player(`player-${id}`, {
+                                    height: '100%', width: '100%', videoId: ytId,
+                                    host: 'https://www.youtube-nocookie.com',
+                                    playerVars: { 
+                                        'autoplay': 1, 'mute': 1, 'loop': 1, 'playlist': ytId, 'controls': 1, 
+                                        'modestbranding': 1, 'rel': 0, 'origin': window.location.origin, 'enablejsapi': 1 
+                                    },
+                                    events: { 
+                                        'onReady': (event) => { 
+                                            event.target.playVideo(); 
+                                            if (shimmer) shimmer.style.display = 'none'; 
+                                        } 
+                                    }
+                                });
+                            } else if (typeof players[id].playVideo === 'function') {
+                                players[id].playVideo();
+                                if (shimmer) shimmer.style.display = 'none';
+                            }
+                        };
+
+                        if (ytApiReady) {
+                            initPlayer();
+                        } else {
+                            const checkReady = setInterval(() => {
+                                if (ytApiReady) {
+                                    initPlayer();
+                                    clearInterval(checkReady);
+                                }
+                            }, 100);
                         }
                     } else if (ttId) {
                         playerContainer.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${ttId}" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
@@ -492,6 +525,18 @@
                         playerContainer.innerHTML = `<iframe src="https://www.instagram.com/p/${igId}/embed/" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
                         if (shimmer) shimmer.style.display = 'none';
                     } else if (driveId) {
+                        const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+                        const isAlreadyPreview = url.includes('/preview') || url.includes('drive.google.com');
+
+                        if (isAlreadyPreview) {
+                            playerContainer.innerHTML = `
+                                <div style="position:relative;width:100%;height:100%;background:#000;overflow:hidden;">
+                                    <iframe src="${previewUrl}"
+                                            style="width:133.33%;height:133.33%;border:none;transform:scale(0.75);transform-origin:top left;position:absolute;top:0;left:0;"
+                                            allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>
+                                </div>`;
+                            if (shimmer) shimmer.style.display = 'none';
+                        } else {
                         // Try loading direct stream link in HTML5 video tag for perfect reels presentation
                         const directUrl = `https://drive.google.com/uc?export=download&confirm=t&id=${driveId}`;
                         playerContainer.innerHTML = `
@@ -539,7 +584,6 @@
                         videoEl.onclick = toggleMute;
                         volIndicator.onclick = toggleMute;
 
-                        const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
                         let replaced = false;
 
                         const swapToIframe = (reason) => {
@@ -573,6 +617,7 @@
                         const stallTimer = setTimeout(() => {
                             swapToIframe('stall timeout (8 s)');
                         }, 8000);
+                        } // end else
                     }
                 } else {
                     if (players[id] && typeof players[id].pauseVideo === 'function') {
@@ -585,8 +630,10 @@
             });
         }, observerOptions);
 
-        document.querySelectorAll('.reel-slide').forEach(reel => {
-            if (reel.dataset.projectId) observer.observe(reel);
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.reel-slide').forEach(reel => {
+                if (reel.dataset.projectId) observer.observe(reel);
+            });
         });
 
         /* Custom Cursor */
@@ -667,9 +714,9 @@
                                 reelContainer.appendChild(slide);
                             });
 
-                            if (typeof obs !== 'undefined' && obs.disconnect) {
-                                obs.disconnect();
-                                reordered.forEach(function(s) { obs.observe(s); });
+                            if (typeof observer !== 'undefined' && observer.disconnect) {
+                                observer.disconnect();
+                                reordered.forEach(function(s) { observer.observe(s); });
                             }
 
                             var dotEls = document.querySelectorAll('.dot');

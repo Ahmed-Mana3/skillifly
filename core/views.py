@@ -184,6 +184,7 @@ from django.http import JsonResponse
 from portfolios.views import (
     examples_view,
     preview_view,
+    theme_preview_view,
     portfolio_reels,
     portfolio_long_videos,
     portfolio_video_detail,
@@ -507,6 +508,7 @@ def activate_portfolio(request):
 
 @login_required
 def themes(request):
+    request.session.pop('preview_theme', None)
     if request.method == "POST":
         if not request.user.is_authenticated:
             return redirect('signin')
@@ -533,13 +535,14 @@ def themes(request):
         if not has_data:
             return redirect('builder')
             
+        theme_slug = theme.name.lower().replace(" ", "_")
+        from django.urls import reverse
+        preview_url = reverse('theme_preview', kwargs={'theme_name': theme_slug})
         if had_theme:
-            from django.urls import reverse
-            preview_url = reverse('preview', kwargs={'username': request.user.username})
             messages.success(request, f'Theme updated successfully! <a href="{preview_url}" class="underline font-bold">Preview Portfolio</a>')
             return redirect('dashboard')
             
-        return redirect('preview', username=request.user.username)
+        return redirect('theme_preview', theme_name=theme_slug)
     
     themes = Theme.objects.all()
     categories = Category.objects.all()

@@ -123,7 +123,7 @@
                 {% if personal_info.user.profile.picture %}
                 <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
                 {% else %}
-                <div class="hero-avatar-fallback">{{ personal_info.full_name|truncatechars:1 }}</div>
+                <img src="{% static 'img/myAvatar (1).png' %}" alt="Default Avatar">
                 {% endif %}
             </div>
             <div class="hero-avatar-ring"></div>

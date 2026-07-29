@@ -101,7 +101,7 @@
 <!-- Skillifly Analytics Tracking -->
 <script>
     window.SF_ANALYTICS = {
-        username: "{{ username|default:personal_info.user.username }}"
+        username: "{{ username }}"
     };
 </script>
 <script src="{% static 'js/sf_analytics.js' %}" defer></script>
