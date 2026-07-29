@@ -596,23 +596,25 @@ logger = logging.getLogger('core')
 def sitemap_view(request):
     """Return an enhanced sitemap.xml. Domain-aware for custom domains."""
     from datetime import date as _date
-    from .models import Project, Profile, CustomUser
+    from .models import Profile
 
     # Detect if we're on a custom domain
     custom_user = getattr(request, 'custom_domain_user', None)
 
     pages = []
 
-    # If it's NOT a custom domain, include static main site pages
+    # If it's NOT a custom domain, include static main site pages with top priority
     if not custom_user:
         SITE_LAUNCH_DATE = _date(2024, 1, 1)
         static_paths = [
-            ('/', '1.0', 'monthly'),
-            ('/themes/', '0.5', 'monthly'),
-            ('/payment/', '0.8', 'monthly'),
-            ('/contact/', '0.3', 'monthly'),
-            ('/terms/', '0.2', 'monthly'),
-            ('/privacy/', '0.2', 'monthly'),
+            ('/', '1.0', 'daily'),
+            ('/examples/', '0.9', 'weekly'),
+            ('/themes/', '0.9', 'weekly'),
+            ('/signin/', '0.8', 'monthly'),
+            ('/payment/', '0.7', 'monthly'),
+            ('/contact/', '0.5', 'monthly'),
+            ('/terms/', '0.3', 'monthly'),
+            ('/privacy/', '0.3', 'monthly'),
         ]
         for path, priority, freq in static_paths:
             pages.append({
@@ -635,47 +637,38 @@ def sitemap_view(request):
         # Determine prefix (empty for custom domain, /@username for main domain)
         prefix = "" if custom_user else f"/@{username}"
         
-        # Main portfolio page
+        # Main portfolio page (well indexed)
         pages.append({
             'loc': request.build_absolute_uri(f'{prefix}/'),
             'lastmod': lastmod,
             'changefreq': 'weekly',
             'priority': '0.9',
         })
-        
-        # Reels & Long Videos index
-        pages.append({
-            'loc': request.build_absolute_uri(f'{prefix}/reels/'),
-            'lastmod': lastmod,
-            'changefreq': 'weekly',
-            'priority': '0.7',
-        })
-        pages.append({
-            'loc': request.build_absolute_uri(f'{prefix}/long-videos/'),
-            'lastmod': lastmod,
-            'changefreq': 'weekly',
-            'priority': '0.7',
-        })
-        
-        # Individual project pages
-        user_projects = Project.objects.filter(user=profile.user, video_type='long').only('slug')
-        for project in user_projects:
-            if project.slug:
-                pages.append({
-                    'loc': request.build_absolute_uri(f'{prefix}/long-videos/{project.slug}/'),
-                    'lastmod': lastmod,
-                    'changefreq': 'monthly',
-                    'priority': '0.6',
-                })
+        # Note: Reels and individual project pages are intentionally excluded from sitemap
+        # to ensure main portfolio pages get maximum crawl equity.
 
     return render(request, 'core/sitemap.xml', {'pages': pages}, content_type='application/xml')
 
 
 def robots_txt_view(request):
-    """Return robots.txt"""
-    content = "User-agent: *\nDisallow: /admin/\nDisallow: /builder/\nSitemap: " + request.build_absolute_uri('/sitemap.xml')
-    from django.http import HttpResponse
-    return HttpResponse(content, content_type="text/plain")
+    """Return robots.txt disallowing admin, builder, dashboard, reels, and project subpages"""
+    content_lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /builder/",
+        "Disallow: /dashboard/",
+        "Disallow: /accounts/",
+        "Disallow: /*/reels/",
+        "Disallow: /*/long-videos/",
+        "Disallow: /*/category/",
+        "Disallow: /@*/reels/",
+        "Disallow: /@*/long-videos/",
+        "Disallow: /@*/category/",
+        "",
+        "Sitemap: " + request.build_absolute_uri('/sitemap.xml')
+    ]
+    return HttpResponse("\n".join(content_lines), content_type="text/plain")
+
 
 
 

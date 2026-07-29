@@ -280,6 +280,7 @@ def preview_view(request, username):
         # Pre-evaluated list with annotated counts — no extra DB queries in templates
         'project_categories': project_categories,
         'project_categories_count': len(project_categories),
+        'is_noindex': False,
     }
 
     # Dynamic template selection based on theme
@@ -391,6 +392,7 @@ def portfolio_reels(request, username):
         'personal_info': personal_info,
         'links': links,
         'category_id': category_id,
+        'is_noindex': True,
     }
     return render(request, template, context)
 
@@ -463,6 +465,7 @@ def portfolio_long_videos(request, username):
         'personal_info': personal_info,
         'links': links,
         'category_id': category_id,
+        'is_noindex': True,
     }
     return render(request, template, context)
 
@@ -532,6 +535,7 @@ def portfolio_video_detail(request, username, slug):
         'other_videos': other_videos,
         'username': username,
         'category_id': category_id,
+        'is_noindex': True,
     }
     return render(request, template, context)
 
@@ -597,5 +601,6 @@ def portfolio_category_detail(request, username, category_id):
         'projects': projects,
         'personal_info': personal_info,
         'username': username,
+        'is_noindex': True,
     }
     return render(request, template, context)

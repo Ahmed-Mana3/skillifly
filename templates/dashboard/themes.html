@@ -1,7 +1,30 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Choose a Theme — Skillifly{% endblock %}
+{% block title %}Portfolio Themes Gallery & Templates — Skillifly{% endblock %}
+
+{% block meta_description %}Browse premium, recruiter-tested portfolio themes designed for video editors, developers, motion designers, and professionals. Live previews available.{% endblock %}
+
+{% block meta_keywords %}portfolio themes, video editor themes, developer portfolio templates, skillifly themes, website templates{% endblock %}
+
+{% block og_title %}Portfolio Themes Gallery — Skillifly{% endblock %}
+{% block og_description %}Browse premium portfolio themes designed for video editors, developers, and creators.{% endblock %}
+{% block twitter_title %}Portfolio Themes Gallery — Skillifly{% endblock %}
+{% block twitter_description %}Browse premium portfolio themes designed for video editors, developers, and creators.{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Skillifly Portfolio Themes Gallery",
+  "description": "Browse premium portfolio themes and templates for professionals.",
+  "url": "{{ request.build_absolute_uri }}"
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-6 py-12">

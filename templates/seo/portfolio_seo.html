@@ -1,5 +1,13 @@
 {% load static %}
 {% include "seo/google_analytics.html" %}
+
+<!-- Robots Indexing Rule: Main portfolios indexed, Reels & Project subpages noindexed -->
+{% if is_noindex or project or type == 'Reels' or type == 'Long Videos' or category %}
+<meta name="robots" content="noindex, follow">
+{% else %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+{% endif %}
+
 <!-- Advanced Portfolio SEO -->
 {% if project %}
     <title>{{ project.title }} | {{ personal_info.full_name }} Portfolio</title>

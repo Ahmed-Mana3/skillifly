@@ -1,9 +1,71 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Skillifly — Your Dream Job Starts With The Right Portfolio{% endblock %}
+{% block title %}Skillifly — Build a Professional Portfolio That Gets You Hired{% endblock %}
+
+{% block meta_description %}Build a stunning, recruiter-tested portfolio in under 2 minutes with Skillifly. Showcase your videos, code, and career story with premium themes and real-time analytics.{% endblock %}
+
+{% block meta_keywords %}portfolio builder, video editor portfolio, developer portfolio, career showcase, skillifly, online portfolio website, resume builder, creative portfolio{% endblock %}
+
+{% block og_title %}Skillifly — Build a Portfolio That Gets You Hired{% endblock %}
+{% block og_description %}Create a recruiter-tested professional portfolio in minutes. Choose from premium themes and share your unique portfolio URL.{% endblock %}
+{% block twitter_title %}Skillifly — Build a Portfolio That Gets You Hired{% endblock %}
+{% block twitter_description %}Create a recruiter-tested professional portfolio in minutes. Choose from premium themes and share your unique portfolio URL.{% endblock %}
 
 {% block extra_head %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://skillifly.cloud/#website",
+      "url": "https://skillifly.cloud/",
+      "name": "Skillifly",
+      "description": "Build a professional portfolio that gets you hired.",
+      "publisher": { "@id": "https://skillifly.cloud/#organization" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://skillifly.cloud/#organization",
+      "name": "Skillifly",
+      "url": "https://skillifly.cloud/",
+      "logo": "https://skillifly.cloud{% static 'img/logo.png' %}"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://skillifly.cloud/#webapp",
+      "name": "Skillifly Portfolio Builder",
+      "url": "https://skillifly.cloud/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Free Plan",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Monthly Pro",
+          "price": "50",
+          "priceCurrency": "EGP"
+        },
+        {
+          "@type": "Offer",
+          "name": "Annual Pro",
+          "price": "360",
+          "priceCurrency": "EGP"
+        }
+      ]
+    }
+  ]
+}
+</script>
+
 <style>
   /* Custom animations for the optimized landing page */
   @keyframes float-slow {

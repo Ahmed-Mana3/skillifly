@@ -1,9 +1,43 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Live Examples — Portfolios Built with Skillifly{% endblock %}
+{% block title %}Live Examples & Showcase Portfolios — Skillifly{% endblock %}
+
+{% block meta_description %}Explore live, real-world portfolios built with Skillifly by top video editors, motion designers, developers, and creators. Get inspired and create your own portfolio today.{% endblock %}
+
+{% block meta_keywords %}live portfolio examples, video editor portfolio samples, developer portfolio showcase, skillifly examples, portfolio inspiration{% endblock %}
+
+{% block og_title %}Live Examples & Showcase Portfolios — Skillifly{% endblock %}
+{% block og_description %}Explore live portfolios built with Skillifly by professional video editors, developers, and creators.{% endblock %}
+{% block twitter_title %}Live Examples & Showcase Portfolios — Skillifly{% endblock %}
+{% block twitter_description %}Explore live portfolios built with Skillifly by professional video editors, developers, and creators.{% endblock %}
 
 {% block extra_head %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Live Examples & Showcase Portfolios",
+  "description": "Explore real-world professional portfolios built with Skillifly.",
+  "url": "{{ request.build_absolute_uri }}",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for showcase in showcases %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "name": "{% if showcase.title %}{{ showcase.title|escapejs }}{% else %}{{ showcase.profile.user.username|title|escapejs }}{% endif %}",
+        "url": "https://skillifly.cloud/{{ showcase.profile.user.username }}/"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+
 <style>
   /* Custom animations */
   @keyframes fadeInUp {

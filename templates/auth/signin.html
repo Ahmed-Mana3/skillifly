@@ -2,7 +2,38 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}Sign In — Skillifly{% endblock %}
+{% block title %}Sign In to Your Account — Skillifly{% endblock %}
+
+{% block meta_description %}Sign in to your Skillifly account to manage your portfolio, customize themes, and track analytics.{% endblock %}
+
+{% block meta_keywords %}skillifly sign in, login skillifly, portfolio account login{% endblock %}
+
+{% block og_title %}Sign In — Skillifly Portfolio Builder{% endblock %}
+{% block og_description %}Sign in to your Skillifly account to build and manage your professional portfolio.{% endblock %}
+{% block twitter_title %}Sign In — Skillifly Portfolio Builder{% endblock %}
+{% block twitter_description %}Sign in to your Skillifly account to build and manage your professional portfolio.{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="index, follow, max-image-preview:large" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Sign In to Skillifly",
+  "description": "Sign in to manage your professional portfolio on Skillifly.",
+  "url": "{{ request.build_absolute_uri }}",
+  "potentialAction": {
+    "@type": "EntryPoint",
+    "actionPlatform": [
+      "http://schema.org/DesktopWebPlatform",
+      "http://schema.org/MobileWebPlatform"
+    ],
+    "urlTemplate": "https://skillifly.cloud/signin/"
+  }
+}
+</script>
+{% endblock %}
 
 {% block footer %}{% endblock %}
 
