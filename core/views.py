@@ -535,14 +535,13 @@ def themes(request):
         if not has_data:
             return redirect('builder')
             
-        theme_slug = theme.name.lower().replace(" ", "_")
         from django.urls import reverse
-        preview_url = reverse('theme_preview', kwargs={'theme_name': theme_slug})
+        preview_url = reverse('preview', kwargs={'username': request.user.username})
         if had_theme:
             messages.success(request, f'Theme updated successfully! <a href="{preview_url}" class="underline font-bold">Preview Portfolio</a>')
             return redirect('dashboard')
             
-        return redirect('theme_preview', theme_name=theme_slug)
+        return redirect('preview', username=request.user.username)
     
     themes = Theme.objects.all()
     categories = Category.objects.all()

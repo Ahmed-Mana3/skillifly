@@ -318,7 +318,7 @@
 
     <!-- Preview Portfolio -->
     {% if profile.theme %}
-    <a href="/preview/{{ profile.theme.name|lower|slugify }}" target="_blank"
+    <a href="{% url 'preview' username=user.username %}" target="_blank"
       class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white">
     {% else %}
     <a href="{% url 'themes' %}"

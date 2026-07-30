@@ -130,10 +130,12 @@ def theme_preview_view(request, theme_name):
 
 def _inject_preview_bar(request, response, profile, user):
     """Helper to inject the preview bar HTML into the response for theme previews."""
+    if user.username != 'alex_mercer':
+        return response
+
     preview_theme_id = request.GET.get('preview_theme') or request.session.get('preview_theme')
-    can_preview = (user.username == 'alex_mercer') or (request.user.is_authenticated and request.user == user)
     
-    if preview_theme_id and can_preview and hasattr(profile, 'theme') and profile.theme:
+    if preview_theme_id and hasattr(profile, 'theme') and profile.theme:
         from django.middleware.csrf import get_token
         csrf_token = get_token(request)
         theme_name = profile.theme.name
@@ -234,8 +236,10 @@ def preview_view(request, username):
     preview_theme_id = request.GET.get('preview_theme')
     if preview_theme_id:
         request.session['preview_theme'] = preview_theme_id
-    else:
+    elif user.username == 'alex_mercer':
         preview_theme_id = request.session.get('preview_theme')
+    else:
+        preview_theme_id = None
 
     personal_info = PersonalInfo.objects.filter(user=user).select_related('user').first()
     experiences = Experience.objects.filter(user=user).select_related('user')
@@ -286,9 +290,8 @@ def preview_view(request, username):
     # Dynamic template selection based on theme
     template_name = 'portfolios/developer/developer_minimal.html'  # Default fallback
 
-    # Handle theme preview if requested
-    can_preview = (user.username == 'alex_mercer') or (request.user.is_authenticated and request.user == user)
-    if preview_theme_id and can_preview:
+    # Handle theme preview for demo portfolio only
+    if preview_theme_id and user.username == 'alex_mercer':
         try:
             preview_theme = Theme.objects.get(id=preview_theme_id)
             if profile:
