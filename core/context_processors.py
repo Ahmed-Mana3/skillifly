@@ -76,6 +76,20 @@ def site_globals(request):
     next_target = request.GET.get('next') or request.POST.get('next') or ''
     is_arabic_page = path.startswith('/ar/') or next_target.startswith('/ar/')
 
+    # Social (Google) signup initiated from an Arabic page: the pending social
+    # login state carries an Arabic `next`, so render the 3rd-party signup
+    # form in Arabic as well.
+    if not is_arabic_page and path.startswith('/accounts/3rdparty/signup/'):
+        pending = request.session.get('socialaccount_sociallogin')
+        if pending:
+            try:
+                from allauth.socialaccount.models import SocialLogin
+                state_next = SocialLogin.deserialize(pending).state.get('next', '')
+                if state_next.startswith('/ar/'):
+                    is_arabic_page = True
+            except Exception:
+                pass
+
     reset_flow = request.session.get('is_arabic_reset_flow', False)
     if reset_flow:
         is_arabic_page = True
