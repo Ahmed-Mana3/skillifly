@@ -94,6 +94,17 @@ def examples_view(request):
     })
 
 
+def arabic_examples_view(request):
+    """Render the Arabic examples page variant for the language toggle."""
+    showcases = Showcase.objects.filter(is_active=True).select_related('profile__user', 'profile__theme')
+    portfolios_count = Profile.objects.count()
+    return render(request, 'core/arabic_examples.html', {
+        'showcases': showcases,
+        'portfolios_count': portfolios_count,
+        'is_arabic_page': True,
+    })
+
+
 # ------------------------------------------------------------------
 # Direct Theme Preview URL (skillifly.cloud/preview/theme_name)
 # ------------------------------------------------------------------

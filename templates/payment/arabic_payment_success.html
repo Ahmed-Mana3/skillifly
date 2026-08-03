@@ -1,0 +1,138 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}تم الدفع بنجاح — Skillifly{% endblock %}
+
+{% block meta_description %}تم تفعيل اشتراكك بنجاح! لقد فتحت جميع مزايا خطة Pro.{% endblock %}
+
+{% block og_title %}تم الدفع بنجاح — Skillifly{% endblock %}
+{% block og_description %}أهلاً بك في الخطة المميزة!{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}تم الدفع بنجاح — Skillifly{% endblock %}
+{% block twitter_description %}أهلاً بك في الخطة المميزة!{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+    body {
+        background-color: white !important;
+        color: #0F172A !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .arabic-rtl h1,
+    .arabic-rtl h2,
+    .arabic-rtl h3,
+    .arabic-rtl h4 {
+        font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        letter-spacing: 0 !important;
+    }
+
+    .arabic-rtl p,
+    .arabic-rtl li,
+    .arabic-rtl a,
+    .arabic-rtl span,
+    .arabic-rtl button {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid rgba(225, 29, 72, 0.14) !important;
+        box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+        border: none !important;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+        box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+    }
+
+    .nav-link {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .nav-link:hover {
+        color: #E11D48 !important;
+    }
+
+    .logo-mark img {
+        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    }
+
+    .arabic-rtl .text-slate-400 { color: #64748B !important; }
+    .arabic-rtl .text-slate-500 { color: #475569 !important; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-6 py-12 arabic-rtl">
+    <div class="max-w-xl w-full">
+        <!-- Main Card -->
+        <div class="glass-card rounded-[2.5rem] p-8 md:p-12 text-center animate-fadeInUp relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-rose-500/10 blur-[80px] rounded-full"></div>
+
+            <!-- Icon -->
+            <div class="relative mb-8 inline-flex">
+                <div class="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full animate-pulse"></div>
+                <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Text Content -->
+            <h1 class="text-4xl font-bold mb-4 tracking-tight">
+                تم <span class="text-emerald-500">الدفع بنجاح!</span>
+            </h1>
+            <p class="text-slate-500 text-lg mb-10 leading-relaxed max-w-sm mx-auto font-medium">
+                أهلاً بك في الخطة المميزة! اشتراكك نشط الآن وقد فتحت جميع مزايا خطة Pro.
+            </p>
+
+            <!-- Actions -->
+            <a href="{% url 'arabic_dashboard' %}" class="btn-primary w-full justify-center py-4 text-lg">
+                الانتقال إلى لوحة التحكم
+                <svg class="w-5 h-5 mr-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Feedback -->
+        <p class="mt-8 text-center text-gray-500 text-sm italic">
+            «مسيرتك المهنية تستحق أفضل عرض.»
+        </p>
+    </div>
+</div>
+{% endblock %}

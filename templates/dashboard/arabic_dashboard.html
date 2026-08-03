@@ -1,10 +1,28 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Dashboard — Skillifly{% endblock %}
+{% block title %}لوحة التحكم — Skillifly{% endblock %}
+
+{% block meta_description %}أدر ملفك المهني على Skillifly: شارك رابط ملفك، تابع الزيارات، غيّر التصميم، وافتح المزايا المميزة.{% endblock %}
+
+{% block og_title %}لوحة التحكم — Skillifly{% endblock %}
+{% block og_description %}أدر ملفك المهني على Skillifly.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}لوحة التحكم — Skillifly{% endblock %}
+{% block twitter_description %}أدر ملفك المهني على Skillifly.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
 <style>
+  /* ===== Arabic Dashboard — Warm Brand Overrides ===== */
   @keyframes slideDown {
     from { transform: translateY(-20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -27,20 +45,151 @@
     animation: wave 2.5s infinite;
     transform-origin: 70% 70%;
   }
+
+  body {
+    background-color: white !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography: Cairo for headings, Tajawal for body */
+  .arabic-rtl h1,
+  .arabic-rtl h2,
+  .arabic-rtl h3,
+  .arabic-rtl h4 {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arabic-rtl p,
+  .arabic-rtl li,
+  .arabic-rtl a,
+  .arabic-rtl span,
+  .arabic-rtl button,
+  .arabic-rtl label {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  }
+
+  /* Remove decorative Latin text treatments for Arabic */
+  .arabic-rtl .tracking-\[0\.3em\],
+  .arabic-rtl .tracking-widest,
+  .arabic-rtl .tracking-tighter,
+  .arabic-rtl .uppercase {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  /* Gradient text — readable on white */
+  .gradient-text {
+    background: linear-gradient(135deg, #DB2777 0%, #EA580C 55%, #D97706 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    border: none !important;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+  }
+
+  /* Cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(225, 29, 72, 0.14) !important;
+    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .gradient-border {
+    background: #ffffff !important;
+    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .gradient-border::before {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+  }
+
+  /* Brand gradient — warm */
+  .gradient-brand {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+  }
+
+  /* Nav */
+  .nav-link {
+    color: #334155 !important;
+    font-weight: 600 !important;
+  }
+
+  .nav-link:hover {
+    color: #E11D48 !important;
+  }
+
+  .logo-mark img {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+  }
+
+  /* Warm the header bird next to the user name */
+  .arabic-rtl h1 img.object-contain {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(85deg);
+  }
+
+  /* Warm accent overrides for inherited English utility colors */
+  .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+  .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
+  .arabic-rtl .text-blue-700 { color: #BE123C !important; }
+  .arabic-rtl .text-purple-600 { color: #DB2777 !important; }
+  .arabic-rtl .text-purple-400 { color: #F472B6 !important; }
+  .arabic-rtl .text-purple-300 { color: #F9A8D4 !important; }
+  .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
+  .arabic-rtl .bg-blue-600 { background-color: #DB2777 !important; }
+  .arabic-rtl .bg-blue-700 { background-color: #BE123C !important; }
+
+  /* Contrast boost — darken muted text for readability on white */
+  .arabic-rtl .text-slate-400 { color: #64748B !important; }
+  .arabic-rtl .text-slate-500 { color: #475569 !important; }
+  .arabic-rtl .text-slate-600 { color: #334155 !important; }
+
+  /* Card arrows flip + slide (RTL) */
+  .arabic-rtl .card-arrow {
+    transform: scaleX(-1);
+    transition: transform 0.3s ease;
+  }
+  .arabic-rtl .group:hover .card-arrow {
+    transform: scaleX(-1) translateX(-4px);
+  }
+
+  /* Focus visibility */
+  a:focus-visible,
+  button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    border-radius: 12px;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-12">
+<div class="max-w-7xl mx-auto px-6 py-12 arabic-rtl">
 
   {% if not has_active_payment and site_settings.banner_is_active %}
   <!-- Notification Banner -->
   <div id="payment-banner" class="hidden mb-12 banner-animate group">
-    <div class="relative overflow-hidden rounded-[2rem] p-[1.5px] bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-2xl shadow-purple-500/20 transition-transform duration-500 hover:scale-[1.005]">
+    <div class="relative overflow-hidden rounded-[2rem] p-[1.5px] bg-gradient-to-br from-pink-500 via-orange-500 to-amber-400 shadow-2xl shadow-pink-500/20 transition-transform duration-500 hover:scale-[1.005]">
       <div class="glass-card rounded-[1.9rem] px-5 py-6 md:px-8 md:py-6 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
         
         <!-- Dismiss Button -->
-        <button onclick="dismissBanner()" class="absolute top-4 right-4 md:static md:order-last p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-all text-slate-500 hover:text-black border border-slate-200 md:ml-2" title="Dismiss">
+        <button onclick="dismissBanner()" class="absolute top-4 left-4 md:static md:order-last p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-all text-slate-500 hover:text-black border border-slate-200 md:mr-2" title="إغلاق">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -54,15 +203,15 @@
             </svg>
           </div>
           
-          <div class="text-center md:text-left">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[10px] font-bold uppercase tracking-widest mb-2">
-              Limited Time Offer
+          <div class="text-center md:text-right">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[10px] font-bold mb-2">
+              عرض محدود
             </div>
-            <h3 class="font-bold text-black text-xl md:text-2xl leading-tight mb-2" style="font-family: 'Syne', sans-serif;">
-              Ready to <span class="gradient-text">Go Live</span>?
+            <h3 class="font-bold text-black text-xl md:text-2xl leading-tight mb-2">
+              جاهز للنشر <span class="gradient-text">المباشر</span>؟
             </h3>
             <p class="text-slate-600 text-sm md:text-base max-w-md leading-relaxed font-medium">
-              Your portfolio is hidden from recruiters. Claim your <span class="text-black font-bold">{{ site_settings.banner_discount_percentage }}% discount</span> today.
+              انشر ملفك المهني اليوم واحصل على خصم <span class="text-black font-bold">{{ site_settings.banner_discount_percentage }}%</span>
             </p>
           </div>
         </div>
@@ -70,22 +219,22 @@
         <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           <!-- Coupon Code Chip -->
           <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 w-full sm:w-auto justify-center group/coupon cursor-pointer transition-colors hover:bg-slate-100" onclick="copyCoupon()">
-            <span class="text-xs text-slate-500 uppercase font-bold tracking-tighter">Code:</span>
-            <span id="coupon-text" class="font-mono text-blue-600 font-bold tracking-widest">{{ site_settings.banner_coupon_code }}</span>
-            <svg class="w-4 h-4 text-slate-400 group-hover/coupon:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="text-xs text-slate-500 font-bold">الرمز:</span>
+            <span id="coupon-text" class="font-mono text-pink-600 font-bold tracking-widest">{{ site_settings.banner_coupon_code }}</span>
+            <svg class="w-4 h-4 text-slate-400 group-hover/coupon:text-pink-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </div>
 
-          <a href="{% url 'payment' %}?coupon={{ site_settings.banner_coupon_code }}" class="btn-primary py-3.5 px-10 text-sm font-bold w-full sm:w-auto shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50">
-            Pay Now
+          <a href="{% url 'payment' %}?coupon={{ site_settings.banner_coupon_code }}" class="btn-primary py-3.5 px-10 text-sm font-bold w-full sm:w-auto shadow-2xl">
+            ادفع الآن
           </a>
         </div>
       </div>
       
       <!-- Premium Background elements -->
-      <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-purple-600/30 rounded-full blur-[100px] pointer-events-none group-hover:bg-purple-500/40 transition-colors duration-700"></div>
-      <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none group-hover:bg-blue-500/30 transition-colors duration-700"></div>
+      <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-pink-600/30 rounded-full blur-[100px] pointer-events-none group-hover:bg-pink-500/40 transition-colors duration-700"></div>
+      <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-amber-500/20 rounded-full blur-[100px] pointer-events-none group-hover:bg-amber-400/30 transition-colors duration-700"></div>
       
       <!-- Sparkle/Shine effect -->
       <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none"></div>
@@ -109,11 +258,11 @@
       navigator.clipboard.writeText(coupon).then(() => {
         const text = document.getElementById('coupon-text');
         const original = text.textContent;
-        text.textContent = 'COPIED!';
-        text.classList.add('text-emerald-400');
+        text.textContent = 'تم النسخ!';
+        text.classList.add('text-emerald-600');
         setTimeout(() => {
           text.textContent = original;
-          text.classList.remove('text-emerald-400');
+          text.classList.remove('text-emerald-600');
         }, 2000);
       });
     }
@@ -135,39 +284,40 @@
 
   <!-- Page header -->
   <div class="mb-10 animate-fadeInUp">
-    <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-1">Welcome back</p>
-    <h1 class="text-4xl font-bold mb-2 text-black flex items-center gap-2" style="font-family: 'Syne', sans-serif;">
+    <p class="text-xs text-pink-600 font-bold mb-1">مرحبًا بعودتك</p>
+    <h1 class="text-4xl font-bold mb-2 text-black flex items-center gap-2">
       <span>{{ user.first_name|default:user.username }}</span>
       <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-8 w-8 sm:h-10 sm:w-10 object-contain">
     </h1>
-    <p class="text-slate-600 font-medium">Manage and grow your professional portfolio from here.</p>
+    <p class="text-slate-600 font-medium">أدر ملفك المهني وطوّره من هنا.</p>
   </div>
 
   <!-- Stats row -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
     <div class="gradient-border rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
-      <p class="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Portfolio URL</p>
-      <p class="text-sm font-bold text-blue-600 truncate tracking-tight">{{ portfolio_url }}</p>
+      <p class="text-[10px] sm:text-xs text-slate-500 mb-2 font-bold">رابط ملفك المهني</p>
+      <p class="text-sm font-bold text-pink-600 truncate tracking-tight">{{ portfolio_url }}</p>
       <!-- Subtle background decoration -->
-      <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-colors"></div>
+      <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-pink-500/5 rounded-full blur-xl group-hover:bg-pink-500/10 transition-colors"></div>
     </div>
     <div class="gradient-border rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest font-bold">Status</p>
+        <p class="text-[10px] sm:text-xs text-slate-500 font-bold">الحالة</p>
         {% if not has_active_payment and not profile.is_public %}
         <a href="{% url 'payment' %}"
-          class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] sm:text-[10px] font-bold text-amber-600 uppercase tracking-tighter hover:bg-amber-500/20 transition-all flex items-center gap-1">
+          class="px-2 py-0.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/40 text-[9px] sm:text-[10px] font-bold hover:brightness-110 transition-all flex items-center gap-1">
           <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <span>Unlock</span>
+          <span>افتح</span>
         </a>
         {% else %}
         <form method="POST" action="{% url 'activate_portfolio' %}" style="display: inline;">
           {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'arabic_dashboard' %}">
           <button type="submit"
-            class="text-[9px] sm:text-[10px] font-bold text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-widest bg-transparent border-none cursor-pointer p-0">
-            Toggle
+            class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold text-white transition-all cursor-pointer shadow-md shadow-pink-500/40 bg-gradient-to-br from-rose-600 via-orange-500 to-amber-400 hover:brightness-110">
+            تغيير الحالة
           </button>
         </form>
        {% endif %}
@@ -175,40 +325,40 @@
       <div class="flex items-center gap-2">
         {% if profile.is_public %}
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
-        <p class="text-sm font-bold text-emerald-600">Public</p>
+        <p class="text-sm font-bold text-emerald-600">عام</p>
         {% else %}
         <span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.4)]"></span>
-        <p class="text-sm font-bold text-amber-600">Private</p>
+        <p class="text-sm font-bold text-amber-600">خاص</p>
         {% endif %}
       </div>
       <!-- Subtle background decoration -->
-      <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-amber-500/5 rounded-full blur-xl group-hover:bg-amber-500/10 transition-colors"></div>
+      <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-amber-500/5 rounded-full blur-xl group-hover:bg-amber-500/10 transition-colors"></div>
     </div>
     <div class="gradient-border rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
-      <p class="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Total Visits</p>
-      <p class="text-2xl sm:text-3xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">{{ profile.visits }}</p>
+      <p class="text-[10px] sm:text-xs text-slate-500 mb-2 font-bold">إجمالي الزيارات</p>
+      <p class="text-2xl sm:text-3xl font-bold gradient-text">{{ profile.visits }}</p>
       <!-- Subtle background decoration -->
-      <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-colors"></div>
+      <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-colors"></div>
     </div>
-    <div class="gradient-border rounded-2xl p-4 sm:p-5 border-purple-500/30 relative overflow-hidden group">
+    <div class="gradient-border rounded-2xl p-4 sm:p-5 border-pink-500/30 relative overflow-hidden group">
       {% if not has_active_payment %}
       <a href="{% url 'payment' %}" class="block">
       {% else %}
       <div class="block">
       {% endif %}
         <div class="flex items-center justify-between mb-2">
-          <p class="text-[10px] sm:text-xs text-blue-600 uppercase tracking-widest font-bold">Pro Days</p>
+          <p class="text-[10px] sm:text-xs text-pink-600 font-bold">أيام برو</p>
           {% if not has_active_payment %}
-          <span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] sm:text-[10px] font-bold text-amber-600 uppercase tracking-tighter group-hover:bg-amber-500/20 transition-all">
-            Upgrade
+          <span class="px-2 py-0.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/40 text-[9px] sm:text-[10px] font-bold group-hover:brightness-110 transition-all">
+            ترقية
           </span>
           {% else %}
           <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
           {% endif %}
         </div>
         <div class="flex items-baseline gap-1.5">
-          <p class="text-2xl sm:text-3xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">{{ days_left }}</p>
-          <span class="text-[10px] text-slate-500 uppercase font-bold">Left</span>
+          <p class="text-2xl sm:text-3xl font-bold gradient-text">{{ days_left }}</p>
+          <span class="text-[10px] text-slate-500 font-bold">متبقية</span>
         </div>
         {% if not has_active_payment %}
       </a>
@@ -216,7 +366,7 @@
       </div>
       {% endif %}
       <!-- Subtle background decoration -->
-      <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-purple-500/5 rounded-full blur-xl group-hover:bg-purple-500/10 transition-colors"></div>
+      <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-amber-500/5 rounded-full blur-xl group-hover:bg-amber-500/10 transition-colors"></div>
     </div>
   </div>
 
@@ -231,17 +381,17 @@
             d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Share Your Portfolio</h3>
-      <p class="text-sm text-slate-600 mb-3 font-medium">Your portfolio link is ready to share.</p>
+      <h3 class="text-base font-bold mb-1 text-black">شارك ملفك المهني</h3>
+      <p class="text-sm text-slate-600 mb-3 font-medium">رابط ملفك المهني جاهز للمشاركة.</p>
       <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
         <span class="text-xs text-slate-600 font-bold flex-1 truncate">{{ portfolio_url }}</span>
         <button onclick="copyUrl()" id="SF-copy-btn"
-          class="text-xs text-blue-600 hover:text-blue-700 transition-colors font-bold flex-shrink-0">Copy</button>
+          class="text-xs text-pink-600 hover:text-pink-700 transition-colors font-bold flex-shrink-0">نسخ</button>
       </div>
     </div>
 
     <!-- Edit Portfolio -->
-    <a href="{% url 'update_portfolio' %}"
+    <a href="{% url 'arabic_update_portfolio' %}"
       class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white">
       <div
         class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
@@ -250,11 +400,11 @@
             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Edit Portfolio</h3>
-      <p class="text-sm text-slate-600 font-medium">Update your personal info, skills, projects and more.</p>
-      <div class="flex items-center gap-1 text-blue-600 text-sm mt-3 font-bold">
-        <span>Open builder</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+      <h3 class="text-base font-bold mb-1 text-black">تعديل ملفك المهني</h3>
+      <p class="text-sm text-slate-600 font-medium">حدّث بياناتك الشخصية ومهاراتك ومشاريعك والمزيد.</p>
+      <div class="flex items-center gap-1 text-pink-600 text-sm mt-3 font-bold">
+        <span>ابدأ التعديل</span>
+        <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
@@ -262,7 +412,7 @@
     </a>
 
     <!-- Change Theme -->
-    <a href="{% url 'themes' %}"
+    <a href="{% url 'arabic_themes' %}"
       class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white">
       <div
         class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
@@ -271,16 +421,15 @@
             d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">
-        {% if user.profile.theme %}Change Theme{% else %}Pick a Theme{% endif %}
+      <h3 class="text-base font-bold mb-1 text-black">
+        {% if user.profile.theme %}تغيير التصميم{% else %}اختر تصميمًا{% endif %}
       </h3>
       <p class="text-sm text-slate-600 font-medium">
-        {% if user.profile.theme %}Browse and switch to a new portfolio theme.{% else %}Choose a beautiful theme for
-        your portfolio.{% endif %}
+        {% if user.profile.theme %}تصفح وبدّل إلى تصميم جديد لملفك المهني.{% else %}اختر تصميمًا جميلًا لملفك المهني.{% endif %}
       </p>
-      <div class="flex items-center gap-1 text-blue-600 text-sm mt-3 font-bold">
-        <span>{% if user.profile.theme %}Browse themes{% else %}Choose theme{% endif %}</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+      <div class="flex items-center gap-1 text-pink-600 text-sm mt-3 font-bold">
+        <span>{% if user.profile.theme %}تصفح التصاميم{% else %}اختر تصميمًا{% endif %}</span>
+        <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
@@ -292,7 +441,7 @@
     <a href="{% url 'preview' username=user.username %}" target="_blank"
       class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white">
     {% else %}
-    <a href="{% url 'themes' %}"
+    <a href="{% url 'arabic_themes' %}"
       class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white">
     {% endif %}
       <div
@@ -303,11 +452,11 @@
             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Preview Portfolio</h3>
-      <p class="text-sm text-slate-600 font-medium">See how your portfolio looks to others right now.</p>
-      <div class="flex items-center gap-1 text-blue-600 text-sm mt-3 font-bold">
-        <span>Open preview</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+      <h3 class="text-base font-bold mb-1 text-black">معاينة ملفك المهني</h3>
+      <p class="text-sm text-slate-600 font-medium">شاهد كيف يظهر ملفك المهني للآخرين الآن.</p>
+      <div class="flex items-center gap-1 text-pink-600 text-sm mt-3 font-bold">
+        <span>افتح المعاينة</span>
+        <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
@@ -315,61 +464,61 @@
     </a>
 
     <!-- SEO Meta Tag Control -->
-    <a href="{% url 'seo_settings' %}" class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white shadow-sm hover:shadow-md">
+    <a href="{% url 'arabic_seo_settings' %}" class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white shadow-sm hover:shadow-md">
       <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">SEO Meta Tag Control</h3>
-      <p class="text-sm text-slate-600 font-medium leading-relaxed">Customize search results and social media sharing previews.</p>
-      <div class="flex items-center gap-1 text-blue-600 text-sm mt-3 font-bold">
-        <span>Manage SEO</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <h3 class="text-base font-bold mb-1 text-black">التحكم في وسوم SEO</h3>
+      <p class="text-sm text-slate-600 font-medium leading-relaxed">خصّص نتائج البحث ومعاينات المشاركة على مواقع التواصل.</p>
+      <div class="flex items-center gap-1 text-pink-600 text-sm mt-3 font-bold">
+        <span>إدارة SEO</span>
+        <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
       </div>
     </a>
 
     <!-- Custom Domain -->
-    <a href="{% url 'custom_domain' %}" class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white shadow-sm hover:shadow-md">
+    <a href="{% url 'arabic_custom_domain' %}" class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white shadow-sm hover:shadow-md">
       <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Custom Domain</h3>
-      <p class="text-sm text-slate-600 font-medium leading-relaxed">Connect your own personal domain (e.g. yourname.com).</p>
-      <div class="flex items-center gap-1 text-blue-600 text-sm mt-3 font-bold">
-        <span>Manage Domain</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <h3 class="text-base font-bold mb-1 text-black">نطاق مخصص</h3>
+      <p class="text-sm text-slate-600 font-medium leading-relaxed">اربط نطاقك الشخصي (مثال: yourname.com).</p>
+      <div class="flex items-center gap-1 text-pink-600 text-sm mt-3 font-bold">
+        <span>إدارة النطاق</span>
+        <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
       </div>
     </a>
 
     <!-- Analytics Insights -->
-    <a href="{% url 'analytics' %}" class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white shadow-sm hover:shadow-md">
+    <a href="{% url 'arabic_analytics' %}" class="gradient-border rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block bg-white shadow-sm hover:shadow-md">
       <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       </div>
-      <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Visitor Insights</h3>
-      <p class="text-sm text-slate-600 font-medium leading-relaxed">See who's viewing your work and which projects they love.</p>
+      <h3 class="text-base font-bold mb-1 text-black">تحليلات الزيارات</h3>
+      <p class="text-sm text-slate-600 font-medium leading-relaxed">تعرف على من يشاهد أعمالك وأي المشاريع يفضلون.</p>
       <div class="flex items-center gap-1 text-emerald-600 text-sm mt-3 font-bold">
-        <span>View Analytics</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span>عرض التحليلات</span>
+        <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
       </div>
     </a>
 
     <!-- Upgrade -->
-    <a href="{% url 'payment' %}"
+    <a href="{% url 'arabic_payment' %}"
       class="rounded-2xl p-6 group hover:scale-[1.01] transition-all duration-300 block relative overflow-hidden"
-      style="background: linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%); border: 1px solid #DBEAFE;">
-      <div class="absolute inset-0 opacity-5" style="background: linear-gradient(135deg, #3B82F6, #8B5CF6);"></div>
+      style="background: linear-gradient(135deg, #FFF1F2 0%, #FFF7ED 100%); border: 1px solid #FECDD3;">
+      <div class="absolute inset-0 opacity-5" style="background: linear-gradient(135deg, #E11D48, #F97316);"></div>
       <div class="relative z-10">
         <div
           class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
@@ -378,13 +527,13 @@
               d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
           </svg>
         </div>
-        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">
-          {% if has_active_payment %}Pro Features{% else %}Go Live{% endif %}
+        <h3 class="text-base font-bold mb-1 text-black">
+          {% if has_active_payment %}مزايا برو{% else %}انطلق مباشرًا{% endif %}
         </h3>
-        <p class="text-sm text-slate-600 font-medium">Unlock custom domains, analytics, and premium themes.</p>
-        <div class="flex items-center gap-1 text-blue-600 text-sm mt-3 font-bold">
-          <span>See plans</span>
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+        <p class="text-sm text-slate-600 font-medium">احصل على النطاقات المخصصة والتحليلات والتصاميم المميزة.</p>
+        <div class="flex items-center gap-1 text-pink-600 text-sm mt-3 font-bold">
+          <span>شاهد الخطط</span>
+          <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor"
             viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
@@ -399,14 +548,14 @@
   <div id="category-notification" class="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl border border-slate-200 p-6 max-w-sm transform translate-y-full opacity-0 transition-all duration-300 z-50 flex flex-col gap-3">
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
           </svg>
         </div>
         <div>
-          <h4 class="font-bold text-slate-900">Categorize your videos now!</h4>
-          <p class="text-sm text-slate-500 mt-1">Perfect! To make this theme look its best, you need to group your videos into categories.</p>
+          <h4 class="font-bold text-slate-900">صنّف فيديوهاتك الآن!</h4>
+          <p class="text-sm text-slate-500 mt-1">ممتاز! لكي يظهر هذا التصميم بأفضل صورة، عليك تجميع فيديوهاتك في فئات.</p>
         </div>
       </div>
       <button onclick="closeCategoryNotification()" class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -415,8 +564,8 @@
         </svg>
       </button>
     </div>
-    <a href="{% url 'update_portfolio' %}#projects-section" class="w-full btn-primary py-2 text-center text-sm mt-2">
-      Go to Builder Projects Section
+    <a href="{% url 'arabic_update_portfolio' %}#projects-section" class="w-full btn-primary py-2 text-center text-sm mt-2">
+      الانتقال إلى قسم المشاريع في المنشئ
     </a>
   </div>
   {% endif %}
@@ -430,11 +579,11 @@
     const url = '{{ portfolio_url }}';
     navigator.clipboard.writeText(url).then(() => {
       const btn = document.getElementById('SF-copy-btn');
-      btn.textContent = 'Copied!';
-      btn.classList.replace('text-blue-600', 'text-emerald-600');
+      btn.textContent = 'تم النسخ!';
+      btn.classList.replace('text-pink-600', 'text-emerald-600');
       setTimeout(() => {
-        btn.textContent = 'Copy';
-        btn.classList.replace('text-emerald-600', 'text-blue-600');
+        btn.textContent = 'نسخ';
+        btn.classList.replace('text-emerald-600', 'text-pink-600');
       }, 2000);
     });
   }
@@ -506,44 +655,44 @@
           const res = await fetch(statusUrl(jobId), { credentials: "same-origin" });
           data = await res.json();
         } catch (_) {
-          setStatus("Network issue… retrying.");
+          setStatus("مشكلة في الشبكة… جارٍ إعادة المحاولة.");
           await new Promise(r => setTimeout(r, Math.min(delay, 5000)));
           delay = Math.min(delay * 1.4, 5000);
           continue;
         }
 
         if (data.status === "succeeded" && data.download_url) {
-          setStatus("Ready.");
+          setStatus("جاهز.");
           downloadEl.href = data.download_url;
           downloadEl.classList.remove('hidden');
           btn.disabled = false;
-          btnText.textContent = "Generate again";
+          btnText.textContent = "إعادة التوليد";
           window.location.href = data.download_url;
           return;
         }
 
         if (data.status === "failed") {
-          setStatus("Failed to generate PDF. Please try again.");
+          setStatus("فشل توليد PDF. حاول مرة أخرى.");
           btn.disabled = false;
-          btnText.textContent = "Try again";
+          btnText.textContent = "حاول مجددًا";
           return;
         }
 
-        setStatus(data.status === "running" ? "Generating…" : "Queued…");
+        setStatus(data.status === "running" ? "جارٍ التوليد…" : "في قائمة الانتظار…");
         await new Promise(r => setTimeout(r, delay));
         delay = Math.min(delay * 1.25, 3500);
       }
 
-      setStatus("Taking longer than usual. Please try again in a moment.");
+      setStatus("يستغرق أطول من المعتاد. حاول مجددًا بعد قليل.");
       btn.disabled = false;
-      btnText.textContent = "Try again";
+      btnText.textContent = "حاول مجددًا";
     }
 
     btn.addEventListener('click', async () => {
       btn.disabled = true;
-      btnText.textContent = "Starting…";
+      btnText.textContent = "بدء…";
       downloadEl.classList.add('hidden');
-      setStatus("Starting…");
+      setStatus("بدء…");
 
       let res;
       try {
@@ -553,25 +702,25 @@
           headers: { "X-CSRFToken": getCookie("csrftoken") }
         });
       } catch (_) {
-        setStatus("Network issue. Please try again.");
+        setStatus("مشكلة في الشبكة. حاول مرة أخرى.");
         btn.disabled = false;
-        btnText.textContent = "Generate PDF";
+        btnText.textContent = "إنشاء PDF";
         return;
       }
 
       const data = await res.json().catch(() => ({}));
 
       if (res.status === 429) {
-        setStatus("Too many exports. Please wait a minute and try again.");
+        setStatus("عدد التصديرات كبير جدًا. انتظر دقيقة وحاول مرة أخرى.");
         btn.disabled = false;
-        btnText.textContent = "Generate PDF";
+        btnText.textContent = "إنشاء PDF";
         return;
       }
 
       if (!res.ok) {
-        setStatus("Could not start export. Please try again.");
+        setStatus("تعذّر بدء التصدير. حاول مرة أخرى.");
         btn.disabled = false;
-        btnText.textContent = "Generate PDF";
+        btnText.textContent = "إنشاء PDF";
         return;
       }
 
@@ -579,12 +728,12 @@
         downloadEl.href = data.download_url;
         downloadEl.classList.remove('hidden');
         btn.disabled = false;
-        btnText.textContent = "Generate again";
+        btnText.textContent = "إعادة التوليد";
         window.location.href = data.download_url;
         return;
       }
 
-      btnText.textContent = "Generating…";
+      btnText.textContent = "جارٍ التوليد…";
       await poll(data.job_id);
     });
   })();

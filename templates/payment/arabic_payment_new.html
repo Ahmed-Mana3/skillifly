@@ -1,0 +1,363 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}الترقية إلى خطة برو — Skillifly{% endblock %}
+
+{% block meta_description %}ارتقِ بمستواك المهني مع خطط Skillifly: خطط واضحة وأسعار شفافة، تفعيل فوري، ودعم لجميع وسائل الدفع.{% endblock %}
+
+{% block og_title %}الترقية إلى خطة برو — Skillifly{% endblock %}
+{% block og_description %}خطط واضحة وأسعار شفافة مع تفعيل فوري.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}الترقية إلى خطة برو — Skillifly{% endblock %}
+{% block twitter_description %}خطط واضحة وأسعار شفافة مع تفعيل فوري.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+    /* ===== Arabic Payment — Warm Brand Overrides ===== */
+    body {
+        background-color: white !important;
+        color: #0F172A !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .arabic-rtl h1,
+    .arabic-rtl h2,
+    .arabic-rtl h3,
+    .arabic-rtl h4 {
+        font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        letter-spacing: 0 !important;
+    }
+
+    .arabic-rtl p,
+    .arabic-rtl li,
+    .arabic-rtl a,
+    .arabic-rtl span,
+    .arabic-rtl button,
+    .arabic-rtl label,
+    .arabic-rtl input {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
+    }
+
+    .arabic-rtl .tracking-widest,
+    .arabic-rtl .tracking-tighter,
+    .arabic-rtl .uppercase {
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+    }
+
+    .gradient-text {
+        background: linear-gradient(135deg, #DB2777 0%, #EA580C 55%, #D97706 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid rgba(225, 29, 72, 0.14) !important;
+        box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .gradient-border {
+        background: #ffffff !important;
+        box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
+    }
+
+    .gradient-border::before {
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+        border: none !important;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+        box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+    }
+
+    .btn-ghost {
+        background: #FFF1F2 !important;
+        color: #BE123C !important;
+        border: 1px solid #FECDD3 !important;
+        font-weight: 700 !important;
+    }
+
+    .btn-ghost:hover {
+        background: #FFE4E6 !important;
+        border-color: #FDA4AF !important;
+    }
+
+    .nav-link {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .nav-link:hover {
+        color: #E11D48 !important;
+    }
+
+    .logo-mark img {
+        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    }
+
+    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+    .arabic-rtl .text-blue-700 { color: #BE123C !important; }
+
+    /* Contrast boost */
+    .arabic-rtl .text-slate-400 { color: #64748B !important; }
+    .arabic-rtl .text-slate-500 { color: #475569 !important; }
+    .arabic-rtl .text-slate-600 { color: #334155 !important; }
+
+    /* Highlighted annual card — warm gradient */
+    .annual-card {
+        background: linear-gradient(160deg, #FFF1F2, #FFF7ED) !important;
+        border: 1px solid #FECDD3 !important;
+        box-shadow: 0 20px 40px rgba(225, 29, 72, 0.08) !important;
+    }
+
+    .annual-badge {
+        background: linear-gradient(135deg, #E11D48, #F97316) !important;
+        color: white;
+    }
+
+    /* Coupon input — light theme */
+    .coupon-input {
+        width: 100%;
+        background: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 9999px;
+        padding: 0.85rem 2.5rem;
+        color: #0F172A;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: center;
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    .coupon-input:focus {
+        outline: none;
+        border-color: #EC4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+    }
+
+    .arabic-rtl .coupon-icon {
+        right: auto;
+        left: 0.75rem;
+    }
+
+    .arabic-rtl .pay-method-pill { direction: ltr; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-16 arabic-rtl">
+
+  <!-- Messages for Payment Status -->
+  {% if messages %}
+    <div class="w-full max-w-2xl mx-auto mb-8 animate-fadeInUp">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl {% if message.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %} flex items-center gap-3">
+          {% if message.tags == 'error' %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {% else %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {% endif %}
+          <span class="text-sm font-medium">{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="text-center mb-16 animate-fadeInUp">
+    <div
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-rose-500/20 text-sm mb-6">
+      <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+      <span class="text-slate-600 font-bold">أسعار بسيطة وشفافة</span>
+    </div>
+    <h1 class="text-5xl md:text-6xl font-bold mb-4 text-black">
+      استثمر في <span class="gradient-text">مسيرتك المهنية</span>
+    </h1>
+    <p class="text-slate-600 text-lg max-w-xl mx-auto font-medium">افتح المزايا المميزة واترك انطباعًا دائمًا لدى كل مسؤول توظيف وعميل.</p>
+  </div>
+
+  <!-- Payment method badges -->
+  <div class="flex flex-wrap items-center justify-center gap-3 mb-10 animate-fadeInUp" style="animation-delay:0.05s">
+    <div class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold pay-method-pill" style="background:#EFF6FF; border:1px solid #BFDBFE;">
+      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+      </svg>
+      <span class="text-blue-700">إنستا باي</span>
+    </div>
+    <div class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold pay-method-pill" style="background:#FEF2F2; border:1px solid #FECACA;">
+      <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      <span class="text-red-600">فودافون كاش</span>
+    </div>
+
+    <div class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold pay-method-pill" style="background:#F0FDF4; border:1px solid #BBF7D0;">
+      <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+      </svg>
+      <span class="text-emerald-700">تحقق فوري بالذكاء الاصطناعي</span>
+    </div>
+  </div>
+
+  <!-- Pricing cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+
+    <!-- Monthly -->
+    <div class="gradient-border rounded-3xl p-7 animate-fadeInUp bg-white" style="animation-delay: 0.1s">
+      <div class="mb-6">
+        <p class="text-sm font-bold text-slate-500 tracking-widest mb-2">شهريًا</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span class="text-4xl font-bold text-black">50</span>
+          <span class="text-slate-500 mb-1.5 font-medium">جنيه/شهر</span>
+        </div>
+        <p class="text-sm text-slate-400 font-medium">يُدفع شهريًا.</p>
+      </div>
+      <button class="btn-ghost w-full justify-center" onclick="goToPayment('monthly')">اختر الخطة الشهرية</button>
+    </div>
+
+    <!-- 6 Months -->
+    <div class="gradient-border rounded-3xl p-7 animate-fadeInUp bg-white" style="animation-delay: 0.2s">
+      <div class="mb-6">
+        <p class="text-sm font-bold text-slate-500 tracking-widest mb-2">6 أشهر</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span class="text-4xl font-bold text-black">250</span>
+          <span class="text-slate-500 mb-1.5 font-medium">جنيه/6 أشهر</span>
+        </div>
+        <p class="text-sm text-emerald-600 font-bold">وفّر 50 جنيهًا عن الاشتراك الشهري</p>
+      </div>
+      <button class="btn-ghost w-full justify-center" onclick="goToPayment('pro_monthly')">الترقية إلى برو</button>
+    </div>
+
+    <!-- Annual (highlighted) -->
+    <div class="rounded-3xl p-7 relative overflow-hidden animate-fadeInUp bg-white annual-card"
+      style="animation-delay: 0.3s;">
+
+      <div class="absolute top-4 left-4">
+        <span class="px-3 py-1 rounded-full text-xs font-bold annual-badge">الأكثر شهرة</span>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-sm font-bold text-blue-600 tracking-widest mb-2">سنويًا</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span class="text-4xl font-bold" style="font-family: 'Cairo', sans-serif;">360</span>
+          <span class="text-gray-400 mb-1.5">جنيه/سنة</span>
+        </div>
+        <p class="text-sm text-emerald-600 font-bold">وفّر 240 جنيهًا عن الاشتراك الشهري</p>
+      </div>
+
+      <button class="btn-primary w-full justify-center py-3.5" onclick="goToPayment('pro_annual')">
+        اختر الخطة السنوية
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Coupon Code -->
+  <div class="max-w-md mx-auto mb-16 text-center animate-fadeInUp" style="animation-delay: 0.35s">
+    <div class="relative max-w-xs mx-auto">
+      <input type="text" id="couponCode" placeholder="أدخل كود الخصم" class="coupon-input" />
+      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none coupon-icon">
+        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-3">يتم تطبيق أكواد الخصم تلقائيًا أثناء الدفع.</p>
+  </div>
+
+  <!-- Trust row -->
+  <div class="text-center animate-fadeInUp" style="animation-delay: 0.4s">
+    <div class="flex flex-wrap items-center justify-center gap-8">
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+            clip-rule="evenodd" />
+        </svg>
+        دفع آمن
+      </div>
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        تحقق فوري بالذكاء الاصطناعي
+      </div>
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        تفعيل فوري
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Auto-fill coupon from URL if present
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const coupon = urlParams.get('coupon');
+    if (coupon) {
+      const input = document.getElementById('couponCode');
+      if (input) {
+        input.value = coupon;
+      }
+    }
+  });
+
+  // Route plan button clicks to the manual payment page, passing coupon as GET param
+  function goToPayment(plan) {
+    const coupon = document.getElementById('couponCode').value.trim();
+    let url = '/ar/manual-pay/' + plan + '/';
+    if (coupon) {
+      url += '?coupon=' + encodeURIComponent(coupon);
+    }
+    window.location.href = url;
+  }
+</script>
+{% endblock %}

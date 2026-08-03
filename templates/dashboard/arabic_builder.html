@@ -1,0 +1,862 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}أنشئ ملفك المهني — Skillifly{% endblock %}
+
+{% block meta_description %}ابنِ ملفك المهني الاحترافي على Skillifly: أضف هويتك ومهاراتك وخبراتك ومشاريعك وروابطك، ثم أطلقه مباشرة.{% endblock %}
+
+{% block og_title %}أنشئ ملفك المهني — Skillifly{% endblock %}
+{% block og_description %}ابنِ ملفك المهني الاحترافي على Skillifly.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}أنشئ ملفك المهني — Skillifly{% endblock %}
+{% block twitter_description %}ابنِ ملفك المهني الاحترافي على Skillifly.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/builder_theme.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+  /* Skillifly Warm Brand Accents (Arabic) */
+  :root {
+    --accent: #E11D48;
+    --accent-alt: #F97316;
+    --accent-glow: rgba(225, 29, 72, 0.15);
+  }
+
+  body {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography: Cairo for headings, Tajawal for body */
+  .arabic-rtl h1,
+  .arabic-rtl h2,
+  .arabic-rtl h3,
+  .arabic-rtl h4 {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arabic-rtl p,
+  .arabic-rtl li,
+  .arabic-rtl a,
+  .arabic-rtl span,
+  .arabic-rtl button,
+  .arabic-rtl label,
+  .arabic-rtl input,
+  .arabic-rtl textarea,
+  .arabic-rtl select {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  }
+
+  .arabic-rtl .sf-label {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  .arabic-rtl .btn-premium {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    background: linear-gradient(135deg, #E11D48 0%, #EC4899 50%, #F97316 100%);
+    background-size: 200% auto;
+    box-shadow: 0 10px 30px -5px rgba(225, 29, 72, 0.35);
+  }
+
+  .arabic-rtl .btn-premium:hover {
+    box-shadow: 0 20px 40px -10px rgba(249, 115, 22, 0.45);
+  }
+
+  .arabic-rtl .builder-tabs {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #F43F5E 0%, #F97316 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .builder-container {
+    padding-top: 6rem;
+    padding-bottom: 10rem;
+    position: relative;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+  }
+
+  /* Wizard Flow Visibility */
+  .section-panel {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .section-panel.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Validation Styles */
+  .sf-input.invalid-field {
+    border-color: rgba(244, 63, 94, 0.5) !important;
+    background: rgba(244, 63, 94, 0.05) !important;
+    box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.1) !important;
+  }
+
+  @keyframes errorPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); border-color: #f43f5e; box-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
+    100% { transform: scale(1); }
+  }
+
+  .error-pulse {
+    animation: errorPulse 0.5s ease-in-out 2;
+  }
+
+  /* Navigation Tabs */
+  .builder-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+    padding-bottom: 1.25rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .tab-btn:hover {
+    background: #E2E8F0;
+    border-color: #CBD5E1;
+    transform: translateY(-1px);
+  }
+
+  .tab-btn.active {
+    background: rgba(225, 29, 72, 0.1);
+    border-color: rgba(225, 29, 72, 0.35);
+    color: #E11D48;
+    box-shadow: 0 10px 20px -10px rgba(225, 29, 72, 0.3);
+  }
+
+  .tab-num {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 6px;
+    background: #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    transition: all 0.3s ease;
+  }
+
+  .tab-btn.active .tab-num {
+    background: linear-gradient(135deg, #E11D48, #F97316);
+    color: white;
+  }
+
+  .tab-btn.has-error {
+    border-color: rgba(244, 63, 94, 0.5);
+    color: #fb7185;
+  }
+
+  /* Category Manager & Chips Overhaul */
+  .category-manager-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .category-manager-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(225, 29, 72, 0.15);
+  }
+  .category-chip {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 999px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+  }
+  .category-chip:hover {
+    background: #E2E8F0;
+    border-color: #CBD5E1;
+    color: #0F172A;
+    transform: translateY(-1px);
+  }
+  .category-chip.active {
+    background: rgba(225, 29, 72, 0.1);
+    border-color: rgba(225, 29, 72, 0.45);
+    color: #E11D48;
+    box-shadow: 0 0 12px rgba(225, 29, 72, 0.2);
+  }
+  .logo-mark img {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-5xl mx-auto px-6 builder-container arabic-rtl" id="builder-container" data-category="{{ category }}">
+
+    <!-- Header -->
+    <form method="POST" id="portfolio-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+        <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6"
+           style="background: rgba(225,29,72,0.08); border: 1px solid rgba(225,29,72,0.2); color: #E11D48;">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        البنية التحتية لملفك المهني نشطة
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tight">
+        صمّم <span class="gradient-text">هويتك</span>
+      </h1>
+        <p class="text-zinc-500 max-w-xl text-lg leading-relaxed">
+          ابنِ حضورك الرقمي المهني. كل تفصيل هنا يحوّل عرضك الاحترافي إلى صورة معماريّة متكاملة.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <button type="submit" form="portfolio-form" id="submit-btn-top" class="btn-premium btn-premium-shimmer w-full md:w-auto justify-center whitespace-nowrap shadow-2xl group">
+          <span class="flex items-center gap-3">
+            {% if is_update %}حفظ التحديثات{% else %}إطلاق ومعاينة{% endif %}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="builder-tabs">
+      {# Base Order (Indices 0-6): Identity, Expertise, Education, Experience, Projects, Links, Creators #}
+      <button type="button" class="tab-btn active" onclick="Builder.switchSection(0)">
+        <span class="tab-num">1</span>
+        <span>الهوية</span>
+      </button>
+      <button type="button" class="tab-btn" onclick="Builder.switchSection(1)">
+        <span class="tab-num">2</span>
+        <span>{% if category == 'video_editor' %}مهارات البرامج{% else %}المهارات{% endif %}</span>
+      </button>
+      <button type="button" class="tab-btn" onclick="Builder.switchSection(2)">
+        <span class="tab-num">3</span>
+        <span>التعليم</span>
+      </button>
+      <button type="button" class="tab-btn" onclick="Builder.switchSection(3)">
+        <span class="tab-num">4</span>
+        <span>الخبرة العملية</span>
+      </button>
+      <button type="button" class="tab-btn" onclick="Builder.switchSection(4)">
+        <span class="tab-num">5</span>
+        <span>{% if category == 'video_editor' %}معرض الأعمال{% else %}المشاريع{% endif %}</span>
+      </button>
+      <button type="button" class="tab-btn" onclick="Builder.switchSection(5)">
+        <span class="tab-num">6</span>
+        <span>الروابط</span>
+      </button>
+      <button type="button" class="tab-btn" onclick="Builder.switchSection(6)">
+        <span class="tab-num">7</span>
+        <span>صنّاع المحتوى</span>
+      </button>
+    </div>
+
+      <meta name="csrf-token" content="{{ csrf_token }}">
+      <input type="hidden" id="ajax-save-category-url" value="{% url 'ajax_save_category' %}">
+
+      {# DYNAMIC ORDERING BASED ON CATEGORY #}
+      <div id="builder-panels">
+        <!-- SECTION 0: PERSONAL IDENTITY -->
+        <div class="section-panel active" id="section-0">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">الهوية الشخصية</h2>
+              <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة 1 من {% if category == 'video_editor' %}7{% else %}6{% endif %}</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div class="md:col-span-2">
+                <label class="sf-label">اسمك الكامل</label>
+                <input type="text" name="fullname" value="{{ personal_form.fullname.value|default:'' }}" class="sf-input" placeholder="مثال: محمد أحمد" required>
+              </div>
+              <div class="md:col-span-2">
+                <label class="sf-label">المسمى الوظيفي / الدور</label>
+                <input type="text" name="title" value="{{ personal_form.title.value|default:'' }}" class="sf-input" placeholder="مثال: مصمم بصري أول" required>
+              </div>
+              <div><label class="sf-label">البريد الإلكتروني</label><input type="email" name="email" value="{{ personal_form.email.value|default:'' }}" class="sf-input"></div>
+              <div><label class="sf-label">رقم الهاتف</label><input type="text" name="phone" value="{{ personal_form.phone.value|default:'' }}" class="sf-input"></div>
+              <div class="md:col-span-2"><label class="sf-label">رابط الحجز (واتساب / Calendly)</label><input type="text" name="booking_url" value="{{ personal_form.booking_url.value|default:'' }}" class="sf-input"></div>
+
+              {% if theme_name == 'animated' or theme_name == 'animated_dark' or theme_name == 'creative_white' %}
+              <div class="md:col-span-2">
+                <label class="sf-label">الصورة الشخصية <span class="text-[10px] text-zinc-500 font-normal normal-case ml-2">(مطلوبة حسب تصميمك الحالي)</span></label>
+                <input type="file" name="picture" class="sf-input" accept="image/*">
+                {% if request.user.profile.picture %}
+                <div class="mt-2 text-xs text-emerald-600">الحالي: مرفوع</div>
+                {% endif %}
+              </div>
+              {% endif %}
+
+              <div class="md:col-span-2"><label class="sf-label">نبذة قصيرة عنك</label><textarea name="bio" class="sf-input" rows="4">{{ personal_form.bio.value|default:'' }}</textarea></div>
+            </div>
+            <div class="flex justify-end mt-12"><button type="button" onclick="Builder.switchSection(Builder.currentSection + 1)" class="btn-premium">الخطوة التالية ←</button></div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: EXPERTISE -->
+        <div class="section-panel" id="section-1">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">{% if category == 'video_editor' %}إتقان البرامج{% else %}كتالوج المهارات{% endif %}</h2>
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة 2 من {% if category == 'video_editor' %}7{% else %}6{% endif %}</span>
+                <button type="button" onclick="Builder.addFormsetItem('skills')" class="add-btn-pill">+ إضافة مهارة</button>
+              </div>
+            </div>
+            {{ skill_formset.management_form }}
+            <div id="skills-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for form in skill_formset %}
+              <div class="formset-item mb-0">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <button type="button" class="remove-item-btn">✕</button>
+                <label class="sf-label">اسم المهارة</label>
+                <input type="text" name="{{ form.skill.html_name }}" value="{{ form.skill.value|default:'' }}" class="sf-input" placeholder="مثال: Adobe Premiere Pro">
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="flex justify-between mt-12">
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">رجوع</button>
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection + 1)" class="btn-premium">الخطوة التالية ←</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: EDUCATION -->
+        <div class="section-panel" id="section-2">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">السجل الأكاديمي</h2>
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة {% if category == 'video_editor' %}6{% else %}3{% endif %} من {% if category == 'video_editor' %}7{% else %}6{% endif %}</span>
+                <button type="button" onclick="Builder.addFormsetItem('education')" class="add-btn-pill">+ إضافة تعليم</button>
+              </div>
+            </div>
+            {{ education_formset.management_form }}
+            <div id="education-container" class="space-y-6">
+              {% for form in education_formset %}
+              <div class="formset-item">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <button type="button" class="remove-item-btn">✕</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="md:col-span-2"><label class="sf-label">المدرسة / الجامعة</label><input type="text" name="{{ form.school.html_name }}" value="{{ form.school.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">الدرجة / التخصص</label><input type="text" name="{{ form.degree.html_name }}" value="{{ form.degree.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">سنة التخرج</label><input type="number" name="{{ form.year.html_name }}" value="{{ form.year.value|default:'' }}" class="sf-input"></div>
+                </div>
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="flex justify-between mt-12">
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">رجوع</button>
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection + 1)" class="btn-premium">الخطوة التالية ←</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: EXPERIENCE -->
+        <div class="section-panel" id="section-3">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">الخط الزمني للخبرة</h2>
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة {% if category == 'video_editor' %}5{% else %}4{% endif %} من {% if category == 'video_editor' %}7{% else %}6{% endif %}</span>
+                <button type="button" onclick="Builder.addFormsetItem('experience')" class="add-btn-pill">+ إضافة عمل</button>
+              </div>
+            </div>
+            {{ experience_formset.management_form }}
+            <div id="experience-container" class="space-y-6">
+              {% for form in experience_formset %}
+              <div class="formset-item">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <button type="button" class="remove-item-btn">✕</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div><label class="sf-label">المسمى الوظيفي</label><input type="text" name="{{ form.title.html_name }}" value="{{ form.title.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">اسم الشركة</label><input type="text" name="{{ form.company.html_name }}" value="{{ form.company.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">تاريخ البداية</label><input type="month" name="{{ form.start.html_name }}" value="{{ form.start.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">تاريخ النهاية</label><input type="month" name="{{ form.end.html_name }}" value="{{ form.end.value|default:'' }}" class="sf-input"></div>
+                  <div class="md:col-span-2"><label class="sf-label">{% if category == 'student' %}ما هو دورك / مهمتك؟{% else %}ماذا فعلت هناك؟{% endif %}</label><textarea name="{{ form.description.html_name }}" class="sf-input" rows="3">{{ form.description.value|default:'' }}</textarea></div>
+                </div>
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="flex justify-between mt-12">
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">رجوع</button>
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection + 1)" class="btn-premium">الخطوة التالية ←</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: PROJECTS -->
+        <div class="section-panel" id="section-4">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">{% if category == 'video_editor' %}معرض الفيديو{% elif category == 'student' %}المشاريع الأكاديمية{% else %}معرض الأعمال{% endif %}</h2>
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة {% if category == 'video_editor' %}2{% else %}5{% endif %} من {% if category == 'video_editor' %}7{% else %}6{% endif %}</span>
+                <button type="button" onclick="Builder.addFormsetItem('projects')" class="add-btn-pill">+ إضافة مشروع</button>
+              </div>
+            </div>
+            {{ project_formset.management_form }}
+
+            {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
+            <!-- Category Management Center -->
+            <div class="mb-10 p-6 rounded-2xl border border-black/5 bg-slate-50 backdrop-blur-md">
+              <div class="flex items-center justify-between mb-6">
+                <div>
+                  <h3 class="text-lg font-bold text-black">إدارة المجموعات</h3>
+                  <p class="text-xs text-zinc-500 mt-1">نظّم مشاريعك في معارض منفصلة (مثال: فيديوهات موسيقية، إعلانات).</p>
+                </div>
+                <button type="button" class="btn-premium px-4 py-2 text-xs" onclick="Builder.openCategoryModalFor(null)">+ إنشاء مجموعة</button>
+              </div>
+
+              <!-- Categories Grid -->
+              <div id="builder-categories-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {% for cat in request.user.project_categories.all %}
+                <div class="category-manager-card group relative p-4 rounded-xl border border-black/5 bg-white hover:border-rose-500/40 transition-all flex flex-col justify-between min-h-[140px]" data-category-id="{{ cat.id }}" data-name="{{ cat.name }}" data-description="{{ cat.description|default:'' }}" data-thumbnail-url="{% if cat.thumbnail %}{{ cat.thumbnail.url }}{% endif %}">
+                  <!-- Cover Thumbnail Overlay Background -->
+                  <div class="absolute inset-0 rounded-xl overflow-hidden z-0">
+                    {% if cat.thumbnail %}
+                    <img src="{{ cat.thumbnail.url }}" class="cat-card-bg w-full h-full object-cover opacity-20 filter blur-sm group-hover:scale-105 transition-all">
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-200 via-slate-100/70 to-transparent"></div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="relative z-10 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button type="button" class="w-7 h-7 rounded-lg bg-slate-200 border border-black/10 text-slate-500 hover:text-black flex items-center justify-center text-xs" onclick="Builder.editCategory('{{ cat.id }}')" title="تعديل المجموعة">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                    <button type="button" class="w-7 h-7 rounded-lg bg-slate-200 border border-black/10 text-red-500 hover:text-red-400 flex items-center justify-center text-xs" onclick="Builder.deleteCategory('{{ cat.id }}')" title="حذف المجموعة">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-7v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
+
+                  <!-- Details -->
+                  <div class="relative z-10 mt-auto">
+                    <h4 class="text-sm font-bold text-black cat-card-title">{{ cat.name }}</h4>
+                    <p class="text-[10px] text-zinc-500 mt-1 line-clamp-2 cat-card-desc">{% if cat.description %}{{ cat.description }}{% endif %}</p>
+                  </div>
+                </div>
+                {% empty %}
+                <div id="no-categories-state" class="col-span-full py-8 text-center border border-dashed border-black/10 rounded-xl text-zinc-500 text-xs">
+                  لم تُنشأ مجموعات بعد. ستظهر المشاريع في "فيديوهات أخرى".
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <div id="projects-container" class="space-y-8">
+              {% for form in project_formset %}
+              <div class="formset-item">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <button type="button" class="remove-item-btn">✕</button>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  <div class="{% if show_project_images %}lg:col-span-7{% else %}lg:col-span-12{% endif %} space-y-6">
+                    <div><label class="sf-label">{% if category == 'video_editor' %}عنوان الفيديو{% else %}اسم المشروع{% endif %}</label><input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="sf-input"></div>
+
+                    {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
+                    <div>
+                      <label class="sf-label">إسناد إلى مجموعة</label>
+                      <input type="hidden" name="{{ form.category_id.html_name }}" class="project-category-input category-dropdown" value="{{ form.category_id.value|default:'' }}">
+                      <div class="category-chips-container flex flex-wrap gap-2 mt-2">
+                        <button type="button" class="category-chip {% if not form.category_id.value %}active{% endif %}" data-value="" onclick="Builder.selectCategoryChip(this)">
+                          بدون تصنيف
+                        </button>
+                        {% for cat in request.user.project_categories.all %}
+                        <button type="button" class="category-chip {% if form.category_id.value|stringformat:'s' == cat.id|stringformat:'s' %}active{% endif %}" data-value="{{ cat.id }}" onclick="Builder.selectCategoryChip(this)">
+                          {{ cat.name }}
+                        </button>
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div><label class="sf-label">{% if category == 'video_editor' %}رابط الفيديو (يوتيوب / Vimeo){% else %}رابط المشروع{% endif %}</label><input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="sf-input"></div>
+                      <div><label class="sf-label">حجم العرض</label>{{ form.video_type }}</div>
+                    </div>
+                    <div><label class="sf-label">{% if category == 'video_editor' %}اشرح دورك في هذا الفيديو{% else %}ما هو دورك؟{% endif %}</label><textarea name="{{ form.description.html_name }}" class="sf-input" rows="3">{{ form.description.value|default:'' }}</textarea></div>
+                  </div>
+                  {% if show_project_images %}
+                  <div class="lg:col-span-5 flex flex-col justify-between">
+                    <div><label class="sf-label">معاينة الصورة المصغرة</label><input type="file" name="{{ form.thumbnail.html_name }}" class="sf-input text-xs"></div>
+                    <div class="mt-4 flex flex-col items-center">
+                      <span class="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-3">المعاينة</span>
+                      <div class="preview-box">{% if form.thumbnail.value %}<img src="{{ form.thumbnail.value.url }}" class="w-full h-full object-cover">{% else %}لا توجد صورة{% endif %}</div>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="flex justify-between mt-12">
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">رجوع</button>
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection + 1)" class="btn-premium">الخطوة التالية ←</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 7: PROJECT CATEGORIES (Only for categories theme) -->
+        <!-- HIDDEN PROJECT CATEGORIES FORMSET (Used by JS Modal) -->
+        {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
+        <div id="hidden-categories-data" style="display: none;">
+            {{ project_category_formset.management_form }}
+            <div id="project_categories-container">
+              {% for form in project_category_formset %}
+              <div class="formset-item">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}">
+                <textarea name="{{ form.description.html_name }}">{{ form.description.value|default:'' }}</textarea>
+                <input type="file" name="{{ form.thumbnail.html_name }}">
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SECTION 5: LINKS -->
+        <div class="section-panel" id="section-5">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">روابط التواصل</h2>
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة {% if category == 'video_editor' %}7{% else %}6{% endif %} من {% if category == 'video_editor' %}7{% else %}6{% endif %}</span>
+                <button type="button" onclick="Builder.addFormsetItem('links')" class="add-btn-pill">+ إضافة رابط</button>
+              </div>
+            </div>
+            {{ link_formset.management_form }}
+            <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for form in link_formset %}
+              <div class="formset-item mb-0">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <button type="button" class="remove-item-btn">✕</button>
+                <div class="space-y-4">
+                  <div><label class="sf-label">اسم المنصة</label><input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">رابط الحساب</label><input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="sf-input"></div>
+                </div>
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="mt-20 pt-12 border-t border-black/5 flex flex-col md:flex-row gap-6 items-center justify-between">
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-black/10 text-zinc-500 hover:text-black hover:bg-black/5 transition-all font-black text-[10px] uppercase tracking-widest">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                الخطوة السابقة
+              </button>
+              <button type="submit" id="submit-btn" class="btn-premium btn-premium-shimmer w-full md:w-auto justify-center whitespace-nowrap">
+                {% if is_update %}حفظ التحديثات{% else %}إطلاق الملف{% endif %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- SECTION 6: CREATORS -->
+        <div class="section-panel" id="section-6">
+          <div class="glass-panel">
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-8 sm:mb-10">
+              <h2 class="text-2xl font-bold tracking-tight">صنّاع المحتوى الذين عملت معهم</h2>
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full font-black uppercase tracking-widest text-zinc-500 step-label">الخطوة {% if category == 'video_editor' %}4{% elif category == 'student' %}6{% else %}5{% endif %} من 7</span>
+                <button type="button" onclick="Builder.addFormsetItem('creators')" class="add-btn-pill">+ إضافة صانع محتوى</button>
+              </div>
+            </div>
+            {{ creator_formset.management_form }}
+            <div id="creators-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for form in creator_formset %}
+              <div class="formset-item mb-0">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                <button type="button" class="remove-item-btn">✕</button>
+                <div class="space-y-4">
+                  <div><label class="sf-label">اسم صانع المحتوى</label><input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="sf-input"></div>
+                  <div><label class="sf-label">الرابط (اختياري)</label><input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" placeholder="https://..." class="sf-input"></div>
+                  <div><label class="sf-label">الصورة الرمزية</label><input type="file" name="{{ form.image.html_name }}" class="sf-input text-xs"></div>
+                  <div class="flex justify-center mt-2">
+                    <div class="preview-box">{% if form.image.value %}<img src="{{ form.image.value.url }}" class="w-full h-full object-cover">{% else %}لا توجد صورة{% endif %}</div>
+                  </div>
+                </div>
+                <div style="display:none">{{ form.DELETE }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="flex justify-between mt-12">
+                <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="text-zinc-500 font-bold text-xs uppercase tracking-widest">رجوع</button>
+                <button type="button" onclick="Builder.switchSection(Builder.currentSection + 1)" class="btn-premium">الخطوة التالية ←</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <script type="text/html" id="skills-empty-form">
+    {% for hidden in skill_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <label class="sf-label">اسم المهارة</label>
+    <input type="text" name="skills-__prefix__-skill" class="sf-input" placeholder="مثال: Adobe Suite Proficiency">
+    <div style="display:none"><input type="checkbox" name="skills-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="education-empty-form">
+    {% for hidden in education_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="md:col-span-2"><label class="sf-label">المدرسة / الجامعة</label><input type="text" name="education-__prefix__-school" class="sf-input" placeholder="مثال: جامعة القاهرة"></div>
+      <div><label class="sf-label">الدرجة / التخصص</label><input type="text" name="education-__prefix__-degree" class="sf-input" placeholder="مثال: بكالوريوس آداب"></div>
+      <div><label class="sf-label">سنة التخرج</label><input type="number" name="education-__prefix__-year" class="sf-input" placeholder="مثال: 2024"></div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="education-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="experience-empty-form">
+    {% for hidden in experience_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div><label class="sf-label">المسمى الوظيفي</label><input type="text" name="experience-__prefix__-title" class="sf-input" placeholder="مثال: مونتير فيديو"></div>
+      <div><label class="sf-label">اسم الشركة</label><input type="text" name="experience-__prefix__-company" class="sf-input" placeholder="مثال: استوديو إبداعي"></div>
+      <div><label class="sf-label">تاريخ البداية</label><input type="month" name="experience-__prefix__-start" class="sf-input" placeholder="مثال: YYYY-MM"></div>
+      <div><label class="sf-label">تاريخ النهاية (اتركه فارغًا إذا كنت ما زلت تعمل)</label><input type="month" name="experience-__prefix__-end" class="sf-input"></div>
+      <div class="md:col-span-2"><label class="sf-label">ماذا فعلت هناك؟</label><textarea name="experience-__prefix__-description" class="sf-input" rows="3" placeholder="صف بإيجاز دورك وإنجازاتك..."></textarea></div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="experience-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="projects-empty-form">
+    {% for hidden in project_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-7 space-y-6">
+            <div><label class="sf-label">اسم المشروع</label><input type="text" name="projects-__prefix__-name" class="sf-input" placeholder="مثال: حملة إعلانية 2023"></div>
+
+            {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
+            <div>
+              <label class="sf-label">إسناد إلى مجموعة</label>
+              <input type="hidden" name="projects-__prefix__-category_id" class="project-category-input category-dropdown" value="">
+              <div class="category-chips-container flex flex-wrap gap-2 mt-2">
+                <button type="button" class="category-chip active" data-value="" onclick="Builder.selectCategoryChip(this)">
+                  بدون تصنيف
+                </button>
+                {% for cat in request.user.project_categories.all %}
+                <button type="button" class="category-chip" data-value="{{ cat.id }}" onclick="Builder.selectCategoryChip(this)">
+                  {{ cat.name }}
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="sf-label">رابط المشروع (Vimeo/YouTube)</label><input type="text" name="projects-__prefix__-url" class="sf-input" placeholder="YouTube/IG/TikTok"></div>
+                <div><label class="sf-label">حجم العرض</label>{{ project_formset.empty_form.video_type }}</div>
+            </div>
+            <div><label class="sf-label">ما هو دورك؟</label><textarea name="projects-__prefix__-description" class="sf-input" rows="3" placeholder="اشرح بإيجاز دورك في هذا المشروع..."></textarea></div>
+        </div>
+        <div class="lg:col-span-5 flex flex-col justify-between">
+            <div>
+                <label class="sf-label">رفع الصورة المصغرة</label>
+                <div class="bg-slate-50 p-4 rounded-xl border border-black/5"><input type="file" name="projects-__prefix__-thumbnail" class="sf-input text-xs"></div>
+            </div>
+            <div class="mt-4 flex flex-col items-center">
+                <span class="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-3">معاينة الملف</span>
+                <div class="preview-box"><span class="text-zinc-400 text-[9px] font-bold">بانتظار الملف...</span></div>
+            </div>
+        </div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="projects-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="project_categories-empty-form">
+    {% for hidden in project_category_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-7 space-y-6">
+            <div><label class="sf-label">اسم المجموعة</label><input type="text" name="project_categories-__prefix__-name" class="sf-input" placeholder="مثال: فيديوهات موسيقية"></div>
+            <div><label class="sf-label">الوصف</label><textarea name="project_categories-__prefix__-description" class="sf-input" rows="3" placeholder="صف هذه المجموعة..."></textarea></div>
+        </div>
+        <div class="lg:col-span-5 flex flex-col justify-between">
+            <div>
+                <label class="sf-label">رفع الصورة المصغرة</label>
+                <div class="bg-slate-50 p-4 rounded-xl border border-black/5"><input type="file" name="project_categories-__prefix__-thumbnail" class="sf-input text-xs"></div>
+            </div>
+            <div class="mt-4 flex flex-col items-center">
+                <span class="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-3">معاينة الملف</span>
+                <div class="preview-box"><span class="text-zinc-400 text-[9px] font-bold">بانتظار الملف...</span></div>
+            </div>
+        </div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="project_categories-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="links-empty-form">
+    {% for hidden in link_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="space-y-4">
+      <div><label class="sf-label">اسم المنصة</label><input type="text" name="links-__prefix__-name" class="sf-input" placeholder="مثال: LinkedIn / GitHub"></div>
+      <div><label class="sf-label">رابط الحساب</label><input type="text" name="links-__prefix__-url" class="sf-input" placeholder="مثال: https://..."></div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="links-__prefix__-DELETE"></div>
+  </script>
+
+  <script type="text/html" id="creators-empty-form">
+    {% for hidden in creator_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+    <div class="space-y-4">
+      <div><label class="sf-label">اسم صانع المحتوى</label><input type="text" name="creators-__prefix__-name" class="sf-input" placeholder="مثال: عبدالله"></div>
+      <div><label class="sf-label">الصورة الرمزية</label><input type="file" name="creators-__prefix__-image" class="sf-input text-xs"></div>
+      <div class="flex justify-center mt-2">
+        <div class="preview-box">لا توجد صورة</div>
+      </div>
+    </div>
+    <div style="display:none"><input type="checkbox" name="creators-__prefix__-DELETE"></div>
+  </script>
+
+  <!-- CATEGORY CREATION MODAL - Self-contained, always in DOM -->
+  <div id="category-modal" role="dialog" aria-modal="true" aria-labelledby="cat-modal-title"
+       style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);">
+
+    <div id="category-modal-content"
+         style="position:relative; width:100%; max-width:640px; margin:1rem; background:linear-gradient(135deg,#FFFFFF 0%,#F8FAFC 100%); border:1px solid rgba(0,0,0,0.1); border-radius:1.5rem; padding:2.5rem; box-shadow:0 40px 120px rgba(0,0,0,0.25); transform:scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);">
+
+      <!-- Close Button -->
+      <button type="button" id="cat-modal-close" onclick="Builder.closeCategoryModal()"
+              style="position:absolute; top:1.25rem; left:1.25rem; width:2.25rem; height:2.25rem; border-radius:50%; background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.1); color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <!-- Header -->
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+          <div style="width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px #4ade80;"></div>
+          <span style="font-size:0.65rem; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:#64748b;">مجموعة جديدة</span>
+        </div>
+        <h3 id="cat-modal-title" style="font-size:1.875rem; font-weight:800; color:#0f172a; line-height:1.1;">إنشاء مجموعة</h3>
+        <p style="margin-top:0.5rem; font-size:0.875rem; color:#64748b; line-height:1.6;">سمِّ مجموعتك، أضف وصفًا، وارفع صورة مصغرة للغلاف.</p>
+      </div>
+      <input type="hidden" id="cat-modal-id" value="">
+
+      <!-- Form Body -->
+      <div style="display:grid; grid-template-columns:1fr 180px; gap:1.5rem; align-items:start;">
+
+        <!-- Left: Text Fields -->
+        <div style="display:flex; flex-direction:column; gap:1.25rem;">
+          <div>
+            <label for="cat-modal-name" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#64748b; margin-bottom:0.4rem;">اسم المجموعة <span style="color:#f87171;">*</span></label>
+            <input type="text" id="cat-modal-name" placeholder="مثال: فيديوهات أعراس، فيديوهات موسيقية..."
+                   style="width:100%; background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.1); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.9rem; color:#0f172a; outline:none; transition:border-color 0.2s; box-sizing:border-box;"
+                   onfocus="this.style.borderColor='rgba(74,222,128,0.5)'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
+            <p id="cat-modal-name-error" style="display:none; margin-top:0.4rem; font-size:0.75rem; color:#f87171;">اسم المجموعة مطلوب.</p>
+          </div>
+          <div>
+            <label for="cat-modal-desc" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#64748b; margin-bottom:0.4rem;">الوصف</label>
+            <textarea id="cat-modal-desc" rows="4" placeholder="أي نوع من الأعمال يُضم إلى هذه المجموعة؟"
+                      style="width:100%; background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.1); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.9rem; color:#0f172a; outline:none; resize:none; transition:border-color 0.2s; box-sizing:border-box;"
+                      onfocus="this.style.borderColor='rgba(74,222,128,0.5)'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'"></textarea>
+          </div>
+        </div>
+
+        <!-- Right: Thumbnail Upload -->
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">الصورة المصغرة للغلاف</label>
+          <label for="cat-modal-thumb" id="cat-thumb-label"
+                 style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:180px; border-radius:0.875rem; border:2px dashed rgba(0,0,0,0.15); background:rgba(0,0,0,0.03); cursor:pointer; transition:all 0.2s; overflow:hidden; position:relative;"
+                 onmouseenter="this.style.borderColor='rgba(74,222,128,0.4)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.15)'">
+            <div id="cat-thumb-placeholder" style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; pointer-events:none;">
+              <svg width="28" height="28" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 20M14 8h.01"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              <span style="font-size:0.7rem; font-weight:600; color:#64748b; text-align:center; padding:0 0.5rem;">اضغط للرفع</span>
+            </div>
+            <img id="cat-thumb-preview" src="" alt="" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
+            <input type="file" id="cat-modal-thumb" accept="image/*" style="display:none;" onchange="Builder.handleCategoryThumbPreview(this)">
+          </label>
+          <span id="cat-thumb-name" style="font-size:0.7rem; color:#64748b; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">لم يتم اختيار ملف</span>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(0,0,0,0.07);">
+        <button type="button" onclick="Builder.closeCategoryModal()"
+                style="padding:0.625rem 1.25rem; border-radius:0.75rem; border:1px solid rgba(0,0,0,0.1); background:transparent; color:#64748b; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;"
+                onmouseenter="this.style.background='rgba(0,0,0,0.05)'" onmouseleave="this.style.background='transparent'">إلغاء</button>
+        <button type="button" onclick="Builder.saveCategoryModal()"
+                style="padding:0.625rem 1.5rem; border-radius:0.75rem; background:linear-gradient(135deg,#E11D48,#F97316); color:#fff; font-size:0.8rem; font-weight:800; cursor:pointer; border:none; display:flex; align-items:center; gap:0.5rem; transition:all 0.2s;"
+                onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='1'">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          حفظ المجموعة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.BuilderI18n = {
+      stepOf: 'الخطوة {step} من {total}',
+      beforeLaunchErrors: 'يرجى تصحيح الأخطاء المحددة قبل الإطلاق.',
+      savingLaunch: 'جارٍ حفظ التغييرات وإطلاق ملفك المهني...',
+      sectionRequired: 'يرجى إكمال الحقول المطلوبة في هذا القسم.',
+      launching: 'جارٍ الإطلاق...',
+      noFileChosen: 'لم يتم اختيار ملف',
+      createCategory: 'إنشاء مجموعة',
+      editCategory: 'تعديل المجموعة',
+      existingThumbnail: 'صورة مصغرة موجودة',
+      confirmDeleteCollection: 'هل أنت متأكد من حذف هذه المجموعة؟ ستصبح جميع المشاريع بداخلها بدون تصنيف تلقائيًا.',
+      securityToken: 'رمز الأمان غير موجود. يرجى تحديث الصفحة.',
+      deletingCollection: 'جارٍ حذف المجموعة...',
+      failedDeleteCategory: 'تعذر حذف المجموعة.',
+      noCollections: 'لم تُنشأ مجموعات بعد. ستظهر المشاريع في "فيديوهات أخرى".',
+      collectionDeleted: 'تم حذف المجموعة بنجاح.',
+      errorConnecting: 'خطأ في الاتصال بالخادم.',
+      configError: 'خطأ في الإعدادات — يرجى تحديث الصفحة والمحاولة مجددًا.',
+      saving: 'جارٍ الحفظ...',
+      failedSaveCategory: 'تعذر حفظ المجموعة.',
+      editCollection: 'تعديل المجموعة',
+      deleteCollection: 'حذف المجموعة',
+      collectionCreated: 'تم إنشاء المجموعة "{name}"!',
+      collectionUpdated: 'تم تحديث المجموعة "{name}"!',
+      networkError: 'خطأ في الشبكة — يرجى المحاولة مجددًا.',
+      imgAlt: 'المعاينة'
+    };
+  </script>
+
+  <script src="{% static 'js/builder.js' %}?v={% now 'U' %}"></script>
+</body>
+{% endblock %}

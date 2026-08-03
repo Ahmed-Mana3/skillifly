@@ -3,6 +3,7 @@ from portfolios import views
 
 urlpatterns = [
     path('examples/', views.examples_view, name='examples'),
+    path('ar/examples/', views.arabic_examples_view, name='arabic_examples'),
 
     # Theme preview by theme name/slug
     path('preview/<str:theme_name>/', views.theme_preview_view, name='theme_preview'),

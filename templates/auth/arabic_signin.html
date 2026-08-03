@@ -1,0 +1,307 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}تسجيل الدخول إلى حسابك — Skillifly{% endblock %}
+
+{% block meta_description %}سجّل الدخول إلى حسابك على Skillifly لإدارة ملفك المهني، وتخصيص التصاميم، ومتابعة التحليلات.{% endblock %}
+
+{% block meta_keywords %}تسجيل دخول skillifly, دخول ملف مهني, تسجيل الدخول{% endblock %}
+
+{% block og_title %}تسجيل الدخول — Skillifly{% endblock %}
+{% block og_description %}سجّل الدخول إلى حسابك على Skillifly لإنشاء ملفك المهني وإدارته.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}تسجيل الدخول — Skillifly{% endblock %}
+{% block twitter_description %}سجّل الدخول إلى حسابك على Skillifly لإنشاء ملفك المهني وإدارته.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signin' %}" />
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "تسجيل الدخول إلى Skillifly",
+  "description": "سجّل الدخول لإدارة ملفك المهني على Skillifly.",
+  "inLanguage": "ar",
+  "url": "{{ request.build_absolute_uri }}",
+  "potentialAction": {
+    "@type": "EntryPoint",
+    "actionPlatform": [
+      "http://schema.org/DesktopWebPlatform",
+      "http://schema.org/MobileWebPlatform"
+    ],
+    "urlTemplate": "https://skillifly.cloud/ar/signin/"
+  }
+}
+</script>
+
+<style>
+  /* ===== Arabic Signin — Warm Brand Overrides ===== */
+  body {
+    background-color: white !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography: Cairo for headings, Tajawal for body */
+  .arabic-rtl h1 {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arabic-rtl p,
+  .arabic-rtl li,
+  .arabic-rtl a,
+  .arabic-rtl span,
+  .arabic-rtl button,
+  .arabic-rtl label {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  }
+
+  .arabic-rtl .tracking-widest,
+  .arabic-rtl .uppercase {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  .arabic-rtl .rtl-arrow {
+    transform: scaleX(-1);
+  }
+
+  /* Gradient text — readable on white */
+  .gradient-text {
+    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    border: none !important;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+  }
+
+  /* Cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(225, 29, 72, 0.14) !important;
+    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .gradient-border {
+    background: #ffffff !important;
+    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .gradient-border::before {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+  }
+
+  .nav-link {
+    color: #334155 !important;
+    font-weight: 600 !important;
+  }
+
+  .nav-link:hover {
+    color: #E11D48 !important;
+  }
+
+  .logo-mark img {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+  }
+
+  .arabic-rtl .gradient-border img.animate-float {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(85deg);
+  }
+
+  /* Form inputs */
+  .sf-input {
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 12px;
+    color: #0F172A !important;
+    font-family: 'Tajawal', sans-serif !important;
+  }
+
+  .sf-input:focus {
+    border-color: #EC4899 !important;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.12) !important;
+  }
+
+  .sf-label {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+  }
+
+  /* Warm background lights */
+  .warm-lights {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(236, 72, 153, 0.09), transparent 60%),
+      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(251, 191, 36, 0.07), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(251, 191, 36, 0.06), transparent 60%),
+      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(236, 72, 153, 0.05), transparent 60%);
+  }
+
+  /* Focus visibility */
+  a:focus-visible,
+  button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    border-radius: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden arabic-rtl">
+  <div class="warm-lights" aria-hidden="true"></div>
+  <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 15%, rgba(236,72,153,0.08), transparent 45%), radial-gradient(circle at 20% 85%, rgba(249,115,22,0.08), transparent 45%);"></div>
+
+  <div class="w-full max-w-md relative z-10">
+
+    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <a href="{% url 'arabic_landing' %}" class="inline-flex items-center gap-2 mb-6">
+          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
+          <span class="text-xl font-bold gradient-text">Skillifly</span>
+        </a>
+        <h1 class="text-2xl font-bold mb-1 text-slate-900">مرحبًا بعودتك</h1>
+        <p class="text-slate-500 text-sm">سجّل الدخول لمتابعة بناء ملفك المهني.</p>
+      </div>
+
+      <!-- Error messages -->
+      {% if message %}
+      <div class="alert-error mb-6 flex items-start gap-2">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd" />
+        </svg>
+        <div>{{ message }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
+      {% if google_oauth_button_visible %}
+      <div class="mb-6">
+        <form action="{% provider_login_url 'google' %}" method="post">
+          {% csrf_token %}
+          <button type="submit"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z"
+                fill="#4285F4" />
+              <path
+                d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z"
+                fill="#34A853" />
+              <path
+                d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z"
+                fill="#FBBC05" />
+              <path
+                d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z"
+                fill="#EA4335" />
+            </svg>
+            <span>المتابعة عبر Google</span>
+          </button>
+        </form>
+        <div class="relative flex items-center justify-center my-5">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200"></div>
+          </div>
+          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">أو سجّل الدخول بالبريد الإلكتروني</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Email / Password Form -->
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <div class="mb-4">
+          <label class="sf-label">البريد الإلكتروني أو اسم المستخدم</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="sf-label mb-0">كلمة المرور</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+          {% for error in form.password.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Forgot password -->
+        <div class="mb-6">
+          <a href="{% url 'account_reset_password' %}?next={% url 'arabic_signin' %}"
+            class="text-sm text-pink-600 hover:text-pink-700 transition-colors">
+            هل نسيت كلمة المرور؟
+          </a>
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl">
+          تسجيل الدخول
+          <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3 3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+        </button>
+
+        <p class="text-center text-sm text-slate-600 mt-6 font-medium">
+          ليس لديك حساب؟
+          <a href="{% url 'arabic_signup' %}" class="text-pink-600 hover:text-pink-700 transition-colors font-bold">أنشئ حسابًا
+            مجانًا</a>
+        </p>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
+    el.classList.add('sf-input');
+  });
+</script>
+{% endblock %}

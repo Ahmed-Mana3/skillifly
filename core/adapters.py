@@ -16,7 +16,27 @@ class SkillliflyAccountAdapter(DefaultAccountAdapter):
     """
 
     def get_password_change_redirect_url(self, request):
+        if request.GET.get("next", "").startswith("/ar/"):
+            return "/ar/profile/"
         return "/profile/"
+
+    def send_password_reset_mail(self, user, email, context):
+        """
+        Track when a password reset is requested from an Arabic page so the
+        follow-up reset pages (done / from-key / done) render in Arabic too.
+        """
+        request = context.get("request")
+        if request is not None:
+            next_target = request.GET.get("next") or request.POST.get("next") or ""
+            is_arabic = (
+                request.path.startswith("/ar/")
+                or next_target.startswith("/ar/")
+                or request.session.get("is_arabic_reset_flow", False)
+            )
+            if is_arabic:
+                request.session["is_arabic_reset_flow"] = True
+                context["is_arabic_page"] = True
+        return super().send_password_reset_mail(user, email, context)
 
 
 class SkilliflySocialAccountAdapter(DefaultSocialAccountAdapter):

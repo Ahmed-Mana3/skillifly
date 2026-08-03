@@ -1,0 +1,157 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}فشل الدفع — Skillifly{% endblock %}
+
+{% block meta_description %}تعذّر التحقق من الدفع. تحقق من البيانات وحاول مرة أخرى.{% endblock %}
+
+{% block og_title %}فشل الدفع — Skillifly{% endblock %}
+{% block og_description %}تعذّر التحقق من إيصال الدفع.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}فشل الدفع — Skillifly{% endblock %}
+{% block twitter_description %}تعذّر التحقق من إيصال الدفع.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+    body {
+        background-color: white !important;
+        color: #0F172A !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .arabic-rtl h1,
+    .arabic-rtl h2,
+    .arabic-rtl h3,
+    .arabic-rtl h4 {
+        font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        letter-spacing: 0 !important;
+    }
+
+    .arabic-rtl p,
+    .arabic-rtl li,
+    .arabic-rtl a,
+    .arabic-rtl span,
+    .arabic-rtl button {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
+    }
+
+    .arabic-rtl .tracking-widest,
+    .arabic-rtl .tracking-wider,
+    .arabic-rtl .uppercase {
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid rgba(225, 29, 72, 0.14) !important;
+        box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .nav-link {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .nav-link:hover {
+        color: #E11D48 !important;
+    }
+
+    .logo-mark img {
+        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    }
+
+    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+    .arabic-rtl .text-slate-400 { color: #64748B !important; }
+    .arabic-rtl .text-slate-500 { color: #475569 !important; }
+    .arabic-rtl .text-slate-600 { color: #334155 !important; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-6 py-12 arabic-rtl">
+    <div class="max-w-xl w-full">
+        <!-- Main Card -->
+        <div class="glass-card rounded-[2.5rem] p-8 md:p-12 text-center animate-fadeInUp relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 blur-[80px] rounded-full"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-orange-500/10 blur-[80px] rounded-full"></div>
+
+            <!-- Icon -->
+            <div class="relative mb-8 inline-flex">
+                <div class="absolute inset-0 bg-red-500/20 blur-2xl rounded-full animate-pulse"></div>
+                <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Text Content -->
+            <h1 class="text-4xl font-bold mb-4 tracking-tight text-slate-900">
+                فشل <span class="text-red-600">التحقق</span>
+            </h1>
+            <p class="text-slate-600 text-lg mb-8 leading-relaxed font-medium">
+                {{ error_message|default:"تعذّر التحقق من إيصال الدفع. يرجى مراجعة البيانات والمحاولة مرة أخرى." }}
+            </p>
+
+            <!-- Info Box -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-10 text-right">
+                <h3 class="text-slate-900 font-bold text-sm mb-3 tracking-wider">ما الذي يجب فعله الآن:</h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
+                        تأكد من أنك أرسلت المبلغ المطلوب بالضبط.
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
+                        تحقق من صحة رقم أو معرف المستلم.
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></span>
+                        ارفع لقطة شاشة واضحة وغير مقصوصة للإيصال.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{% url 'arabic_payment' %}" class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-500/20">
+                    إعادة المحاولة
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </a>
+                <a href="{% url 'arabic_dashboard' %}" class="w-full sm:flex-1 inline-flex items-center justify-center bg-slate-100 text-slate-900 font-bold py-4 rounded-xl hover:bg-slate-200 transition-all">
+                    العودة إلى لوحة التحكم
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer Help -->
+        <p class="mt-8 text-center text-slate-500 text-sm font-medium">
+            ما زلت تواجه مشكلة؟ <a href="{% url 'contact' %}" class="text-blue-600 hover:underline font-bold">تواصل مع فريق الدعم</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

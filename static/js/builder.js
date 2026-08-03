@@ -7,6 +7,44 @@ const Builder = {
     currentSection: 0,
     sectionNames: ['Personal', 'Skills', 'Education', 'Experience', 'Projects', 'Links'],
 
+    I18N: Object.assign({
+        stepOf: 'Step {step} of {total}',
+        beforeLaunchErrors: 'Please fix the highlighted errors before launching.',
+        savingLaunch: 'Saving changes & launching your portfolio...',
+        sectionRequired: 'Please complete the required fields in this section.',
+        launching: 'Launching...',
+        noFileChosen: 'No file chosen',
+        createCategory: 'Create a Category',
+        editCategory: 'Edit Category',
+        existingThumbnail: 'Existing thumbnail',
+        confirmDeleteCollection: 'Are you sure you want to delete this collection? All projects inside it will automatically become Uncategorized.',
+        securityToken: 'Security token not found. Please reload.',
+        deletingCollection: 'Deleting collection...',
+        failedDeleteCategory: 'Failed to delete category.',
+        noCollections: 'No collections created yet. Projects will display in "Other Videos".',
+        collectionDeleted: 'Collection deleted successfully.',
+        errorConnecting: 'Error connecting to server.',
+        configError: 'Configuration error — please refresh and try again.',
+        saving: 'Saving...',
+        failedSaveCategory: 'Failed to save category.',
+        editCollection: 'Edit Collection',
+        deleteCollection: 'Delete Collection',
+        collectionCreated: 'Collection "{name}" created!',
+        collectionUpdated: 'Collection "{name}" updated!',
+        networkError: 'Network error — please try again.',
+        imgAlt: 'Preview'
+    }, window.BuilderI18n || {}),
+
+    t(key, vars) {
+        let s = this.I18N[key] !== undefined ? this.I18N[key] : key;
+        if (vars) {
+            for (const k in vars) {
+                s = s.split('{' + k + '}').join(String(vars[k]));
+            }
+        }
+        return s;
+    },
+
     init() {
         this.cacheDOM();
         this.bindEvents();
@@ -45,7 +83,7 @@ const Builder = {
             container.appendChild(panelArray[idx]);
             const stepLabel = panelArray[idx].querySelector('.step-label');
             if (stepLabel) {
-              stepLabel.textContent = `Step ${stepNum + 1} of ${validOrder.length}`;
+              stepLabel.textContent = this.t('stepOf', { step: stepNum + 1, total: validOrder.length });
             }
         });
 
@@ -83,10 +121,10 @@ const Builder = {
             if (!this.form.checkValidity()) {
                 e.preventDefault();
                 this.jumpToFirstInvalid();
-                this.showToast("Please fix the highlighted errors before launching.", "error");
+                this.showToast(this.t('beforeLaunchErrors'), "error");
             } else {
                 this.setSubmittingState(submitter);
-                this.showToast("Saving changes & launching your portfolio...", "success");
+                this.showToast(this.t('savingLaunch'), "success");
             }
         });
     },
@@ -147,7 +185,7 @@ const Builder = {
         if (btn) {
             setTimeout(() => {
                 btn.disabled = true;
-                btn.innerHTML = `<div style="display:flex;align-items:center;gap:0.75rem;"><svg style="animation:spin 1s linear infinite;width:1.25rem;height:1.25rem;" viewBox="0 0 24 24"><circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Launching...</span></div>`;
+                btn.innerHTML = `<div style="display:flex;align-items:center;gap:0.75rem;"><svg style="animation:spin 1s linear infinite;width:1.25rem;height:1.25rem;" viewBox="0 0 24 24"><circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>${this.t('launching')}</span></div>`;
             }, 0);
         }
     },
@@ -175,7 +213,7 @@ const Builder = {
         if (!isValid && firstInvalid) {
             firstInvalid.reportValidity();
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            this.showToast("Please complete the required fields in this section.", "error");
+            this.showToast(this.t('sectionRequired'), "error");
         }
 
         return isValid;
@@ -286,7 +324,7 @@ const Builder = {
                         input.parentElement.appendChild(previewBox);
                     }
                     
-                    previewBox.innerHTML = `<img src="${event.target.result}" alt="Preview" class="w-full h-full object-cover">`;
+                    previewBox.innerHTML = `<img src="${event.target.result}" alt="${this.t('imgAlt')}" class="w-full h-full object-cover">`;
                 };
                 reader.readAsDataURL(file);
             });
@@ -347,10 +385,10 @@ const Builder = {
         document.getElementById('cat-modal-thumb').value = '';
         document.getElementById('cat-thumb-preview').style.display = 'none';
         document.getElementById('cat-thumb-placeholder').style.display = 'flex';
-        document.getElementById('cat-thumb-name').textContent = 'No file chosen';
+        document.getElementById('cat-thumb-name').textContent = this.t('noFileChosen');
         document.getElementById('cat-modal-name-error').style.display = 'none';
         document.getElementById('cat-modal-name').style.borderColor = 'rgba(255,255,255,0.1)';
-        document.getElementById('cat-modal-title').textContent = 'Create a Category';
+        document.getElementById('cat-modal-title').textContent = this.t('createCategory');
         
         // Show modal with animation
         modal.style.display = 'flex';
@@ -379,7 +417,7 @@ const Builder = {
         document.getElementById('cat-modal-thumb').value = '';
         document.getElementById('cat-modal-name-error').style.display = 'none';
         document.getElementById('cat-modal-name').style.borderColor = 'rgba(255,255,255,0.1)';
-        document.getElementById('cat-modal-title').textContent = 'Edit Category';
+        document.getElementById('cat-modal-title').textContent = this.t('editCategory');
 
         // Previews
         const preview = document.getElementById('cat-thumb-preview');
@@ -390,11 +428,11 @@ const Builder = {
             preview.src = card.dataset.thumbnailUrl;
             preview.style.display = 'block';
             placeholder.style.display = 'none';
-            nameSpan.textContent = 'Existing thumbnail';
+            nameSpan.textContent = this.t('existingThumbnail');
         } else {
             preview.style.display = 'none';
             placeholder.style.display = 'flex';
-            nameSpan.textContent = 'No file chosen';
+            nameSpan.textContent = this.t('noFileChosen');
         }
 
         // Show modal
@@ -410,7 +448,7 @@ const Builder = {
     },
 
     deleteCategory(catId) {
-        if (!confirm("Are you sure you want to delete this collection? All projects inside it will automatically become Uncategorized.")) {
+        if (!confirm(this.t('confirmDeleteCollection'))) {
             return;
         }
 
@@ -419,14 +457,14 @@ const Builder = {
         const deleteUrl = '/ajax/delete-category/'; // Explicit AJAX delete endpoint
 
         if (!csrfToken) {
-            this.showToast('Security token not found. Please reload.', 'error');
+            this.showToast(this.t('securityToken'), 'error');
             return;
         }
 
         const formData = new FormData();
         formData.append('id', catId);
 
-        this.showToast('Deleting collection...', 'info');
+        this.showToast(this.t('deletingCollection'), 'info');
 
         fetch(deleteUrl, {
             method: 'POST',
@@ -436,7 +474,7 @@ const Builder = {
         .then(res => res.json())
         .then(data => {
             if (!data.success) {
-                this.showToast(data.error || 'Failed to delete category.', 'error');
+                this.showToast(data.error || this.t('failedDeleteCategory'), 'error');
                 return;
             }
 
@@ -452,7 +490,7 @@ const Builder = {
                     emptyState = document.createElement('div');
                     emptyState.id = 'no-categories-state';
                     emptyState.className = 'col-span-full py-8 text-center border border-dashed border-white/5 rounded-xl text-zinc-500 text-xs';
-                    emptyState.textContent = 'No collections created yet. Projects will display in "Other Videos".';
+                    emptyState.textContent = this.t('noCollections');
                     grid.appendChild(emptyState);
                 } else {
                     emptyState.style.display = 'block';
@@ -484,11 +522,11 @@ const Builder = {
                 }
             }
 
-            this.showToast('Collection deleted successfully.', 'success');
+            this.showToast(this.t('collectionDeleted'), 'success');
         })
         .catch(err => {
             console.error('Delete AJAX error:', err);
-            this.showToast('Error connecting to server.', 'error');
+            this.showToast(this.t('errorConnecting'), 'error');
         });
     },
 
@@ -548,7 +586,7 @@ const Builder = {
         
         if (!url || !csrfToken) {
             console.error('Missing CSRF token or AJAX URL.');
-            this.showToast('Configuration error — please refresh and try again.', 'error');
+            this.showToast(this.t('configError'), 'error');
             return;
         }
         
@@ -565,7 +603,7 @@ const Builder = {
         // Loading state
         const originalHTML = saveBtn.innerHTML;
         saveBtn.disabled = true;
-        saveBtn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation:spin 0.8s linear infinite;display:inline;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Saving...';
+        saveBtn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation:spin 0.8s linear infinite;display:inline;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> ${this.t('saving')}`;
         
         fetch(url, {
             method: 'POST',
@@ -575,7 +613,7 @@ const Builder = {
         .then(res => res.json())
         .then(data => {
             if (!data.success) {
-                this.showToast(data.error || 'Failed to save category.', 'error');
+                this.showToast(data.error || this.t('failedSaveCategory'), 'error');
                 return;
             }
             
@@ -608,10 +646,10 @@ const Builder = {
 
                       <!-- Actions -->
                       <div class="relative z-10 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center text-xs" onclick="Builder.editCategory('${data.id}')" title="Edit Collection">
+                        <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center text-xs" onclick="Builder.editCategory('${data.id}')" title="${this.t('editCollection')}">
                           <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         </button>
-                        <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-red-400 hover:text-red-300 flex items-center justify-center text-xs" onclick="Builder.deleteCategory('${data.id}')" title="Delete Collection">
+                        <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-red-400 hover:text-red-300 flex items-center justify-center text-xs" onclick="Builder.deleteCategory('${data.id}')" title="${this.t('deleteCollection')}">
                           <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-7v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                       </div>
@@ -654,7 +692,7 @@ const Builder = {
                     }
                 }
 
-                this.showToast(`Collection "${data.name}" created!`, 'success');
+                this.showToast(this.t('collectionCreated', { name: data.name }), 'success');
             } else {
                 // Update existing card in manager grid
                 const card = document.querySelector(`.category-manager-card[data-category-id="${data.id}"]`);
@@ -700,14 +738,14 @@ const Builder = {
                     }
                 }
 
-                this.showToast(`Collection "${data.name}" updated!`, 'success');
+                this.showToast(this.t('collectionUpdated', { name: data.name }), 'success');
             }
             
             this.closeCategoryModal();
         })
         .catch(err => {
             console.error('AJAX error:', err);
-            this.showToast('Network error — please try again.', 'error');
+            this.showToast(this.t('networkError'), 'error');
         })
         .finally(() => {
             saveBtn.disabled = false;

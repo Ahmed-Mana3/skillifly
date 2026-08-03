@@ -66,6 +66,29 @@ def site_globals(request):
     # If we are on the blog, links should go to main site
     if host.startswith('blog.'):
         main_host = host.replace('blog.', '', 1)
-        return {'MAIN_SITE_URL': f"{request.scheme}://{main_host}"}
-    return {'MAIN_SITE_URL': ''}
+        main_site_url = f"{request.scheme}://{main_host}"
+    else:
+        main_site_url = ''
+
+    # Arabic detection: /ar/ paths, or a `next` target pointing at /ar/, or a
+    # password-reset flow started from an Arabic page (see the adapter below).
+    path = request.path_info
+    next_target = request.GET.get('next') or request.POST.get('next') or ''
+    is_arabic_page = path.startswith('/ar/') or next_target.startswith('/ar/')
+
+    reset_flow = request.session.get('is_arabic_reset_flow', False)
+    if reset_flow:
+        is_arabic_page = True
+        # Drop the flag once the user leaves the /accounts/ reset flow so it
+        # cannot leak into later English pages.
+        if not path.startswith('/accounts/') and not path.startswith('/ar/'):
+            request.session.pop('is_arabic_reset_flow', None)
+    else:
+        # The reset form is shown in Arabic (via ?next=/ar/...). Remember that
+        # for the whole flow so the done page and the reset email stay Arabic
+        # after the form POSTs (allauth's success redirect doesn't keep `next`).
+        if is_arabic_page and path.startswith('/accounts/password/reset/'):
+            request.session['is_arabic_reset_flow'] = True
+
+    return {'MAIN_SITE_URL': main_site_url, 'is_arabic_page': is_arabic_page}
 

@@ -1,0 +1,109 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}إتمام الدفع — Skillifly{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+    body {
+        background-color: white !important;
+        color: #0F172A !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .arabic-rtl h1,
+    .arabic-rtl h2,
+    .arabic-rtl h3,
+    .arabic-rtl h4 {
+        font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        letter-spacing: 0 !important;
+    }
+
+    .arabic-rtl p,
+    .arabic-rtl li,
+    .arabic-rtl a,
+    .arabic-rtl span,
+    .arabic-rtl button {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
+    }
+
+    .gradient-text {
+        background: linear-gradient(135deg, #DB2777 0%, #EA580C 55%, #D97706 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent;
+    }
+
+    .nav-link {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .nav-link:hover {
+        color: #E11D48 !important;
+    }
+
+    .logo-mark img {
+        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    }
+
+    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+    .arabic-rtl .text-slate-400 { color: #64748B !important; }
+    .arabic-rtl .text-slate-500 { color: #475569 !important; }
+    .arabic-rtl .text-slate-600 { color: #334155 !important; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="min-h-screen px-6 py-12 flex flex-col items-center arabic-rtl">
+  <div class="text-center mb-8 animate-fadeInUp">
+    <h1 class="text-3xl md:text-4xl font-bold mb-3 text-black">
+      أتمم <span class="gradient-text">الدفع</span>
+    </h1>
+    <p class="text-slate-600 font-medium">يرجى إدخال بيانات الدفع الخاصة بك بأمان أدناه.</p>
+  </div>
+
+  <div class="w-full max-w-3xl bg-white rounded-3xl shadow-sm border border-slate-200 p-2 md:p-6 animate-fadeInUp" style="animation-delay: 0.1s">
+    <!-- Fawaterk Iframe Container -->
+    <div id="fawaterkDivId" class="w-full min-h-[500px]"></div>
+  </div>
+
+  <div class="text-center mt-8 animate-fadeInUp" style="animation-delay: 0.2s">
+    <a href="{% url 'arabic_payment' %}" class="text-sm text-slate-500 hover:text-blue-600 transition-colors font-bold">
+      → إلغاء والعودة إلى الخطط
+    </a>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://app.fawaterk.com/fawaterkPlugin/fawaterkPlugin.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    fawaterkCheckoutV2({
+      envType: "{{ env_type }}",
+      intentUrl: "{{ checkout_url|safe }}"
+    });
+  });
+</script>
+{% endblock %}

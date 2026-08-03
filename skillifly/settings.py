@@ -99,6 +99,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'core.middleware.CustomDomainMiddleware',
     'core.middleware.SubdomainRoutingMiddleware',
+    'core.middleware.LanguagePreferenceMiddleware',
     'django.middleware.common.CommonMiddleware',
     'core.middleware.DynamicCsrfTrustedOriginsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

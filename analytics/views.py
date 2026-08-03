@@ -177,6 +177,82 @@ def analytics_dashboard(request):
     return render(request, 'dashboard/analytics.html', context)
 
 
+@login_required(login_url='arabic_signin')
+def arabic_analytics_dashboard(request):
+    """Arabic RTL version of the advanced analytics dashboard"""
+    # Pro Check
+    payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+    if not (payment and payment.is_active):
+        messages.warning(request, "لوحة التحليلات من مزايا خطة Pro. قم بترقية خطتك لعرض إحصائيات زوارك.")
+        return redirect('arabic_payment')
+
+    # Base Queryset
+    visits = AnalyticsVisit.objects.filter(user=request.user)
+
+    # Stats
+    tracked_views = visits.count()
+    legacy_views = getattr(request.user.profile, 'visits', 0)
+    total_views = tracked_views + legacy_views
+
+    unique_visitors = visits.values('ip_address', 'user_agent').distinct().count()
+    avg_duration = visits.aggregate(Avg('duration_seconds'))['duration_seconds__avg'] or 0
+
+    # Top Projects
+    top_projects_raw = AnalyticsEvent.objects.filter(
+        visit__user=request.user,
+        event_type='project_click'
+    ).values('project__title', 'project__id').annotate(
+        clicks=Count('id')
+    ).order_by('-clicks')[:5]
+
+    top_projects = []
+    for p in top_projects_raw:
+        percentage = (p['clicks'] / total_views * 100) if total_views > 0 else 0
+        p['percentage'] = round(percentage, 1)
+        top_projects.append(p)
+
+    # Top Locations (By Visit)
+    top_locations = visits.values('country').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+
+    # Time Chart (last N days)
+    days_param = request.GET.get('days', '7')
+    try:
+        active_days = int(days_param)
+        if active_days not in [7, 30]:
+            active_days = 7
+    except ValueError:
+        active_days = 7
+
+    chart_data = []
+
+    for i in range(active_days - 1, -1, -1):
+        day = timezone.now().date() - timedelta(days=i)
+        tracked_count = visits.filter(created_at__date=day).count()
+
+        # for 30 days, maybe skip labels or format differently, but JS can handle it
+        label_format = '%b %d'
+        chart_data.append({
+            'label': day.strftime(label_format),
+            'value': tracked_count
+        })
+
+    context = {
+        'total_views': total_views,
+        'tracked_views': tracked_views,
+        'legacy_views': legacy_views,
+        'unique_visitors': unique_visitors,
+        'avg_duration': round(avg_duration / 60, 1), # in minutes
+        'top_projects': top_projects,
+        'top_locations': top_locations,
+        'chart_data': json.dumps(chart_data),
+        'active_days': active_days,
+        'is_arabic_page': True,
+    }
+    return render(request, 'dashboard/arabic_analytics.html', context)
+
+
 @user_passes_test(lambda u: u.is_superuser)
 def user_activity_report(request):
     """View to see last time users opened Skillifly and last portfolio visits."""

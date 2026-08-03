@@ -42,6 +42,7 @@ class CustomDomainMiddleware:
         '/themes/',
         '/examples/',
         '/update_portfolio/',
+        '/ar/',
         '/submit-review-exclusive/',
         '/manage/',
         '/user-activity/',
@@ -99,6 +100,88 @@ class CustomDomainMiddleware:
                     request.path_info = f'/{username}{path}'
 
         return self.get_response(request)
+
+
+class LanguagePreferenceMiddleware:
+    """
+    Remembers the user's language choice (Arabic / English) in a persistent
+    ``skillifly_lang`` cookie and keeps them on the branch they picked.
+
+    Pages that exist in both languages are listed in ``ROUTE_MAP``. When the
+    stored preference disagrees with the branch implied by the current path,
+    the request is redirected to the counterpart (query string preserved).
+    Visiting any ``/ar/`` page also persists the Arabic choice, so picking
+    Arabic from the toggle -- or arriving via a direct ``/ar/`` link -- sticks
+    across visits. Pages with no counterpart (``/terms/``, ``/builder/`` etc.)
+    are left untouched.
+    """
+
+    COOKIE_NAME = 'skillifly_lang'
+    ROUTE_MAP = {
+        '/': '/ar/',
+        '/ar/': '/',
+        '/signup/': '/ar/signup/',
+        '/ar/signup/': '/signup/',
+        '/signin/': '/ar/signin/',
+        '/ar/signin/': '/signin/',
+        '/dashboard/': '/ar/dashboard/',
+        '/ar/dashboard/': '/dashboard/',
+        '/profile/': '/ar/profile/',
+        '/ar/profile/': '/profile/',
+        '/themes/': '/ar/themes/',
+        '/ar/themes/': '/themes/',
+        '/builder/update/': '/ar/update/',
+        '/ar/update/': '/builder/update/',
+        '/examples/': '/ar/examples/',
+        '/ar/examples/': '/examples/',
+        '/dashboard/analytics/': '/ar/dashboard/analytics/',
+        '/ar/dashboard/analytics/': '/dashboard/analytics/',
+        '/dashboard/seo/': '/ar/dashboard/seo/',
+        '/ar/dashboard/seo/': '/dashboard/seo/',
+        '/dashboard/domain/': '/ar/dashboard/domain/',
+        '/ar/dashboard/domain/': '/dashboard/domain/',
+        '/payment/': '/ar/payment/',
+        '/ar/payment/': '/payment/',
+        '/payment/success/': '/ar/payment/success/',
+        '/ar/payment/success/': '/payment/success/',
+        '/payment/failure/': '/ar/payment/failure/',
+        '/ar/payment/failure/': '/payment/failure/',
+    }
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        pref = request.COOKIES.get(self.COOKIE_NAME, '')
+        path = request.path_info
+
+        if pref in ('ar', 'en') and path in self.ROUTE_MAP:
+            wants_arabic = (pref == 'ar')
+            if path.startswith('/ar/') != wants_arabic:
+                target = self.ROUTE_MAP[path]
+                qs = request.META.get('QUERY_STRING', '')
+                url = target + (f'?{qs}' if qs else '')
+                response = redirect(url)
+                self._persist(response, pref)
+                return response
+
+        response = self.get_response(request)
+
+        # Visiting an Arabic page means choosing Arabic; remember it even when
+        # the user arrived via a link rather than the language toggle.
+        if path.startswith('/ar/') and pref != 'ar':
+            self._persist(response, 'ar')
+
+        return response
+
+    def _persist(self, response, lang):
+        response.set_cookie(
+            self.COOKIE_NAME,
+            lang,
+            max_age=60 * 60 * 24 * 365,
+            path='/',
+            samesite='Lax',
+        )
 
 
 class DynamicCsrfTrustedOriginsMiddleware:

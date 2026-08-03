@@ -6,6 +6,7 @@ from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Sum, Count, Avg, Q
 from datetime import timedelta
 from django.contrib.auth import login, logout
@@ -56,6 +57,44 @@ def seo_settings_view(request):
         'portfolio_url': request.build_absolute_uri(f'/{request.user.username}/'),
     }
     return render(request, 'dashboard/seo_settings.html', context)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_seo_settings_view(request):
+    """Arabic version of the SEO Meta Tag settings page."""
+    payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+    has_active_payment = payment is not None and payment.is_active
+
+    if not has_active_payment:
+        messages.warning(request, "التحكم في وسوم SEO ميزة احترافية. قم بترقية اشتراكك للوصول إليها.")
+        return redirect('arabic_payment')
+
+    seo_settings, created = SEOSettings.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = SEOSettingsForm(request.POST, request.FILES, instance=seo_settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "تم تحديث إعدادات SEO بنجاح!")
+            return redirect('arabic_seo_settings')
+    else:
+        form = SEOSettingsForm(instance=seo_settings)
+
+    # Arabic placeholders
+    form.fields['meta_title'].widget.attrs.update({'placeholder': 'مثال: أحمد محمد | مونتير فيديو محترف'})
+    form.fields['meta_description'].widget.attrs.update({'placeholder': 'وصف موجز لملفك المهني...'})
+    form.fields['meta_keywords'].widget.attrs.update({'placeholder': 'مثال: مونتير فيديو، موشن جرافيك، فريلانسر'})
+    form.fields['og_title'].widget.attrs.update({'placeholder': 'عنوان المشاركة على وسائل التواصل'})
+    form.fields['og_description'].widget.attrs.update({'placeholder': 'وصف المشاركة على وسائل التواصل...'})
+    form.fields['og_image'].widget.attrs.update({'class': 'sf-input', 'accept': 'image/*'})
+
+    context = {
+        'form': form,
+        'seo_settings': seo_settings,
+        'portfolio_url': request.build_absolute_uri(f'/{request.user.username}/'),
+        'is_arabic_page': True,
+    }
+    return render(request, 'dashboard/arabic_seo_settings.html', context)
 
 @login_required
 def custom_domain_view(request):
@@ -134,6 +173,87 @@ def custom_domain_view(request):
         'server_ip': server_ip,
     }
     return render(request, 'dashboard/custom_domain.html', context)
+
+@login_required(login_url='arabic_signin')
+def arabic_custom_domain_view(request):
+    """View to manage Custom Domains (Arabic RTL version)"""
+    # Pro Check
+    payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+    has_active_payment = payment is not None and payment.is_active
+
+    if not has_active_payment:
+        messages.warning(request, "النطاقات المخصصة من مزايا خطة Pro. قم بترقية خطتك للوصول إليها.")
+        return redirect('arabic_payment')
+
+    from .models import CustomDomain
+    from .forms import CustomDomainForm
+    import socket
+
+    custom_domain, created = CustomDomain.objects.get_or_create(user=request.user, defaults={'domain': ''})
+
+    # The actual IP of the Skillifly VPS
+    server_ip = '156.67.217.227'
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'verify':
+            if not custom_domain.domain:
+                messages.error(request, "يرجى إدخال النطاق أولاً.")
+            else:
+                try:
+                    # Check if domain resolves to our server IP (A record)
+                    # or to skillifly.cloud (CNAME record)
+                    resolved_ip = socket.gethostbyname(custom_domain.domain)
+                    skillifly_ip = socket.gethostbyname('skillifly.cloud')
+
+                    if resolved_ip == server_ip or resolved_ip == skillifly_ip:
+                        custom_domain.is_active = True
+                        custom_domain.dns_verified_at = timezone.now()
+                        custom_domain.save()
+
+                        # Trigger SSL provisioning in production
+                        if not settings.DEBUG:
+                            import subprocess
+                            try:
+                                subprocess.Popen(
+                                    ['sudo', 'python', 'manage.py', 'provision_ssl', custom_domain.domain],
+                                    cwd=settings.BASE_DIR,
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL,
+                                )
+                                logger.info('SSL provisioning triggered for %s', custom_domain.domain)
+                            except Exception as e:
+                                logger.warning('Could not trigger SSL provisioning for %s: %s', custom_domain.domain, e)
+
+                        messages.success(request, f"تم التحقق من DNS بنجاح! ملفك المهني يعمل الآن على {custom_domain.domain}. يتم توفير شهادة SSL تلقائيًا.")
+                    else:
+                        messages.warning(request, f"فشل فحص DNS. النطاق {custom_domain.domain} يشير حاليًا إلى {resolved_ip}، لكن يجب أن يشير إلى {server_ip}. يرجى تحديث سجلات DNS لديك.")
+                except socket.gaierror:
+                    messages.error(request, f"تعذّر الوصول إلى {custom_domain.domain}. يرجى التحقق من إعدادات DNS والمحاولة مرة أخرى بعد بضع دقائق.")
+            return redirect('arabic_custom_domain')
+
+        form = CustomDomainForm(request.POST, instance=custom_domain)
+        if form.is_valid():
+            domain_obj = form.save()
+            # Reset verification status on domain change
+            domain_obj.is_active = False
+            domain_obj.dns_verified_at = None
+            domain_obj.save()
+            messages.success(request, "تم تحديث النطاق المخصص! يرجى اتباع إرشادات إعداد DNS ثم النقر على «تحقق من DNS الآن».")
+            return redirect('arabic_custom_domain')
+    else:
+        form = CustomDomainForm(instance=custom_domain)
+
+    form.fields['domain'].widget.attrs.update({'placeholder': 'مثال: portfolio.yourname.com', 'dir': 'ltr'})
+
+    context = {
+        'form': form,
+        'custom_domain': custom_domain,
+        'server_ip': server_ip,
+        'is_arabic_page': True,
+    }
+    return render(request, 'dashboard/arabic_custom_domain.html', context)
 
 @login_required
 def submit_review_view(request):
@@ -216,6 +336,45 @@ def index(request):
     return render(request, 'core/index.html', context)
 
 
+def arabic_landing_view(request):
+    """Render the Arabic landing page variant for the language toggle."""
+    if request.user.is_authenticated:
+        return redirect('arabic_dashboard')
+
+    portfolios_count = Profile.objects.count()
+    themes_count = Theme.objects.count()
+    total_visits = Profile.objects.aggregate(Sum('visits'))['visits__sum'] or 0
+    reviews = list(Review.objects.filter(is_featured=True).order_by('order', '-created_at')[:6])
+    if not reviews:
+        reviews = [
+            {
+                'user_name': 'أحمد كامل',
+                'user_title': 'محرر فيديو',
+                'content': 'ساعدني Skillifly على تحويل أعمالي ومهاراتي إلى ملف مهني واضح واحترافي يمكن مشاركته خلال ثوانٍ.',
+                'rating': 5,
+                'initials': 'أك',
+                'image_url': None,
+            },
+            {
+                'user_name': 'أحمد مدحت',
+                'user_title': 'مطور SaaS',
+                'content': 'التجربة سهلة من البداية، والتصاميم تبدو متقنة على الهاتف والكمبيوتر بدون أي مجهود إضافي.',
+                'rating': 5,
+                'initials': 'أم',
+                'image_url': None,
+            },
+        ]
+
+    context = {
+        'portfolios_count': portfolios_count,
+        'themes_count': themes_count,
+        'total_visits': total_visits,
+        'reviews': reviews,
+        'is_arabic_page': True,
+    }
+    return render(request, 'core/arabic_landing.html', context)
+
+
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -262,6 +421,55 @@ def signup_view(request):
     return render(request, 'auth/signup.html', context)
 
 
+def arabic_signup_view(request):
+    """Render the Arabic sign-up page variant for the language toggle."""
+    if request.user.is_authenticated:
+        return redirect('arabic_dashboard')
+
+    next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
+
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # Require OTP verification
+            user.save()
+
+            # Generate OTP
+            otp_code = str(random.randint(100000, 999999))
+            EmailOTP.objects.create(user=user, otp=otp_code)
+
+            # Send HTML Email
+            plain_text = f'Your Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
+            html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
+            send_mail(
+                subject='Verify your Skillifly Account',
+                message=plain_text,
+                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            request.session['verification_user_id'] = user.id
+            request.session['next_url'] = next_url
+            request.session['is_arabic_flow'] = True
+            return redirect('verify_otp')
+        else:
+            message = form.errors
+    else:
+        form = RegisterForm()
+        message = None
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': True,
+    }
+    return render(request, 'auth/arabic_signup.html', context)
+
+
 def signin_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -296,54 +504,94 @@ def signin_view(request):
     return render(request, 'auth/signin.html', context)
 
 
+def arabic_signin_view(request):
+    """Render the Arabic sign-in page variant for the language toggle."""
+    if request.user.is_authenticated:
+        return redirect('arabic_dashboard')
+
+    next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
+
+    if request.method == "POST":
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user())
+            return redirect(next_url)
+        else:
+            username = request.POST.get('username')
+            try:
+                user = CustomUser.objects.get(Q(username=username) | Q(email=username))
+                if not user.is_active:
+                    request.session['verification_user_id'] = user.id
+                    request.session['next_url'] = next_url
+                    request.session['is_arabic_flow'] = True
+                    return redirect('verify_otp')
+            except CustomUser.DoesNotExist:
+                pass
+            message = form.errors
+    else:
+        form = LoginForm()
+        message = None
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': True,
+    }
+    return render(request, 'auth/arabic_signin.html', context)
+
+
 def verify_otp_view(request):
+    is_arabic = request.session.get('is_arabic_flow', False)
     user_id = request.session.get('verification_user_id')
     if not user_id:
-        return redirect('signin')
-        
+        return redirect('arabic_signin' if is_arabic else 'signin')
+
     user = get_object_or_404(CustomUser, id=user_id)
-    
+
     if request.method == "POST":
         entered_otp = request.POST.get('otp', '').strip()
         try:
             otp_record = EmailOTP.objects.get(user=user)
             if otp_record.is_expired():
-                messages.error(request, 'OTP has expired. Please request a new one.')
+                messages.error(request, 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.' if is_arabic else 'OTP has expired. Please request a new one.')
             elif otp_record.otp == entered_otp:
                 user.is_active = True
                 user.save()
                 otp_record.delete()
-                
+
                 # Also verify in allauth if present
                 from allauth.account.models import EmailAddress
                 EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
-                
+
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                next_url = request.session.pop('next_url', 'dashboard')
-                messages.success(request, 'Email verified successfully!')
+                next_url = request.session.pop('next_url', 'arabic_dashboard' if is_arabic else 'dashboard')
+                messages.success(request, 'تم تأكيد بريدك الإلكتروني بنجاح!' if is_arabic else 'Email verified successfully!')
                 return redirect(next_url)
             else:
-                messages.error(request, 'Invalid OTP code.')
+                messages.error(request, 'رمز التحقق غير صحيح.' if is_arabic else 'Invalid OTP code.')
         except EmailOTP.DoesNotExist:
-            messages.error(request, 'No OTP found. Please resend.')
-            
-    return render(request, 'auth/verify_otp.html', {'email': user.email})
+            messages.error(request, 'لم يتم العثور على رمز تحقق. يرجى إعادة الإرسال.' if is_arabic else 'No OTP found. Please resend.')
+
+    template = 'auth/arabic_verify_otp.html' if is_arabic else 'auth/verify_otp.html'
+    return render(request, template, {'email': user.email, 'is_arabic_page': is_arabic})
 
 
 def resend_otp_view(request):
+    is_arabic = request.session.get('is_arabic_flow', False)
     user_id = request.session.get('verification_user_id')
     if not user_id:
-        return redirect('signin')
-        
+        return redirect('arabic_signin' if is_arabic else 'signin')
+
     user = get_object_or_404(CustomUser, id=user_id)
-    
+
     if user.is_active:
-        return redirect('signin')
-        
+        return redirect('arabic_signin' if is_arabic else 'signin')
+
     # Generate new OTP
     otp_code = str(random.randint(100000, 999999))
     EmailOTP.objects.update_or_create(user=user, defaults={'otp': otp_code, 'created_at': timezone.now()})
-    
+
     plain_text = f'Your new Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
     html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
     send_mail(
@@ -354,13 +602,16 @@ def resend_otp_view(request):
         html_message=html_message,
         fail_silently=False,
     )
-    
-    messages.success(request, 'A new OTP has been sent to your email.')
+
+    messages.success(request, 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.' if is_arabic else 'A new OTP has been sent to your email.')
     return redirect('verify_otp')
 
 
 def logout_view(request):
     logout(request)
+    next_url = request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
     return redirect('signin')
 
 
@@ -437,9 +688,96 @@ def profile_view(request):
     return render(request, 'dashboard/profile.html', context)
 
 
+@login_required(login_url='arabic_signin')
+def arabic_profile_view(request):
+    """Arabic user profile page — view & edit account details, sign out"""
+    user = request.user
+    profile, _ = Profile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        username = request.POST.get('username', '').strip()
+
+        errors = {}
+        if email and email != user.email:
+            if CustomUser.objects.filter(email=email).exclude(pk=user.pk).exists():
+                errors['email'] = 'هذا البريد الإلكتروني مستخدم بالفعل.'
+        if username and username != user.username:
+            if CustomUser.objects.filter(username=username).exclude(pk=user.pk).exists():
+                errors['username'] = 'اسم المستخدم هذا محجوز بالفعل.'
+            elif len(username) < 3:
+                errors['username'] = 'يجب ألا يقل اسم المستخدم عن 3 أحرف.'
+
+        if errors:
+            error_msg = ' '.join(errors.values())
+            messages.error(request, error_msg)
+        else:
+            user.first_name = first_name
+            user.last_name = last_name
+            if email:
+                user.email = email
+            if username:
+                user.username = username
+            user.save()
+
+            # Handle profile picture upload (same field used by builder/portfolio)
+            picture = request.FILES.get('picture')
+            if picture:
+                profile.picture = picture
+                profile.save()
+            elif request.POST.get('remove_picture') == '1':
+                profile.picture = None
+                profile.save()
+
+            messages.success(request, 'تم تحديث الملف الشخصي بنجاح!')
+            return redirect('arabic_profile')
+
+    # Payment info
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    has_active_payment = payment is not None and payment.is_active
+
+    # Profile picture
+    profile_picture = None
+    if profile.picture and hasattr(profile.picture, 'url'):
+        profile_picture = profile.picture.url
+
+    # User initials for avatar fallback
+    initials = ''
+    if user.first_name and user.last_name:
+        initials = (user.first_name[0] + user.last_name[0]).upper()
+    elif user.first_name:
+        initials = user.first_name[:2].upper()
+    else:
+        initials = user.username[:2].upper()
+
+    context = {
+        'profile': profile,
+        'has_active_payment': has_active_payment,
+        'profile_picture': profile_picture,
+        'user_initials': initials,
+        'is_arabic_page': True,
+    }
+    return render(request, 'dashboard/arabic_profile.html', context)
+
+
 @login_required
 def dashboard_view(request):
     """Render the dashboard page"""
+    return render(request, 'dashboard/dashboard.html', _dashboard_context(request))
+
+
+@login_required(login_url='arabic_signin')
+def arabic_dashboard_view(request):
+    """Render the Arabic dashboard page variant for the language toggle."""
+    context = _dashboard_context(request)
+    context['is_arabic_page'] = True
+    return render(request, 'dashboard/arabic_dashboard.html', context)
+
+
+def _dashboard_context(request):
+    """Shared dashboard context used by both English and Arabic variants."""
     profile, created = Profile.objects.select_related('user', 'theme__category').get_or_create(user=request.user)
     
     # Calculate subscription days left
@@ -473,7 +811,7 @@ def dashboard_view(request):
     # Check if we need to show the category notification
     show_category_notification = request.session.pop('show_category_notification', False)
 
-    context = {
+    return {
         'profile': profile,
         'days_left': days_left,
         'payment': payment,
@@ -484,27 +822,37 @@ def dashboard_view(request):
         'site_settings': site_settings,
         'show_category_notification': show_category_notification,
     }
-    return render(request, 'dashboard/dashboard.html', context)
 
 @login_required
 def activate_portfolio(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
-    
+
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        redirect_to = next_url
+    else:
+        redirect_to = 'dashboard'
+
+    arabic_flow = redirect_to.startswith('/ar/')
+
     # Check if user is trying to make it public
     if not profile.is_public:
         # Check for active subscription
         payment = UserPayment.objects.filter(user=request.user, status='paid').last()
         has_active_subscription = payment and payment.is_active
-        
+
         if not has_active_subscription:
+            if arabic_flow:
+                messages.error(request, "لا يمكن جعل ملفك عامًا إلا للأعضاء المشتركين. اشترك لتتمكن من النشر المباشر.")
+                return redirect(redirect_to)
             messages.error(request, "Visibility can only be set to Public for Pro members. Please subscribe to go live.")
             return redirect('payment')
-    
+
     # Toggle visibility
     profile.is_public = not profile.is_public
     profile.save()
-    
-    return redirect('dashboard')
+
+    return redirect(redirect_to)
 
 @login_required
 def themes(request):
@@ -546,6 +894,201 @@ def themes(request):
     themes = Theme.objects.all()
     categories = Category.objects.all()
     return render(request, 'dashboard/themes.html', {'themes': themes, 'categories' : categories})
+
+
+@login_required(login_url='arabic_signin')
+def arabic_themes(request):
+    """Render the Arabic themes gallery page variant."""
+    request.session.pop('preview_theme', None)
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            return redirect('arabic_signin')
+
+        theme_id = request.POST.get('theme')
+        theme = get_object_or_404(Theme, id=theme_id)
+
+        # Ensure profile exists and check if user had a theme already
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        had_theme = profile.theme is not None
+        profile.theme = theme
+        profile.save()
+
+        # Update usage count
+        theme.use_num += 1
+        theme.save()
+
+        # Check if it's a category theme
+        if 'categories' in theme.name.lower() or 'category' in theme.name.lower():
+            request.session['show_category_notification'] = True
+
+        # If user has no portfolio data yet, send them to the builder first
+        has_data = PersonalInfo.objects.filter(user=request.user).exists()
+        if not has_data:
+            return redirect('arabic_update_portfolio')
+
+        preview_url = reverse('preview', kwargs={'username': request.user.username})
+        if had_theme:
+            messages.success(request, f'تم تحديث التصميم بنجاح! <a href="{preview_url}" class="underline font-bold">معاينة الملف</a>')
+            return redirect('arabic_dashboard')
+
+        return redirect('preview', username=request.user.username)
+
+    themes = Theme.objects.all()
+    categories = Category.objects.all()
+    return render(request, 'dashboard/arabic_themes.html', {'themes': themes, 'categories': categories, 'is_arabic_page': True})
+
+
+@login_required(login_url='arabic_signin')
+def arabic_update_portfolio_view(request):
+    """Arabic portfolio builder (update flow) page variant."""
+    from builder.forms import (
+        PersonalInfoForm,
+        SkillFormSetUpdate,
+        EducationFormSetUpdate,
+        ExperienceFormSetUpdate,
+        ProjectFormSetUpdate,
+        ProjectCategoryFormSetUpdate,
+        LinkFormSetUpdate,
+        CreatorFormSetUpdate,
+    )
+    from builder.views import save_portfolio_data
+
+    user = request.user
+
+    # helper for existing data
+    personal_info = PersonalInfo.objects.filter(user=user).first()
+
+    if request.method == "POST":
+        personal_form = PersonalInfoForm(request.POST, request.FILES)
+
+        skill_formset = SkillFormSetUpdate(request.POST, prefix="skills")
+        education_formset = EducationFormSetUpdate(request.POST, prefix="education")
+        experience_formset = ExperienceFormSetUpdate(request.POST, prefix="experience")
+        project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects")
+        project_category_formset = ProjectCategoryFormSetUpdate(request.POST, request.FILES, prefix="project_categories")
+        link_formset = LinkFormSetUpdate(request.POST, prefix="links")
+        creator_formset = CreatorFormSetUpdate(request.POST, request.FILES, prefix="creators")
+
+        if (
+            personal_form.is_valid()
+            and skill_formset.is_valid()
+            and education_formset.is_valid()
+            and experience_formset.is_valid()
+            and project_formset.is_valid()
+            and link_formset.is_valid()
+            and creator_formset.is_valid()
+        ):
+            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+            # Set profile to public if user has active payment
+            payment = UserPayment.objects.filter(user=request.user, status='paid').last()
+            if payment and payment.is_active:
+                profile = Profile.objects.filter(user=user).first()
+                if profile:
+                    profile.is_public = True
+                    profile.save()
+
+            return redirect("arabic_dashboard")
+        else:
+            print("--- ARABIC UPDATE PORTFOLIO VALIDATION ERRORS ---")
+            print(f"Personal Form Errors: {personal_form.errors}")
+            messages.error(request, "تعذر حفظ التغييرات. يرجى التحقق من الأخطاء في النموذج.")
+
+    else:
+        # Pre-fill forms with existing data
+
+        # Personal Info
+        initial_personal = {}
+        if personal_info:
+            initial_personal = {
+                'fullname': personal_info.full_name,
+                'title': personal_info.title,
+                'email': personal_info.email,
+                'phone': personal_info.phone,
+                'bio': personal_info.bio,
+                'booking_url': personal_info.booking_url,
+            }
+        personal_form = PersonalInfoForm(initial=initial_personal)
+
+        # Skills
+        skills_data = [{'skill': s.name} for s in Skill.objects.filter(user=user)]
+        skill_formset = SkillFormSetUpdate(initial=skills_data, prefix="skills")
+
+        # Education
+        education_data = [{
+            'school': e.school,
+            'degree': e.degree,
+            'field': e.field,
+            'year': e.grade_year.year
+        } for e in Education.objects.filter(user=user)]
+        education_formset = EducationFormSetUpdate(initial=education_data, prefix="education")
+
+        # Experience
+        experience_data = []
+        for e in Experience.objects.filter(user=user):
+            start_str = e.start_date.strftime('%Y-%m') if e.start_date else ''
+            end_str = e.end_date.strftime('%Y-%m') if e.end_date else ''
+            experience_data.append({
+                'title': e.title,
+                'company': e.company,
+                'start': start_str,
+                'end': end_str,
+                'description': e.details
+            })
+        experience_formset = ExperienceFormSetUpdate(initial=experience_data, prefix="experience")
+
+        # Projects
+        project_data = [{
+            'name': p.title,
+            'url': p.url,
+            'description': p.details,
+            'video_type': p.video_type,
+            'thumbnail': p.image,
+            'category_id': p.category_id
+        } for p in Project.objects.filter(user=user)]
+        project_formset = ProjectFormSetUpdate(initial=project_data, prefix="projects")
+
+        # Project Categories
+        from core.models import ProjectCategory
+        category_data = [{
+            'id': c.id,
+            'name': c.name,
+            'description': c.description,
+            'thumbnail': c.thumbnail
+        } for c in ProjectCategory.objects.filter(user=user)]
+        project_category_formset = ProjectCategoryFormSetUpdate(initial=category_data, prefix="project_categories")
+
+        # Links
+        link_data = [{
+            'name': l.platform,
+            'url': l.url
+        } for l in Link.objects.filter(user=user)]
+        link_formset = LinkFormSetUpdate(initial=link_data, prefix="links")
+
+        # Creators
+        creator_data = [{
+            'name': c.name,
+            'image': c.image,
+            'url': c.url
+        } for c in Creator.objects.filter(user=user)]
+        creator_formset = CreatorFormSetUpdate(initial=creator_data, prefix="creators")
+
+    profile = getattr(request.user, 'profile', None)
+    context = {
+        "personal_form": personal_form,
+        "skill_formset": skill_formset,
+        "education_formset": education_formset,
+        "experience_formset": experience_formset,
+        "project_formset": project_formset,
+        "project_category_formset": project_category_formset,
+        "link_formset": link_formset,
+        "creator_formset": creator_formset,
+        "is_update": True,
+        "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
+        "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
+        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True,
+        "is_arabic_page": True,
+    }
+    return render(request, 'dashboard/arabic_builder.html', context)
 
 
 

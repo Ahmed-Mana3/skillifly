@@ -1,0 +1,370 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}نماذج جاهزة — ملفات مهنية حقيقية | Skillifly{% endblock %}
+
+{% block meta_description %}استكشف ملفات مهنية حقيقية أنشأها محترفون باستخدام Skillifly — محررو فيديو، مصممو حركة، مطورون، وصنّاع محتوى. استلهم وأطلق ملفك المهني الخاص اليوم.{% endblock %}
+
+{% block meta_keywords %}نماذج ملفات مهنية, أمثلة ملفات شخصية, ملف محرر فيديو, معرض ملفات, إلهام ملفات مهنية, skillifly{% endblock %}
+
+{% block og_title %}نماذج جاهزة — ملفات مهنية حقيقية | Skillifly{% endblock %}
+{% block og_description %}استكشف ملفات مهنية حقيقية أنشأها محترفون باستخدام Skillifly.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}نماذج جاهزة — ملفات مهنية حقيقية | Skillifly{% endblock %}
+{% block twitter_description %}استكشف ملفات مهنية حقيقية أنشأها محترفون باستخدام Skillifly.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_examples' %}" />
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'examples' %}" />
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'examples' %}" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "نماذج جاهزة — ملفات مهنية حقيقية",
+  "description": "استكشف ملفات مهنية احترافية أنشأها مستخدمون عبر Skillifly.",
+  "inLanguage": "ar",
+  "url": "{{ request.build_absolute_uri }}",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for showcase in showcases %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "name": "{% if showcase.title %}{{ showcase.title|escapejs }}{% else %}{{ showcase.profile.user.username|title|escapejs }}{% endif %}",
+        "url": "https://skillifly.cloud/{{ showcase.profile.user.username }}/"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+
+<script>document.documentElement.classList.add('js');</script>
+
+<style>
+  /* ===== Arabic Examples — Warm Brand Overrides ===== */
+  body {
+    background-color: white !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography: Cairo for headings, Tajawal for body */
+  .arabic-rtl h1,
+  .arabic-rtl h2,
+  .arabic-rtl h3 {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arabic-rtl p,
+  .arabic-rtl li,
+  .arabic-rtl a,
+  .arabic-rtl span,
+  .arabic-rtl button {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  }
+
+  /* Remove decorative Latin text treatments for Arabic */
+  .arabic-rtl .tracking-\[0\.3em\],
+  .arabic-rtl .tracking-widest,
+  .arabic-rtl .tracking-tighter,
+  .arabic-rtl .uppercase {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  .arabic-rtl .rtl-arrow {
+    transform: scaleX(-1);
+  }
+
+  /* Gradient text — readable on white */
+  .gradient-text {
+    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    border: none !important;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+  }
+
+  .btn-ghost {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(225, 29, 72, 0.35) !important;
+    color: #0F172A !important;
+  }
+
+  .btn-ghost:hover {
+    background: #FFF1F2 !important;
+    border-color: #E11D48 !important;
+    box-shadow: 0 6px 18px -6px rgba(225, 29, 72, 0.25) !important;
+  }
+
+  .btn-white {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #ffffff !important;
+    color: #E11D48 !important;
+    font-weight: 800;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.35) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-white:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(225, 29, 72, 0.14) !important;
+    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .showcase-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .showcase-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(225, 29, 72, 0.28) !important;
+    box-shadow: 0 26px 50px -24px rgba(236, 72, 153, 0.24) !important;
+  }
+
+  /* Nav */
+  .nav-link {
+    color: #334155 !important;
+    font-weight: 600 !important;
+  }
+
+  .nav-link:hover {
+    color: #E11D48 !important;
+  }
+
+  .logo-mark img {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+  }
+
+  /* Reveal-on-scroll */
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .js .reveal.in-view {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+
+  /* Soft tinted section that fades in/out of white for a seamless flow */
+  .section-warm {
+    background: linear-gradient(180deg, #ffffff 0%, #FFF8F5 14%, #FFF8F5 86%, #ffffff 100%);
+  }
+
+  /* Very light warm lights that float in the background of every section */
+  .warm-lights {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(236, 72, 153, 0.09), transparent 60%),
+      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(251, 191, 36, 0.07), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(251, 191, 36, 0.06), transparent 60%),
+      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(236, 72, 153, 0.05), transparent 60%);
+  }
+
+  /* Focus visibility */
+  a:focus-visible,
+  button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    border-radius: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="pt-24 min-h-screen">
+  <!-- Hero Section -->
+  <section class="py-20 px-6 relative overflow-hidden text-center arabic-rtl">
+    <div class="warm-lights" aria-hidden="true"></div>
+    <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(15,23,42,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-pink-400/10 blur-[120px] rounded-full"></div>
+
+    <div class="max-w-4xl mx-auto relative z-10 animate-fadeInUp">
+      <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6 leading-[1.2]">
+        نماذج <span class="gradient-text">حقيقية</span>
+      </h1>
+      <p class="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed">
+        استكشف ملفات مهنية مميزة أنشأها مجتمعنا. شاهد كيف يعرضون مهاراتهم ويحققون فرصًا أفضل.
+      </p>
+    </div>
+  </section>
+
+  <!-- Showcase Grid -->
+  <section class="py-20 px-6 section-warm relative overflow-hidden arabic-rtl">
+    <div class="warm-lights" aria-hidden="true"></div>
+    <div class="max-w-7xl mx-auto relative z-10">
+      {% if showcases %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {% for showcase in showcases %}
+        <div class="glass-card showcase-card rounded-[2.5rem] overflow-hidden group flex flex-col h-full animate-fadeInUp">
+          <!-- Preview Image -->
+          <div class="aspect-[16/10] relative overflow-hidden bg-slate-100 border-b border-slate-100">
+            {% if showcase.preview_image %}
+              <img src="{{ showcase.preview_image.url }}" alt="{{ showcase.profile.user.username }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            {% elif showcase.profile.picture %}
+               <img src="{{ showcase.profile.picture.url }}" alt="{{ showcase.profile.user.username }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            {% else %}
+               <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-500 via-orange-500 to-amber-400 opacity-5">
+                 <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+               </div>
+            {% endif %}
+
+            <!-- Theme Badge -->
+            {% if showcase.profile.theme %}
+            <div class="absolute top-5 left-5">
+              <span class="bg-white/95 backdrop-blur-md text-[10px] font-black px-4 py-2 rounded-full text-slate-900 shadow-sm border border-pink-100">
+                {{ showcase.profile.theme.name }}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Content -->
+          <div class="p-8 sm:p-10 flex flex-col flex-grow">
+            <div class="mb-6">
+              <h3 class="text-2xl font-bold text-slate-900 mb-3">
+                {% if showcase.title %}{{ showcase.title }}{% else %}{{ showcase.profile.user.username|title }}{% endif %}
+              </h3>
+              <p class="text-slate-600 text-sm leading-relaxed line-clamp-3 font-medium">
+                {% if showcase.description %}
+                  {{ showcase.description }}
+                {% else %}
+                  {{ showcase.profile.bio|default:"استكشف هذا الملف المهني الاحترافي الذي تم إنشاؤه باستخدام Skillifly." }}
+                {% endif %}
+              </p>
+            </div>
+
+            <div class="mt-auto">
+               <a href="{% url 'preview' showcase.profile.user.username %}" target="_blank" class="w-full inline-flex items-center justify-center gap-3 btn-primary px-6 py-4 rounded-2xl font-bold text-sm">
+                 زيارة الملف
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+               </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-32 glass-card rounded-[3rem] border-dashed border-2 border-pink-200">
+         <div class="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
+           <svg class="w-10 h-10 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+         </div>
+         <h3 class="text-2xl font-bold text-slate-900 mb-2">قريبًا</h3>
+         <p class="text-slate-600 font-medium italic">نختار حاليًا أفضل الملفات المهنية لنعرضها لك. عد قريبًا!</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="px-6 py-24 relative overflow-hidden arabic-rtl">
+    <div class="warm-lights" aria-hidden="true"></div>
+    <div class="max-w-5xl mx-auto reveal">
+      <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden text-white" style="background: linear-gradient(135deg, #E11D48 0%, #F97316 60%, #F59E0B 110%);">
+        <div class="absolute inset-0 opacity-[0.16]" style="background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.5), transparent 45%), radial-gradient(circle at 85% 80%, rgba(255,255,255,0.35), transparent 40%);"></div>
+        <div class="absolute inset-0 opacity-[0.12]" style="background-image: linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px); background-size: 48px 48px;"></div>
+        <div class="relative z-10">
+          <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 leading-tight text-white" style="text-shadow: 0 2px 24px rgba(0,0,0,0.18);">
+            جاهز لبناء <span class="text-amber-300">ملفك الخاص؟</span>
+          </h2>
+          <p class="text-white/95 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium leading-relaxed" style="text-shadow: 0 1px 12px rgba(0,0,0,0.12);">انضم إلى {{ portfolios_count }} محترفًا يحصلون على فرص عمل عبر Skillifly.</p>
+
+          <div class="flex flex-col items-center gap-6">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+              <a href="{% url 'arabic_signup' %}" class="btn-white w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-base sm:text-lg whitespace-nowrap">
+                ابدأ مجانًا
+                <svg class="rtl-arrow w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </a>
+              <a href="{% url 'arabic_landing' %}" class="w-full sm:w-auto btn-ghost px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold">
+                اعرف المزيد
+              </a>
+            </div>
+            <p class="text-white/80 text-xs font-bold uppercase tracking-widest">ضمان استرداد خلال 14 يومًا</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!prefersReduced && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in-view'));
+    }
+  })();
+</script>
+{% endblock %}

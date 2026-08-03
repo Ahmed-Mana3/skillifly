@@ -1,0 +1,381 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}معرض تصاميم الملفات المهنية — Skillifly{% endblock %}
+
+{% block meta_description %}تصفّح تصاميم احترافية جاهزة للملفات المهنية صمّمها خبراء في التوظيف، مناسبة لمصممي الفيديو والمطورين ومصممي الحركة وأصحاب المهن الإبداعية. معاينات مباشرة متاحة.{% endblock %}
+
+{% block meta_keywords %}تصاميم الملفات, قوالب ملفات مصممي الفيديو, تصاميم المطورين, تصاميم Skillifly, قوالب مواقع الملفات{% endblock %}
+
+{% block og_title %}معرض تصاميم الملفات — Skillifly{% endblock %}
+{% block og_description %}تصفّح تصاميم احترافية جاهزة للملفات المهنية لمصممي الفيديو والمطورين والمبدعين.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}معرض تصاميم الملفات — Skillifly{% endblock %}
+{% block twitter_description %}تصفّح تصاميم احترافية جاهزة للملفات المهنية لمصممي الفيديو والمطورين والمبدعين.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+  /* ===== Arabic Themes — Warm Brand Overrides ===== */
+  body {
+    background-color: white !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography: Cairo for headings, Tajawal for body */
+  .arabic-rtl h1,
+  .arabic-rtl h2,
+  .arabic-rtl h3,
+  .arabic-rtl h4 {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arabic-rtl p,
+  .arabic-rtl li,
+  .arabic-rtl a,
+  .arabic-rtl span,
+  .arabic-rtl button,
+  .arabic-rtl label {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  }
+
+  /* Remove decorative Latin text treatments for Arabic */
+  .arabic-rtl .tracking-\[0\.3em\],
+  .arabic-rtl .tracking-widest,
+  .arabic-rtl .tracking-tighter,
+  .arabic-rtl .uppercase {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  /* Gradient text — readable on white */
+  .gradient-text {
+    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    border: none !important;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+  }
+
+  .btn-primary:disabled {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    opacity: 0.5;
+    box-shadow: none !important;
+  }
+
+  /* Cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(225, 29, 72, 0.14) !important;
+    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .gradient-border {
+    background: #ffffff !important;
+    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .gradient-border::before {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+  }
+
+  /* Brand gradient — warm */
+  .gradient-brand {
+    background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+  }
+
+  /* Nav */
+  .nav-link {
+    color: #334155 !important;
+    font-weight: 600 !important;
+  }
+
+  .nav-link:hover {
+    color: #E11D48 !important;
+  }
+
+  .logo-mark img {
+    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+  }
+
+  /* Warm accent overrides for inherited English utility colors */
+  .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+  .arabic-rtl .text-blue-700 { color: #BE123C !important; }
+  .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
+  .arabic-rtl .bg-blue-600 { background-color: #DB2777 !important; }
+  .arabic-rtl .border-blue-600 { border-color: #DB2777 !important; }
+
+  /* Flip forward arrows for RTL */
+  .arabic-rtl .rtl-arrow {
+    transform: scaleX(-1);
+  }
+
+  /* Focus visibility */
+  a:focus-visible,
+  button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    border-radius: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12 arabic-rtl">
+
+  <!-- Header -->
+  <div class="mb-10 animate-fadeInUp">
+    <p class="text-sm text-pink-600 font-bold mb-2">الخطوة 1 من 2</p>
+    <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black">
+      اختر <span class="gradient-text">تصميمك</span>
+    </h1>
+    <p class="text-slate-600 max-w-xl font-medium">اختر تصميمًا يعكس هويتك المهنية. يمكنك تغييره لاحقًا في أي وقت.</p>
+  </div>
+
+  {% if themes %}
+  <form method="POST" id="theme-form">
+    {% csrf_token %}
+    <input type="hidden" name="theme" id="selected-theme">
+    <input type="hidden" name="category" id="selected-category">
+
+    <!-- Category filter -->
+    {% if categories %}
+    <div class="flex flex-wrap gap-2 mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
+      <button type="button" onclick="filterCategory('all')" data-cat="all"
+        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-pink-500/40 bg-pink-50 text-pink-700">
+        كل التصاميم
+      </button>
+      {% for category in categories %}
+      <button type="button" onclick="filterCategory('{{ category.id }}')" data-cat="{{ category.id }}"
+        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-slate-200 text-slate-500 hover:border-pink-500/40 hover:text-pink-600">
+        {{ category.name }}
+      </button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Themes grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeInUp" style="animation-delay: 0.2s"
+      id="themes-grid">
+      {% for theme in themes %}
+      <div class="theme-card group cursor-pointer" data-category-id="{{ theme.category.id }}" data-theme-name="{{ theme.name|lower }}"
+        onclick="selectTheme('{{ theme.id }}', '{{ theme.category.id }}', this)">
+        <div
+          class="gradient-border rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+          id="theme-card-{{ theme.id }}">
+
+          <!-- Preview image -->
+          <div class="relative aspect-video overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
+            {% if theme.preview_image %}
+            <img src="{{ theme.preview_image.url }}" alt="معاينة تصميم {{ theme.name }}" loading="lazy"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            {% else %}
+            <!-- Placeholder preview -->
+            <div class="w-full h-full flex items-center justify-center"
+              style="background: linear-gradient(135deg, #0F1523 0%, #1E293B 100%);">
+              <div class="text-center">
+                <div class="w-12 h-12 gradient-brand rounded-xl mx-auto mb-2 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                  </svg>
+                </div>
+                <p class="text-xs text-gray-500">{{ theme.name }}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Preview Button Overlay -->
+            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-20">
+                <a href="{% url 'theme_preview' theme_name=theme.name|lower|slugify %}" target="_blank" onclick="event.stopPropagation()" class="pointer-events-auto bg-white/95 backdrop-blur-sm text-slate-900 text-sm font-bold px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-white hover:scale-105 hover:text-pink-600" title="معاينة هذا التصميم في تبويب جديد">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  معاينة مباشرة
+                </a>
+            </div>
+
+            <!-- Selected overlay -->
+            <div
+              class="selected-overlay absolute inset-0 bg-pink-600/10 border-4 border-pink-600 rounded-none opacity-0 transition-opacity duration-200 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card info -->
+          <div class="p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-sm mb-0.5 text-black">{{ theme.name }}</h3>
+                <p class="text-xs text-slate-500 font-bold">{{ theme.category.name|default:"Theme" }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-600 font-bold">{{ theme.use_num }} {% if theme.use_num == 1 %}استخدام{% elif theme.use_num == 2 %}استخدامان{% else %}استخدامات{% endif %}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Submit -->
+    <div class="mt-10 flex items-center justify-between border-t border-slate-200 pt-8 animate-fadeInUp"
+      style="animation-delay: 0.3s">
+      <p id="selection-msg" class="text-sm text-slate-500 font-bold">اختر تصميمًا للمتابعة</p>
+      <button type="submit" id="apply-btn" disabled class="btn-primary opacity-50 cursor-not-allowed shadow-none"
+        style="min-width: 160px;">
+        تطبيق التصميم
+        <svg class="w-4 h-4 rtl-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </button>
+    </div>
+
+  </form>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="text-center py-24">
+    <div class="w-16 h-16 gradient-brand rounded-2xl mx-auto mb-4 flex items-center justify-center">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-semibold mb-2 text-black">لا توجد تصاميم متاحة بعد</h3>
+    <p class="text-gray-500 text-sm">ترقّب قريبًا — نضيف تصاميم جميلة باستمرار.</p>
+  </div>
+  {% endif %}
+
+  <!-- Notification Popup (Hidden by default) -->
+  <div id="category-notification" class="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl border border-slate-200 p-6 max-w-sm transform translate-y-full opacity-0 transition-all duration-300 z-50 flex flex-col gap-3">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-900">صنّف فيديوهاتك الآن!</h4>
+          <p class="text-sm text-slate-500 mt-1">ممتاز! لكي يظهر هذا التصميم بأفضل صورة، عليك تجميع فيديوهاتك في فئات.</p>
+        </div>
+      </div>
+      <button onclick="closeCategoryNotification()" class="text-slate-400 hover:text-slate-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <a href="{% url 'arabic_update_portfolio' %}#projects-section" class="w-full btn-primary py-2 text-center text-sm mt-2">
+      الانتقال إلى قسم المشاريع في المنشئ
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let selectedThemeId = null;
+  let selectedCategoryId = null;
+
+  function selectTheme(themeId, categoryId, el) {
+    // Reset previous
+    document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('opacity-0'));
+
+    // Set new
+    selectedThemeId = themeId;
+    selectedCategoryId = categoryId;
+    document.getElementById('selected-theme').value = themeId;
+    document.getElementById('selected-category').value = categoryId;
+    el.querySelector('.selected-overlay').classList.remove('opacity-0');
+
+    // Enable button
+    const btn = document.getElementById('apply-btn');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    // Update message
+    document.getElementById('selection-msg').textContent = 'تم اختيار التصميم — انقر للتطبيق';
+    document.getElementById('selection-msg').classList.add('text-pink-600', 'font-bold');
+    document.getElementById('selection-msg').classList.remove('text-slate-500');
+
+    // Show notification if it's a categories theme
+    const themeName = el.dataset.themeName;
+    if (themeName && (themeName.includes('categories') || themeName.includes('category'))) {
+      showCategoryNotification();
+    } else {
+      closeCategoryNotification();
+    }
+  }
+
+  function showCategoryNotification() {
+    const notif = document.getElementById('category-notification');
+    notif.classList.remove('translate-y-full', 'opacity-0');
+    notif.classList.add('translate-y-0', 'opacity-100');
+  }
+
+  function closeCategoryNotification() {
+    const notif = document.getElementById('category-notification');
+    notif.classList.add('translate-y-full', 'opacity-0');
+    notif.classList.remove('translate-y-0', 'opacity-100');
+  }
+
+  function filterCategory(catId) {
+    // Update button styles
+    document.querySelectorAll('.cat-filter').forEach(btn => {
+      if (btn.dataset.cat === catId) {
+        btn.classList.add('border-pink-500/40', 'bg-pink-50', 'text-pink-700');
+        btn.classList.remove('border-slate-200', 'text-slate-500');
+      } else {
+        btn.classList.remove('border-pink-500/40', 'bg-pink-50', 'text-pink-700');
+        btn.classList.add('border-slate-200', 'text-slate-500');
+      }
+    });
+
+    // Show/hide themes
+    document.querySelectorAll('.theme-card').forEach(card => {
+      if (catId === 'all' || card.dataset.categoryId === catId) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}

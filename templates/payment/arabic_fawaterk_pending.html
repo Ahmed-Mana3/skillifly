@@ -1,0 +1,90 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}الدفع قيد المعالجة — Skillifly{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+    body {
+        background-color: white !important;
+        color: #0F172A !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .arabic-rtl h1,
+    .arabic-rtl h2,
+    .arabic-rtl h3,
+    .arabic-rtl h4 {
+        font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        letter-spacing: 0 !important;
+    }
+
+    .arabic-rtl p,
+    .arabic-rtl li,
+    .arabic-rtl a,
+    .arabic-rtl span,
+    .arabic-rtl button {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
+    }
+
+    .nav-link {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .nav-link:hover {
+        color: #E11D48 !important;
+    }
+
+    .logo-mark img {
+        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    }
+
+    .arabic-rtl .text-slate-400 { color: #64748B !important; }
+    .arabic-rtl .text-slate-500 { color: #475569 !important; }
+    .arabic-rtl .text-slate-600 { color: #334155 !important; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="min-h-screen px-6 py-24 flex items-center justify-center relative arabic-rtl">
+  <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-sm border border-slate-200 text-center relative z-10 animate-fadeInUp">
+    <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+
+    <h1 class="text-2xl font-display font-bold text-black mb-4">الدفع قيد المعالجة</h1>
+    <p class="text-slate-600 mb-6 font-medium">
+      تم إنشاء مرجع الدفع بنجاح. يرجى إتمام الدفع من أقرب منفذ مدعوم (مثل فوري، أمان).
+    </p>
+    <p class="text-slate-500 text-sm mb-8">
+      سيتم تفعيل اشتراكك تلقائيًا بمجرد تأكيد الدفع.
+    </p>
+
+    <a href="{% url 'arabic_dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors w-full">
+      العودة إلى لوحة التحكم
+    </a>
+  </div>
+</section>
+{% endblock %}
