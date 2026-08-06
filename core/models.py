@@ -303,8 +303,8 @@ class SiteSettings(models.Model):
 
 
 class Review(models.Model):
-    user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.CASCADE, related_name="reviews", help_text="The portfolio owner this review is about (null = platform review)")
-    reviewer = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL, related_name="reviews_given", help_text="The client who wrote this review (null = platform/manual review)")
+    """Website/platform reviews shown on the Skillifly landing page."""
+    reviewer = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL, related_name="website_reviews", help_text="The authenticated user who submitted this review (null = admin/manual)")
     user_name = models.CharField(max_length=254)
     user_title = models.CharField(max_length=254, blank=True, null=True, help_text="e.g. Video Editor, Frontend Developer")
     user_image = models.ImageField(upload_to='reviews/', blank=True, null=True)
@@ -312,6 +312,44 @@ class Review(models.Model):
     rating = models.PositiveIntegerField(default=5, help_text="1 to 5 stars")
     is_featured = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0, help_text="Order of appearance on landing page")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return f"Review by {self.user_name}"
+
+    @property
+    def image_url(self):
+        if self.user_image and hasattr(self.user_image, 'url'):
+            return self.user_image.url
+        if self.reviewer_id:
+            profile = getattr(self.reviewer, 'profile', None)
+            if profile is not None and profile.picture and hasattr(profile.picture, 'url'):
+                return profile.picture.url
+        return None
+
+    @property
+    def initials(self):
+        if not self.user_name:
+            return "SF"
+        parts = self.user_name.split()
+        if len(parts) >= 2:
+            return (parts[0][0] + parts[1][0]).upper()
+        return self.user_name[:2].upper()
+
+class ClientReview(models.Model):
+    """Reviews clients leave on an editor's portfolio."""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reviews", help_text="The portfolio owner this review is about")
+    reviewer = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL, related_name="reviews_given", help_text="The client who wrote this review")
+    user_name = models.CharField(max_length=254)
+    user_title = models.CharField(max_length=254, blank=True, null=True, help_text="e.g. Video Editor, Frontend Developer")
+    user_image = models.ImageField(upload_to='reviews/', blank=True, null=True)
+    content = models.TextField()
+    rating = models.PositiveIntegerField(default=5, help_text="1 to 5 stars")
+    is_featured = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text="Order of appearance on the portfolio")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

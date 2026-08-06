@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from urllib.parse import quote
-from core.models import UserPayment, Subscription, Profile, Review, UserAccount
+from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount
 from django.utils import timezone
 from datetime import timedelta
 import json
@@ -137,12 +137,12 @@ class ClientReviewImageFallbackTests(TestCase):
             'rating': 5,
         })
         self.assertEqual(response.status_code, 200)
-        review = Review.objects.get(user=self.owner)
+        review = ClientReview.objects.get(user=self.owner)
         self.assertEqual(review.reviewer, self.client_user)
         self.assertFalse(review.is_featured)
 
     def test_review_image_url_prefers_user_image(self):
-        review = Review.objects.create(
+        review = ClientReview.objects.create(
             user=self.owner,
             reviewer=self.client_user,
             user_name='Sara',
@@ -155,7 +155,7 @@ class ClientReviewImageFallbackTests(TestCase):
     def test_review_image_url_falls_back_to_reviewer_profile_picture(self):
         self.profile.picture = SimpleUploadedFile('pic.png', b'fakeimage')
         self.profile.save()
-        review = Review.objects.create(
+        review = ClientReview.objects.create(
             user=self.owner,
             reviewer=self.client_user,
             user_name='Sara',
@@ -165,7 +165,7 @@ class ClientReviewImageFallbackTests(TestCase):
         self.assertEqual(review.image_url, self.profile.picture.url)
 
     def test_review_image_url_none_without_images(self):
-        review = Review.objects.create(
+        review = ClientReview.objects.create(
             user=self.owner,
             reviewer=self.client_user,
             user_name='Sara',
@@ -312,7 +312,7 @@ class ClientReviewRedirectFunnelTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Thank')
-        self.assertEqual(Review.objects.filter(user=self.owner, reviewer__email='fullflow@example.com').count(), 1)
+        self.assertEqual(ClientReview.objects.filter(user=self.owner, reviewer__email='fullflow@example.com').count(), 1)
 
 
 class ClientDashboardRoutingTests(TestCase):
@@ -328,7 +328,7 @@ class ClientDashboardRoutingTests(TestCase):
             email='editorx@example.com',
             password='pass12345'
         )
-        Review.objects.create(
+        ClientReview.objects.create(
             user=self.editor,
             reviewer=self.client_user,
             user_name='Client Dash',
@@ -424,7 +424,7 @@ class ReviewsManagementAvatarTests(TestCase):
             email='avother@example.com',
             password='pass12345'
         )
-        self.review = Review.objects.create(
+        self.review = ClientReview.objects.create(
             user=self.owner,
             user_name='Happy Client',
             content='Great work!',

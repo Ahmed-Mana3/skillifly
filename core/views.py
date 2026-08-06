@@ -17,8 +17,8 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP
-from .forms import RegisterForm, LoginForm, ReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP
+from .forms import RegisterForm, LoginForm, ReviewForm, ClientReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm
 import random
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -323,7 +323,7 @@ def _client_review_page(request, username, arabic=False):
 
     submitted = False
     if request.method == "POST":
-        form = ReviewForm(request.POST, request.FILES)
+        form = ClientReviewForm(request.POST, request.FILES)
         if form.is_valid():
             review = form.save(commit=False)
             review.user = owner
@@ -331,11 +331,11 @@ def _client_review_page(request, username, arabic=False):
             review.is_featured = False
             review.save()
             submitted = True
-        form = ReviewForm()
+        form = ClientReviewForm()
     else:
         # Pre-fill the reviewer's name from their client account.
         reviewer_name = request.user.get_full_name() or request.user.first_name or request.user.username
-        form = ReviewForm(initial={'user_name': reviewer_name})
+        form = ClientReviewForm(initial={'user_name': reviewer_name})
 
     owner_name = (getattr(owner.personal_info, 'full_name', '') if hasattr(owner, 'personal_info') else '') or owner.username
 
@@ -353,7 +353,7 @@ def _client_review_page(request, username, arabic=False):
 @login_required
 def reviews_management_view(request):
     """Dashboard page showing the reviews collected from the user's clients."""
-    reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+    reviews = ClientReview.objects.filter(user=request.user).order_by('-created_at')
     reviews_list = list(reviews)
     total = len(reviews_list)
     average_rating = (sum(r.rating for r in reviews_list) / total) if total else 0
@@ -387,7 +387,7 @@ def reviews_management_view(request):
 @login_required(login_url='arabic_signin')
 def arabic_reviews_management_view(request):
     """Arabic RTL twin of the dashboard reviews management page."""
-    reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+    reviews = ClientReview.objects.filter(user=request.user).order_by('-created_at')
     reviews_list = list(reviews)
     total = len(reviews_list)
     average_rating = (sum(r.rating for r in reviews_list) / total) if total else 0
@@ -422,7 +422,7 @@ def arabic_reviews_management_view(request):
 @require_POST
 def toggle_review_featured_view(request, review_id):
     """List or unlist a review on the portfolio (owner-controlled)."""
-    review = get_object_or_404(Review, pk=review_id, user=request.user)
+    review = get_object_or_404(ClientReview, pk=review_id, user=request.user)
     review.is_featured = not review.is_featured
     review.save()
 
@@ -438,7 +438,7 @@ def toggle_review_featured_view(request, review_id):
 @require_POST
 def update_review_avatar_view(request, review_id):
     """Let the editor upload/replace the avatar shown for a client review."""
-    review = get_object_or_404(Review, pk=review_id, user=request.user)
+    review = get_object_or_404(ClientReview, pk=review_id, user=request.user)
     form = ReviewAvatarForm(request.POST, request.FILES)
     if form.is_valid():
         review.user_image = form.cleaned_data['user_image']
@@ -1093,7 +1093,7 @@ def _is_client_account(user):
 
 def _client_reviews_context(request):
     reviews = (
-        Review.objects.filter(reviewer=request.user, user__isnull=False)
+        ClientReview.objects.filter(reviewer=request.user)
         .select_related('user', 'user__personal_info')
         .order_by('-created_at')
     )
@@ -1105,7 +1105,7 @@ def _client_reviews_context(request):
 
 
 def _client_dashboard_context(request):
-    reviews = Review.objects.filter(reviewer=request.user, user__isnull=False)
+    reviews = ClientReview.objects.filter(reviewer=request.user)
     return {
         'reviews_count': reviews.count(),
         'reviewed_editors_count': reviews.values('user_id').distinct().count(),
@@ -1424,7 +1424,7 @@ def arabic_update_portfolio_view(request):
         "project_category_formset": project_category_formset,
         "link_formset": link_formset,
         "creator_formset": creator_formset,
-        "reviews": Review.objects.filter(user=request.user).order_by('-created_at'),
+        "reviews": ClientReview.objects.filter(user=request.user).order_by('-created_at'),
         "is_update": True,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",

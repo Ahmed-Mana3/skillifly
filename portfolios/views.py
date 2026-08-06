@@ -24,7 +24,7 @@ from core.models import (
     UserPayment,
     Showcase,
     Theme,
-    Review,
+    ClientReview,
 )
 
 
@@ -82,12 +82,12 @@ def get_or_create_mock_user():
         Creator.objects.create(user=user, name="MKBHD", url="https://youtube.com/@mkbhd", image="creators/creator_mkbhd.png")
         Creator.objects.create(user=user, name="Peter McKinnon", url="https://youtube.com/@petermckinnon", image="creators/creator_petermckinnon.png")
 
-    if not Review.objects.filter(user=user).exists():
-        Review.objects.create(user=user, user_name="Sarah Mitchell", user_title="Content Strategist", content="Alex transformed our raw footage into a stunning brand story. The pacing, color grading, and attention to detail exceeded every expectation.", rating=5, order=0)
-        Review.objects.create(user=user, user_name="Omar Khaled", user_title="YouTube Creator · 2M Subscribers", content="Working with Alex was effortless. Fast turnaround, clear communication, and the final cut doubled our average watch time.", rating=5, order=1)
-        Review.objects.create(user=user, user_name="Jessica Lane", user_title="Marketing Lead", content="The most reliable editor we've worked with. Every project is delivered on time with a polished, cinematic finish. Highly recommended.", rating=5, order=2)
-        Review.objects.create(user=user, user_name="Daniel Ross", user_title="Documentary Filmmaker", content="Alex brought a real sense of rhythm and emotion to our documentary. The grade alone made the project feel world-class.", rating=4, order=3)
-        Review.objects.create(user=user, user_name="Lina Hassan", user_title="Social Media Manager", content="Our reels have never looked better. Alex understands short-form storytelling and made our content actually convert.", rating=5, order=4)
+    if not ClientReview.objects.filter(user=user).exists():
+        ClientReview.objects.create(user=user, user_name="Sarah Mitchell", user_title="Content Strategist", content="Alex transformed our raw footage into a stunning brand story. The pacing, color grading, and attention to detail exceeded every expectation.", rating=5, order=0)
+        ClientReview.objects.create(user=user, user_name="Omar Khaled", user_title="YouTube Creator · 2M Subscribers", content="Working with Alex was effortless. Fast turnaround, clear communication, and the final cut doubled our average watch time.", rating=5, order=1)
+        ClientReview.objects.create(user=user, user_name="Jessica Lane", user_title="Marketing Lead", content="The most reliable editor we've worked with. Every project is delivered on time with a polished, cinematic finish. Highly recommended.", rating=5, order=2)
+        ClientReview.objects.create(user=user, user_name="Daniel Ross", user_title="Documentary Filmmaker", content="Alex brought a real sense of rhythm and emotion to our documentary. The grade alone made the project feel world-class.", rating=4, order=3)
+        ClientReview.objects.create(user=user, user_name="Lina Hassan", user_title="Social Media Manager", content="Our reels have never looked better. Alex understands short-form storytelling and made our content actually convert.", rating=5, order=4)
 
     return user
 
@@ -288,7 +288,7 @@ def preview_view(request, username):
     projects = Project.objects.filter(user=user).select_related('user', 'category')
     links = Link.objects.filter(user=user).select_related('user')
     creators = Creator.objects.filter(user=user).select_related('user')
-    reviews = Review.objects.filter(user=user, is_featured=True).order_by('order', '-created_at')
+    reviews = ClientReview.objects.filter(user=user, is_featured=True).order_by('order', '-created_at')
 
     # In theme previews, give reviews without a photo the pictures from the
     # "clients I worked with" (creators) section so avatars are never blank.

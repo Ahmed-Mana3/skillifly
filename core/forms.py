@@ -199,11 +199,23 @@ class LoginForm(AuthenticationForm):
 # =========================
 # Reviews (ModelForm)
 # =========================
-from core.models import Review
+from core.models import Review, ClientReview
 
 class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
+        fields = ['user_name', 'user_title', 'user_image', 'content', 'rating']
+        widgets = {
+            'user_name': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'Your Name'}),
+            'user_title': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. YouTuber'}),
+            'user_image': forms.ClearableFileInput(attrs={'class': 'sf-input', 'accept': 'image/*'}),
+            'content': forms.Textarea(attrs={'class': 'sf-input', 'placeholder': 'Your Review...', 'rows': 4}),
+            'rating': forms.HiddenInput(attrs={'class': 'sf-rating-value'}),
+        }
+
+class ClientReviewForm(forms.ModelForm):
+    class Meta:
+        model = ClientReview
         fields = ['user_name', 'user_title', 'user_image', 'content', 'rating']
         widgets = {
             'user_name': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'Your Name'}),

@@ -3,7 +3,7 @@ from core.models import (
     CustomUser, UserAccount, Category, Theme, Profile, PersonalInfo, 
     Experience, Education, Skill, Project, Link, 
     Subscription, UserPayment, DiscountCode, SiteSettings, 
-    Review, Showcase, SEOSettings, CustomDomain, ManualPayment
+    Review, ClientReview, Showcase, SEOSettings, CustomDomain, ManualPayment
 )
 
 # Register your models here.
@@ -45,6 +45,14 @@ class ReviewAdmin(admin.ModelAdmin):
     list_editable = ('order', 'is_featured')
     list_filter = ('is_featured', 'rating')
     search_fields = ('user_name', 'content')
+
+@admin.register(ClientReview)
+class ClientReviewAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user_name', 'rating', 'is_featured', 'order', 'created_at')
+    list_editable = ('order', 'is_featured')
+    list_filter = ('is_featured', 'rating')
+    search_fields = ('user__username', 'user_name', 'content')
+    raw_id_fields = ('user', 'reviewer')
 
 from django.utils.html import format_html
 
