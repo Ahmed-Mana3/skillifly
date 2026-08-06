@@ -254,9 +254,9 @@
         <div class="hero-avatar-wrapper" style="animation:fadeUp .8s .1s both">
             <div class="hero-avatar">
                 {% if personal_info.user.profile.picture %}
-                <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
+                <img src="{% url 'image_thumb' personal_info.user.profile.picture.name 400 %}" alt="{{ personal_info.full_name }}" width="400" height="400" decoding="async">
                 {% else %}
-                <img src="{% static 'img/myAvatar (1).png' %}" alt="Default Avatar">
+                <img src="{% static 'img/myAvatar (1).png' %}" alt="Default Avatar" width="180" height="180" decoding="async">
                 {% endif %}
             </div>
             <div class="hero-avatar-ring"></div>
@@ -364,7 +364,7 @@
                     <{% if creator.url %}a href="{{ creator.url }}" target="_blank" {% else %}div{% endif %}
                         class="creator-card">
                         {% if creator.image %}
-                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img">
+                        <img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" class="creator-img" loading="lazy" decoding="async" width="100" height="100">
                         {% else %}
                         <canvas class="creator-avatar-canvas creator-img" width="100" height="100"
                             data-name="{{ creator.name }}"></canvas>
@@ -398,7 +398,7 @@
                         {% endif %}
                         <div class="project-thumb">
                             {% if project.image %}
-                            <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                            <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                             {% else %}
                             <div class="project-thumb-placeholder">▶</div>
                             {% endif %}
@@ -531,8 +531,8 @@
                     </div>
                     <p class="review-content">"{{ review.content }}"</p>
                     <div class="review-author">
-                        {% if review.image_url or review.preview_image %}
-                        <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+                        {% if review.image_name %}
+                        <img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
                         {% else %}
                         <div class="review-avatar-placeholder">{{ review.initials }}</div>
                         {% endif %}

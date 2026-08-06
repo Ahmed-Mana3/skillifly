@@ -45,6 +45,7 @@ urlpatterns = [
     path('privacy/', views.privacy_view, name='privacy'),
     path('contact/', views.contact_view, name='contact'),
     path('sw.js', views.service_worker, name='service_worker'),
+    path('image-thumb/<path:name>/<int:size>/', views.image_thumb, name='image_thumb'),
     path('submit-review-exclusive/', views.submit_review_view, name='submit_review'),
     path('review/<str:username>/', views.client_review_view, name='client_review'),
     path('ar/review/<str:username>/', views.arabic_client_review_view, name='arabic_client_review'),

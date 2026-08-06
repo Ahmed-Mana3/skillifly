@@ -245,7 +245,7 @@
             <div class="avatar-ring-2"></div>
             <div class="hero-avatar">
                 {% if personal_info.user.profile.picture %}
-                <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
+                <img src="{% url 'image_thumb' personal_info.user.profile.picture.name 400 %}" alt="{{ personal_info.full_name }}" width="400" height="400" decoding="async">
                 {% else %}
                 <img src="{% static 'img/myAvatar (1).png' %}" alt="Default Avatar">
                 {% endif %}
@@ -288,7 +288,7 @@
                     {% for creator in creators %}
                     <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-bubble">
                         {% if creator.image %}
-                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar-img">
+                        <img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" class="creator-avatar-img" loading="lazy" decoding="async" width="100" height="100">
                         {% else %}
                         <canvas class="creator-avatar-canvas creator-avatar-img" width="88" height="88" data-name="{{ creator.name }}"></canvas>
                         {% endif %}
@@ -318,7 +318,7 @@
             {% endif %}
                 <div class="project-img">
                     {% if project.image %}
-                    <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                    <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <div style="width:100%;height:100%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Bebas Neue';font-size:3rem">▶</div>
                     {% endif %}
@@ -430,8 +430,8 @@
                 </div>
                 <p class="review-content">"{{ review.content }}"</p>
                 <div class="review-author">
-                    {% if review.image_url or review.preview_image %}
-                    <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+                    {% if review.image_name %}
+                    <img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
                     {% else %}
                     <div class="review-avatar-placeholder">{{ review.initials }}</div>
                     {% endif %}

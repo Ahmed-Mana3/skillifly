@@ -333,7 +333,7 @@
             <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/" class="related-card" data-project-id="{{ other.id }}">
                 <div class="related-thumb">
                     {% if other.image %}
-                    <img src="{{ other.image.url }}" alt="{{ other.title }}">
+                    <img src="{% url 'image_thumb' other.image.name 800 %}" alt="{{ other.title }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <img src="https://img.youtube.com/vi/{{ other.url|slice:'-11:' }}/mqdefault.jpg" alt="{{ other.title }}">
                     {% endif %}

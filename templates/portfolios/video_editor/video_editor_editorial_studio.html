@@ -1348,7 +1348,7 @@
             <div class="project-media">
               <div class="project-scanlines"></div>
               {% if project.image %}
-                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
               {% endif %}
               {% if project.video_type == "reel" %}
                 <div class="project-label">Reel</div>
@@ -1436,7 +1436,7 @@
                 {% for creator in creators %}
                 <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
                   {% if creator.image %}
-                  <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar" style="width:56px; height:56px; object-fit:cover; border-radius:inherit;">
+                  <img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" class="creator-avatar" loading="lazy" decoding="async" width="100" height="100" style="width:56px; height:56px; object-fit:cover; border-radius:inherit;">
                   {% else %}
                   <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
                   {% endif %}
@@ -1455,7 +1455,7 @@
                 {% for creator in creators %}
                 <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}div{% endif %} class="creator-pill">
                   {% if creator.image %}
-                  <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-avatar" style="width:56px; height:56px; object-fit:cover; border-radius:inherit;">
+                  <img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" class="creator-avatar" loading="lazy" decoding="async" width="100" height="100" style="width:56px; height:56px; object-fit:cover; border-radius:inherit;">
                   {% else %}
                   <canvas class="creator-avatar" width="240" height="240" data-creator="{{ creator.name|default:'creator' }}"></canvas>
                   {% endif %}
@@ -1491,8 +1491,8 @@
           </div>
           <p class="review-content">"{{ review.content }}"</p>
           <div class="review-author">
-            {% if review.image_url or review.preview_image %}
-            <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="88" height="88">
+            {% if review.image_name %}
+            <img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="88" height="88">
             {% else %}
             <div class="review-avatar-placeholder">{{ review.initials }}</div>
             {% endif %}

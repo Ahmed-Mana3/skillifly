@@ -331,6 +331,19 @@ class Review(models.Model):
         return None
 
     @property
+    def image_name(self):
+        if self.user_image:
+            return self.user_image.name
+        if self.reviewer_id:
+            profile = getattr(self.reviewer, 'profile', None)
+            if profile is not None and profile.picture:
+                return profile.picture.name
+        preview = getattr(self, 'preview_image', None)
+        if preview:
+            return preview
+        return None
+
+    @property
     def initials(self):
         if not self.user_name:
             return "SF"
@@ -366,6 +379,19 @@ class ClientReview(models.Model):
             profile = getattr(self.reviewer, 'profile', None)
             if profile is not None and profile.picture and hasattr(profile.picture, 'url'):
                 return profile.picture.url
+        return None
+
+    @property
+    def image_name(self):
+        if self.user_image:
+            return self.user_image.name
+        if self.reviewer_id:
+            profile = getattr(self.reviewer, 'profile', None)
+            if profile is not None and profile.picture:
+                return profile.picture.name
+        preview = getattr(self, 'preview_image', None)
+        if preview:
+            return preview
         return None
 
     @property

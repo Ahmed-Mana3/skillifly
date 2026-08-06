@@ -322,7 +322,7 @@
         <div class="card p-6 group" data-project-id="{{ project.id }}">
           {% if project.image %}
           <div class="aspect-video rounded-xl overflow-hidden mb-4">
-            <img src="{{ project.image.url }}" alt="{{ project.title }}"
+            <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
           </div>
           {% endif %}

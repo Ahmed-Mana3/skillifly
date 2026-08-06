@@ -1322,7 +1322,7 @@
         <div class="project-thumbnail {% if project.image %}has-image{% else %}no-image{% endif %}"
           style="{% if not project.image %}background: linear-gradient(135deg, {% cycle '#667eea, #764ba2' '#f093fb, #f5576c' '#4facfe, #00f2fe' '#43e97b, #38f9d7' '#fa709a, #fee140' '#30cfd0, #330867' %}){% endif %}">
           {% if project.image %}
-          <img src="{{ project.image.url }}" alt="{{ project.title }}"
+          <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}"
             loading="{% if forloop.counter <= 4 %}eager{% else %}lazy{% endif %}"
             fetchpriority="{% if forloop.counter <= 4 %}high{% else %}low{% endif %}" decoding="async" width="640"
             height="360">
@@ -1416,8 +1416,8 @@
         </div>
         <p class="review-content">"{{ review.content }}"</p>
         <div class="review-author">
-          {% if review.image_url or review.preview_image %}
-          <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+          {% if review.image_name %}
+          <img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
           {% else %}
           <div class="review-avatar-placeholder">{{ review.initials }}</div>
           {% endif %}
@@ -1448,7 +1448,7 @@
         {% for creator in creators %}
         <{% if creator.url %}a href="{{ creator.url }}" target="_blank" {% else %}div{% endif %} class="creator-pill">
           {% if creator.image %}
-          <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img" loading="lazy"
+          <img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" class="creator-img" loading="lazy"
             decoding="async" width="80" height="80">
           {% else %}
           <canvas class="creator-avatar-canvas creator-img" width="80" height="80"

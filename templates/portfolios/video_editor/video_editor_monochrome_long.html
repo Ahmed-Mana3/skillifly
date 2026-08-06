@@ -249,7 +249,7 @@
             <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card">
                 <div class="thumbnail-wrapper">
                     {% if project.image %}
-                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <div style="width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Bebas Neue';font-size:3rem">▶</div>
                     {% endif %}

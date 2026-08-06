@@ -293,7 +293,7 @@ def preview_view(request, username):
     # In theme previews, give reviews without a photo the pictures from the
     # "clients I worked with" (creators) section so avatars are never blank.
     if user.username == 'alex_mercer':
-        creator_images = [c.image.url for c in creators if c.image]
+        creator_images = [c.image.name for c in creators if c.image]
         if creator_images:
             reviews_list = list(reviews)
             for idx, review in enumerate(reviews_list):

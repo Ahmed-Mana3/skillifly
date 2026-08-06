@@ -212,7 +212,7 @@
             <a href="{% if project.video_type == 'reel' %}/{{ username }}/reels/{% else %}/{{ username }}/long-videos/{{ project.slug }}/{% endif %}" class="project-card">
                 <div class="thumbnail-wrapper">
                     {% if project.image %}
-                        <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                        <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                         <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2071&auto=format&fit=crop" alt="Placeholder" id="thumb-{{ project.id }}">
                         <script>

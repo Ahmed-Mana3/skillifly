@@ -372,7 +372,7 @@
             <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/" class="video-card" data-project-id="{{ project.id }}">
                 <div class="thumbnail-wrapper" data-url="{{ project.url }}">
                     {% if project.image %}
-                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                    <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <!-- Fallback is handled by JS -->
                     <img class="yt-thumb" src="" alt="{{ project.title }}">

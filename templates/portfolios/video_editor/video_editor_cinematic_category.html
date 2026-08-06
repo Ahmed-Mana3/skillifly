@@ -389,7 +389,7 @@
         <a href="{% if project.video_type == 'long' %}{% url 'portfolio_video_detail' username=portfolio_user.username slug=project.slug %}?category_id={{ category.id }}{% else %}{% url 'portfolio_reels' username=portfolio_user.username %}?category_id={{ category.id }}{% endif %}" class="project-card">
             <div class="project-thumb">
                 {% if project.image %}
-                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                 {% else %}
                 <div style="width:100%; height:100%; background:#1a1533; display:flex; align-items:center; justify-content:center;">
                     <svg width="32" height="32" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>

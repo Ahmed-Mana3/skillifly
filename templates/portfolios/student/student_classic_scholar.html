@@ -180,7 +180,7 @@
                 <div class="card p-6 flex flex-col h-full" data-project-id="{{ project.id }}">
                     {% if project.image %}
                     <div class="aspect-video w-full overflow-hidden rounded mb-4">
-                        <img src="{{ project.image.url }}" alt="{{ project.title }}"
+                        <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450"
                             class="object-cover w-full h-full" />
                     </div>
                     {% endif %}

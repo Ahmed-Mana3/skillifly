@@ -250,7 +250,7 @@
         <a href="{% if project.video_type == 'long' %}{% url 'portfolio_video_detail' username=portfolio_user.username slug=project.slug %}?category_id={{ category.id }}{% else %}{% url 'portfolio_reels' username=portfolio_user.username %}?category_id={{ category.id }}{% endif %}" class="project-card">
             <div class="project-thumb">
                 {% if project.image %}
-                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
                 {% else %}
                 <div style="width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Bebas Neue'; font-size:3rem">▶</div>
                 {% endif %}

@@ -197,7 +197,7 @@
             <a href="/{{ username }}/long-videos/{{ other.slug }}/" class="related-card">
                 <div class="related-thumb">
                     {% if other.image %}
-                    <img src="{{ other.image.url }}" alt="{{ other.title }}">
+                    <img src="{% url 'image_thumb' other.image.name 800 %}" alt="{{ other.title }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <div style="width:100%; height:100%; background:var(--ink); color:var(--paper); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">▶</div>
                     {% endif %}

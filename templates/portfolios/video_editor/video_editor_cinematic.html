@@ -849,7 +849,7 @@
     <section class="hero">
         <div class="hero-avatar reveal">
             {% if personal_info.user.profile.picture %}
-            <img src="{{ personal_info.user.profile.picture.url }}" alt="{{ personal_info.full_name }}">
+            <img src="{% url 'image_thumb' personal_info.user.profile.picture.name 400 %}" alt="{{ personal_info.full_name }}" width="400" height="400" decoding="async">
             {% else %}
             <img src="{% static 'img/myAvatar (1).png' %}" alt="Avatar">
             {% endif %}
@@ -904,7 +904,7 @@
             <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=category.id %}" class="category-card reveal">
                 <div class="category-img-box">
                     {% if category.thumbnail %}
-                    <img src="{{ category.thumbnail.url }}" alt="{{ category.name }}" loading="lazy">
+                    <img src="{% url 'image_thumb' category.thumbnail.name 800 %}" alt="{{ category.name }}" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <div style="width:100%; height:100%; background:#1a1533; display:flex; align-items:center; justify-content:center;">
                         <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
@@ -1032,7 +1032,7 @@
                     {% for creator in creators %}
                     <{% if creator.url %}a href="{{ creator.url }}" target="_blank" rel="noopener"{% else %}div{% endif %} class="creator-card">
                         {% if creator.image %}
-                        <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img" loading="lazy">
+                        <img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" class="creator-img" loading="lazy" decoding="async" width="100" height="100">
                         {% else %}
                         <canvas class="creator-avatar-canvas creator-img" width="88" height="88" data-name="{{ creator.name }}"></canvas>
                         {% endif %}

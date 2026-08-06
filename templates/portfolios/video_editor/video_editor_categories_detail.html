@@ -301,7 +301,7 @@
                 <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/{% if request.GET.category_id %}?category_id={{ request.GET.category_id }}{% endif %}" class="related-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}0ms">
                     <div class="related-thumb">
                         {% if other.image %}
-                            <img src="{{ other.image.url }}" alt="{{ other.title }}">
+                            <img src="{% url 'image_thumb' other.image.name 800 %}" alt="{{ other.title }}" loading="lazy" decoding="async" width="800" height="450">
                         {% else %}
                             <div class="related-thumb-placeholder">▶</div>
                         {% endif %}

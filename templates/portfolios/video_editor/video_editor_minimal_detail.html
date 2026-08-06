@@ -241,7 +241,7 @@
                 <a href="{% if video.video_type == 'reel' %}/{{ username }}/reels/{% else %}/{{ username }}/long-videos/{{ video.slug }}/{% endif %}" class="other-card">
                     <div class="other-thumb">
                         {% if video.image %}
-                        <img src="{{ video.image.url }}" alt="{{ video.title }}">
+                        <img src="{% url 'image_thumb' video.image.name 800 %}" alt="{{ video.title }}" loading="lazy" decoding="async" width="800" height="450">
                         {% else %}
                         <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2071&auto=format&fit=crop" id="other-{{ video.id }}">
                         <script>

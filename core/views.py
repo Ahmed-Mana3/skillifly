@@ -2074,3 +2074,68 @@ def portfolio_category_detail(request, username, category_id):
         'projects': projects,
     }
     return render(request, template, context)
+
+
+def image_thumb(request, name, size):
+    """
+    Serve a downscaled, cached thumbnail of a media file.
+
+    Portfolios link straight to full-resolution uploads (profile pics,
+    project thumbnails, creator/review avatars) which are far bigger than the
+    ~50-800px they're actually rendered at, so pages load slowly. This view
+    resizes the original once with Pillow, caches the result under
+    MEDIA_ROOT/_thumbs/<size>/..., and serves it with long-lived cache
+    headers. On any failure it falls back to the original file.
+    """
+    from django.http import FileResponse, Http404
+    from django.core.files.storage import default_storage
+    from PIL import Image
+    import io
+
+    try:
+        size = int(size)
+    except (TypeError, ValueError):
+        raise Http404("Invalid size")
+    if size < 16 or size > 2000:
+        raise Http404("Size out of range")
+
+    # Normalise + validate the storage path (no traversal, no absolute paths).
+    rel = (name or "").replace("\\", "/").strip("/")
+    parts = rel.split("/")
+    if not parts or any(p in ("", ".", "..") for p in parts):
+        raise Http404("Bad path")
+    ext = os.path.splitext(rel)[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
+        raise Http404("Bad file type")
+
+    thumb_name = f"_thumbs/{size}/{rel}"
+
+    if default_storage.exists(thumb_name):
+        resp = FileResponse(default_storage.open(thumb_name, "rb"))
+        resp["Cache-Control"] = "public, max-age=31536000, immutable"
+        return resp
+
+    if not default_storage.exists(rel):
+        raise Http404("File not found")
+
+    try:
+        with default_storage.open(rel, "rb") as src:
+            img = Image.open(src)
+            img.thumbnail((size, size), Image.LANCZOS)
+            buf = io.BytesIO()
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                if img.mode != "RGBA":
+                    img = img.convert("RGBA")
+                img.save(buf, "PNG", optimize=True)
+            else:
+                img = img.convert("RGB")
+                img.save(buf, "JPEG", quality=82, optimize=True, progressive=True)
+            buf.seek(0)
+            default_storage.save(thumb_name, buf)
+        resp = FileResponse(default_storage.open(thumb_name, "rb"))
+        resp["Cache-Control"] = "public, max-age=31536000, immutable"
+        return resp
+    except Exception:
+        logger.exception("image_thumb failed for %s (size=%s), serving original", rel, size)
+        from django.http import HttpResponseRedirect
+        return HttpResponseRedirect(settings.MEDIA_URL + rel)
