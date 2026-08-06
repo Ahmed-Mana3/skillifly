@@ -346,9 +346,10 @@
     /* Portfolio Section */
     .portfolio-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2rem;
       margin-top: 2rem;
+      align-items: stretch;
     }
 
     .project-card {
@@ -359,6 +360,9 @@
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
       position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     .project-card:hover {
@@ -439,6 +443,10 @@
 
     .project-info {
       padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
     .project-category {
@@ -453,16 +461,24 @@
     .project-title {
       font-size: 1.4rem;
       font-weight: 700;
-      margin-bottom: 0.75rem;
       color: var(--text-primary);
       font-family: 'Space Grotesk', sans-serif;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .project-description {
       font-size: 0.95rem;
       color: var(--text-secondary);
-      margin-bottom: 1.5rem;
       line-height: 1.7;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .project-link {
@@ -474,6 +490,7 @@
       font-size: 0.9rem;
       font-weight: 600;
       transition: all 0.3s ease;
+      margin-top: auto;
     }
 
     .project-link:hover {
@@ -726,6 +743,101 @@
       margin-top: 0.5rem;
     }
 
+    /* Client Reviews Section */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 2rem;
+      align-items: stretch;
+    }
+
+    .review-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: 100%;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .review-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-6px);
+      box-shadow: 0 15px 40px rgba(0, 217, 255, 0.15);
+    }
+
+    .review-stars {
+      display: flex;
+      gap: 4px;
+    }
+
+    .review-stars svg {
+      width: 16px;
+      height: 16px;
+      fill: #ffd700;
+      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4));
+    }
+
+    .review-stars svg.empty {
+      fill: rgba(255, 255, 255, 0.15);
+      filter: none;
+    }
+
+    .review-content {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      flex: 1;
+    }
+
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: auto;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .review-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      flex-shrink: 0;
+    }
+
+    .review-avatar-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gradient-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .review-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .review-title {
+      font-size: 0.85rem;
+      color: var(--text-tertiary);
+    }
+
     /* Contact CTA */
     .cta-final {
       background: linear-gradient(135deg, #00d9ff 0%, #8f00ff 100%);
@@ -951,6 +1063,10 @@
 
     /* Responsive */
     @media (max-width: 1024px) {
+      .reviews-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .timeline::before {
         left: 15px;
       }
@@ -1057,6 +1173,11 @@
         gap: 1.5rem;
       }
 
+      .reviews-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
       .project-thumbnail {
         height: 200px;
       }
@@ -1156,6 +1277,7 @@
         <li><a href="/{{ username }}/long-videos/">Work</a></li>
         {% if skills %}<li><a href="#skills">Skills</a></li>{% endif %}
         {% if experiences %}<li><a href="#experience">Experience</a></li>{% endif %}
+        {% if reviews %}<li><a href="#reviews">Reviews</a></li>{% endif %}
         <li><a href="#contact">Contact</a></li>
       </ul>
     </div>
@@ -1177,7 +1299,7 @@
         <a href="mailto:{{ personal_info.email }}" class="btn btn-primary">Get In Touch</a>
         {% endif %}
         {% if projects %}
-        <a href="/{{ username }}/long-videos/" class="btn btn-secondary">View My Work</a>
+        <a href="#portfolio" class="btn btn-secondary">View My Work</a>
         {% endif %}
       </div>
     </div>
@@ -1200,7 +1322,10 @@
         <div class="project-thumbnail {% if project.image %}has-image{% else %}no-image{% endif %}"
           style="{% if not project.image %}background: linear-gradient(135deg, {% cycle '#667eea, #764ba2' '#f093fb, #f5576c' '#4facfe, #00f2fe' '#43e97b, #38f9d7' '#fa709a, #fee140' '#30cfd0, #330867' %}){% endif %}">
           {% if project.image %}
-          <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+          <img src="{{ project.image.url }}" alt="{{ project.title }}"
+            loading="{% if forloop.counter <= 4 %}eager{% else %}lazy{% endif %}"
+            fetchpriority="{% if forloop.counter <= 4 %}high{% else %}low{% endif %}" decoding="async" width="640"
+            height="360">
           {% endif %}
           {% if project.url %}
           <div class="play-badge">▶</div>
@@ -1273,6 +1398,42 @@
   </section>
   {% endif %}
 
+  <!-- Client Reviews Section -->
+  {% if reviews %}
+  <section id="reviews">
+    <h2 class="section-title">Client Reviews</h2>
+    <p class="section-subtitle">What clients say about working with me.</p>
+
+    <div class="reviews-grid">
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+          {% for i in "12345" %}
+          <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          {% endfor %}
+        </div>
+        <p class="review-content">"{{ review.content }}"</p>
+        <div class="review-author">
+          {% if review.image_url or review.preview_image %}
+          <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+          {% else %}
+          <div class="review-avatar-placeholder">{{ review.initials }}</div>
+          {% endif %}
+          <div>
+            <div class="review-name">{{ review.user_name }}</div>
+            {% if review.user_title %}
+            <div class="review-title">{{ review.user_title }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {% if creators %}
   <section id="creators" style="padding-bottom: 0;">
     <h2 class="section-title">CREATORS</h2>
@@ -1287,7 +1448,8 @@
         {% for creator in creators %}
         <{% if creator.url %}a href="{{ creator.url }}" target="_blank" {% else %}div{% endif %} class="creator-pill">
           {% if creator.image %}
-          <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img">
+          <img src="{{ creator.image.url }}" alt="{{ creator.name }}" class="creator-img" loading="lazy"
+            decoding="async" width="80" height="80">
           {% else %}
           <canvas class="creator-avatar-canvas creator-img" width="80" height="80"
             data-name="{{ creator.name }}"></canvas>
@@ -1363,7 +1525,8 @@
     <div class="footer-content">
       <a href="/" class="skillifly-badge" target="_blank" rel="noopener">
         <span class="powered-text">Powered by</span>
-        <img src="{% static 'img/bird.png' %}" alt="Skillifly Logo">
+        <img src="{% static 'img/bird.png' %}" alt="Skillifly Logo" loading="lazy" decoding="async" width="28"
+          height="28">
         <span class="brand-name">Skillifly</span>
       </a>
       <div class="flex flex-col items-center md:items-start gap-2">
@@ -1421,7 +1584,7 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-    document.querySelectorAll('.project-card, .skill-pill, .timeline-item, .edu-card, .connect-chip').forEach(el => {
+    document.querySelectorAll('.project-card, .skill-pill, .timeline-item, .edu-card, .connect-chip, .review-card').forEach(el => {
       el.style.opacity = '0';
       observer.observe(el);
     });

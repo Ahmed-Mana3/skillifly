@@ -1,12 +1,12 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Share Your Story — Skillifly{% endblock %}
+{% block title %}Leave a Review — Skillifly{% endblock %}
 
 {% block content %}
 
 <section class="min-h-screen px-6 py-24 relative overflow-hidden">
-  
+
   <!-- Animated background blobs -->
   <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-[100px]"
     style="background: radial-gradient(circle, #3B82F6, #8B5CF6);"></div>
@@ -14,20 +14,43 @@
     style="background: radial-gradient(circle, #D946EF, #F43F5E);"></div>
 
   <div class="max-w-2xl mx-auto relative z-10">
-    
+
+    {% if submitted %}
+    <!-- Thank you -->
+    <div class="text-center animate-fadeInUp">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 mb-6">
+        <svg class="w-9 h-9 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-display font-bold mb-4 text-black" style="font-family: 'Syne', sans-serif;">
+        Thank <span class="gradient-text">You!</span>
+      </h1>
+      <p class="text-slate-500 text-lg font-medium max-w-md mx-auto">
+        Your review for <span class="font-bold text-black">{{ owner_name }}</span> has been submitted successfully and
+        is now awaiting moderation.
+      </p>
+      <div class="mt-10">
+        <a href="{{ MAIN_SITE_URL }}/{{ owner.username }}/"
+          class="btn-primary px-8 py-3.5 rounded-xl text-sm font-bold">
+          View {{ owner_name }}'s portfolio
+        </a>
+      </div>
+    </div>
+    {% else %}
     <!-- Header -->
     <div class="text-center mb-12 animate-fadeInUp">
       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/20 text-sm mb-6">
-        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
-        <span class="text-slate-600 font-bold">Help us grow</span>
+        <span class="text-slate-600 font-bold">Client review</span>
       </div>
       <h1 class="text-4xl md:text-5xl font-display font-bold mb-4 text-black" style="font-family: 'Syne', sans-serif;">
-        Share Your <span class="gradient-text">Experience</span>
+        Rate Your Experience with <span class="gradient-text">{{ owner_name }}</span>
       </h1>
       <p class="text-slate-500 text-lg font-medium">
-        Your feedback helps us build a better platform for everyone.
+        Your feedback helps {{ owner_name }} grow and improves the work they deliver.
       </p>
     </div>
 
@@ -35,17 +58,17 @@
     <div class="gradient-border rounded-3xl p-8 sm:p-12 bg-white shadow-2xl animate-fadeInUp" style="animation-delay: 0.1s">
       <form method="POST" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Name -->
           <div class="space-y-2">
-            <label class="text-sm font-bold text-slate-700 ml-1">Full Name</label>
+            <label class="text-sm font-bold text-slate-700 ml-1">Your Name</label>
             {{ form.user_name }}
           </div>
-          
+
           <!-- Title -->
           <div class="space-y-2">
-            <label class="text-sm font-bold text-slate-700 ml-1">Title / Profession</label>
+            <label class="text-sm font-bold text-slate-700 ml-1">Your Title / Role</label>
             {{ form.user_title }}
           </div>
         </div>
@@ -91,16 +114,7 @@
         </div>
       </form>
     </div>
-
-    <!-- Back to Dashboard -->
-    <div class="text-center mt-12 animate-fadeInUp" style="animation-delay: 0.2s">
-      <a href="{% url 'dashboard' %}" class="text-slate-500 hover:text-blue-600 transition-colors text-sm font-bold flex items-center justify-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to Dashboard
-      </a>
-    </div>
+    {% endif %}
 
   </div>
 </section>

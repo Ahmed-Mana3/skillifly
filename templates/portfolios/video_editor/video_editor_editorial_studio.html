@@ -885,6 +885,95 @@
     .creator-proof strong { display: block; font-family: var(--display); letter-spacing: -0.02em; }
     .creator-proof span { display: block; margin-top: 10px; font-weight: 800; color: rgba(16, 17, 20, 0.58); }
 
+    /* ─── Reviews ─── */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .review-card {
+      border-radius: 18px;
+      border: 1px solid rgba(16, 17, 20, 0.10);
+      background: rgba(255, 250, 240, 0.62);
+      box-shadow: 0 18px 55px rgba(32, 24, 12, 0.06);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    }
+    .review-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--ember);
+      box-shadow: var(--shadow);
+    }
+    .review-stars {
+      display: flex;
+      gap: 4px;
+    }
+    .review-stars svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--gold);
+    }
+    .review-stars svg.empty {
+      fill: rgba(16, 17, 20, 0.10);
+    }
+    .review-content {
+      margin: 0;
+      color: rgba(16, 17, 20, 0.86);
+      line-height: 1.7;
+      font-size: 0.95rem;
+      flex: 1;
+    }
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px dashed rgba(16, 17, 20, 0.14);
+      margin-top: auto;
+    }
+    .review-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 2px solid rgba(255, 250, 240, 0.9);
+      box-shadow: 0 8px 24px rgba(32, 24, 12, 0.10);
+      background: var(--paper-strong);
+      flex: none;
+    }
+    .review-avatar-placeholder {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--ember), var(--gold));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: 15px;
+      flex: none;
+    }
+    .review-name {
+      display: block;
+      font-family: var(--display);
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+    .review-title {
+      display: block;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(16, 17, 20, 0.56);
+      margin-top: 3px;
+    }
+
     .contact-panel {
       border-radius: 22px;
       border: 1px solid rgba(16, 17, 20, 0.12);
@@ -955,6 +1044,7 @@
       .split-grid { grid-template-columns: 1fr; }
       .education-grid { grid-template-columns: 1fr; }
       .creator-proof { grid-template-columns: 1fr; }
+      .reviews-grid { grid-template-columns: 1fr; }
       .contact-panel { grid-template-columns: 1fr; }
       .nav, .nav-cta { display: none; }
       .menu-button { display: inline-flex; margin-left: auto; }
@@ -1168,6 +1258,7 @@
         {% if experiences %}<a href="#experience">Experience</a>{% endif %}
         {% if education %}<a href="#education">Education</a>{% endif %}
         {% if creators %}<a href="#creators">Creators</a>{% endif %}
+        {% if reviews %}<a href="#reviews">Reviews</a>{% endif %}
         <a href="#contact">Contact</a>
         <a class="nav-cta" href="#contact">Hire Me</a>
       </nav>
@@ -1379,6 +1470,44 @@
 
       </section>
       {% endif %}
+
+    {% if reviews %}
+    <section class="section reviews-section" id="reviews" aria-labelledby="reviews-title">
+      <div class="section-heading">
+        <div>
+          <div class="section-kicker">Testimonials</div>
+          <h2 id="reviews-title">Clients who trusted the cut.</h2>
+        </div>
+      </div>
+      <div class="reviews-grid">
+        {% for review in reviews %}
+        <article class="review-card">
+          <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+            {% for i in "12345" %}
+            <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            {% endfor %}
+          </div>
+          <p class="review-content">"{{ review.content }}"</p>
+          <div class="review-author">
+            {% if review.image_url or review.preview_image %}
+            <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="88" height="88">
+            {% else %}
+            <div class="review-avatar-placeholder">{{ review.initials }}</div>
+            {% endif %}
+            <div>
+              <span class="review-name">{{ review.user_name }}</span>
+              {% if review.user_title %}
+              <span class="review-title">{{ review.user_title }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
     <section class="contact-section" id="contact">
       <div class="contact-inner">

@@ -24,6 +24,7 @@ from core.models import (
     UserPayment,
     Showcase,
     Theme,
+    Review,
 )
 
 
@@ -80,6 +81,13 @@ def get_or_create_mock_user():
         Creator.objects.create(user=user, name="Ali Abdaal", url="https://youtube.com/@aliabdaal", image="creators/creator_aliabdaal.png")
         Creator.objects.create(user=user, name="MKBHD", url="https://youtube.com/@mkbhd", image="creators/creator_mkbhd.png")
         Creator.objects.create(user=user, name="Peter McKinnon", url="https://youtube.com/@petermckinnon", image="creators/creator_petermckinnon.png")
+
+    if not Review.objects.filter(user=user).exists():
+        Review.objects.create(user=user, user_name="Sarah Mitchell", user_title="Content Strategist", content="Alex transformed our raw footage into a stunning brand story. The pacing, color grading, and attention to detail exceeded every expectation.", rating=5, order=0)
+        Review.objects.create(user=user, user_name="Omar Khaled", user_title="YouTube Creator · 2M Subscribers", content="Working with Alex was effortless. Fast turnaround, clear communication, and the final cut doubled our average watch time.", rating=5, order=1)
+        Review.objects.create(user=user, user_name="Jessica Lane", user_title="Marketing Lead", content="The most reliable editor we've worked with. Every project is delivered on time with a polished, cinematic finish. Highly recommended.", rating=5, order=2)
+        Review.objects.create(user=user, user_name="Daniel Ross", user_title="Documentary Filmmaker", content="Alex brought a real sense of rhythm and emotion to our documentary. The grade alone made the project feel world-class.", rating=4, order=3)
+        Review.objects.create(user=user, user_name="Lina Hassan", user_title="Social Media Manager", content="Our reels have never looked better. Alex understands short-form storytelling and made our content actually convert.", rating=5, order=4)
 
     return user
 
@@ -150,11 +158,28 @@ def _inject_preview_bar(request, response, profile, user):
         from django.middleware.csrf import get_token
         csrf_token = get_token(request)
         theme_name = profile.theme.name
+        lang_pref = request.COOKIES.get('skillifly_lang')
+        referrer = request.META.get('HTTP_REFERER', '')
+        is_arabic = (
+            request.GET.get('lang') == 'ar'
+            or lang_pref == 'ar'
+            or '/ar/themes/' in referrer
+        )
+
+        themes_url = '/ar/themes/' if is_arabic else '/themes/'
+        preview_mode_label = 'وضع المعاينة' if is_arabic else 'Preview Mode'
+        theme_label = f"تصميم {theme_name}" if is_arabic else f"{theme_name} Theme"
+        back_label = 'العودة للتصاميم' if is_arabic else 'Back to Themes'
+        apply_label = 'تطبيق التصميم' if is_arabic else 'Apply Theme'
+        text_dir = 'rtl' if is_arabic else 'ltr'
+        font_stack = "'Inter', system-ui, sans-serif"
+        arabic_button_font = "'Cairo', 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif"
+        button_font_stack = arabic_button_font if is_arabic else font_stack
         
         bar_html = f"""
         <style>
             .preview-bar-container {{
-                position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: white; padding: 16px 24px; z-index: 999999; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.3);
+                position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: white; padding: 16px 24px; z-index: 999999; display: flex; justify-content: space-between; align-items: center; font-family: {font_stack}; box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.3);
             }}
             .preview-bar-left {{
                 display: flex; align-items: center; gap: 16px;
@@ -168,8 +193,12 @@ def _inject_preview_bar(request, response, profile, user):
             .preview-btn-back:hover {{ background: #1e293b; }}
             .preview-btn-apply {{
                 background: #3b82f6; border: none; color: white; padding: 10px 24px; border-radius: 99px; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5); transition: all 0.2s; width: 100%;
+                font-family: {button_font_stack};
             }}
             .preview-btn-apply:hover {{ transform: scale(1.05); }}
+            .preview-btn-back {{
+                font-family: {button_font_stack};
+            }}
             
             @media (max-width: 640px) {{
                 .preview-bar-container {{
@@ -182,22 +211,22 @@ def _inject_preview_bar(request, response, profile, user):
                 .preview-btn-apply {{ padding: 10px 12px; font-size: 13px; }}
             }}
         </style>
-        <div class="preview-bar-container">
+        <div class="preview-bar-container" dir="{text_dir}">
             <div class="preview-bar-left">
                 <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <svg style="width: 20px; height: 20px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                 </div>
                 <div>
-                    <p style="margin: 0; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Preview Mode</p>
-                    <p style="margin: 0; font-size: 16px; font-weight: 700;">{theme_name} Theme</p>
+                    <p style="margin: 0; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{preview_mode_label}</p>
+                    <p style="margin: 0; font-size: 16px; font-weight: 700;">{theme_label}</p>
                 </div>
             </div>
             <div class="preview-bar-right">
-                <a href="/themes/" class="preview-btn-back">Back to Themes</a>
-                <form method="POST" action="/themes/" style="margin: 0; display: flex; flex: 1;">
+                <a href="{themes_url}" class="preview-btn-back">{back_label}</a>
+                <form method="POST" action="{themes_url}" style="margin: 0; display: flex; flex: 1;">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
                     <input type="hidden" name="theme" value="{profile.theme.id}">
-                    <button type="submit" class="preview-btn-apply">Apply Theme</button>
+                    <button type="submit" class="preview-btn-apply">{apply_label}</button>
                 </form>
             </div>
         </div>
@@ -259,6 +288,18 @@ def preview_view(request, username):
     projects = Project.objects.filter(user=user).select_related('user', 'category')
     links = Link.objects.filter(user=user).select_related('user')
     creators = Creator.objects.filter(user=user).select_related('user')
+    reviews = Review.objects.filter(user=user, is_featured=True).order_by('order', '-created_at')
+
+    # In theme previews, give reviews without a photo the pictures from the
+    # "clients I worked with" (creators) section so avatars are never blank.
+    if user.username == 'alex_mercer':
+        creator_images = [c.image.url for c in creators if c.image]
+        if creator_images:
+            reviews_list = list(reviews)
+            for idx, review in enumerate(reviews_list):
+                if not review.image_url:
+                    review.preview_image = creator_images[idx % len(creator_images)]
+            reviews = reviews_list
 
     # Prefetch categories with annotated project counts in a SINGLE query — eliminates N+1
     project_categories = list(
@@ -284,6 +325,7 @@ def preview_view(request, username):
         'projects': projects,
         'links': links,
         'creators': creators,
+        'reviews': reviews,
         'username': clean_username,
         'project_count': project_count,
         'long_count': long_count,

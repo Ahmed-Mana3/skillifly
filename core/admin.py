@@ -1,6 +1,6 @@
 from django.contrib import admin
 from core.models import (
-    CustomUser, Category, Theme, Profile, PersonalInfo, 
+    CustomUser, UserAccount, Category, Theme, Profile, PersonalInfo, 
     Experience, Education, Skill, Project, Link, 
     Subscription, UserPayment, DiscountCode, SiteSettings, 
     Review, Showcase, SEOSettings, CustomDomain, ManualPayment
@@ -8,6 +8,7 @@ from core.models import (
 
 # Register your models here.
 admin.site.register(CustomUser)
+admin.site.register(UserAccount)
 admin.site.register(Category)
 admin.site.register(Theme)
 admin.site.register(Profile)

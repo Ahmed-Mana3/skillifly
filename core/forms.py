@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain, DiscountCode, SiteSettings
 from django import forms
 from django.forms import formset_factory, BaseFormSet
@@ -83,6 +85,60 @@ class RegisterForm(UserCreationForm):
         model = User
         fields = ["first_name", "last_name", "username", "email"]
 
+class ClientRegisterForm(forms.Form):
+    """Minimal signup form for client accounts (no username, no OTP)."""
+    name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "id": "client_name",
+                "placeholder": "Your name",
+                "class": "form-control",
+                "autocomplete": "name",
+            }
+        ),
+        label="Name",
+    )
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(
+            attrs={
+                "id": "client_email",
+                "placeholder": "you@example.com",
+                "class": "form-control",
+                "autocomplete": "email",
+            }
+        )
+    )
+
+    password = forms.CharField(
+        required=True,
+        label="Password",
+        widget=forms.PasswordInput(
+            attrs={
+                "id": "client_password",
+                "placeholder": "Create a password",
+                "class": "form-control",
+                "autocomplete": "new-password",
+            }
+        )
+    )
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if not email:
+            raise ValidationError("This field is required.")
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValidationError("An account with this email already exists. Please sign in instead.")
+        return email
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if password:
+            validate_password(password, user=None)
+        return password
+
 class LoginForm(AuthenticationForm):
     username = forms.CharField(
         label="Email or Username",
@@ -151,13 +207,19 @@ class ReviewForm(forms.ModelForm):
         fields = ['user_name', 'user_title', 'user_image', 'content', 'rating']
         widgets = {
             'user_name': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'Your Name'}),
-            'user_title': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. Video Editor'}),
+            'user_title': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. YouTuber'}),
             'user_image': forms.ClearableFileInput(attrs={'class': 'sf-input', 'accept': 'image/*'}),
             'content': forms.Textarea(attrs={'class': 'sf-input', 'placeholder': 'Your Review...', 'rows': 4}),
-            'rating': forms.NumberInput(attrs={'class': 'sf-input', 'min': 1, 'max': 5}),
+            'rating': forms.HiddenInput(attrs={'class': 'sf-rating-value'}),
         }
 
 from core.models import SEOSettings
+
+class ReviewAvatarForm(forms.Form):
+    """Lets a portfolio owner upload/replace the avatar shown for a client review."""
+    user_image = forms.ImageField(
+        widget=forms.FileInput(attrs={'accept': 'image/*'}),
+    )
 
 class SEOSettingsForm(forms.ModelForm):
     class Meta:

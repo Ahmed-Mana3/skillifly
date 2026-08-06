@@ -72,7 +72,11 @@
       <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
       {% if google_oauth_button_visible %}
       <div class="mb-6">
+        {% if next %}
+        <form action="{% provider_login_url 'google' next=next %}" method="post">
+        {% else %}
         <form action="{% provider_login_url 'google' %}" method="post">
+        {% endif %}
           {% csrf_token %}
           <button type="submit"
             class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">

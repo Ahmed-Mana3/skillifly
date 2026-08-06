@@ -11,6 +11,29 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+# 1b. User Account Type (kept separate from CustomUser so auth data stays clean)
+class UserAccount(models.Model):
+    ACCOUNT_TYPE_CHOICES = [
+        ('editor', 'Editor'),
+        ('client', 'Client'),
+    ]
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='user_account')
+    account_type = models.CharField(
+        max_length=10,
+        choices=ACCOUNT_TYPE_CHOICES,
+        default='editor',
+        help_text="editor = builds a portfolio, client = hires editors",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "User Account"
+        verbose_name_plural = "User Accounts"
+
+    def __str__(self):
+        return f"{self.user.username} ({self.account_type})"
+
 class EmailOTP(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_otp')
     otp = models.CharField(max_length=6)
@@ -280,6 +303,8 @@ class SiteSettings(models.Model):
 
 
 class Review(models.Model):
+    user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.CASCADE, related_name="reviews", help_text="The portfolio owner this review is about (null = platform review)")
+    reviewer = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL, related_name="reviews_given", help_text="The client who wrote this review (null = platform/manual review)")
     user_name = models.CharField(max_length=254)
     user_title = models.CharField(max_length=254, blank=True, null=True, help_text="e.g. Video Editor, Frontend Developer")
     user_image = models.ImageField(upload_to='reviews/', blank=True, null=True)
@@ -299,6 +324,10 @@ class Review(models.Model):
     def image_url(self):
         if self.user_image and hasattr(self.user_image, 'url'):
             return self.user_image.url
+        if self.reviewer_id:
+            profile = getattr(self.reviewer, 'profile', None)
+            if profile is not None and profile.picture and hasattr(profile.picture, 'url'):
+                return profile.picture.url
         return None
 
     @property

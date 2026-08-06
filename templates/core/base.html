@@ -456,12 +456,12 @@
       z-index: 0;
     }
 
-    /* Arabic warm-brand logo */
-    .arabic-rtl .logo-mark img {
+    /* Arabic warm-brand logo — matches the Arabic landing page look on every Arabic page */
+    [dir="rtl"] .logo-mark img {
       filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
     }
 
-    .arabic-rtl footer img[alt="Skillifly Bird Icon"] {
+    [dir="rtl"] footer img[alt="Skillifly Bird Icon"] {
       filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(85deg);
     }
   </style>
@@ -502,15 +502,27 @@
       <div class="hidden md:flex items-center gap-8">
         {% if user.is_authenticated %}
         {% if is_arabic_page %}
+        {% if nav_is_client %}
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_dashboard' %}" class="nav-link">لوحة التحكم</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_examples' %}" class="nav-link">توظيف محرر</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_reviews' %}" class="nav-link">تقييماتي</a>
+        {% else %}
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_dashboard' %}" class="nav-link">لوحة التحكم</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_themes' %}" class="nav-link">التصاميم</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_examples' %}" class="nav-link">نماذج جاهزة</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_update_portfolio' %}" class="nav-link">منشئ الملف</a>
+        {% endif %}
+        {% else %}
+        {% if nav_is_client %}
+        <a href="{{ MAIN_SITE_URL }}{% url 'client_dashboard' %}" class="nav-link">Dashboard</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="nav-link">Hire an Editor</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'client_reviews' %}" class="nav-link">My Reviews</a>
         {% else %}
         <a href="{{ MAIN_SITE_URL }}{% url 'dashboard' %}" class="nav-link">Dashboard</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'themes' %}" class="nav-link">Themes</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="nav-link">Live Examples</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'update_portfolio' %}" class="nav-link">Builder</a>
+        {% endif %}
         {% endif %}
         <div class="language-switcher" role="group" aria-label="Language selector">
           <button type="button" class="lang-btn" data-lang="en" aria-label="English" aria-pressed="false">En</button>
@@ -561,17 +573,31 @@
         </div>
         {% if user.is_authenticated %}
         {% if is_arabic_page %}
+        {% if nav_is_client %}
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_dashboard' %}" class="block nav-link py-2">لوحة التحكم</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_examples' %}" class="block nav-link py-2">توظيف محرر</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_reviews' %}" class="block nav-link py-2">تقييماتي</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_profile' %}" class="block nav-link py-2">الملف الشخصي</a>
+        {% else %}
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_dashboard' %}" class="block nav-link py-2">لوحة التحكم</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_themes' %}" class="block nav-link py-2">التصاميم</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_examples' %}" class="block nav-link py-2">نماذج جاهزة</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_update_portfolio' %}" class="block nav-link py-2">منشئ الملف</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_profile' %}" class="block nav-link py-2">الملف الشخصي</a>
+        {% endif %}
+        {% else %}
+        {% if nav_is_client %}
+        <a href="{{ MAIN_SITE_URL }}{% url 'client_dashboard' %}" class="block nav-link py-2">Dashboard</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="block nav-link py-2">Hire an Editor</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'client_reviews' %}" class="block nav-link py-2">My Reviews</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'profile' %}" class="block nav-link py-2">Profile</a>
         {% else %}
         <a href="{{ MAIN_SITE_URL }}{% url 'dashboard' %}" class="block nav-link py-2">Dashboard</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'themes' %}" class="block nav-link py-2">Themes</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="block nav-link py-2">Live Examples</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'update_portfolio' %}" class="block nav-link py-2">Builder</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'profile' %}" class="block nav-link py-2">Profile</a>
+        {% endif %}
         {% endif %}
         <form method="POST" action="{{ MAIN_SITE_URL }}{% url 'logout' %}{% if is_arabic_page %}?next={% url 'arabic_signin' %}{% endif %}">
           {% csrf_token %}
@@ -677,39 +703,13 @@
             const homePath = "{{ MAIN_SITE_URL }}{% url 'index' %}";
             const arabicPath = "{{ MAIN_SITE_URL }}{% url 'arabic_landing' %}";
 
-            const langRouteMap = {
-              '/': '/ar/',
-              '/ar/': '/',
-              '/signup/': '/ar/signup/',
-              '/ar/signup/': '/signup/',
-              '/signin/': '/ar/signin/',
-              '/ar/signin/': '/signin/',
-              '/dashboard/': '/ar/dashboard/',
-              '/ar/dashboard/': '/dashboard/',
-              '/profile/': '/ar/profile/',
-              '/ar/profile/': '/profile/',
-              '/themes/': '/ar/themes/',
-              '/ar/themes/': '/themes/',
-              '/builder/update/': '/ar/update/',
-              '/ar/update/': '/builder/update/',
-              '/examples/': '/ar/examples/',
-              '/ar/examples/': '/examples/',
-              '/dashboard/analytics/': '/ar/dashboard/analytics/',
-              '/ar/dashboard/analytics/': '/dashboard/analytics/',
-              '/dashboard/seo/': '/ar/dashboard/seo/',
-              '/ar/dashboard/seo/': '/dashboard/seo/',
-              '/dashboard/domain/': '/ar/dashboard/domain/',
-              '/ar/dashboard/domain/': '/dashboard/domain/',
-              '/payment/': '/ar/payment/',
-              '/ar/payment/': '/payment/',
-              '/payment/success/': '/ar/payment/success/',
-              '/ar/payment/success/': '/payment/success/',
-              '/payment/failure/': '/ar/payment/failure/',
-              '/ar/payment/failure/': '/payment/failure/',
-            };
+            const langRouteMap = {{ lang_route_map|safe }};
 
             const currentPath = window.location.pathname;
-            const mappedPath = langRouteMap[currentPath];
+            const mappedPath = langRouteMap[currentPath]
+              || (currentPath.startsWith('/ar/review/') ? '/' + currentPath.slice(4)
+                  : currentPath.startsWith('/review/') ? '/ar' + currentPath
+                  : null);
             const targetUrl = mappedPath
               ? "{{ MAIN_SITE_URL }}" + mappedPath + window.location.search
               : (nextLang === 'ar' ? arabicPath : homePath);

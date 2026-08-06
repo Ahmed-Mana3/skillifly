@@ -22,6 +22,8 @@ class CustomDomainMiddleware:
         '/admin/',
         '/accounts/',
         '/dashboard/',
+        '/client_dashboard/',
+        '/client_reviews/',
         '/builder/',
         '/payment/',
         '/pay/',
@@ -122,10 +124,20 @@ class LanguagePreferenceMiddleware:
         '/ar/': '/',
         '/signup/': '/ar/signup/',
         '/ar/signup/': '/signup/',
+        '/signup/editor/': '/ar/signup/editor/',
+        '/ar/signup/editor/': '/signup/editor/',
+        '/signup/client/': '/ar/signup/client/',
+        '/ar/signup/client/': '/signup/client/',
         '/signin/': '/ar/signin/',
         '/ar/signin/': '/signin/',
         '/dashboard/': '/ar/dashboard/',
         '/ar/dashboard/': '/dashboard/',
+        '/dashboard/reviews/': '/ar/dashboard/reviews/',
+        '/ar/dashboard/reviews/': '/dashboard/reviews/',
+        '/client_reviews/': '/ar/client_reviews/',
+        '/ar/client_reviews/': '/client_reviews/',
+        '/client_dashboard/': '/ar/client_dashboard/',
+        '/ar/client_dashboard/': '/client_dashboard/',
         '/profile/': '/ar/profile/',
         '/ar/profile/': '/profile/',
         '/themes/': '/ar/themes/',
@@ -151,19 +163,40 @@ class LanguagePreferenceMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
+    @staticmethod
+    def _review_twin(path):
+        """Return the counterpart review URL, or None for non-review paths.
+
+        Review URLs embed the owner's username (``/review/<username>/``), so
+        they can't live in the static ``ROUTE_MAP`` — derive the twin by prefix.
+        """
+        if path.startswith('/ar/review/'):
+            return '/' + path[4:]
+        if path.startswith('/review/'):
+            return '/ar' + path
+        return None
+
     def __call__(self, request):
         pref = request.COOKIES.get(self.COOKIE_NAME, '')
         path = request.path_info
 
-        if pref in ('ar', 'en') and path in self.ROUTE_MAP:
-            wants_arabic = (pref == 'ar')
-            if path.startswith('/ar/') != wants_arabic:
+        if pref in ('ar', 'en'):
+            review_twin = self._review_twin(path)
+            if review_twin is not None:
+                target = review_twin
+            elif path in self.ROUTE_MAP:
                 target = self.ROUTE_MAP[path]
-                qs = request.META.get('QUERY_STRING', '')
-                url = target + (f'?{qs}' if qs else '')
-                response = redirect(url)
-                self._persist(response, pref)
-                return response
+            else:
+                target = None
+
+            if target is not None:
+                wants_arabic = (pref == 'ar')
+                if path.startswith('/ar/') != wants_arabic:
+                    qs = request.META.get('QUERY_STRING', '')
+                    url = target + (f'?{qs}' if qs else '')
+                    response = redirect(url)
+                    self._persist(response, pref)
+                    return response
 
         response = self.get_response(request)
 

@@ -1,5 +1,6 @@
 import logging
 import os
+from urllib.parse import quote
 from decimal import Decimal
 from django.conf import settings
 from datetime import date
@@ -16,13 +17,30 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP
-from .forms import RegisterForm, LoginForm, ReviewForm, SEOSettingsForm
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP
+from .forms import RegisterForm, LoginForm, ReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm
 import random
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
 logger = logging.getLogger('core')
+
+
+def csrf_failure_view(request, reason=""):
+    """
+    Custom CSRF failure handler.
+
+    A stale token (e.g. a page left open in the back-forward cache while a
+    login elsewhere rotated the token) currently shows a dead-end 403. Instead,
+    redirect the user back to the very form they submitted so it reloads with a
+    fresh token and they can just hit submit again. Real CSRF attacks are still
+    rejected — the POST never reaches a view.
+    """
+    try:
+        messages.warning(request, 'Your session was refreshed — please submit the form again.')
+    except Exception:
+        pass
+    return redirect(request.get_full_path())
 
 
 
@@ -266,6 +284,7 @@ def submit_review_view(request):
             # User didn't specify, but usually it's better to review them.
             # I'll set is_featured=False by default just in case.
             review.is_featured = False 
+            review.reviewer = request.user
             review.save()
             messages.success(request, "Thank you for your review! It has been submitted for verification.")
             return redirect('dashboard')
@@ -279,6 +298,157 @@ def submit_review_view(request):
         form = ReviewForm(initial=initial_data)
 
     return render(request, 'core/submit_review.html', {'form': form})
+
+
+def client_review_view(request, username):
+    """Public page where a client can leave a review for a portfolio owner."""
+    return _client_review_page(request, username, arabic=False)
+
+
+def arabic_client_review_view(request, username):
+    """Arabic RTL twin of the public client review page."""
+    return _client_review_page(request, username, arabic=True)
+
+
+def _client_review_page(request, username, arabic=False):
+    owner = get_object_or_404(CustomUser, username=username.lstrip('@'))
+
+    # Funnel anonymous reviewers through client signup first so a real client
+    # account submits the review. The review URL is passed along as `next` and
+    # the signup view bounces the new client back here afterwards.
+    if not request.user.is_authenticated:
+        review_path = f'/ar/review/{owner.username}/' if arabic else f'/review/{owner.username}/'
+        signup_url = reverse('arabic_client_signup' if arabic else 'client_signup')
+        return redirect(f'{signup_url}?next={quote(review_path)}')
+
+    submitted = False
+    if request.method == "POST":
+        form = ReviewForm(request.POST, request.FILES)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = owner
+            review.reviewer = request.user
+            review.is_featured = False
+            review.save()
+            submitted = True
+        form = ReviewForm()
+    else:
+        # Pre-fill the reviewer's name from their client account.
+        reviewer_name = request.user.get_full_name() or request.user.first_name or request.user.username
+        form = ReviewForm(initial={'user_name': reviewer_name})
+
+    owner_name = (getattr(owner.personal_info, 'full_name', '') if hasattr(owner, 'personal_info') else '') or owner.username
+
+    template = 'core/arabic_client_review.html' if arabic else 'core/client_review.html'
+    context = {
+        'form': form,
+        'owner': owner,
+        'owner_name': owner_name,
+        'submitted': submitted,
+        'is_arabic_page': arabic,
+    }
+    return render(request, template, context)
+
+
+@login_required
+def reviews_management_view(request):
+    """Dashboard page showing the reviews collected from the user's clients."""
+    reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+    reviews_list = list(reviews)
+    total = len(reviews_list)
+    average_rating = (sum(r.rating for r in reviews_list) / total) if total else 0
+    average_stars = int(round(average_rating)) if total else 0
+
+    distribution = {stars: 0 for stars in range(1, 6)}
+    for review in reviews_list:
+        distribution[review.rating] = distribution.get(review.rating, 0) + 1
+    rating_distribution = [
+        {
+            'stars': stars,
+            'count': distribution.get(stars, 0),
+            'percent': int(round(distribution.get(stars, 0) / total * 100)) if total else 0,
+        }
+        for stars in range(5, 0, -1)
+    ]
+
+    review_link = request.build_absolute_uri(f'/review/{request.user.username}/')
+
+    return render(request, 'dashboard/reviews_management.html', {
+        'reviews': reviews,
+        'reviews_count': total,
+        'average_rating': average_rating,
+        'average_stars': average_stars,
+        'rating_distribution': rating_distribution,
+        'review_link': review_link,
+        'is_arabic_page': False,
+    })
+
+
+@login_required(login_url='arabic_signin')
+def arabic_reviews_management_view(request):
+    """Arabic RTL twin of the dashboard reviews management page."""
+    reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+    reviews_list = list(reviews)
+    total = len(reviews_list)
+    average_rating = (sum(r.rating for r in reviews_list) / total) if total else 0
+    average_stars = int(round(average_rating)) if total else 0
+
+    distribution = {stars: 0 for stars in range(1, 6)}
+    for review in reviews_list:
+        distribution[review.rating] = distribution.get(review.rating, 0) + 1
+    rating_distribution = [
+        {
+            'stars': stars,
+            'count': distribution.get(stars, 0),
+            'percent': int(round(distribution.get(stars, 0) / total * 100)) if total else 0,
+        }
+        for stars in range(5, 0, -1)
+    ]
+
+    review_link = request.build_absolute_uri(f'/ar/review/{request.user.username}/')
+
+    return render(request, 'dashboard/arabic_reviews_management.html', {
+        'reviews': reviews,
+        'reviews_count': total,
+        'average_rating': average_rating,
+        'average_stars': average_stars,
+        'rating_distribution': rating_distribution,
+        'review_link': review_link,
+        'is_arabic_page': True,
+    })
+
+
+@login_required
+@require_POST
+def toggle_review_featured_view(request, review_id):
+    """List or unlist a review on the portfolio (owner-controlled)."""
+    review = get_object_or_404(Review, pk=review_id, user=request.user)
+    review.is_featured = not review.is_featured
+    review.save()
+
+    next_url = request.POST.get('next', '')
+    if not next_url.startswith('/') or next_url.startswith('//'):
+        next_url = reverse('reviews_management')
+    elif not url_has_allowed_host_and_scheme(next_url, allowed_hosts=None):
+        next_url = reverse('reviews_management')
+    return redirect(next_url)
+
+
+@login_required
+@require_POST
+def update_review_avatar_view(request, review_id):
+    """Let the editor upload/replace the avatar shown for a client review."""
+    review = get_object_or_404(Review, pk=review_id, user=request.user)
+    form = ReviewAvatarForm(request.POST, request.FILES)
+    if form.is_valid():
+        review.user_image = form.cleaned_data['user_image']
+        review.save()
+
+    next_url = request.POST.get('next', '')
+    if not next_url.startswith('/') or next_url.startswith('//'):
+        next_url = reverse('reviews_management')
+    return redirect(next_url)
+
 
 from django.http import HttpResponse
 
@@ -375,10 +545,44 @@ def arabic_landing_view(request):
     return render(request, 'core/arabic_landing.html', context)
 
 
-def signup_view(request):
+def _send_otp_email(request, user):
+    """Create an OTP record, email it, and remember the pending verification in the session."""
+    otp_code = str(random.randint(100000, 999999))
+    EmailOTP.objects.update_or_create(user=user, defaults={'otp': otp_code, 'created_at': timezone.now()})
+
+    plain_text = f'Your Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
+    html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
+    send_mail(
+        subject='Verify your Skillifly Account',
+        message=plain_text,
+        from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
+        recipient_list=[user.email],
+        html_message=html_message,
+        fail_silently=False,
+    )
+
+    request.session['verification_user_id'] = user.id
+
+
+def _generate_client_username(name, email):
+    """Build a unique, valid username for a client (clients never pick their own)."""
+    import re as _re
+    base = _re.sub(r'[^a-zA-Z0-9_.]', '', (name or '').replace(' ', '.'))
+    base = _re.sub(r'^\.+|\.+$', '', base)
+    base = (base or (email or '').split('@')[0] or 'client').lower()
+    base = (_re.sub(r'[^a-z0-9_.]', '', base)[:20].strip('.') or 'client')
+    username = base
+    while CustomUser.objects.filter(username=username).exists():
+        username = f"{base}{random.randint(1000, 9999)}"
+    return username
+
+
+def editor_signup_view(request):
+    """Editor signup: full portfolio account — email verification via OTP."""
     if request.user.is_authenticated:
         return redirect('dashboard')
-    
+    request.session['signup_account_type'] = 'editor'
+
     next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
 
     if request.method == "POST":
@@ -387,24 +591,8 @@ def signup_view(request):
             user = form.save(commit=False)
             user.is_active = False  # Require OTP verification
             user.save()
-            
-            # Generate OTP
-            otp_code = str(random.randint(100000, 999999))
-            EmailOTP.objects.create(user=user, otp=otp_code)
-            
-            # Send HTML Email
-            plain_text = f'Your Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
-            html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
-            send_mail(
-                subject='Verify your Skillifly Account',
-                message=plain_text,
-                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
-                recipient_list=[user.email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-            
-            request.session['verification_user_id'] = user.id
+            UserAccount.objects.create(user=user, account_type='editor')
+            _send_otp_email(request, user)
             request.session['next_url'] = next_url
             return redirect('verify_otp')
         else:
@@ -416,15 +604,17 @@ def signup_view(request):
     context = {
         'message': message,
         'form': form,
-        'next': next_url
+        'next': next_url,
+        'is_arabic_page': False,
     }
     return render(request, 'auth/signup.html', context)
 
 
-def arabic_signup_view(request):
-    """Render the Arabic sign-up page variant for the language toggle."""
+def arabic_editor_signup_view(request):
+    """Arabic twin of the editor signup form."""
     if request.user.is_authenticated:
         return redirect('arabic_dashboard')
+    request.session['signup_account_type'] = 'editor'
 
     next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
 
@@ -432,26 +622,10 @@ def arabic_signup_view(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False  # Require OTP verification
+            user.is_active = False
             user.save()
-
-            # Generate OTP
-            otp_code = str(random.randint(100000, 999999))
-            EmailOTP.objects.create(user=user, otp=otp_code)
-
-            # Send HTML Email
-            plain_text = f'Your Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
-            html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
-            send_mail(
-                subject='Verify your Skillifly Account',
-                message=plain_text,
-                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
-                recipient_list=[user.email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-
-            request.session['verification_user_id'] = user.id
+            UserAccount.objects.create(user=user, account_type='editor')
+            _send_otp_email(request, user)
             request.session['next_url'] = next_url
             request.session['is_arabic_flow'] = True
             return redirect('verify_otp')
@@ -470,9 +644,104 @@ def arabic_signup_view(request):
     return render(request, 'auth/arabic_signup.html', context)
 
 
+def client_signup_view(request):
+    """Client signup: just name, email and password — no OTP, instant access."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    request.session['signup_account_type'] = 'client'
+
+    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+
+    if request.method == "POST":
+        form = ClientRegisterForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            username = _generate_client_username(data['name'], data['email'])
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=data['email'],
+                password=data['password'],
+                first_name=data['name'],
+            )
+            user.is_active = True
+            user.save()
+            UserAccount.objects.create(user=user, account_type='client')
+
+            # Mark the email as verified in allauth too, since clients skip OTP.
+            from allauth.account.models import EmailAddress
+            EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
+
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, 'Welcome to Skillifly! Your account is ready.')
+            return redirect(next_url)
+        else:
+            message = form.errors
+    else:
+        form = ClientRegisterForm()
+        message = None
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': False,
+    }
+    return render(request, 'auth/client_signup.html', context)
+
+
+def arabic_client_signup_view(request):
+    """Arabic twin of the client signup form."""
+    if request.user.is_authenticated:
+        return redirect('arabic_dashboard')
+    request.session['signup_account_type'] = 'client'
+
+    next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
+
+    if request.method == "POST":
+        form = ClientRegisterForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            username = _generate_client_username(data['name'], data['email'])
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=data['email'],
+                password=data['password'],
+                first_name=data['name'],
+            )
+            user.is_active = True
+            user.save()
+            UserAccount.objects.create(user=user, account_type='client')
+
+            from allauth.account.models import EmailAddress
+            EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
+
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, 'أهلًا بك في Skillifly! حسابك جاهز الآن.')
+            return redirect(next_url)
+        else:
+            message = form.errors
+    else:
+        form = ClientRegisterForm()
+        message = None
+
+    # Arabic placeholders
+    form.fields['name'].widget.attrs.update({'placeholder': 'اسمك'})
+    form.fields['email'].widget.attrs.update({'placeholder': 'you@example.com'})
+    form.fields['password'].widget.attrs.update({'placeholder': 'أنشئ كلمة مرور'})
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': True,
+    }
+    return render(request, 'auth/arabic_client_signup.html', context)
+
+
 def signin_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+    request.session.pop('signup_account_type', None)
     
     next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
 
@@ -508,6 +777,7 @@ def arabic_signin_view(request):
     """Render the Arabic sign-in page variant for the language toggle."""
     if request.user.is_authenticated:
         return redirect('arabic_dashboard')
+    request.session.pop('signup_account_type', None)
 
     next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
 
@@ -765,15 +1035,81 @@ def arabic_profile_view(request):
 @login_required
 def dashboard_view(request):
     """Render the dashboard page"""
+    if _is_client_account(request.user):
+        return redirect('client_dashboard')
     return render(request, 'dashboard/dashboard.html', _dashboard_context(request))
 
 
 @login_required(login_url='arabic_signin')
 def arabic_dashboard_view(request):
     """Render the Arabic dashboard page variant for the language toggle."""
+    if _is_client_account(request.user):
+        return redirect('arabic_client_dashboard')
     context = _dashboard_context(request)
     context['is_arabic_page'] = True
     return render(request, 'dashboard/arabic_dashboard.html', context)
+
+
+@login_required
+def client_dashboard_view(request):
+    """Client dashboard with hiring entry point and a manage-reviews link."""
+    if not _is_client_account(request.user):
+        return redirect('dashboard')
+    return render(request, 'dashboard/client_dashboard.html', _client_dashboard_context(request))
+
+
+@login_required(login_url='arabic_signin')
+def arabic_client_dashboard_view(request):
+    """Arabic twin of the client dashboard."""
+    if not _is_client_account(request.user):
+        return redirect('arabic_dashboard')
+    context = _client_dashboard_context(request)
+    context['is_arabic_page'] = True
+    return render(request, 'dashboard/arabic_client_dashboard.html', context)
+
+
+@login_required
+def client_reviews_view(request):
+    """Page listing the reviews the client submitted to editors."""
+    if not _is_client_account(request.user):
+        return redirect('dashboard')
+    return render(request, 'dashboard/client_reviews.html', _client_reviews_context(request))
+
+
+@login_required(login_url='arabic_signin')
+def arabic_client_reviews_view(request):
+    """Arabic twin of the client reviews page."""
+    if not _is_client_account(request.user):
+        return redirect('arabic_dashboard')
+    context = _client_reviews_context(request)
+    context['is_arabic_page'] = True
+    return render(request, 'dashboard/arabic_client_reviews.html', context)
+
+
+def _is_client_account(user):
+    account = getattr(user, 'user_account', None)
+    return bool(account and account.account_type == 'client')
+
+
+def _client_reviews_context(request):
+    reviews = (
+        Review.objects.filter(reviewer=request.user, user__isnull=False)
+        .select_related('user', 'user__personal_info')
+        .order_by('-created_at')
+    )
+    return {
+        'reviews': reviews,
+        'reviews_count': reviews.count(),
+        'reviewed_editors_count': reviews.values('user_id').distinct().count(),
+    }
+
+
+def _client_dashboard_context(request):
+    reviews = Review.objects.filter(reviewer=request.user, user__isnull=False)
+    return {
+        'reviews_count': reviews.count(),
+        'reviewed_editors_count': reviews.values('user_id').distinct().count(),
+    }
 
 
 def _dashboard_context(request):
@@ -790,6 +1126,10 @@ def _dashboard_context(request):
         days_left = max(0, remaining.days)
         
     portfolio_url = request.build_absolute_uri(f'/{request.user.username}/')
+
+    # Client reviews — link to share with clients + count of reviews received
+    review_link = request.build_absolute_uri(f'/review/{request.user.username}/')
+    reviews_count = request.user.reviews.count()
     
     # Context helpers for template visibility
     is_developer = (profile.theme and profile.theme.category and profile.theme.category.name.lower() == 'developer')
@@ -817,6 +1157,8 @@ def _dashboard_context(request):
         'payment': payment,
         'has_active_payment': has_active_payment,
         'portfolio_url': portfolio_url,
+        'review_link': review_link,
+        'reviews_count': reviews_count,
         'is_developer': is_developer,
         'is_annual_subscriber': is_annual_subscriber,
         'site_settings': site_settings,
@@ -1082,6 +1424,7 @@ def arabic_update_portfolio_view(request):
         "project_category_formset": project_category_formset,
         "link_formset": link_formset,
         "creator_formset": creator_formset,
+        "reviews": Review.objects.filter(user=request.user).order_by('-created_at'),
         "is_update": True,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
@@ -1731,4 +2074,3 @@ def portfolio_category_detail(request, username, category_id):
         'projects': projects,
     }
     return render(request, template, context)
-

@@ -2,17 +2,15 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}تسجيل الدخول إلى حسابك — Skillifly{% endblock %}
+{% block title %}أنشئ حسابك كعميل — Skillifly{% endblock %}
 
-{% block meta_description %}سجّل الدخول إلى حسابك على Skillifly لإدارة ملفك المهني، وتخصيص التصاميم، ومتابعة التحليلات.{% endblock %}
+{% block meta_description %}سجّل كعميل في ثوانٍ — فقط اسمك وبريدك الإلكتروني وكلمة المرور. بدون التحقق من البريد.{% endblock %}
 
-{% block meta_keywords %}تسجيل دخول skillifly, دخول ملف مهني, تسجيل الدخول{% endblock %}
-
-{% block og_title %}تسجيل الدخول — Skillifly{% endblock %}
-{% block og_description %}سجّل الدخول إلى حسابك على Skillifly لإنشاء ملفك المهني وإدارته.{% endblock %}
+{% block og_title %}أنشئ حسابك كعميل — Skillifly{% endblock %}
+{% block og_description %}تسجيل سريع وبسيط — بدون تحقق من البريد الإلكتروني.{% endblock %}
 {% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
-{% block twitter_title %}تسجيل الدخول — Skillifly{% endblock %}
-{% block twitter_description %}سجّل الدخول إلى حسابك على Skillifly لإنشاء ملفك المهني وإدارته.{% endblock %}
+{% block twitter_title %}أنشئ حسابك كعميل{% endblock %}
+{% block twitter_description %}تسجيل سريع وبسيط — بدون تحقق من البريد الإلكتروني.{% endblock %}
 {% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
@@ -24,31 +22,8 @@
 <meta property="og:locale" content="ar_AR" />
 <meta name="theme-color" content="#E11D48" />
 
-<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signin' %}" />
-<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
-<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "تسجيل الدخول إلى Skillifly",
-  "description": "سجّل الدخول لإدارة ملفك المهني على Skillifly.",
-  "inLanguage": "ar",
-  "url": "{{ request.build_absolute_uri }}",
-  "potentialAction": {
-    "@type": "EntryPoint",
-    "actionPlatform": [
-      "http://schema.org/DesktopWebPlatform",
-      "http://schema.org/MobileWebPlatform"
-    ],
-    "urlTemplate": "https://skillifly.cloud/ar/signin/"
-  }
-}
-</script>
-
 <style>
-  /* ===== Arabic Signin — Warm Brand Overrides ===== */
+  /* ===== Arabic Client Signup — Warm Brand Overrides ===== */
   body {
     background-color: white !important;
     color: #0F172A !important;
@@ -56,7 +31,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Typography: Cairo for headings, Tajawal for body */
   .arabic-rtl h1 {
     font-family: 'Cairo', 'Tajawal', sans-serif !important;
     letter-spacing: 0 !important;
@@ -71,17 +45,10 @@
     font-family: 'Tajawal', 'Cairo', sans-serif !important;
   }
 
-  .arabic-rtl .tracking-widest,
-  .arabic-rtl .uppercase {
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-  }
-
   .arabic-rtl .rtl-arrow {
     transform: scaleX(-1);
   }
 
-  /* Gradient text — readable on white */
   .gradient-text {
     background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
     -webkit-background-clip: text !important;
@@ -90,7 +57,6 @@
     color: transparent;
   }
 
-  /* Buttons */
   .btn-primary {
     background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
     color: #ffffff !important;
@@ -101,15 +67,6 @@
   .btn-primary:hover {
     background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
     box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
-  }
-
-  /* Cards */
-  .glass-card {
-    background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(225, 29, 72, 0.14) !important;
-    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
   }
 
   .gradient-border {
@@ -125,7 +82,6 @@
     color: #334155 !important;
     font-weight: 600 !important;
   }
-
   .nav-link:hover {
     color: #E11D48 !important;
   }
@@ -138,7 +94,6 @@
     filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(85deg);
   }
 
-  /* Form inputs */
   .sf-input {
     background: #F8FAFC !important;
     border: 1px solid #E2E8F0 !important;
@@ -156,7 +111,6 @@
     font-family: 'Cairo', 'Tajawal', sans-serif !important;
   }
 
-  /* Warm background lights */
   .warm-lights {
     position: absolute;
     inset: 0;
@@ -169,7 +123,10 @@
       radial-gradient(ellipse 45% 40% at 15% 90%, rgba(236, 72, 153, 0.05), transparent 60%);
   }
 
-  /* Focus visibility */
+  .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+  .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
+  .arabic-rtl .text-blue-700 { color: #BE123C !important; }
+
   a:focus-visible,
   button:focus-visible {
     outline: none;
@@ -188,6 +145,7 @@
 
   <div class="w-full max-w-md relative z-10">
 
+    <!-- Card -->
     <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
 
       <!-- Header -->
@@ -196,8 +154,16 @@
           <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
           <span class="text-xl font-bold gradient-text">Skillifly</span>
         </a>
-        <h1 class="text-2xl font-bold mb-1 text-slate-900">مرحبًا بعودتك</h1>
-        <p class="text-slate-500 text-sm">سجّل الدخول لمتابعة بناء ملفك المهني.</p>
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-100 text-[10px] font-bold text-orange-700">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v3m0 0v3m0-3h3m-3 0h-3" />
+            </svg>
+            حساب عميل
+          </span>
+        </div>
+        <h1 class="text-2xl font-bold mb-1 text-slate-900">أنشئ حسابك كعميل</h1>
+        <p class="text-slate-500 text-sm">يستغرق حوالي 30 ثانية — بدون الحاجة لتأكيد البريد الإلكتروني.</p>
       </div>
 
       <!-- Error messages -->
@@ -224,18 +190,10 @@
           <button type="submit"
             class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z"
-                fill="#4285F4" />
-              <path
-                d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z"
-                fill="#34A853" />
-              <path
-                d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z"
-                fill="#FBBC05" />
-              <path
-                d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z"
-                fill="#EA4335" />
+              <path d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z" fill="#4285F4"/>
+              <path d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z" fill="#34A853"/>
+              <path d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z" fill="#FBBC05"/>
+              <path d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z" fill="#EA4335"/>
             </svg>
             <span>المتابعة عبر Google</span>
           </button>
@@ -244,12 +202,12 @@
           <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-slate-200"></div>
           </div>
-          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">أو سجّل الدخول بالبريد الإلكتروني</div>
+          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">أو سجّل بالبريد الإلكتروني</div>
         </div>
       </div>
       {% endif %}
 
-      <!-- Email / Password Form -->
+      <!-- Name / Email / Password Form -->
       <form method="POST" novalidate>
         {% csrf_token %}
 
@@ -258,45 +216,61 @@
         {% endif %}
 
         <div class="mb-4">
-          <label class="sf-label">البريد الإلكتروني أو اسم المستخدم</label>
-          {{ form.username }}
-          {% if form.username.errors %}
-          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          <label class="sf-label">الاسم</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          {% for error in form.name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
           {% endif %}
         </div>
 
-        <div class="mb-3">
-          <label class="sf-label mb-0">كلمة المرور</label>
-          {{ form.password }}
+        <div class="mb-4">
+          <label class="sf-label">البريد الإلكتروني</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+          {% for error in form.email.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="mb-6">
+          <label class="sf-label">كلمة المرور</label>
+          <div class="relative">
+            {{ form.password }}
+            <button type="button" onclick="togglePassword()" aria-label="إظهار أو إخفاء كلمة المرور"
+              class="absolute inset-y-0 left-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+              <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg id="eye-icon-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+              </svg>
+            </button>
+          </div>
           {% if form.password.errors %}
           {% for error in form.password.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
           {% endif %}
         </div>
 
-        <!-- Forgot password -->
-        <div class="mb-6">
-          <a href="{% url 'account_reset_password' %}?next={% url 'arabic_signin' %}"
-            class="text-sm text-pink-600 hover:text-pink-700 transition-colors">
-            هل نسيت كلمة المرور؟
-          </a>
-        </div>
-
         <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl">
-          تسجيل الدخول
+          إنشاء حساب العميل
           <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3 3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </button>
 
         <p class="text-center text-sm text-slate-600 mt-6 font-medium">
-          ليس لديك حساب؟
-          <a href="{% url 'arabic_signup' %}" class="text-pink-600 hover:text-pink-700 transition-colors font-bold">أنشئ حسابًا
-            مجانًا</a>
+          تريد عرض أعمالك بدلًا من ذلك؟
+          <a href="{% url 'arabic_editor_signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="text-pink-600 hover:text-pink-700 transition-colors font-bold">أنشئ حساب مونتير</a>
         </p>
 
       </form>
     </div>
+
+    <!-- Terms note -->
+    <p class="text-center text-xs text-slate-500 mt-6 px-4 leading-relaxed">
+      بإنشاء حساب، فأنت توافق على <a href="#" class="underline">شروط الخدمة</a> و<a href="#"
+        class="underline">سياسة الخصوصية</a>.
+    </p>
 
   </div>
 </div>
@@ -304,8 +278,20 @@
 
 {% block extra_scripts %}
 <script>
+  // Add sf-input class to all form inputs dynamically
   document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
     el.classList.add('sf-input');
+    el.classList.remove('form-control');
   });
+
+  function togglePassword() {
+    const input = document.getElementById('client_password');
+    const show = document.getElementById('eye-icon');
+    const hide = document.getElementById('eye-icon-off');
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    show.classList.toggle('hidden', !isPassword);
+    hide.classList.toggle('hidden', isPassword);
+  }
 </script>
 {% endblock %}

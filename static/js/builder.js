@@ -5,7 +5,7 @@
 
 const Builder = {
     currentSection: 0,
-    sectionNames: ['Personal', 'Skills', 'Education', 'Experience', 'Projects', 'Links'],
+    sectionNames: ['Personal', 'Skills', 'Education', 'Experience', 'Projects', 'Links', 'Creators', 'Reviews'],
 
     I18N: Object.assign({
         stepOf: 'Step {step} of {total}',
@@ -32,7 +32,9 @@ const Builder = {
         collectionCreated: 'Collection "{name}" created!',
         collectionUpdated: 'Collection "{name}" updated!',
         networkError: 'Network error — please try again.',
-        imgAlt: 'Preview'
+        imgAlt: 'Preview',
+        reviewListed: 'Review listed on portfolio!',
+        reviewHidden: 'Review hidden from portfolio.'
     }, window.BuilderI18n || {}),
 
     t(key, vars) {
@@ -66,11 +68,11 @@ const Builder = {
         const container = document.getElementById('builder-panels');
         if (!container) return;
 
-        // 0:Identity, 1:Expertise, 2:Education, 3:Experience, 4:Projects, 5:Links, 6:Creators
+        // 0:Identity, 1:Expertise, 2:Education, 3:Experience, 4:Projects, 5:Links, 6:Creators, 7:Reviews
         const orders = {
-          'student': [0, 2, 1, 3, 4, 6, 5],
-          'video_editor': [0, 4, 1, 6, 3, 2, 5],
-          'developer': [0, 1, 3, 4, 6, 2, 5]
+          'student': [0, 2, 1, 3, 4, 6, 7, 5],
+          'video_editor': [0, 4, 1, 6, 7, 3, 2, 5],
+          'developer': [0, 1, 3, 4, 6, 7, 2, 5]
         };
 
         const preferredOrder = orders[this.category] || orders['developer'];
@@ -256,7 +258,23 @@ const Builder = {
             }
         }
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+        if (isMobile) {
+            const tab = this.tabs[index];
+            if (tab && tab.parentElement) {
+                const container = tab.parentElement;
+                container.scrollTo({
+                    left: tab.offsetLeft - container.clientWidth / 2 + tab.clientWidth / 2,
+                    behavior: 'smooth'
+                });
+            }
+            const navHeight = (document.querySelector('nav') || { offsetHeight: 64 }).offsetHeight || 64;
+            const panelTop = nextPanel.getBoundingClientRect().top + window.pageYOffset;
+            window.scrollTo({ top: Math.max(0, panelTop - navHeight - 16), behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     },
 
     addFormsetItem(prefix) {
@@ -750,6 +768,60 @@ const Builder = {
         .finally(() => {
             saveBtn.disabled = false;
             saveBtn.innerHTML = originalHTML;
+        });
+    },
+
+    toggleReview(reviewId, btn) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                          document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!csrfToken) {
+            this.showToast(this.t('securityToken'), 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('next', window.location.pathname + window.location.search);
+
+        fetch(`/dashboard/reviews/${reviewId}/toggle/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData,
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const card = document.querySelector(`.review-card[data-review-id="${reviewId}"]`);
+            if (!card) return;
+
+            const featured = card.dataset.featured === '1';
+            card.dataset.featured = featured ? '0' : '1';
+            const listed = !featured;
+
+            const badge = card.querySelector('.review-badge');
+            if (badge) {
+                badge.textContent = listed
+                    ? (badge.dataset.listedLabel || 'Listed on Portfolio')
+                    : (badge.dataset.pendingLabel || 'Pending');
+                badge.className = 'review-badge px-2.5 py-1 rounded-full text-[10px] font-bold ' +
+                    (listed
+                        ? 'bg-emerald-50 border border-emerald-500/30 text-emerald-700'
+                        : 'bg-amber-50 border border-amber-500/30 text-amber-600');
+            }
+
+            if (btn) {
+                btn.textContent = listed
+                    ? (btn.dataset.removeLabel || 'Remove from Portfolio')
+                    : (btn.dataset.listLabel || 'List on Portfolio');
+                btn.className = 'review-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ' +
+                    (listed
+                        ? 'border border-red-500/30 text-red-600 hover:bg-red-50'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white');
+            }
+
+            this.showToast(this.t(listed ? 'reviewListed' : 'reviewHidden'), 'success');
+        })
+        .catch(err => {
+            console.error('AJAX error:', err);
+            this.showToast(this.t('networkError'), 'error');
         });
     }
 };

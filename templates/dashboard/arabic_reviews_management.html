@@ -1,0 +1,354 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}تقييمات العملاء — Skillifly{% endblock %}
+
+{% block meta_description %}أدر تقييمات عملائك، وشارك رابط التقييم، وابنِ الثقة مع عملائك القادمين.{% endblock %}
+
+{% block og_title %}تقييمات العملاء — Skillifly{% endblock %}
+{% block og_description %}أدر تقييمات عملائك وشارك رابط التقييم.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}تقييمات العملاء — Skillifly{% endblock %}
+{% block twitter_description %}أدر تقييمات عملائك وشارك رابط التقييم.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#E11D48" />
+<meta name="robots" content="noindex, follow" />
+
+<style>
+    /* ===== Arabic Reviews Management — Warm Brand Overrides ===== */
+    body {
+        background-color: white !important;
+        color: #0F172A !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Typography: Cairo for headings, Tajawal for body */
+    .arabic-rtl h1,
+    .arabic-rtl h2,
+    .arabic-rtl h3,
+    .arabic-rtl h4 {
+        font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        letter-spacing: 0 !important;
+    }
+
+    .arabic-rtl p,
+    .arabic-rtl li,
+    .arabic-rtl a,
+    .arabic-rtl span,
+    .arabic-rtl button,
+    .arabic-rtl label,
+    .arabic-rtl input {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
+    }
+
+    /* Remove decorative Latin text treatments for Arabic */
+    .arabic-rtl .tracking-widest,
+    .arabic-rtl .tracking-tighter,
+    .arabic-rtl .uppercase {
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+        border: none !important;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
+        box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+    }
+
+    .gradient-brand {
+        background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+    }
+
+    .gradient-text {
+        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+    }
+
+    /* Warm accent overrides for inherited English utility colors */
+    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+    .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
+    .arabic-rtl .text-blue-700 { color: #BE123C !important; }
+    .arabic-rtl .text-blue-500 { color: #DB2777 !important; }
+    .arabic-rtl .text-purple-600 { color: #DB2777 !important; }
+    .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
+    .arabic-rtl .bg-blue-50 { background-color: #FFF1F7 !important; }
+    .arabic-rtl .border-blue-100 { border-color: #FBCFE8 !important; }
+    .arabic-rtl .text-blue-800 { color: #BE123C !important; }
+    .arabic-rtl .focus\:border-blue-400:focus { border-color: #EC4899 !important; }
+
+    /* Contrast boost — darken muted text for readability on white */
+    .arabic-rtl .text-slate-400 { color: #64748B !important; }
+    .arabic-rtl .text-slate-500 { color: #475569 !important; }
+    .arabic-rtl .text-slate-600 { color: #334155 !important; }
+
+    /* Back arrow flip (RTL) */
+    .arabic-rtl .back-arrow {
+        transform: scaleX(-1);
+        transition: transform 0.3s ease;
+    }
+    .arabic-rtl .group:hover .back-arrow {
+        transform: scaleX(-1) translateX(4px);
+    }
+
+    /* Review link field stays LTR */
+    .review-link-field {
+        direction: ltr;
+        text-align: left;
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-12 arabic-rtl">
+
+  <!-- Header -->
+  <div class="mb-10 animate-fadeInUp">
+    <a href="{% url 'arabic_dashboard' %}"
+      class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-pink-600 font-bold mb-4 transition-colors group">
+      العودة إلى لوحة التحكم
+      <svg class="w-4 h-4 back-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+      </svg>
+    </a>
+    <h1 class="text-3xl sm:text-4xl font-bold mb-2 text-black">
+      تقييمات <span class="gradient-text">العملاء</span>
+    </h1>
+  </div>
+
+  <!-- Share your review link -->
+  <div class="gradient-border rounded-2xl p-6 bg-white mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-black">شارك رابط التقييم</h2>
+      </div>
+    </div>
+    <div class="flex flex-col sm:flex-row items-stretch gap-3">
+      <input type="text" readonly value="{{ review_link }}"
+        class="review-link-field flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 font-bold outline-none focus:border-blue-400"
+        dir="ltr" onfocus="this.select()">
+      <button onclick="copyManagementUrl()" class="SF-review-mgmt-copy-btn btn-primary px-8 py-3 text-sm font-bold rounded-xl">
+        <span class="SF-review-mgmt-copy-label">نسخ الرابط</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 gap-4 mb-8 animate-fadeInUp" style="animation-delay: 0.2s">
+    <div class="gradient-border rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+      <p class="text-[10px] sm:text-xs text-slate-500 mb-2 font-bold">إجمالي التقييمات</p>
+      <p class="text-2xl sm:text-3xl font-bold gradient-text">{{ reviews_count }}</p>
+      <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-blue-500/5 rounded-full blur-xl"></div>
+    </div>
+    <div class="gradient-border rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+      <p class="text-[10px] sm:text-xs text-slate-500 mb-2 font-bold">متوسط التقييم</p>
+      <div class="flex items-center gap-2">
+        <p class="text-2xl sm:text-3xl font-bold gradient-text">
+          {% if reviews_count %}{{ average_rating|floatformat:2 }}{% else %}—{% endif %}
+        </p>
+        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      </div>
+      <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-purple-500/5 rounded-full blur-xl"></div>
+    </div>
+  </div>
+
+  <!-- Reviews list -->
+  {% if reviews %}
+  <div class="space-y-4 animate-fadeInUp" style="animation-delay: 0.3s">
+    <h2 class="text-lg font-bold text-black">جميع التقييمات</h2>
+    {% for review in reviews %}
+    <div class="gradient-border rounded-2xl p-6 bg-white">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3">
+          {% if review.image_url %}
+          <img src="{{ review.image_url }}" alt="{{ review.user_name }}"
+            class="w-11 h-11 rounded-full object-cover border-2 border-slate-100">
+          {% else %}
+          <div class="w-11 h-11 rounded-full gradient-brand flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+            {{ review.initials }}
+          </div>
+          {% endif %}
+          <div>
+            <h3 class="font-bold text-black">{{ review.user_name }}</h3>
+            <p class="text-xs text-slate-500 font-medium">{{ review.user_title|default:"عميل" }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-0.5 text-yellow-400">
+            {% for i in "12345" %}
+              {% if forloop.counter <= review.rating %}
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              {% else %}
+              <svg class="w-4 h-4 text-slate-200" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="text-[10px] text-slate-400 font-bold">{{ review.created_at|date:"j M Y" }}</span>
+        </div>
+      </div>
+      <p class="text-slate-600 mt-4 leading-relaxed">"{{ review.content }}"</p>
+      <div class="mt-4 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div>
+            {% if review.is_featured %}
+            <span class="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-600">مدرج</span>
+            {% else %}
+            <span class="px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-500">غير مدرج</span>
+            {% endif %}
+          </div>
+          <form method="POST" action="{% url 'update_review_avatar' review.id %}" enctype="multipart/form-data" class="inline-flex">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'arabic_reviews_management' %}">
+            <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-pink-200 text-pink-500 hover:bg-pink-50 text-[11px] font-bold cursor-pointer transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-1.414-1.414a2 2 0 00-1.414-.586H9.657a2 2 0 00-1.414.586L6.828 7H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-2.828z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {% if review.image_url %}تغيير الصورة{% else %}إضافة صورة{% endif %}
+              <input type="file" name="user_image" accept="image/*" class="hidden" onchange="this.form.submit()">
+            </label>
+          </form>
+        </div>
+        <form method="POST" action="{% url 'toggle_review_featured' review.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'arabic_reviews_management' %}">
+          {% if review.is_featured %}
+          <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 text-[11px] font-bold transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v6a4 4 0 004 4h9M3 7l2-2m-2 2l2 2m16-2v6a4 4 0 01-4 4h-5" />
+            </svg>
+            إزالة من الملف المهني
+          </button>
+          {% else %}
+          <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            عرض في الملف المهني
+          </button>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Empty state -->
+  <div class="gradient-border rounded-2xl p-12 text-center bg-white animate-fadeInUp" style="animation-delay: 0.3s">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4">
+      <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-black mb-1">لا توجد تقييمات بعد</h3>
+    <p class="text-sm text-slate-500 font-medium mb-6 max-w-sm mx-auto">شارك رابط التقييم مع عملائك وستظهر ملاحظاتهم هنا.</p>
+    <button onclick="copyManagementUrl()" class="SF-review-mgmt-copy-btn btn-primary px-8 py-3 text-sm font-bold rounded-xl">
+      <span class="SF-review-mgmt-copy-label">نسخ رابط التقييم</span>
+    </button>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function copyManagementUrl() {
+    const url = '{{ review_link }}';
+
+    const setLabel = (btn, text) => {
+      const label = btn.querySelector('.SF-review-mgmt-copy-label');
+      if (label) {
+        if (!btn.dataset.originalLabel) btn.dataset.originalLabel = label.textContent;
+        label.textContent = text;
+      }
+    };
+
+    const restore = () => {
+      document.querySelectorAll('.SF-review-mgmt-copy-btn').forEach((btn) => {
+        btn.classList.remove('copied', 'copy-failed');
+        const label = btn.querySelector('.SF-review-mgmt-copy-label');
+        if (label) label.textContent = btn.dataset.originalLabel || 'نسخ الرابط';
+      });
+    };
+
+    const done = () => {
+      document.querySelectorAll('.SF-review-mgmt-copy-btn').forEach((btn) => {
+        btn.classList.add('copied');
+        setLabel(btn, 'تم النسخ!');
+      });
+      setTimeout(restore, 2000);
+    };
+
+    const failed = () => {
+      document.querySelectorAll('.SF-review-mgmt-copy-btn').forEach((btn) => {
+        btn.classList.add('copy-failed');
+        setLabel(btn, 'اضغط Ctrl+C');
+      });
+      setTimeout(restore, 2500);
+    };
+
+    const fallbackCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (ok) { done(); } else { failed(); }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  }
+</script>
+<style>
+  .SF-review-mgmt-copy-btn.copied {
+    background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.35) !important;
+  }
+  .SF-review-mgmt-copy-btn.copy-failed {
+    background: linear-gradient(135deg, #DC2626 0%, #F97316 100%) !important;
+    box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.35) !important;
+  }
+</style>
+{% endblock %}

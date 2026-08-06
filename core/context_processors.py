@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+import json
+
 
 def auth_providers(request):
     google_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
@@ -39,6 +41,7 @@ def navbar_profile(request):
 
     nav_picture = None
     nav_initials = ''
+    nav_account_type = 'editor'
 
     try:
         profile = request.user.profile
@@ -55,9 +58,15 @@ def navbar_profile(request):
     else:
         nav_initials = user.username[:2].upper()
 
+    user_account = getattr(user, 'user_account', None)
+    if user_account and user_account.account_type in ('editor', 'client'):
+        nav_account_type = user_account.account_type
+
     return {
         'nav_profile_picture': nav_picture,
         'nav_user_initials': nav_initials,
+        'nav_account_type': nav_account_type,
+        'nav_is_client': nav_account_type == 'client',
     }
 
 def site_globals(request):
@@ -104,5 +113,11 @@ def site_globals(request):
         if is_arabic_page and path.startswith('/accounts/password/reset/'):
             request.session['is_arabic_reset_flow'] = True
 
-    return {'MAIN_SITE_URL': main_site_url, 'is_arabic_page': is_arabic_page}
+    from .middleware import LanguagePreferenceMiddleware
+    route_map = dict(LanguagePreferenceMiddleware.ROUTE_MAP)
 
+    return {
+        'MAIN_SITE_URL': main_site_url,
+        'is_arabic_page': is_arabic_page,
+        'lang_route_map': json.dumps(route_map),
+    }

@@ -85,6 +85,128 @@
             letter-spacing: 0.01em;
             white-space: nowrap;
         }
+
+        /* Reviews Section */
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .review-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .review-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--grad);
+            opacity: 0.8;
+        }
+
+        .review-card:hover {
+            transform: translateY(-10px) rotate(-1deg);
+            border-color: var(--accent-3);
+            background: #1a1a2e;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .review-stars {
+            display: flex;
+            gap: 5px;
+        }
+
+        .review-stars svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--accent-1);
+        }
+
+        .review-stars svg.empty {
+            fill: rgba(255, 255, 255, 0.15);
+        }
+
+        .review-content {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            flex: 1;
+        }
+
+        .review-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        .review-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-3);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .review-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .review-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .review-title {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 900px) {
+            .reviews-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .reviews-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -113,6 +235,7 @@
             {% if projects %}<a href="#projects">Projects</a>{% endif %}
             {% if skills %}<a href="#skills">Skills</a>{% endif %}
             {% if experiences %}<a href="#experience">Experience</a>{% endif %}
+            {% if reviews %}<a href="#reviews">Reviews</a>{% endif %}
             <a href="#contact">Contact</a>
         </div>
     </nav>
@@ -283,6 +406,43 @@
                     <div class="timeline-date">{{ edu.grade_year|date:"Y" }}</div>
                     <h3 class="timeline-title">{{ edu.degree }} {% if edu.field %}in {{ edu.field }}{% endif %}</h3>
                     <div class="timeline-org">{{ edu.school }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- REVIEWS -->
+    {% if reviews %}
+    <section class="section" id="reviews">
+        <div class="section-header reveal">
+            <div class="section-tag">Testimonials</div>
+            <h2 class="section-title">Client Reviews</h2>
+        </div>
+        <div class="reviews-grid">
+            {% for review in reviews %}
+            <div class="review-card reveal" style="transition-delay:{{ forloop.counter0 }}00ms">
+                <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+                    {% for i in "12345" %}
+                    <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    {% endfor %}
+                </div>
+                <p class="review-content">"{{ review.content }}"</p>
+                <div class="review-author">
+                    {% if review.image_url or review.preview_image %}
+                    <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+                    {% else %}
+                    <div class="review-avatar-placeholder">{{ review.initials }}</div>
+                    {% endif %}
+                    <div>
+                        <div class="review-name">{{ review.user_name }}</div>
+                        {% if review.user_title %}
+                        <div class="review-title">{{ review.user_title }}</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% endfor %}

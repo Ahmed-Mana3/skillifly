@@ -371,6 +371,151 @@
             white-space: nowrap;
         }
 
+        /* ─── Reviews Section ─── */
+        .reviews-section {
+            padding: 120px 5%;
+            background: #000;
+            border-top: 1px solid var(--border);
+        }
+
+        .reviews-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .reviews-head {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .reviews-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent);
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .reviews-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #fff 0%, var(--text-dim) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .review-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .review-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(0, 217, 255, 0.04));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .review-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 217, 255, 0.3);
+            box-shadow: 0 30px 60px -12px rgba(0, 217, 255, 0.1);
+        }
+
+        .review-card:hover::before {
+            opacity: 1;
+        }
+
+        .review-stars {
+            display: flex;
+            gap: 4px;
+        }
+
+        .review-stars svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--accent);
+        }
+
+        .review-stars svg.empty {
+            fill: rgba(255, 255, 255, 0.12);
+        }
+
+        .review-content {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.75;
+            flex: 1;
+        }
+
+        .review-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        .review-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .review-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(0, 217, 255, 0.1);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .review-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .review-title {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
         /* ─── Footer ─── */
         footer {
             background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
@@ -479,8 +624,18 @@
             -webkit-text-fill-color: transparent;
         }
 
+        @media (max-width: 1024px) {
+            .reviews-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
             .cta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reviews-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -572,6 +727,46 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- ─── Reviews ─── -->
+    {% if reviews %}
+    <section class="reviews-section" id="reviews">
+        <div class="reviews-container">
+            <div class="reviews-head">
+                <div class="reviews-label">Testimonials</div>
+                <h2 class="reviews-title">CLIENT REVIEWS</h2>
+            </div>
+
+            <div class="reviews-grid">
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+                        {% for i in "12345" %}
+                        <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        {% endfor %}
+                    </div>
+                    <p class="review-content">"{{ review.content }}"</p>
+                    <div class="review-author">
+                        {% if review.image_url or review.preview_image %}
+                        <img src="{% if review.image_url %}{{ review.image_url }}{% else %}{{ review.preview_image }}{% endif %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+                        {% else %}
+                        <div class="review-avatar-placeholder">{{ review.initials }}</div>
+                        {% endif %}
+                        <div>
+                            <div class="review-name">{{ review.user_name }}</div>
+                            {% if review.user_title %}
+                            <div class="review-title">{{ review.user_title }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
     {% endif %}
 
     <section class="contact-section" id="contact">

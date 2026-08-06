@@ -5,6 +5,7 @@ from allauth.account.utils import user_email
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialAccount
 from allauth.utils import get_user_model
+from core.models import UserAccount
 
 
 User = get_user_model()
@@ -43,6 +44,8 @@ class SkilliflySocialAccountAdapter(DefaultSocialAccountAdapter):
     """
     - Auto-fill first_name/last_name from Google profile data.
     - Link social login to an existing local user with the same email (prevents duplicates).
+    - Record the account type chosen on the signup funnel in the UserAccount table,
+      and auto-complete signup for clients (they never see the username step).
     """
 
     def populate_user(self, request, sociallogin, data):
@@ -60,6 +63,21 @@ class SkilliflySocialAccountAdapter(DefaultSocialAccountAdapter):
             user.last_name = family_name
 
         return user
+
+    def save_user(self, request, sociallogin, form=None):
+        user = super().save_user(request, sociallogin, form=form)
+        # Persist the account type chosen on the signup funnel. Runs for both the
+        # auto-signup (client) and username-form (editor) completion paths.
+        account_type = request.session.get("signup_account_type", "editor")
+        if account_type in ("editor", "client"):
+            UserAccount.objects.update_or_create(user=user, defaults={"account_type": account_type})
+        request.session.pop("signup_account_type", None)
+        return user
+
+    def is_auto_signup_allowed(self, request, sociallogin):
+        # Clients sign up with a single Google click — skip the username picker.
+        # The session flag is intentionally left in place so save_user can read it.
+        return request.session.get("signup_account_type") == "client" or super().is_auto_signup_allowed(request, sociallogin)
 
     def pre_social_login(self, request, sociallogin):
         """

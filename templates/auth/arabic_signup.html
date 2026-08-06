@@ -2,17 +2,17 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}أنشئ حسابك — Skillifly{% endblock %}
+{% block title %}أنشئ حساب المونتير — Skillifly{% endblock %}
 
-{% block meta_description %}أنشئ حسابك المجاني على Skillifly وابدأ في بناء ملفك المهني الاحترافي خلال دقائق.{% endblock %}
+{% block meta_description %}أنشئ حسابك كمونتير على Skillifly وابدأ في بناء ملفك المهني الاحترافي، اعرض شو ريلز خاصتك وليكتشفك العملاء.{% endblock %}
 
-{% block meta_keywords %}إنشاء حساب, تسجيل جديد, حساب مجاني, ملف مهني, skillifly{% endblock %}
+{% block meta_keywords %}إنشاء حساب, تسجيل جديد, حساب مونتير, ملف مهني, شو ريل, skillifly{% endblock %}
 
-{% block og_title %}أنشئ حسابك — Skillifly{% endblock %}
-{% block og_description %}أنشئ حسابك المجاني على Skillifly وابدأ في بناء ملفك المهني الاحترافي خلال دقائق.{% endblock %}
+{% block og_title %}أنشئ حساب المونتير — Skillifly{% endblock %}
+{% block og_description %}أنشئ حسابك كمونتير على Skillifly وابدأ في بناء ملفك المهني الاحترافي.{% endblock %}
 {% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
-{% block twitter_title %}أنشئ حسابك — Skillifly{% endblock %}
-{% block twitter_description %}أنشئ حسابك المجاني على Skillifly وابدأ في بناء ملفك المهني الاحترافي خلال دقائق.{% endblock %}
+{% block twitter_title %}أنشئ حساب المونتير{% endblock %}
+{% block twitter_description %}أنشئ حسابك كمونتير واعرض أعمالك للعملاء.{% endblock %}
 {% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
@@ -24,16 +24,16 @@
 <meta property="og:locale" content="ar_AR" />
 <meta name="theme-color" content="#E11D48" />
 
-<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signup' %}" />
-<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}" />
-<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}" />
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_editor_signup' %}" />
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'editor_signup' %}" />
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'editor_signup' %}" />
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  "name": "أنشئ حسابك على Skillifly",
-  "description": "أنشئ حسابك المجاني لبناء ملفك المهني الاحترافي.",
+  "name": "أنشئ حساب المونتير على Skillifly",
+  "description": "أنشئ حسابك كمونتير لبناء ملفك المهني الاحترافي.",
   "inLanguage": "ar",
   "url": "{{ request.build_absolute_uri }}",
   "potentialAction": {
@@ -42,7 +42,7 @@
       "http://schema.org/DesktopWebPlatform",
       "http://schema.org/MobileWebPlatform"
     ],
-    "urlTemplate": "https://skillifly.cloud/ar/signup/"
+    "urlTemplate": "https://skillifly.cloud/ar/signup/editor/"
   }
 }
 </script>
@@ -191,8 +191,8 @@
           <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
           <span class="text-xl font-bold gradient-text">Skillifly</span>
         </a>
-        <h1 class="text-2xl font-bold mb-1 text-slate-900">أنشئ حسابك</h1>
-        <p class="text-slate-500 text-sm">ابدأ في بناء ملفك المهني الاحترافي اليوم.</p>
+        <h1 class="text-2xl font-bold mb-1 text-slate-900">أنشئ حساب المونتير</h1>
+        <p class="text-slate-500 text-sm">ابنِ ملفك المهني الاحترافي ودع العملاء يكتشفون أعمالك.</p>
       </div>
 
       <!-- Error messages -->
@@ -210,7 +210,11 @@
       <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
       {% if google_oauth_button_visible %}
       <div class="mb-6">
+        {% if next %}
+        <form action="{% provider_login_url 'google' next=next %}" method="post">
+        {% else %}
         <form action="{% provider_login_url 'google' next='/ar/dashboard/' %}" method="post">
+        {% endif %}
           {% csrf_token %}
           <button type="submit"
             class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
@@ -293,7 +297,7 @@
         </div>
 
         <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl">
-          إنشاء الحساب
+          إنشاء حساب المونتير
           <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>

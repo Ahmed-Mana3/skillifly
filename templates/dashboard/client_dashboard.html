@@ -1,0 +1,103 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Client Dashboard — Skillifly{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  .client-premium-shell {
+    min-height: 100vh;
+  }
+
+  .client-hero-card {
+    border: 1px solid rgba(99, 102, 241, 0.14);
+    border-radius: 24px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
+    box-shadow: 0 24px 48px -30px rgba(15, 23, 42, 0.35);
+  }
+
+  .client-kpi-chip {
+    border: 1px solid rgba(99, 102, 241, 0.18);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 10px 14px;
+  }
+
+  .client-action-card {
+    border-radius: 22px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 16px 34px -22px rgba(15, 23, 42, 0.3);
+  }
+
+  .client-action-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 24px 38px -24px rgba(37, 99, 235, 0.35);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="client-premium-shell min-h-screen">
+  <div class="max-w-7xl mx-auto px-6 py-12">
+
+    <div class="client-hero-card p-7 md:p-9 mb-8 animate-fadeInUp">
+      <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-2">Client Command Center</p>
+      <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black flex items-center gap-2" style="font-family: 'Syne', sans-serif;">
+        <span>{{ user.first_name|default:user.username }}</span>
+        <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-8 w-8 sm:h-10 sm:w-10 object-contain" loading="lazy" decoding="async" width="40" height="40">
+      </h1>
+      <p class="text-slate-600 font-medium mb-5">Lead with confidence. Discover top-tier editors and build your public reputation through trusted reviews.</p>
+
+      <div class="flex flex-wrap gap-3">
+        <div class="client-kpi-chip">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Total Reviews</p>
+          <p class="text-lg font-extrabold text-blue-600">{{ reviews_count }}</p>
+        </div>
+        <div class="client-kpi-chip">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Editors Reviewed</p>
+          <p class="text-lg font-extrabold text-violet-600">{{ reviewed_editors_count }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fadeInUp" style="animation-delay: 0.1s">
+      <a href="{% url 'examples' %}" class="client-action-card p-6 group transition-all duration-300 block">
+        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Hire Exceptional Talent</h3>
+        <p class="text-sm text-slate-600 font-medium">Explore standout portfolios and shortlist editors that match your exact creative standards.</p>
+        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
+          <span>Explore Top Editors</span>
+          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
+      </a>
+
+      <a href="{% url 'client_reviews' %}" class="client-action-card p-6 group transition-all duration-300 block">
+        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l2.025 6.236h6.557c.969 0 1.371 1.24.588 1.81l-5.304 3.855 2.026 6.236c.3.921-.755 1.688-1.54 1.118L12 18.327l-5.303 3.855c-.785.57-1.84-.197-1.54-1.118l2.026-6.236L1.879 10.973c-.783-.57-.38-1.81.588-1.81h6.557l2.025-6.236z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Own Your Review Presence</h3>
+        <p class="text-sm text-slate-600 font-medium">{{ reviews_count }} review{{ reviews_count|pluralize }} across {{ reviewed_editors_count }} editor{{ reviewed_editors_count|pluralize }}. Maintain a premium, credible client voice.</p>
+        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
+          <span>Manage Review Portfolio</span>
+          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

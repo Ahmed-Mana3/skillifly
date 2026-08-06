@@ -243,6 +243,7 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = 'signin'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'signin'
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure_view'
 
 # allauth settings
 ACCOUNT_ADAPTER = "core.adapters.SkillliflyAccountAdapter"

@@ -161,6 +161,7 @@ def builder_view(request):
         "project_category_formset": project_category_formset,
         "link_formset": link_formset,
         "creator_formset": creator_formset,
+        "reviews": Review.objects.filter(user=request.user).order_by('-created_at'),
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
         "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True
@@ -318,6 +319,7 @@ def update_portfolio_view(request):
         "project_category_formset": project_category_formset,
         "link_formset": link_formset,
         "creator_formset": creator_formset,
+        "reviews": Review.objects.filter(user=request.user).order_by('-created_at'),
         "is_update": True,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
