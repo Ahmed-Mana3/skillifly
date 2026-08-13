@@ -9,10 +9,10 @@
 
 {% block og_title %}نماذج جاهزة — ملفات مهنية حقيقية | Skillifly{% endblock %}
 {% block og_description %}استكشف ملفات مهنية حقيقية أنشأها محترفون باستخدام Skillifly.{% endblock %}
-{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block og_image %}{% static 'img/logo.png' %}{% endblock %}
 {% block twitter_title %}نماذج جاهزة — ملفات مهنية حقيقية | Skillifly{% endblock %}
 {% block twitter_description %}استكشف ملفات مهنية حقيقية أنشأها محترفون باستخدام Skillifly.{% endblock %}
-{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_image %}{% static 'img/logo.png' %}{% endblock %}
 
 {% block extra_head %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -114,15 +114,20 @@
   }
 
   .btn-ghost {
-    background: #ffffff !important;
-    border: 1.5px solid rgba(37, 99, 235, 0.35) !important;
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
     color: #0F172A !important;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .btn-ghost:hover {
-    background: #FFF1F2 !important;
-    border-color: #3B82F6 !important;
-    box-shadow: 0 6px 18px -6px rgba(37, 99, 235, 0.25) !important;
+    background: #F1F5F9 !important;
+    border-color: #CBD5E1 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
   }
 
   .btn-white {
@@ -134,13 +139,13 @@
     color: #3B82F6 !important;
     font-weight: 800;
     border-radius: 16px;
-    box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.35) !important;
+    box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.08) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .btn-white:hover {
     transform: translateY(-2px);
-    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.12) !important;
   }
 
   /* Cards */
@@ -234,8 +239,8 @@
   <!-- Hero Section -->
   <section class="py-20 px-6 relative overflow-hidden text-center arabic-rtl">
     <div class="warm-lights" aria-hidden="true"></div>
-    <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(15,23,42,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-pink-400/10 blur-[120px] rounded-full"></div>
+    <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-400/10 blur-[120px] rounded-full"></div>
 
     <div class="max-w-4xl mx-auto relative z-10 animate-fadeInUp">
       <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6 leading-[1.2]">
@@ -270,7 +275,7 @@
             <!-- Theme Badge -->
             {% if showcase.profile.theme %}
             <div class="absolute top-5 left-5">
-              <span class="bg-white/95 backdrop-blur-md text-[10px] font-black px-4 py-2 rounded-full text-slate-900 shadow-sm border border-pink-100">
+              <span class="bg-white/95 backdrop-blur-md text-[10px] font-black px-4 py-2 rounded-full text-slate-900 shadow-sm border border-slate-100">
                 {{ showcase.profile.theme.name }}
               </span>
             </div>
@@ -304,8 +309,8 @@
       </div>
       {% else %}
       <div class="text-center py-32 glass-card rounded-[3rem] border-dashed border-2 border-blue-200">
-         <div class="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
-           <svg class="w-10 h-10 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+         <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+           <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
          </div>
          <h3 class="text-2xl font-bold text-slate-900 mb-2">قريبًا</h3>
          <p class="text-slate-600 font-medium italic">نختار حاليًا أفضل الملفات المهنية لنعرضها لك. عد قريبًا!</p>
@@ -318,18 +323,17 @@
   <section class="px-6 py-24 relative overflow-hidden arabic-rtl">
     <div class="warm-lights" aria-hidden="true"></div>
     <div class="max-w-5xl mx-auto reveal">
-      <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden text-white" style="background: linear-gradient(135deg, #E11D48 0%, #8B5CF6 60%, #F59E0B 110%);">
-        <div class="absolute inset-0 opacity-[0.16]" style="background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.5), transparent 45%), radial-gradient(circle at 85% 80%, rgba(255,255,255,0.35), transparent 40%);"></div>
-        <div class="absolute inset-0 opacity-[0.12]" style="background-image: linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px); background-size: 48px 48px;"></div>
+      <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden glass-card">
+        <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.06), transparent 45%), radial-gradient(circle at 85% 80%, rgba(139,92,246,0.05), transparent 40%);"></div>
         <div class="relative z-10">
-          <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 leading-tight text-white" style="text-shadow: 0 2px 24px rgba(0,0,0,0.18);">
-            جاهز لبناء <span class="text-amber-300">ملفك الخاص؟</span>
+          <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 leading-tight text-slate-900">
+            جاهز لبناء <span class="gradient-text">ملفك الخاص؟</span>
           </h2>
-          <p class="text-white/95 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium leading-relaxed" style="text-shadow: 0 1px 12px rgba(0,0,0,0.12);">انضم إلى {{ portfolios_count }} محترفًا يحصلون على فرص عمل عبر Skillifly.</p>
+          <p class="text-slate-600 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium leading-relaxed">انضم إلى {{ portfolios_count }} محترفًا يحصلون على فرص عمل عبر Skillifly.</p>
 
           <div class="flex flex-col items-center gap-6">
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-              <a href="{% url 'arabic_signup' %}" class="btn-white w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-base sm:text-lg whitespace-nowrap">
+              <a href="{% url 'arabic_signup' %}" class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-base sm:text-lg whitespace-nowrap">
                 ابدأ مجانًا
                 <svg class="rtl-arrow w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
               </a>
@@ -337,7 +341,7 @@
                 اعرف المزيد
               </a>
             </div>
-            <p class="text-white/80 text-xs font-bold uppercase tracking-widest">ضمان استرداد خلال 14 يومًا</p>
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">ضمان استرداد خلال 14 يومًا</p>
           </div>
         </div>
       </div>
