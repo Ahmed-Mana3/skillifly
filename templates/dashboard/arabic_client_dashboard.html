@@ -18,11 +18,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-    /* ===== Arabic Client Dashboard — Warm Brand Overrides ===== */
+    /* ===== Arabic Client Dashboard — Brand Overrides (English palette) ===== */
     body {
         background-color: white !important;
         color: #0F172A !important;
@@ -56,41 +56,23 @@
     }
 
     .gradient-brand {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     }
 
-    /* Warm bird logo — recolor the cool blue/purple brand mark to the Arabic warm palette */
-    .arabic-rtl .client-bird-logo {
-        filter: hue-rotate(78deg) saturate(1.2);
-    }
-
-    /* Warm accent overrides for inherited English utility colors */
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-    .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
-    .arabic-rtl .text-blue-500 { color: #DB2777 !important; }
-    .arabic-rtl .text-purple-600 { color: #DB2777 !important; }
-    .arabic-rtl .text-violet-600 { color: #DB2777 !important; }
-    .arabic-rtl .text-orange-600 { color: #EA580C !important; }
-
-    /* Contrast boost — darken muted text for readability on white */
-    .arabic-rtl .text-slate-400 { color: #64748B !important; }
-    .arabic-rtl .text-slate-500 { color: #475569 !important; }
-    .arabic-rtl .text-slate-600 { color: #334155 !important; }
-
-    /* Client command center — warm cards */
+    /* Client command center cards */
     .client-premium-shell {
         min-height: 100vh;
     }
 
     .client-hero-card {
-        border: 1px solid rgba(225, 29, 72, 0.14);
+        border: 1px solid rgba(99, 102, 241, 0.14);
         border-radius: 24px;
-        background: linear-gradient(145deg, #ffffff 0%, #fff5f7 100%);
-        box-shadow: 0 24px 48px -30px rgba(190, 18, 60, 0.3);
+        background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
+        box-shadow: 0 24px 48px -30px rgba(15, 23, 42, 0.35);
     }
 
     .client-kpi-chip {
-        border: 1px solid rgba(225, 29, 72, 0.16);
+        border: 1px solid rgba(99, 102, 241, 0.18);
         background: #ffffff;
         border-radius: 14px;
         padding: 10px 14px;
@@ -98,15 +80,15 @@
 
     .client-action-card {
         border-radius: 22px;
-        border: 1px solid rgba(225, 29, 72, 0.12);
-        background: linear-gradient(160deg, #ffffff 0%, #fff7f7 100%);
-        box-shadow: 0 16px 34px -22px rgba(190, 18, 60, 0.25);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 16px 34px -22px rgba(15, 23, 42, 0.3);
     }
 
     .client-action-card:hover {
         transform: translateY(-4px);
-        border-color: rgba(236, 72, 153, 0.4);
-        box-shadow: 0 24px 38px -24px rgba(219, 39, 119, 0.35);
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 24px 38px -24px rgba(37, 99, 235, 0.35);
     }
 
     /* RTL card arrow — points forward (left) and slides on hover */
@@ -121,7 +103,7 @@
     a:focus-visible,
     button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
         border-radius: 12px;
     }
 </style>
@@ -133,21 +115,21 @@
 
     <!-- Hero card -->
     <div class="client-hero-card p-7 md:p-9 mb-8 animate-fadeInUp">
-      <p class="text-xs text-pink-600 font-bold mb-2">مركز تحكم العميل</p>
+      <p class="text-xs text-purple-600 font-bold mb-2">مركز تحكم العميل</p>
       <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black flex items-center gap-2">
         <span>{{ user.first_name|default:user.username }}</span>
-        <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="client-bird-logo h-8 w-8 sm:h-10 sm:w-10 object-contain" loading="lazy" decoding="async" width="40" height="40">
+        <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-8 w-8 sm:h-10 sm:w-10 object-contain" loading="lazy" decoding="async" width="40" height="40">
       </h1>
       <p class="text-slate-600 font-medium mb-5">قُد بثقة. اكتشف محررين من الطراز الأول، وابنِ سمعتك المهنية عبر تقييمات موثوقة.</p>
 
       <div class="flex flex-wrap gap-3">
         <div class="client-kpi-chip">
           <p class="text-[11px] text-slate-500 font-bold mb-0.5">إجمالي التقييمات</p>
-          <p class="text-lg font-extrabold text-pink-600">{{ reviews_count }}</p>
+          <p class="text-lg font-extrabold text-blue-600">{{ reviews_count }}</p>
         </div>
         <div class="client-kpi-chip">
           <p class="text-[11px] text-slate-500 font-bold mb-0.5">المحررون الذين قيّمتهم</p>
-          <p class="text-lg font-extrabold text-orange-600">{{ reviewed_editors_count }}</p>
+          <p class="text-lg font-extrabold text-violet-600">{{ reviewed_editors_count }}</p>
         </div>
       </div>
     </div>
@@ -162,7 +144,7 @@
         </div>
         <h3 class="text-base font-bold mb-1 text-black">وظّف مواهب استثنائية</h3>
         <p class="text-sm text-slate-600 font-medium">استكشف نماذج مميزة للمحررين واختر من يناسب معاييرك الإبداعية بدقة.</p>
-        <div class="flex items-center gap-1 text-pink-600 text-sm mt-4 font-bold">
+        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
           <span>استكشف أفضل المحررين</span>
           <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -181,7 +163,7 @@
           {% if reviews_count %}{{ reviews_count }} من التقييمات على {{ reviewed_editors_count }} من المحررين. حافظ على صوت عميل موثوق ومميز.
           {% else %}ابدأ الآن بترك تقييمك الأول وابنِ حضورًا موثوقًا كعميل مميز.{% endif %}
         </p>
-        <div class="flex items-center gap-1 text-pink-600 text-sm mt-4 font-bold">
+        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
           <span>إدارة تقييماتك</span>
           <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />

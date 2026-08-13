@@ -19,11 +19,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-    /* ===== Arabic Analytics — Warm Brand Overrides ===== */
+    /* ===== Arabic Analytics — Brand Overrides (English palette) ===== */
     body {
         background-color: white !important;
         color: #0F172A !important;
@@ -60,8 +60,8 @@
 
     .glass-card {
         background: rgba(255, 255, 255, 0.92) !important;
-        border: 1px solid rgba(225, 29, 72, 0.14) !important;
-        box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
     }
@@ -83,22 +83,12 @@
     }
 
     .nav-link:hover {
-        color: #E11D48 !important;
+        color: #3B82F6 !important;
     }
 
     .logo-mark img {
-        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+        filter: none;
     }
-
-    /* Warm accent overrides for inherited English utility colors */
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-    .arabic-rtl .text-blue-500 { color: #DB2777 !important; }
-    .arabic-rtl .bg-blue-50 { background-color: #FFF1F7 !important; }
-    .arabic-rtl .border-blue-100 { border-color: #FBCFE8 !important; }
-
-    /* Contrast boost — darken muted text for readability on white */
-    .arabic-rtl .text-slate-400 { color: #64748B !important; }
-    .arabic-rtl .text-slate-500 { color: #475569 !important; }
 
     .progress-bar {
         height: 8px;
@@ -109,7 +99,7 @@
 
     .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #E11D48, #F97316);
+        background: linear-gradient(90deg, #3B82F6, #8B5CF6);
         border-radius: 4px;
         transition: width 1s ease-in-out;
     }
@@ -135,7 +125,7 @@
     a:focus-visible,
     button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
         border-radius: 12px;
     }
 </style>
@@ -301,13 +291,13 @@
             datasets: [{
                 label: 'المشاهدات',
                 data: chartData.map(d => d.value),
-                borderColor: '#DB2777',
-                backgroundColor: 'rgba(219, 39, 119, 0.05)',
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.05)',
                 borderWidth: 4,
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: '#fff',
-                pointBorderColor: '#DB2777',
+                pointBorderColor: '#3B82F6',
                 pointBorderWidth: 2,
                 pointRadius: 4,
                 pointHoverRadius: 6

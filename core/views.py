@@ -26,6 +26,26 @@ from django.template.loader import render_to_string
 logger = logging.getLogger('core')
 
 
+def _next_url(request, fallback):
+    """
+    Resolve the `next` value used for redirects after login/signup into a real
+    path (starting with `/`). A bare URL *name* like 'arabic_dashboard' is fine
+    for Django's redirect() (it reverses names), but Google OAuth stashes this
+    value and later issues a *relative* redirect against the callback URL, so
+    the browser would resolve it to /accounts/google/login/callback/arabic_dashboard
+    and hit a 404.
+    """
+    raw = request.GET.get('next') or request.POST.get('next') or ''
+    if not raw:
+        raw = fallback
+    if raw.startswith('/'):
+        return raw
+    try:
+        return reverse(raw)
+    except Exception:
+        return raw
+
+
 def csrf_failure_view(request, reason=""):
     """
     Custom CSRF failure handler.
@@ -583,7 +603,7 @@ def editor_signup_view(request):
         return redirect('dashboard')
     request.session['signup_account_type'] = 'editor'
 
-    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+    next_url = _next_url(request, 'dashboard')
 
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -616,7 +636,7 @@ def arabic_editor_signup_view(request):
         return redirect('arabic_dashboard')
     request.session['signup_account_type'] = 'editor'
 
-    next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
+    next_url = _next_url(request, 'arabic_dashboard')
 
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -650,7 +670,7 @@ def client_signup_view(request):
         return redirect('dashboard')
     request.session['signup_account_type'] = 'client'
 
-    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+    next_url = _next_url(request, 'dashboard')
 
     if request.method == "POST":
         form = ClientRegisterForm(request.POST)
@@ -695,7 +715,7 @@ def arabic_client_signup_view(request):
         return redirect('arabic_dashboard')
     request.session['signup_account_type'] = 'client'
 
-    next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
+    next_url = _next_url(request, 'arabic_dashboard')
 
     if request.method == "POST":
         form = ClientRegisterForm(request.POST)
@@ -743,7 +763,7 @@ def signin_view(request):
         return redirect('dashboard')
     request.session.pop('signup_account_type', None)
     
-    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+    next_url = _next_url(request, 'dashboard')
 
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
@@ -779,7 +799,7 @@ def arabic_signin_view(request):
         return redirect('arabic_dashboard')
     request.session.pop('signup_account_type', None)
 
-    next_url = request.GET.get('next') or request.POST.get('next') or 'arabic_dashboard'
+    next_url = _next_url(request, 'arabic_dashboard')
 
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
@@ -835,7 +855,7 @@ def verify_otp_view(request):
                 EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
 
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                next_url = request.session.pop('next_url', 'arabic_dashboard' if is_arabic else 'dashboard')
+                next_url = request.session.pop('next_url', _next_url(request, 'arabic_dashboard' if is_arabic else 'dashboard'))
                 messages.success(request, 'تم تأكيد بريدك الإلكتروني بنجاح!' if is_arabic else 'Email verified successfully!')
                 return redirect(next_url)
             else:

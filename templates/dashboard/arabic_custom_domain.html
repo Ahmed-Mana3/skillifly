@@ -18,11 +18,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-    /* ===== Arabic Custom Domain — Warm Brand Overrides ===== */
+    /* ===== Arabic Custom Domain — Brand Overrides (English palette) ===== */
     body {
         background-color: white !important;
         color: #0F172A !important;
@@ -58,27 +58,27 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
         color: #ffffff !important;
-        box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+        box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
         border: none !important;
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-        box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+        background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
+        box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
     }
 
     .glass-card {
         background: rgba(255, 255, 255, 0.92) !important;
-        border: 1px solid rgba(225, 29, 72, 0.14) !important;
-        box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
     }
 
     .gradient-brand {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     }
 
     .nav-link {
@@ -87,27 +87,12 @@
     }
 
     .nav-link:hover {
-        color: #E11D48 !important;
+        color: #3B82F6 !important;
     }
 
     .logo-mark img {
-        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+        filter: none;
     }
-
-    /* Warm accent overrides for inherited English utility colors */
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-    .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
-    .arabic-rtl .text-blue-700 { color: #BE123C !important; }
-    .arabic-rtl .text-blue-500 { color: #DB2777 !important; }
-    .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
-    .arabic-rtl .bg-blue-50 { background-color: #FFF1F7 !important; }
-    .arabic-rtl .border-blue-100 { border-color: #FBCFE8 !important; }
-    .arabic-rtl .text-blue-800 { color: #BE123C !important; }
-
-    /* Contrast boost — darken muted text for readability on white */
-    .arabic-rtl .text-slate-400 { color: #64748B !important; }
-    .arabic-rtl .text-slate-500 { color: #475569 !important; }
-    .arabic-rtl .text-slate-600 { color: #334155 !important; }
 
     /* Inputs */
     .sf-input {
@@ -124,8 +109,8 @@
 
     .sf-input:focus {
         outline: none;
-        border-color: #EC4899;
-        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
         background: #ffffff;
     }
 
@@ -169,7 +154,7 @@
     a:focus-visible,
     button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
         border-radius: 12px;
     }
 </style>
@@ -189,12 +174,12 @@
     <div class="animate-fade-in">
         <div class="glass-card rounded-[2rem] p-6 sm:p-10 shadow-2xl overflow-hidden relative">
             <!-- Decorative background -->
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="relative z-10">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-10">
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500 flex items-center justify-center shadow-xl shadow-rose-500/20">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 flex items-center justify-center shadow-xl shadow-blue-500/20">
                         <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
                         </svg>
@@ -213,7 +198,7 @@
                             <label class="block text-xs font-black text-slate-400 tracking-widest mb-3">اسم النطاق</label>
                             <div class="relative group">
                                 {{ form.domain }}
-                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-rose-500 transition-colors">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
@@ -225,7 +210,7 @@
                         <div class="p-6 sm:p-8 rounded-[1.5rem] bg-slate-50 border border-slate-100 space-y-6">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold">DNS</span>
+                                    <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">DNS</span>
                                     <h3 class="text-sm font-bold text-slate-800 tracking-widest">إرشادات إعداد DNS</h3>
                                 </div>
                             </div>
@@ -237,7 +222,7 @@
                             <div class="space-y-4">
                                 <!-- A Record for Root -->
                                 <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
-                                    <p class="text-[10px] font-black text-rose-500 tracking-widest mb-3">الخيار الأول: النطاق الرئيسي (مثل johndoe.com)</p>
+                                    <p class="text-[10px] font-black text-blue-500 tracking-widest mb-3">الخيار الأول: النطاق الرئيسي (مثل johndoe.com)</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                         <div>
                                             <p class="text-[9px] font-bold text-slate-400 tracking-widest mb-1">النوع</p>
@@ -256,7 +241,7 @@
 
                                 <!-- CNAME for Subdomain -->
                                 <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
-                                    <p class="text-[10px] font-black text-orange-600 tracking-widest mb-3">الخيار الثاني: النطاق الفرعي (مثل portfolio.johndoe.com)</p>
+                                    <p class="text-[10px] font-black text-purple-500 tracking-widest mb-3">الخيار الثاني: النطاق الفرعي (مثل portfolio.johndoe.com)</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                         <div>
                                             <p class="text-[9px] font-bold text-slate-400 tracking-widest mb-1">النوع</p>

@@ -18,11 +18,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-    /* ===== Arabic Client Reviews — Warm Brand Overrides ===== */
+    /* ===== Arabic Client Reviews — Brand Overrides (English palette) ===== */
     body {
         background-color: white !important;
         color: #0F172A !important;
@@ -58,44 +58,27 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
         color: #ffffff !important;
-        box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+        box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
         border: none !important;
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-        box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+        background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
+        box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
     }
 
     .gradient-brand {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     }
 
     .gradient-text {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+        background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
         -webkit-background-clip: text !important;
         background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
     }
-
-    /* Warm accent overrides for inherited English utility colors */
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-    .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
-    .arabic-rtl .text-blue-700 { color: #BE123C !important; }
-    .arabic-rtl .text-blue-500 { color: #DB2777 !important; }
-    .arabic-rtl .text-purple-600 { color: #DB2777 !important; }
-    .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
-    .arabic-rtl .bg-blue-50 { background-color: #FFF1F7 !important; }
-    .arabic-rtl .border-blue-100 { border-color: #FBCFE8 !important; }
-    .arabic-rtl .text-blue-800 { color: #BE123C !important; }
-    .arabic-rtl .focus\:border-blue-400:focus { border-color: #EC4899 !important; }
-
-    /* Contrast boost — darken muted text for readability on white */
-    .arabic-rtl .text-slate-400 { color: #64748B !important; }
-    .arabic-rtl .text-slate-500 { color: #475569 !important; }
-    .arabic-rtl .text-slate-600 { color: #334155 !important; }
 
     /* Back arrow motion (RTL) */
     .arabic-rtl .back-arrow {
@@ -108,7 +91,7 @@
     a:focus-visible,
     button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
         border-radius: 12px;
     }
 </style>
@@ -120,7 +103,7 @@
   <!-- Header -->
   <div class="mb-10 animate-fadeInUp">
     <a href="{% url 'client_dashboard' %}"
-      class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-pink-600 font-bold mb-4 transition-colors group">
+      class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 font-bold mb-4 transition-colors group">
       <svg class="w-4 h-4 back-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
       </svg>

@@ -19,15 +19,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-  /* Skillifly Warm Brand Accents (Arabic) */
+  /* Skillifly Brand Accents (Arabic) */
   :root {
-    --accent: #E11D48;
-    --accent-alt: #F97316;
-    --accent-glow: rgba(225, 29, 72, 0.15);
+    --accent: #8B5CF6;
+    --accent-alt: #8B5CF6;
+    --accent-glow: rgba(139, 92, 246, 0.2);
   }
 
   body {
@@ -66,21 +65,17 @@
   .arabic-rtl .btn-premium {
     letter-spacing: 0 !important;
     text-transform: none !important;
-    background: linear-gradient(135deg, #E11D48 0%, #EC4899 50%, #F97316 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #DB2777 100%);
     background-size: 200% auto;
-    box-shadow: 0 10px 30px -5px rgba(225, 29, 72, 0.35);
+    box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.3);
   }
 
   .arabic-rtl .btn-premium:hover {
-    box-shadow: 0 20px 40px -10px rgba(249, 115, 22, 0.45);
-  }
-
-  .arabic-rtl .builder-tabs {
-    border-bottom-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.4);
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #F43F5E 0%, #F97316 100%);
+    background: linear-gradient(135deg, #A78BFA 0%, #E879F9 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -138,7 +133,7 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     margin-bottom: 3rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   @media (max-width: 768px) {
@@ -152,9 +147,9 @@
     flex-shrink: 0;
     padding: 0.6rem 1rem;
     border-radius: 12px;
-    background: #F1F5F9;
-    border: 1px solid #E2E8F0;
-    color: #475569;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #71717a;
     font-size: 0.7rem;
     font-weight: 700;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -165,23 +160,23 @@
   }
 
   .tab-btn:hover {
-    background: #E2E8F0;
-    border-color: #CBD5E1;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-1px);
   }
 
   .tab-btn.active {
-    background: rgba(225, 29, 72, 0.1);
-    border-color: rgba(225, 29, 72, 0.35);
-    color: #E11D48;
-    box-shadow: 0 10px 20px -10px rgba(225, 29, 72, 0.3);
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #a78bfa;
+    box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.3);
   }
 
   .tab-num {
     width: 1.25rem;
     height: 1.25rem;
     border-radius: 6px;
-    background: #E2E8F0;
+    background: rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -190,7 +185,7 @@
   }
 
   .tab-btn.active .tab-num {
-    background: linear-gradient(135deg, #E11D48, #F97316);
+    background: #8b5cf6;
     color: white;
   }
 
@@ -205,34 +200,34 @@
   }
   .category-manager-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(225, 29, 72, 0.15);
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15);
   }
   .category-chip {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
     font-weight: 600;
     border-radius: 999px;
-    background: #F1F5F9;
-    border: 1px solid #E2E8F0;
-    color: #64748B;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #a1a1aa;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
   }
   .category-chip:hover {
-    background: #E2E8F0;
-    border-color: #CBD5E1;
-    color: #0F172A;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
     transform: translateY(-1px);
   }
   .category-chip.active {
-    background: rgba(225, 29, 72, 0.1);
-    border-color: rgba(225, 29, 72, 0.45);
-    color: #E11D48;
-    box-shadow: 0 0 12px rgba(225, 29, 72, 0.2);
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.45);
+    color: #c084fc;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
   }
   .logo-mark img {
-    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    filter: none;
   }
 </style>
 {% endblock %}
@@ -246,7 +241,7 @@
       <div class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
         <div>
       <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6"
-           style="background: rgba(225,29,72,0.08); border: 1px solid rgba(225,29,72,0.2); color: #E11D48;">
+           style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: #A78BFA;">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
         البنية التحتية لملفك المهني نشطة
       </div>
@@ -335,7 +330,7 @@
                 <label class="sf-label">الصورة الشخصية <span class="text-[10px] text-zinc-500 font-normal normal-case ml-2">(مطلوبة حسب تصميمك الحالي)</span></label>
                 <input type="file" name="picture" class="sf-input" accept="image/*">
                 {% if request.user.profile.picture %}
-                <div class="mt-2 text-xs text-emerald-600">الحالي: مرفوع</div>
+                <div class="mt-2 text-xs text-emerald-400">الحالي: مرفوع</div>
                 {% endif %}
               </div>
               {% endif %}
@@ -455,10 +450,10 @@
 
             {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
             <!-- Category Management Center -->
-            <div class="mb-10 p-6 rounded-2xl border border-black/5 bg-slate-50 backdrop-blur-md">
+            <div class="mb-10 p-6 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md">
               <div class="flex items-center justify-between mb-6">
                 <div>
-                  <h3 class="text-lg font-bold text-black">إدارة المجموعات</h3>
+                  <h3 class="text-lg font-bold text-white">إدارة المجموعات</h3>
                   <p class="text-xs text-zinc-500 mt-1">نظّم مشاريعك في معارض منفصلة (مثال: فيديوهات موسيقية، إعلانات).</p>
                 </div>
                 <button type="button" class="btn-premium px-4 py-2 text-xs" onclick="Builder.openCategoryModalFor(null)">+ إنشاء مجموعة</button>
@@ -467,33 +462,33 @@
               <!-- Categories Grid -->
               <div id="builder-categories-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {% for cat in request.user.project_categories.all %}
-                <div class="category-manager-card group relative p-4 rounded-xl border border-black/5 bg-white hover:border-rose-500/40 transition-all flex flex-col justify-between min-h-[140px]" data-category-id="{{ cat.id }}" data-name="{{ cat.name }}" data-description="{{ cat.description|default:'' }}" data-thumbnail-url="{% if cat.thumbnail %}{{ cat.thumbnail.url }}{% endif %}">
+                <div class="category-manager-card group relative p-4 rounded-xl border border-white/5 bg-zinc-950/40 hover:border-violet-500/40 transition-all flex flex-col justify-between min-h-[140px]" data-category-id="{{ cat.id }}" data-name="{{ cat.name }}" data-description="{{ cat.description|default:'' }}" data-thumbnail-url="{% if cat.thumbnail %}{{ cat.thumbnail.url }}{% endif %}">
                   <!-- Cover Thumbnail Overlay Background -->
                   <div class="absolute inset-0 rounded-xl overflow-hidden z-0">
                     {% if cat.thumbnail %}
                     <img src="{{ cat.thumbnail.url }}" class="cat-card-bg w-full h-full object-cover opacity-20 filter blur-sm group-hover:scale-105 transition-all">
                     {% endif %}
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-200 via-slate-100/70 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent"></div>
                   </div>
 
                   <!-- Actions -->
                   <div class="relative z-10 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button type="button" class="w-7 h-7 rounded-lg bg-slate-200 border border-black/10 text-slate-500 hover:text-black flex items-center justify-center text-xs" onclick="Builder.editCategory('{{ cat.id }}')" title="تعديل المجموعة">
+                    <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center text-xs" onclick="Builder.editCategory('{{ cat.id }}')" title="تعديل المجموعة">
                       <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     </button>
-                    <button type="button" class="w-7 h-7 rounded-lg bg-slate-200 border border-black/10 text-red-500 hover:text-red-400 flex items-center justify-center text-xs" onclick="Builder.deleteCategory('{{ cat.id }}')" title="حذف المجموعة">
+                    <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-red-400 hover:text-red-300 flex items-center justify-center text-xs" onclick="Builder.deleteCategory('{{ cat.id }}')" title="حذف المجموعة">
                       <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-7v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                   </div>
 
                   <!-- Details -->
                   <div class="relative z-10 mt-auto">
-                    <h4 class="text-sm font-bold text-black cat-card-title">{{ cat.name }}</h4>
+                    <h4 class="text-sm font-bold text-white cat-card-title">{{ cat.name }}</h4>
                     <p class="text-[10px] text-zinc-500 mt-1 line-clamp-2 cat-card-desc">{% if cat.description %}{{ cat.description }}{% endif %}</p>
                   </div>
                 </div>
                 {% empty %}
-                <div id="no-categories-state" class="col-span-full py-8 text-center border border-dashed border-black/10 rounded-xl text-zinc-500 text-xs">
+                <div id="no-categories-state" class="col-span-full py-8 text-center border border-dashed border-white/5 rounded-xl text-zinc-500 text-xs">
                   لم تُنشأ مجموعات بعد. ستظهر المشاريع في "فيديوهات أخرى".
                 </div>
                 {% endfor %}
@@ -537,7 +532,7 @@
                   <div class="lg:col-span-5 flex flex-col justify-between">
                     <div><label class="sf-label">معاينة الصورة المصغرة</label><input type="file" name="{{ form.thumbnail.html_name }}" class="sf-input text-xs"></div>
                     <div class="mt-4 flex flex-col items-center">
-                      <span class="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-3">المعاينة</span>
+                      <span class="text-[9px] text-zinc-600 uppercase font-black tracking-widest mb-3">المعاينة</span>
                       <div class="preview-box">{% if form.thumbnail.value %}<img src="{{ form.thumbnail.value.url }}" class="w-full h-full object-cover">{% else %}لا توجد صورة{% endif %}</div>
                     </div>
                   </div>
@@ -597,8 +592,8 @@
               </div>
               {% endfor %}
             </div>
-            <div class="mt-20 pt-12 border-t border-black/5 flex flex-col md:flex-row gap-6 items-center justify-between">
-              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-black/10 text-zinc-500 hover:text-black hover:bg-black/5 transition-all font-black text-[10px] uppercase tracking-widest">
+            <div class="mt-20 pt-12 border-t border-white/5 flex flex-col md:flex-row gap-6 items-center justify-between">
+              <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/5 text-zinc-500 hover:text-white hover:bg-white/5 transition-all font-black text-[10px] uppercase tracking-widest">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                 الخطوة السابقة
               </button>
@@ -777,11 +772,11 @@
         <div class="lg:col-span-5 flex flex-col justify-between">
             <div>
                 <label class="sf-label">رفع الصورة المصغرة</label>
-                <div class="bg-slate-50 p-4 rounded-xl border border-black/5"><input type="file" name="projects-__prefix__-thumbnail" class="sf-input text-xs"></div>
+                <div class="bg-black/20 p-4 rounded-xl border border-white/5"><input type="file" name="projects-__prefix__-thumbnail" class="sf-input text-xs"></div>
             </div>
             <div class="mt-4 flex flex-col items-center">
-                <span class="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-3">معاينة الملف</span>
-                <div class="preview-box"><span class="text-zinc-400 text-[9px] font-bold">بانتظار الملف...</span></div>
+                <span class="text-[9px] text-zinc-600 uppercase font-black tracking-widest mb-3">معاينة الملف</span>
+                <div class="preview-box"><span class="text-zinc-700 text-[9px] font-bold">بانتظار الملف...</span></div>
             </div>
         </div>
     </div>
@@ -798,11 +793,11 @@
         <div class="lg:col-span-5 flex flex-col justify-between">
             <div>
                 <label class="sf-label">رفع الصورة المصغرة</label>
-                <div class="bg-slate-50 p-4 rounded-xl border border-black/5"><input type="file" name="project_categories-__prefix__-thumbnail" class="sf-input text-xs"></div>
+                <div class="bg-black/20 p-4 rounded-xl border border-white/5"><input type="file" name="project_categories-__prefix__-thumbnail" class="sf-input text-xs"></div>
             </div>
             <div class="mt-4 flex flex-col items-center">
-                <span class="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-3">معاينة الملف</span>
-                <div class="preview-box"><span class="text-zinc-400 text-[9px] font-bold">بانتظار الملف...</span></div>
+                <span class="text-[9px] text-zinc-600 uppercase font-black tracking-widest mb-3">معاينة الملف</span>
+                <div class="preview-box"><span class="text-zinc-700 text-[9px] font-bold">بانتظار الملف...</span></div>
             </div>
         </div>
     </div>
@@ -835,11 +830,11 @@
        style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);">
 
     <div id="category-modal-content"
-         style="position:relative; width:100%; max-width:640px; margin:1rem; background:linear-gradient(135deg,#FFFFFF 0%,#F8FAFC 100%); border:1px solid rgba(0,0,0,0.1); border-radius:1.5rem; padding:2.5rem; box-shadow:0 40px 120px rgba(0,0,0,0.25); transform:scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);">
+         style="position:relative; width:100%; max-width:640px; margin:1rem; background:linear-gradient(135deg,#141414 0%,#0a0a0a 100%); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2.5rem; box-shadow:0 40px 120px rgba(0,0,0,0.8); transform:scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);">
 
       <!-- Close Button -->
       <button type="button" id="cat-modal-close" onclick="Builder.closeCategoryModal()"
-              style="position:absolute; top:1.25rem; left:1.25rem; width:2.25rem; height:2.25rem; border-radius:50%; background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.1); color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">
+              style="position:absolute; top:1.25rem; left:1.25rem; width:2.25rem; height:2.25rem; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#a1a1aa; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">
         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
 
@@ -847,10 +842,10 @@
       <div style="margin-bottom:2rem;">
         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
           <div style="width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px #4ade80;"></div>
-          <span style="font-size:0.65rem; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:#64748b;">مجموعة جديدة</span>
+          <span style="font-size:0.65rem; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:#71717a;">مجموعة جديدة</span>
         </div>
-        <h3 id="cat-modal-title" style="font-size:1.875rem; font-weight:800; color:#0f172a; line-height:1.1;">إنشاء مجموعة</h3>
-        <p style="margin-top:0.5rem; font-size:0.875rem; color:#64748b; line-height:1.6;">سمِّ مجموعتك، أضف وصفًا، وارفع صورة مصغرة للغلاف.</p>
+        <h3 id="cat-modal-title" style="font-size:1.875rem; font-weight:800; color:#fff; line-height:1.1;">إنشاء مجموعة</h3>
+        <p style="margin-top:0.5rem; font-size:0.875rem; color:#71717a; line-height:1.6;">سمِّ مجموعتك، أضف وصفًا، وارفع صورة مصغرة للغلاف.</p>
       </div>
       <input type="hidden" id="cat-modal-id" value="">
 
@@ -860,44 +855,44 @@
         <!-- Left: Text Fields -->
         <div style="display:flex; flex-direction:column; gap:1.25rem;">
           <div>
-            <label for="cat-modal-name" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#64748b; margin-bottom:0.4rem;">اسم المجموعة <span style="color:#f87171;">*</span></label>
+            <label for="cat-modal-name" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#a1a1aa; margin-bottom:0.4rem;">اسم المجموعة <span style="color:#f87171;">*</span></label>
             <input type="text" id="cat-modal-name" placeholder="مثال: فيديوهات أعراس، فيديوهات موسيقية..."
-                   style="width:100%; background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.1); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.9rem; color:#0f172a; outline:none; transition:border-color 0.2s; box-sizing:border-box;"
-                   onfocus="this.style.borderColor='rgba(74,222,128,0.5)'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
+                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.9rem; color:#fff; outline:none; transition:border-color 0.2s; box-sizing:border-box;"
+                   onfocus="this.style.borderColor='rgba(74,222,128,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
             <p id="cat-modal-name-error" style="display:none; margin-top:0.4rem; font-size:0.75rem; color:#f87171;">اسم المجموعة مطلوب.</p>
           </div>
           <div>
-            <label for="cat-modal-desc" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#64748b; margin-bottom:0.4rem;">الوصف</label>
+            <label for="cat-modal-desc" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#a1a1aa; margin-bottom:0.4rem;">الوصف</label>
             <textarea id="cat-modal-desc" rows="4" placeholder="أي نوع من الأعمال يُضم إلى هذه المجموعة؟"
-                      style="width:100%; background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.1); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.9rem; color:#0f172a; outline:none; resize:none; transition:border-color 0.2s; box-sizing:border-box;"
-                      onfocus="this.style.borderColor='rgba(74,222,128,0.5)'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'"></textarea>
+                      style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.9rem; color:#fff; outline:none; resize:none; transition:border-color 0.2s; box-sizing:border-box;"
+                      onfocus="this.style.borderColor='rgba(74,222,128,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
           </div>
         </div>
 
         <!-- Right: Thumbnail Upload -->
         <div style="display:flex; flex-direction:column; gap:0.75rem;">
-          <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">الصورة المصغرة للغلاف</label>
+          <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#a1a1aa;">الصورة المصغرة للغلاف</label>
           <label for="cat-modal-thumb" id="cat-thumb-label"
-                 style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:180px; border-radius:0.875rem; border:2px dashed rgba(0,0,0,0.15); background:rgba(0,0,0,0.03); cursor:pointer; transition:all 0.2s; overflow:hidden; position:relative;"
-                 onmouseenter="this.style.borderColor='rgba(74,222,128,0.4)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.15)'">
+                 style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:180px; border-radius:0.875rem; border:2px dashed rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); cursor:pointer; transition:all 0.2s; overflow:hidden; position:relative;"
+                 onmouseenter="this.style.borderColor='rgba(74,222,128,0.4)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.12)'">
             <div id="cat-thumb-placeholder" style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; pointer-events:none;">
-              <svg width="28" height="28" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 20M14 8h.01"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-              <span style="font-size:0.7rem; font-weight:600; color:#64748b; text-align:center; padding:0 0.5rem;">اضغط للرفع</span>
+              <svg width="28" height="28" fill="none" stroke="#52525b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 20M14 8h.01"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              <span style="font-size:0.7rem; font-weight:600; color:#52525b; text-align:center; padding:0 0.5rem;">اضغط للرفع</span>
             </div>
             <img id="cat-thumb-preview" src="" alt="" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
             <input type="file" id="cat-modal-thumb" accept="image/*" style="display:none;" onchange="Builder.handleCategoryThumbPreview(this)">
           </label>
-          <span id="cat-thumb-name" style="font-size:0.7rem; color:#64748b; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">لم يتم اختيار ملف</span>
+          <span id="cat-thumb-name" style="font-size:0.7rem; color:#52525b; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">لم يتم اختيار ملف</span>
         </div>
       </div>
 
       <!-- Footer Actions -->
-      <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(0,0,0,0.07);">
+      <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.07);">
         <button type="button" onclick="Builder.closeCategoryModal()"
-                style="padding:0.625rem 1.25rem; border-radius:0.75rem; border:1px solid rgba(0,0,0,0.1); background:transparent; color:#64748b; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;"
-                onmouseenter="this.style.background='rgba(0,0,0,0.05)'" onmouseleave="this.style.background='transparent'">إلغاء</button>
+                style="padding:0.625rem 1.25rem; border-radius:0.75rem; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#a1a1aa; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;"
+                onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">إلغاء</button>
         <button type="button" onclick="Builder.saveCategoryModal()"
-                style="padding:0.625rem 1.5rem; border-radius:0.75rem; background:linear-gradient(135deg,#E11D48,#F97316); color:#fff; font-size:0.8rem; font-weight:800; cursor:pointer; border:none; display:flex; align-items:center; gap:0.5rem; transition:all 0.2s;"
+                style="padding:0.625rem 1.5rem; border-radius:0.75rem; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; font-size:0.8rem; font-weight:800; cursor:pointer; border:none; display:flex; align-items:center; gap:0.5rem; transition:all 0.2s;"
                 onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='1'">
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
           حفظ المجموعة

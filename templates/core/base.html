@@ -456,13 +456,13 @@
       z-index: 0;
     }
 
-    /* Arabic warm-brand logo — matches the Arabic landing page look on every Arabic page */
+    /* Arabic logo — rendered naturally to match the English brand colors */
     [dir="rtl"] .logo-mark img {
-      filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+      filter: none;
     }
 
     [dir="rtl"] footer img[alt="Skillifly Bird Icon"] {
-      filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(85deg);
+      filter: none;
     }
   </style>
   {% block extra_head %}{% endblock %}
@@ -477,11 +477,11 @@
 
   <!-- Ambient background orbs -->
   {% if is_arabic_page %}
-  <div class="orb w-96 h-96 opacity-[0.06] animate-pulse-slow" style="background: #EC4899; top: -10%; left: -5%;"></div>
+  <div class="orb w-96 h-96 opacity-[0.06] animate-pulse-slow" style="background: #3B82F6; top: -10%; left: -5%;"></div>
   <div class="orb w-80 h-80 opacity-[0.05] animate-pulse-slow"
-    style="background: #FBBF24; top: 40%; right: -8%; animation-delay: 2s;"></div>
+    style="background: #8B5CF6; top: 40%; right: -8%; animation-delay: 2s;"></div>
   <div class="orb w-64 h-64 opacity-[0.04] animate-pulse-slow"
-    style="background: #EC4899; bottom: 10%; left: 20%; animation-delay: 4s;"></div>
+    style="background: #C026D3; bottom: 10%; left: 20%; animation-delay: 4s;"></div>
   {% else %}
   <div class="orb w-96 h-96 opacity-[0.06] animate-pulse-slow" style="background: #3B82F6; top: -10%; left: -5%;"></div>
   <div class="orb w-80 h-80 opacity-[0.05] animate-pulse-slow"
@@ -495,7 +495,7 @@
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <!-- Logo -->
       <a href="{{ MAIN_SITE_URL }}{% url 'index' %}" class="logo-mark flex items-center gap-3">
-        <img src="{% if is_arabic_page %}{% static 'img/logo-arabic.png' %}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="Skillifly" class="h-10 w-auto object-contain bg-transparent">
+        <img src="{% static 'img/logo.png' %}" alt="Skillifly" class="h-10 w-auto object-contain bg-transparent">
       </a>
 
       <!-- Desktop nav -->

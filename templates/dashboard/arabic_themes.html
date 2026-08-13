@@ -20,11 +20,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-  /* ===== Arabic Themes — Warm Brand Overrides ===== */
+  /* ===== Arabic Themes — Brand Overrides (English palette) ===== */
   body {
     background-color: white !important;
     color: #0F172A !important;
@@ -61,7 +61,7 @@
 
   /* Gradient text — readable on white */
   .gradient-text {
-    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
@@ -70,19 +70,19 @@
 
   /* Buttons */
   .btn-primary {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
     border: none !important;
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
+    box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
   }
 
   .btn-primary:disabled {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     opacity: 0.5;
     box-shadow: none !important;
   }
@@ -90,8 +90,8 @@
   /* Cards */
   .glass-card {
     background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(225, 29, 72, 0.14) !important;
-    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
@@ -102,12 +102,12 @@
   }
 
   .gradient-border::before {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
   }
 
-  /* Brand gradient — warm */
+  /* Brand gradient */
   .gradient-brand {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
   }
 
   /* Nav */
@@ -117,19 +117,12 @@
   }
 
   .nav-link:hover {
-    color: #E11D48 !important;
+    color: #3B82F6 !important;
   }
 
   .logo-mark img {
-    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    filter: none;
   }
-
-  /* Warm accent overrides for inherited English utility colors */
-  .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-  .arabic-rtl .text-blue-700 { color: #BE123C !important; }
-  .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
-  .arabic-rtl .bg-blue-600 { background-color: #DB2777 !important; }
-  .arabic-rtl .border-blue-600 { border-color: #DB2777 !important; }
 
   /* Flip forward arrows for RTL */
   .arabic-rtl .rtl-arrow {
@@ -140,7 +133,7 @@
   a:focus-visible,
   button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
     border-radius: 12px;
   }
 </style>
@@ -151,7 +144,7 @@
 
   <!-- Header -->
   <div class="mb-10 animate-fadeInUp">
-    <p class="text-sm text-pink-600 font-bold mb-2">الخطوة 1 من 2</p>
+    <p class="text-sm text-blue-600 font-bold mb-2">الخطوة 1 من 2</p>
     <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black">
       اختر <span class="gradient-text">تصميمك</span>
     </h1>
@@ -168,12 +161,12 @@
     {% if categories %}
     <div class="flex flex-wrap gap-2 mb-8 animate-fadeInUp" style="animation-delay: 0.1s">
       <button type="button" onclick="filterCategory('all')" data-cat="all"
-        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-pink-500/40 bg-pink-50 text-pink-700">
+        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-blue-600/40 bg-blue-50 text-blue-700">
         كل التصاميم
       </button>
       {% for category in categories %}
       <button type="button" onclick="filterCategory('{{ category.id }}')" data-cat="{{ category.id }}"
-        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-slate-200 text-slate-500 hover:border-pink-500/40 hover:text-pink-600">
+        class="cat-filter px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 border-slate-200 text-slate-500 hover:border-blue-600/40 hover:text-blue-600">
         {{ category.name }}
       </button>
       {% endfor %}
@@ -213,7 +206,7 @@
 
             <!-- Preview Button Overlay -->
             <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-20">
-                <a href="{% url 'theme_preview' theme_name=theme.name|lower|slugify %}" target="_blank" onclick="event.stopPropagation()" class="pointer-events-auto bg-white/95 backdrop-blur-sm text-slate-900 text-sm font-bold px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-white hover:scale-105 hover:text-pink-600" title="معاينة هذا التصميم في تبويب جديد">
+                <a href="{% url 'theme_preview' theme_name=theme.name|lower|slugify %}" target="_blank" onclick="event.stopPropagation()" class="pointer-events-auto bg-white/95 backdrop-blur-sm text-slate-900 text-sm font-bold px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-white hover:scale-105 hover:text-blue-600" title="معاينة هذا التصميم في تبويب جديد">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -224,8 +217,8 @@
 
             <!-- Selected overlay -->
             <div
-              class="selected-overlay absolute inset-0 bg-pink-600/10 border-4 border-pink-600 rounded-none opacity-0 transition-opacity duration-200 flex items-center justify-center">
-              <div class="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center shadow-lg">
+              class="selected-overlay absolute inset-0 bg-blue-600/10 border-4 border-blue-600 rounded-none opacity-0 transition-opacity duration-200 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
                 <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -285,8 +278,8 @@
   <div id="category-notification" class="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl border border-slate-200 p-6 max-w-sm transform translate-y-full opacity-0 transition-all duration-300 z-50 flex flex-col gap-3">
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
           </svg>
         </div>
@@ -332,7 +325,7 @@
 
     // Update message
     document.getElementById('selection-msg').textContent = 'تم اختيار التصميم — انقر للتطبيق';
-    document.getElementById('selection-msg').classList.add('text-pink-600', 'font-bold');
+    document.getElementById('selection-msg').classList.add('text-blue-600', 'font-bold');
     document.getElementById('selection-msg').classList.remove('text-slate-500');
 
     // Show notification if it's a categories theme
@@ -360,10 +353,10 @@
     // Update button styles
     document.querySelectorAll('.cat-filter').forEach(btn => {
       if (btn.dataset.cat === catId) {
-        btn.classList.add('border-pink-500/40', 'bg-pink-50', 'text-pink-700');
+        btn.classList.add('border-blue-600/40', 'bg-blue-50', 'text-blue-700');
         btn.classList.remove('border-slate-200', 'text-slate-500');
       } else {
-        btn.classList.remove('border-pink-500/40', 'bg-pink-50', 'text-pink-700');
+        btn.classList.remove('border-blue-600/40', 'bg-blue-50', 'text-blue-700');
         btn.classList.add('border-slate-200', 'text-slate-500');
       }
     });

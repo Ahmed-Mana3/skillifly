@@ -7,10 +7,10 @@
 
 {% block og_title %}Skillifly — ملف مهني عربي يبرز أفضل ما لديك{% endblock %}
 {% block og_description %}حوّل مهاراتك وخبراتك ومشاريعك إلى ملف مهني احترافي عربي يمكنك مشاركته خلال دقائق.{% endblock %}
-{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block og_image %}{% static 'img/logo.png' %}{% endblock %}
 {% block twitter_title %}Skillifly — ملف مهني عربي يبرز أفضل ما لديك{% endblock %}
 {% block twitter_description %}حوّل مهاراتك وخبراتك ومشاريعك إلى ملف مهني احترافي عربي يمكنك مشاركته خلال دقائق.{% endblock %}
-{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_image %}{% static 'img/logo.png' %}{% endblock %}
 
 {% block extra_head %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
 
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 
 <link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_landing' %}" />
 <link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'index' %}" />
@@ -34,7 +34,7 @@
       "@id": "https://skillifly.cloud/#organization",
       "name": "Skillifly",
       "url": "https://skillifly.cloud/ar/",
-      "logo": "https://skillifly.cloud{% static 'img/logo-arabic.png' %}",
+      "logo": "https://skillifly.cloud{% static 'img/logo.png' %}",
       "description": "منصة عربية لإنشاء ملفات مهنية احترافية في دقائق."
     },
     {
@@ -79,15 +79,12 @@
 <script>document.documentElement.classList.add('js');</script>
 
 <style>
-  /* ===== Arabic Landing — Warm Brand Overrides ===== */
+  /* ===== Arabic Landing — Brand Overrides (English blue/purple palette) ===== */
   :root {
-    --brand-warm-1: #EC4899;
-    --brand-warm-2: #F97316;
-    --brand-warm-3: #F59E0B;
     --bg-dark: #FFFFFF;
     --bg-card: #FFFFFF;
     --text-primary: #0F172A;
-    --text-muted: #475569;
+    --text-muted: #64748B;
     --border-subtle: rgba(0, 0, 0, 0.08);
   }
 
@@ -119,8 +116,7 @@
   }
 
   .arabic-rtl .btn-primary,
-  .arabic-rtl .btn-ghost,
-  .arabic-rtl .btn-white {
+  .arabic-rtl .btn-ghost {
     font-family: 'Cairo', 'Tajawal', sans-serif !important;
   }
 
@@ -139,90 +135,58 @@
 
   /* Gradient text — readable on white */
   .gradient-text {
-    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
     color: transparent;
   }
 
-  /* Buttons */
-  .btn-primary {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
-    border: none !important;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
-  }
-
+  /* Buttons — English landing uses base.html defaults for btn-primary */
   .btn-ghost {
-    background: #ffffff !important;
-    border: 1.5px solid rgba(225, 29, 72, 0.35) !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
     color: #0F172A !important;
   }
 
   .btn-ghost:hover {
-    background: #FFF1F2 !important;
-    border-color: #E11D48 !important;
-    box-shadow: 0 6px 18px -6px rgba(225, 29, 72, 0.25) !important;
-  }
-
-  .btn-white {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: #ffffff !important;
-    color: #E11D48 !important;
-    font-weight: 800;
-    border-radius: 16px;
-    box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.35) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .btn-white:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.4) !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.3) !important;
   }
 
   /* Cards */
   .glass-card {
-    background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(225, 29, 72, 0.14) !important;
-    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04) !important;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
 
   .testimonial-card {
-    border: 1px solid rgba(225, 29, 72, 0.12) !important;
-    box-shadow: 0 18px 40px -22px rgba(236, 72, 153, 0.18) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.12) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .testimonial-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 26px 50px -24px rgba(236, 72, 153, 0.28) !important;
+    box-shadow: 0 26px 50px -24px rgba(15, 23, 42, 0.16) !important;
   }
 
   .pricing-card {
-    border: 1px solid rgba(225, 29, 72, 0.12) !important;
-    box-shadow: 0 18px 36px -22px rgba(249, 115, 22, 0.18) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 18px 36px -22px rgba(15, 23, 42, 0.12) !important;
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .pricing-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 30px 60px -28px rgba(236, 72, 153, 0.3) !important;
+    box-shadow: 0 30px 60px -28px rgba(15, 23, 42, 0.18) !important;
   }
 
   .pricing-featured {
-    border: 2px solid rgba(225, 29, 72, 0.35) !important;
-    box-shadow: 0 30px 60px -28px rgba(236, 72, 153, 0.4) !important;
+    border: 1px solid rgba(59, 130, 246, 0.35) !important;
+    box-shadow: 0 30px 60px -28px rgba(139, 92, 246, 0.25) !important;
   }
 
   .gradient-border {
@@ -231,13 +195,8 @@
     transition: all 0.3s ease;
   }
 
-  .gradient-border:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 48px -20px rgba(225, 29, 72, 0.22) !important;
-  }
-
   .gradient-border::before {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
   }
 
   /* Nav */
@@ -247,26 +206,26 @@
   }
 
   .nav-link:hover {
-    color: #E11D48 !important;
+    color: #3B82F6 !important;
   }
 
   .hero-badge {
-    border-color: rgba(225, 29, 72, 0.18) !important;
-    background: rgba(255, 255, 255, 0.92) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
   }
 
   .review-avatar-fallback {
-    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%) !important;
   }
 
   .logo-mark img {
-    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    filter: none !important;
   }
 
   /* Number displays */
   .stat-number {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-    font-weight: 900 !important;
+    font-family: 'Syne', sans-serif !important;
+    font-weight: 800 !important;
     font-variant-numeric: tabular-nums;
   }
 
@@ -304,22 +263,22 @@
     }
   }
 
-  /* Soft tinted sections that fade in/out of white for a seamless flow */
+  /* Soft slate-tinted sections that fade in/out of white for a seamless flow */
   .section-warm {
-    background: linear-gradient(180deg, #ffffff 0%, #FFF8F5 14%, #FFF8F5 86%, #ffffff 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 14%, #F8FAFC 86%, #ffffff 100%);
   }
 
-  /* Very light warm lights that float in the background of every section */
+  /* Very light blue/purple lights that float in the background of every section */
   .warm-lights {
     position: absolute;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(236, 72, 153, 0.09), transparent 60%),
-      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(251, 191, 36, 0.07), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(251, 191, 36, 0.06), transparent 60%),
-      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(236, 72, 153, 0.05), transparent 60%);
+      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(59, 130, 246, 0.09), transparent 60%),
+      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(139, 92, 246, 0.08), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(192, 38, 211, 0.07), transparent 60%),
+      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.06), transparent 60%);
   }
 
   /* Focus visibility */
@@ -327,7 +286,7 @@
   button:focus-visible,
   summary:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
     border-radius: 12px;
   }
 </style>
@@ -337,16 +296,16 @@
 
 <!-- ===== 1. HERO ===== -->
 <section class="min-h-[90vh] flex items-center justify-center px-6 py-20 relative overflow-hidden arabic-rtl">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="absolute inset-0" style="background: radial-gradient(circle at 85% 15%, rgba(236,72,153,0.10), transparent 42%), radial-gradient(circle at 15% 85%, rgba(249,115,22,0.10), transparent 42%), radial-gradient(circle at 50% 50%, rgba(245,158,11,0.06), transparent 60%);"></div>
-  <div class="absolute inset-0 opacity-[0.35]" style="background-image: linear-gradient(rgba(15,23,42,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.05) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);"></div>
+  <!-- Hero background elements (matched to English landing) -->
+  <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.1]" style="background: radial-gradient(circle, #3B82F6, transparent 70%);"></div>
 
   <div class="max-w-6xl mx-auto text-center relative z-10">
-    <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-pink-500/10 text-sm mb-8 animate-fadeInUp whitespace-nowrap">
+    <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-8 animate-fadeInUp whitespace-nowrap">
       <span class="flex -space-x-2 space-x-reverse">
-        <div class="w-6 h-6 rounded-full border-2 border-white bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center text-[10px] font-bold text-white">أ</div>
-        <div class="w-6 h-6 rounded-full border-2 border-white bg-gradient-to-br from-orange-400 to-amber-300 flex items-center justify-center text-[10px] font-bold text-white">ب</div>
-        <div class="w-6 h-6 rounded-full border-2 border-white bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-[10px] font-bold text-white">ج</div>
+        <div class="w-6 h-6 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">أ</div>
+        <div class="w-6 h-6 rounded-full border-2 border-white bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white">ب</div>
+        <div class="w-6 h-6 rounded-full border-2 border-white bg-pink-500 flex items-center justify-center text-[10px] font-bold text-white">ج</div>
       </span>
       <span class="text-slate-900 font-medium">انضم إلى أكثر من {{ portfolios_count }} محترف</span>
     </div>
@@ -361,7 +320,7 @@
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-5 px-6 sm:px-0 animate-fadeInUp" style="animation-delay: 0.2s">
       <div class="relative group w-full sm:w-auto">
-        <a href="{% url 'arabic_signup' %}" class="btn-primary text-lg px-10 py-4 shadow-2xl shadow-pink-500/25 w-full block text-center rounded-2xl">
+        <a href="{% url 'arabic_signup' %}" class="btn-primary text-lg px-10 py-4 shadow-2xl shadow-blue-500/25 w-full block text-center rounded-2xl">
           أنشئ ملفك مجانًا
         </a>
         <p class="absolute -bottom-7 left-0 right-0 text-[11px] text-slate-900 font-medium hidden sm:block text-center">لا تحتاج إلى بطاقة ائتمانية</p>
@@ -373,15 +332,15 @@
 
     <div class="flex flex-col md:flex-row justify-center items-center mt-20 md:mt-24 pt-10 md:pt-12 animate-fadeInUp md:divide-x md:divide-x-reverse divide-y md:divide-y-0 divide-slate-200 space-y-10 md:space-y-0" style="animation-delay: 0.3s; border-top: 1px solid rgba(15,23,42,0.08);">
       <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
-        <p class="text-3xl md:text-4xl gradient-text stat-number mb-2">{{ portfolios_count }}+</p>
+        <p class="text-3xl md:text-4xl font-bold gradient-text stat-number mb-1" style="font-family: 'Syne', sans-serif;">{{ portfolios_count }}+</p>
         <p class="text-sm text-slate-900 font-semibold">ملفًا مهنيًا تم إنشاؤه</p>
       </div>
       <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
-        <p class="text-3xl md:text-4xl gradient-text stat-number mb-2">{{ themes_count }}</p>
+        <p class="text-3xl md:text-4xl font-bold gradient-text stat-number mb-1" style="font-family: 'Syne', sans-serif;">{{ themes_count }}</p>
         <p class="text-sm text-slate-900 font-semibold">تصميمًا احترافيًا</p>
       </div>
       <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
-        <p class="text-3xl md:text-4xl gradient-text stat-number mb-2">{{ total_visits }}+</p>
+        <p class="text-3xl md:text-4xl font-bold gradient-text stat-number mb-1" style="font-family: 'Syne', sans-serif;">{{ total_visits }}+</p>
         <p class="text-sm text-slate-900 font-semibold">زيارة على ملفات المستخدمين</p>
       </div>
     </div>
@@ -393,7 +352,7 @@
   <div class="warm-lights" aria-hidden="true"></div>
   <div class="max-w-7xl mx-auto">
     <div class="text-center mb-16 md:mb-20 reveal">
-      <p class="text-xs sm:text-sm font-bold text-pink-700 tracking-[0.3em] mb-4">لماذا Skillifly؟</p>
+      <p class="text-xs sm:text-sm font-bold text-blue-800 tracking-[0.3em] mb-4">لماذا Skillifly؟</p>
       <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">
         سريع وواضح. <br class="block sm:hidden" /><span class="gradient-text">مصمم ليُظهر قيمتك.</span>
       </h2>
@@ -401,24 +360,24 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <div class="gradient-border rounded-3xl p-8 group reveal">
-        <div class="icon-chip w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6">
-          <svg class="w-7 h-7 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <div class="icon-chip w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
         <h3 class="text-xl font-bold mb-3 text-slate-900">إعداد سريع وسلس</h3>
         <p class="text-slate-600 leading-relaxed">لا تحتاج إلى أسابيع من التصميم والتجارب. يساعدك منشئ Skillifly على تحويل بياناتك إلى صفحة جاهزة للمشاركة خلال دقائق.</p>
       </div>
 
       <div class="gradient-border rounded-3xl p-8 group reveal" style="transition-delay: 0.08s">
-        <div class="icon-chip w-14 h-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6">
-          <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <div class="icon-chip w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
         <h3 class="text-xl font-bold mb-3 text-slate-900">تصاميم احترافية</h3>
         <p class="text-slate-600 leading-relaxed">اختر من بين قوالب مصممة لتقديم أعمالك بوضوح وأناقة، حتى يلمس الزائر خبرتك من أول نظرة.</p>
       </div>
 
       <div class="gradient-border rounded-3xl p-8 group reveal" style="transition-delay: 0.16s">
-        <div class="icon-chip w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-6">
-          <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <div class="icon-chip w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         </div>
         <h3 class="text-xl font-bold mb-3 text-slate-900">تحليلات واضحة</h3>
         <p class="text-slate-600 leading-relaxed">تابع أداء ملفك واعرف عدد الزيارات والمشاريع التي تجذب الاهتمام، لتطوّر حضورك المهني بناءً على بيانات حقيقية.</p>
@@ -428,7 +387,7 @@
 </section>
 
 <!-- ===== 4. TESTIMONIALS ===== -->
-<section class="px-6 py-24 section-warm relative overflow-hidden arabic-rtl">
+<section class="px-6 py-24 relative overflow-hidden arabic-rtl">
   <div class="warm-lights" aria-hidden="true"></div>
   <div class="max-w-7xl mx-auto">
     <div class="text-center mb-20 reveal">
@@ -450,7 +409,7 @@
           {% endfor %}
         </div>
         <p class="text-slate-700 leading-relaxed mb-6 flex-grow">«{{ review.content }}»</p>
-        <div class="flex items-center gap-4 mt-auto pt-6 border-t border-orange-100">
+        <div class="flex items-center gap-4 mt-auto pt-6 border-t border-slate-100">
           <div class="w-12 h-12 rounded-full border-2 border-white shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
             {% if review.image_url %}
               <img src="{{ review.image_url }}" alt="{{ review.user_name }}" class="w-full h-full object-cover" loading="lazy">
@@ -479,7 +438,7 @@
 </section>
 
 <!-- ===== 5. PRICING ===== -->
-<section class="px-6 py-24 relative overflow-hidden arabic-rtl" id="pricing">
+<section class="px-6 py-24 section-warm relative overflow-hidden arabic-rtl" id="pricing">
   <div class="warm-lights" aria-hidden="true"></div>
   <div class="max-w-7xl mx-auto">
     <div class="text-center mb-20 reveal">
@@ -492,7 +451,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
       <div class="pricing-card gradient-border rounded-[2.5rem] p-10 flex flex-col h-full bg-white reveal">
         <div class="mb-8">
-          <p class="text-sm font-bold text-pink-600 mb-2">الخطة الشهرية</p>
+          <p class="text-sm font-bold text-slate-500 mb-2">الخطة الشهرية</p>
           <div class="flex items-baseline gap-2">
             <span class="text-5xl font-black stat-number text-slate-900">50</span>
             <span class="text-slate-600 font-semibold">جنيهًا / شهر</span>
@@ -500,17 +459,17 @@
           <p class="text-sm text-slate-500 mt-2 font-medium">اشتراك مرن يتجدد شهريًا.</p>
         </div>
         <ul class="space-y-4 mb-10 flex-grow text-sm text-slate-600">
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>الوصول إلى التصاميم المميزة</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>إضافة عدد غير محدود من المشاريع</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>مراجعة إيصالات الدفع بالذكاء الاصطناعي</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>ضمان استرداد خلال 14 يومًا</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>الوصول إلى التصاميم المميزة</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>إضافة عدد غير محدود من المشاريع</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>مراجعة إيصالات الدفع بالذكاء الاصطناعي</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>ضمان استرداد خلال 14 يومًا</li>
         </ul>
         <a href="{% url 'payment' %}" class="btn-ghost w-full py-4 text-sm font-bold rounded-2xl">اختر الخطة الشهرية</a>
       </div>
 
       <div class="pricing-card gradient-border rounded-[2.5rem] p-10 flex flex-col h-full bg-white reveal" style="transition-delay: 0.08s">
         <div class="mb-8">
-          <p class="text-sm font-bold text-orange-600 mb-2">خطة 6 أشهر</p>
+          <p class="text-sm font-bold text-slate-500 mb-2">خطة 6 أشهر</p>
           <div class="flex items-baseline gap-2">
             <span class="text-5xl font-black stat-number text-slate-900">250</span>
             <span class="text-slate-600 font-semibold">جنيهًا / 6 أشهر</span>
@@ -518,20 +477,20 @@
           <p class="text-sm text-emerald-600 mt-2 font-bold">وفّر 50 جنيهًا مقارنة بالاشتراك الشهري</p>
         </div>
         <ul class="space-y-4 mb-10 flex-grow text-sm text-slate-600">
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>كل مزايا الخطة الشهرية</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>رابط خاص لملفك المهني</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>نشر ملفك مباشرة على المنصة</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>تجربة متقنة على الهاتف</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>كل مزايا الخطة الشهرية</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>رابط خاص لملفك المهني</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>نشر ملفك مباشرة على المنصة</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>تجربة متقنة على الهاتف</li>
         </ul>
         <a href="{% url 'payment' %}" class="btn-ghost w-full py-4 text-sm font-bold rounded-2xl">اختر خطة 6 أشهر</a>
       </div>
 
       <div class="pricing-card pricing-featured rounded-[2.5rem] p-10 flex flex-col h-full relative overflow-hidden bg-white reveal" style="transition-delay: 0.16s">
         <div class="absolute top-5 left-5 z-10">
-          <span class="bg-gradient-to-l from-pink-500 to-amber-400 text-white text-xs font-black px-4 py-1.5 rounded-full shadow-md">الأفضل قيمة</span>
+          <span class="bg-amber-400 text-black text-xs font-black px-4 py-1.5 rounded-full shadow-md">الأفضل قيمة</span>
         </div>
         <div class="mb-8">
-          <p class="text-sm font-bold text-amber-600 mb-2">الخطة السنوية</p>
+          <p class="text-sm font-bold text-blue-600 mb-2">الخطة السنوية</p>
           <div class="flex items-baseline gap-2">
             <span class="text-5xl font-black stat-number text-slate-900">360</span>
             <span class="text-slate-600 font-semibold">جنيهًا / سنة</span>
@@ -539,10 +498,10 @@
           <p class="text-sm text-emerald-600 mt-2 font-bold">وفّر 240 جنيهًا مقارنة بالاشتراك الشهري</p>
         </div>
         <ul class="space-y-4 mb-10 flex-grow text-sm text-slate-600">
-          <li class="flex items-center gap-3 text-slate-900 font-bold"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>دعم بأولوية أعلى</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>الوصول المبكر إلى التصاميم الجديدة</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>التحكم في إعدادات SEO</li>
-          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>حضور مهني متكامل طوال العام</li>
+          <li class="flex items-center gap-3 text-slate-900 font-bold"><svg class="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>دعم بأولوية أعلى</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>الوصول المبكر إلى التصاميم الجديدة</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>التحكم في إعدادات SEO</li>
+          <li class="flex items-center gap-3"><svg class="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>حضور مهني متكامل طوال العام</li>
         </ul>
         <a href="{% url 'payment' %}" class="btn-primary w-full py-5 text-sm font-bold rounded-2xl shadow-2xl">اختر الخطة السنوية</a>
       </div>
@@ -551,7 +510,7 @@
 </section>
 
 <!-- ===== 6. FAQ ===== -->
-<section class="px-6 py-24 section-warm relative overflow-hidden arabic-rtl" id="faq">
+<section class="px-6 py-24 relative overflow-hidden arabic-rtl" id="faq">
   <div class="warm-lights" aria-hidden="true"></div>
   <div class="max-w-3xl mx-auto">
     <div class="text-center mb-16 reveal">
@@ -561,7 +520,7 @@
 
     <div class="space-y-4">
       <details class="gradient-border rounded-2xl group reveal" id="faq-1">
-        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-pink-600 transition-colors list-none">
+        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors list-none">
           <span>هل يمكنني تغيير التصميم لاحقًا؟</span>
           <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
         </summary>
@@ -571,7 +530,7 @@
       </details>
 
       <details class="gradient-border rounded-2xl group reveal" id="faq-2">
-        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-pink-600 transition-colors list-none">
+        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors list-none">
           <span>هل سيبدو الملف جيدًا على الهاتف؟</span>
           <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
         </summary>
@@ -581,7 +540,7 @@
       </details>
 
       <details class="gradient-border rounded-2xl group reveal" id="faq-3">
-        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-pink-600 transition-colors list-none">
+        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors list-none">
           <span>هل أحتاج إلى الدفع قبل التجربة؟</span>
           <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
         </summary>
@@ -594,28 +553,22 @@
 </section>
 
 <!-- ===== 7. FINAL CTA ===== -->
-<section class="px-6 py-24 relative overflow-hidden arabic-rtl">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="max-w-5xl mx-auto reveal">
-    <div class="rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-16 text-center relative overflow-hidden text-white" style="background: linear-gradient(135deg, #E11D48 0%, #F97316 60%, #F59E0B 110%);">
-      <div class="absolute inset-0 opacity-[0.16]" style="background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.5), transparent 45%), radial-gradient(circle at 85% 80%, rgba(255,255,255,0.35), transparent 40%);"></div>
-      <div class="absolute inset-0 opacity-[0.12]" style="background-image: linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px); background-size: 48px 48px;"></div>
-
+<section class="px-6 py-24 arabic-rtl">
+  <div class="max-w-5xl mx-auto">
+    <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden bg-white border border-slate-100 shadow-2xl shadow-slate-200">
+      <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(circle at 50% 50%, #3B82F6, transparent 70%);"></div>
       <div class="relative z-10">
-        <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 leading-tight text-white" style="text-shadow: 0 2px 24px rgba(0,0,0,0.18);">
+        <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 text-slate-900">
           جاهز لتقديم أفضل ما لديك؟
         </h2>
-        <p class="text-white/95 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium leading-relaxed" style="text-shadow: 0 1px 12px rgba(0,0,0,0.12);">ابدأ ملفك المهني الآن، واعرض مهاراتك ومشاريعك بأفضل صورة.</p>
+        <p class="text-slate-800 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium">ابدأ ملفك المهني الآن، واعرض مهاراتك ومشاريعك بأفضل صورة.</p>
 
-        <div class="flex flex-col items-center gap-5">
-          <a href="{% url 'arabic_signup' %}" class="btn-white w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-base sm:text-lg whitespace-nowrap">
+        <div class="flex flex-col items-center gap-4">
+          <a href="{% url 'arabic_signup' %}" class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg shadow-2xl shadow-purple-500/20 whitespace-nowrap">
             أنشئ ملفك المجاني الآن
             <svg class="rtl-arrow w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
           </a>
-          <p class="text-white/80 text-sm font-bold inline-flex items-center gap-2">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            ضمان استرداد خلال 14 يومًا
-          </p>
+          <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">ضمان استرداد خلال 14 يومًا</p>
         </div>
       </div>
     </div>

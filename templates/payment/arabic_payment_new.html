@@ -18,14 +18,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-    /* ===== Arabic Payment — Warm Brand Overrides ===== */
+    /* Arabic Payment — keep English palette, only apply RTL typography and layout tweaks */
     body {
         background-color: white !important;
-        color: #0F172A !important;
+        color: var(--text-primary) !important;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
@@ -55,106 +55,43 @@
         text-transform: none !important;
     }
 
-    .gradient-text {
-        background: linear-gradient(135deg, #DB2777 0%, #EA580C 55%, #D97706 100%) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-        background-clip: text !important;
-        color: transparent;
-    }
+    /* Do not override gradient-text, btn-primary, btn-ghost or other color tokens here — inherit from core/base for exact parity */
 
-    .glass-card {
-        background: rgba(255, 255, 255, 0.92) !important;
-        border: 1px solid rgba(225, 29, 72, 0.14) !important;
-        box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-    }
-
-    .gradient-border {
-        background: #ffffff !important;
-        box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
-    }
-
-    .gradient-border::before {
-        background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
-        color: #ffffff !important;
-        box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
-        border: none !important;
-    }
-
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-        box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
-    }
-
-    .btn-ghost {
-        background: #FFF1F2 !important;
-        color: #BE123C !important;
-        border: 1px solid #FECDD3 !important;
-        font-weight: 700 !important;
-    }
-
-    .btn-ghost:hover {
-        background: #FFE4E6 !important;
-        border-color: #FDA4AF !important;
-    }
-
-    .nav-link {
-        color: #334155 !important;
-        font-weight: 600 !important;
-    }
-
-    .nav-link:hover {
-        color: #E11D48 !important;
-    }
-
-    .logo-mark img {
-        filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
-    }
-
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-    .arabic-rtl .text-blue-700 { color: #BE123C !important; }
-
-    /* Contrast boost */
-    .arabic-rtl .text-slate-400 { color: #64748B !important; }
-    .arabic-rtl .text-slate-500 { color: #475569 !important; }
-    .arabic-rtl .text-slate-600 { color: #334155 !important; }
-
-    /* Highlighted annual card — warm gradient */
+    /* Annual card: match English payment page visual treatment exactly (colors & shadow) */
     .annual-card {
-        background: linear-gradient(160deg, #FFF1F2, #FFF7ED) !important;
-        border: 1px solid #FECDD3 !important;
-        box-shadow: 0 20px 40px rgba(225, 29, 72, 0.08) !important;
+        background: linear-gradient(160deg, #EFF6FF, #F5F3FF) !important;
+        border: 1px solid #BFDBFE !important;
+        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.05) !important;
     }
 
+    /* Annual badge (localized position is left for RTL) */
     .annual-badge {
-        background: linear-gradient(135deg, #E11D48, #F97316) !important;
-        color: white;
+        background: linear-gradient(135deg, #3B82F6, #8B5CF6) !important;
+        color: white !important;
     }
 
-    /* Coupon input — light theme */
+    /* Coupon input: use same visual treatment as English page */
     .coupon-input {
         width: 100%;
-        background: #F8FAFC !important;
-        border: 1px solid #E2E8F0 !important;
+        background: rgba(17,24,39,0.5) !important; /* bg-gray-900/50 */
+        border: 1px solid rgba(55,65,81,0.8) !important; /* border-gray-700/80 */
         border-radius: 9999px;
-        padding: 0.85rem 2.5rem;
-        color: #0F172A;
+        padding: 0.75rem 2.5rem;
+        color: #ffffff !important;
         font-size: 0.875rem;
         font-weight: 600;
         text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
         font-family: 'Tajawal', sans-serif;
     }
 
+    .coupon-input::placeholder { color: rgba(203,213,225,0.6) !important; }
+
     .coupon-input:focus {
         outline: none;
-        border-color: #EC4899;
-        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
     }
 
     .arabic-rtl .coupon-icon {
@@ -177,7 +114,7 @@
     a:focus-visible,
     button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
         border-radius: 12px;
     }
 </style>

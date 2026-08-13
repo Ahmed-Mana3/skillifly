@@ -12,10 +12,10 @@
 
 <meta name="robots" content="index, follow, max-image-preview:large" />
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3B82F6" />
 
 <style>
-  /* ===== Arabic 3rd-party Signup — Warm Brand Overrides ===== */
+  /* ===== Arabic 3rd-party Signup — Brand Overrides ===== */
   body {
     background-color: white !important;
     color: #0F172A !important;
@@ -44,7 +44,7 @@
 
   /* Gradient text — readable on white */
   .gradient-text {
-    background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
@@ -53,22 +53,22 @@
 
   /* Buttons */
   .btn-primary {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
     border: none !important;
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
+    box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
   }
 
   /* Cards */
   .glass-card {
-    background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(225, 29, 72, 0.14) !important;
-    box-shadow: 0 15px 35px -14px rgba(225, 29, 72, 0.14) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
@@ -79,24 +79,24 @@
   }
 
   .gradient-border::before {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
   }
 
   .nav-link {
-    color: #334155 !important;
-    font-weight: 600 !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
   }
 
   .nav-link:hover {
-    color: #E11D48 !important;
+    color: #000000 !important;
   }
 
   .logo-mark img {
-    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    filter: none;
   }
 
   .arabic-rtl .gradient-border img.animate-float {
-    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(85deg);
+    filter: none;
   }
 
   /* Form inputs */
@@ -109,32 +109,32 @@
   }
 
   .sf-input:focus {
-    border-color: #EC4899 !important;
-    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.12) !important;
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12) !important;
   }
 
   .sf-label {
     font-family: 'Cairo', 'Tajawal', sans-serif !important;
   }
 
-  /* Warm background lights */
+  /* Background lights */
   .warm-lights {
     position: absolute;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(236, 72, 153, 0.09), transparent 60%),
-      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(251, 191, 36, 0.07), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(251, 191, 36, 0.06), transparent 60%),
-      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(236, 72, 153, 0.05), transparent 60%);
+      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(59, 130, 246, 0.09), transparent 60%),
+      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(139, 92, 246, 0.07), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(139, 92, 246, 0.06), transparent 60%),
+      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.05), transparent 60%);
   }
 
   /* Focus visibility */
   a:focus-visible,
   button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
     border-radius: 12px;
   }
 </style>
@@ -147,7 +147,7 @@
 {% if is_arabic_page %}
 <div class="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden arabic-rtl">
   <div class="warm-lights" aria-hidden="true"></div>
-  <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 15%, rgba(236,72,153,0.08), transparent 45%), radial-gradient(circle at 20% 85%, rgba(249,115,22,0.08), transparent 45%);"></div>
+  <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 15%, rgba(59,130,246,0.08), transparent 45%), radial-gradient(circle at 20% 85%, rgba(139,92,246,0.08), transparent 45%);"></div>
 
   <div class="w-full max-w-md relative z-10">
 

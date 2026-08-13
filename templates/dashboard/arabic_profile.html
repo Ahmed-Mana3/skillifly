@@ -18,11 +18,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#E11D48" />
+<meta name="theme-color" content="#3b82f6" />
 <meta name="robots" content="noindex, follow" />
 
 <style>
-  /* ===== Arabic Profile — Warm Brand Overrides ===== */
+  /* ===== Arabic Profile — Brand Overrides (English palette) ===== */
   body {
     background-color: white !important;
     color: #0F172A !important;
@@ -59,7 +59,7 @@
 
   /* Gradient text — readable on white */
   .gradient-text {
-    background: linear-gradient(135deg, #DB2777 0%, #EA580C 55%, #D97706 100%) !important;
+    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
@@ -68,15 +68,15 @@
 
   /* Buttons */
   .btn-primary {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0 14px 30px -10px rgba(225, 29, 72, 0.45) !important;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
     border: none !important;
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #BE123C 0%, #EA580C 100%) !important;
-    box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5) !important;
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
+    box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
   }
 
   /* Cards */
@@ -86,12 +86,12 @@
   }
 
   .gradient-border::before {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(249, 115, 22, 0.4), rgba(245, 158, 11, 0.4)) !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
   }
 
-  /* Brand gradient — warm */
+  /* Brand gradient */
   .gradient-brand {
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 55%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
   }
 
   /* Nav */
@@ -101,28 +101,14 @@
   }
 
   .nav-link:hover {
-    color: #E11D48 !important;
+    color: #3B82F6 !important;
   }
 
   .logo-mark img {
-    filter: saturate(1.4) contrast(1.05) brightness(1.03) hue-rotate(-55deg);
+    filter: none;
   }
 
-  /* Warm accent overrides for inherited English utility colors */
-  .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-  .arabic-rtl a.text-blue-600:hover { color: #BE123C !important; }
-  .arabic-rtl .text-blue-700 { color: #BE123C !important; }
-  .arabic-rtl .bg-blue-100 { background-color: #FCE7F3 !important; }
-  .arabic-rtl .bg-blue-600 { background-color: #DB2777 !important; }
-  .arabic-rtl .bg-blue-700 { background-color: #BE123C !important; }
-  .arabic-rtl .text-blue-500 { color: #DB2777 !important; }
-
-  /* Contrast boost — darken muted text for readability on white */
-  .arabic-rtl .text-slate-400 { color: #64748B !important; }
-  .arabic-rtl .text-slate-500 { color: #475569 !important; }
-  .arabic-rtl .text-slate-600 { color: #334155 !important; }
-
-  /* Avatar — warm gradient ring */
+  /* Avatar — gradient ring */
   .profile-avatar {
     width: 88px;
     height: 88px;
@@ -136,8 +122,8 @@
     color: white;
     position: relative;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #E11D48 0%, #F97316 50%, #F59E0B 100%);
-    box-shadow: 0 12px 32px -8px rgba(225, 29, 72, 0.35);
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%);
+    box-shadow: 0 12px 32px -8px rgba(37, 99, 235, 0.35);
   }
 
   .profile-avatar img {
@@ -149,7 +135,7 @@
   }
 
   .profile-avatar::after {
-    background: linear-gradient(135deg, #E11D48, #F97316, #F59E0B);
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6, #D946EF);
   }
 
   /* Field icons on the right for RTL */
@@ -175,7 +161,7 @@
 
   .field-group input:focus ~ .field-icon,
   .field-group .sf-input:focus ~ .field-icon {
-    color: #E11D48;
+    color: #2563EB;
   }
 
   /* Info chips — remove Latin treatment */
@@ -306,7 +292,7 @@
   a:focus-visible,
   button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
     border-radius: 12px;
   }
 </style>
@@ -458,7 +444,7 @@
 
       <!-- زر الحفظ -->
       <div class="flex items-center gap-4 mt-8 pt-6 border-t border-slate-100">
-        <button type="submit" class="btn-primary py-3 px-8 text-sm shadow-xl shadow-pink-500/15">
+        <button type="submit" class="btn-primary py-3 px-8 text-sm shadow-xl shadow-blue-500/15">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
