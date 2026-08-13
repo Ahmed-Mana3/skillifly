@@ -936,6 +936,15 @@ h1, h2, h3, h4, .serif {
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
 }
+.reviews-grid--sparse {
+    grid-template-columns: repeat(2, 1fr);
+}
+.reviews-grid--sparse .review-card:only-child {
+    grid-column: 1 / -1;
+    max-width: 680px;
+    justify-self: center;
+    width: 100%;
+}
 .review-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -1264,5 +1273,7 @@ footer {
 }
 .reveal-scale.visible {
     opacity: 1;
+}
+.reveal-scale.visible:not(:hover) {
     transform: scale(1);
 }

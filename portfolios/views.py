@@ -290,16 +290,23 @@ def preview_view(request, username):
     creators = Creator.objects.filter(user=user).select_related('user')
     reviews = ClientReview.objects.filter(user=user, is_featured=True).order_by('order', '-created_at')
 
+    # Clamp star ratings to 1-5 so malformed/legacy data can never render 0 or 6+ stars.
+    reviews_list = list(reviews)
+    for review in reviews_list:
+        try:
+            review.rating = max(1, min(5, review.rating))
+        except TypeError:
+            review.rating = 5
+
     # In theme previews, give reviews without a photo the pictures from the
     # "clients I worked with" (creators) section so avatars are never blank.
     if user.username == 'alex_mercer':
         creator_images = [c.image.name for c in creators if c.image]
         if creator_images:
-            reviews_list = list(reviews)
             for idx, review in enumerate(reviews_list):
                 if not review.image_url:
                     review.preview_image = creator_images[idx % len(creator_images)]
-            reviews = reviews_list
+    reviews = reviews_list
 
     # Prefetch categories with annotated project counts in a SINGLE query — eliminates N+1
     project_categories = list(

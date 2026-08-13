@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date
 from django.utils.text import slugify
 import uuid
@@ -309,7 +310,11 @@ class Review(models.Model):
     user_title = models.CharField(max_length=254, blank=True, null=True, help_text="e.g. Video Editor, Frontend Developer")
     user_image = models.ImageField(upload_to='reviews/', blank=True, null=True)
     content = models.TextField()
-    rating = models.PositiveIntegerField(default=5, help_text="1 to 5 stars")
+    rating = models.PositiveIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="1 to 5 stars",
+    )
     is_featured = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0, help_text="Order of appearance on landing page")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -360,7 +365,11 @@ class ClientReview(models.Model):
     user_title = models.CharField(max_length=254, blank=True, null=True, help_text="e.g. Video Editor, Frontend Developer")
     user_image = models.ImageField(upload_to='reviews/', blank=True, null=True)
     content = models.TextField()
-    rating = models.PositiveIntegerField(default=5, help_text="1 to 5 stars")
+    rating = models.PositiveIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="1 to 5 stars",
+    )
     is_featured = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0, help_text="Order of appearance on the portfolio")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -373,21 +382,21 @@ class ClientReview(models.Model):
 
     @property
     def image_url(self):
-        if self.user_image and hasattr(self.user_image, 'url'):
+        if self.user_image and self.user_image.storage.exists(self.user_image.name):
             return self.user_image.url
         if self.reviewer_id:
             profile = getattr(self.reviewer, 'profile', None)
-            if profile is not None and profile.picture and hasattr(profile.picture, 'url'):
+            if profile is not None and profile.picture and profile.picture.storage.exists(profile.picture.name):
                 return profile.picture.url
         return None
 
     @property
     def image_name(self):
-        if self.user_image:
+        if self.user_image and self.user_image.storage.exists(self.user_image.name):
             return self.user_image.name
         if self.reviewer_id:
             profile = getattr(self.reviewer, 'profile', None)
-            if profile is not None and profile.picture:
+            if profile is not None and profile.picture and profile.picture.storage.exists(profile.picture.name):
                 return profile.picture.name
         preview = getattr(self, 'preview_image', None)
         if preview:

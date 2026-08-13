@@ -292,7 +292,7 @@
             <span class="section-tag">Testimonials</span>
             <h2 class="section-title">Client Reviews</h2>
         </div>
-        <div class="reviews-grid">
+        <div class="reviews-grid{% if reviews|length <= 2 %} reviews-grid--sparse{% endif %}">
             {% for review in reviews %}
             <div class="review-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
                 <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
