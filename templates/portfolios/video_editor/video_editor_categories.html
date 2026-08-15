@@ -109,25 +109,33 @@
             {% for category in project_categories %}
             <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=category.id %}" class="category-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
                 <div class="category-img-box">
-                    {% if category.thumbnail %}
+                    {% if category.preview_projects %}
+                    <div class="category-collage">
+                        {% for project in category.preview_projects %}
+                        <img src="{% url 'image_thumb' project.image.name 400 %}" alt="{{ project.title }}" class="category-collage-img" loading="lazy" decoding="async">
+                        {% endfor %}
+                    </div>
+                    {% elif category.thumbnail %}
                     <img src="{% url 'image_thumb' category.thumbnail.name 800 %}" alt="{{ category.name }}" class="category-img" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
-                    <div class="category-img" style="background:#0e1e16; display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-muted)">
+                    <div class="category-img category-img-placeholder">
                         <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg>
                     </div>
                     {% endif %}
                     <div class="category-card-overlay"></div>
+                    <div class="category-card-index">{{ forloop.counter|stringformat:"02d" }}</div>
                 </div>
                 <div class="category-card-content">
                     <h3 class="category-card-title">{{ category.name }}</h3>
-                    <div class="category-card-meta">
-                        {{ category.project_count }} Project{{ category.project_count|pluralize }}
-                        <span></span>
-                        Explore Collection →
-                    </div>
                     {% if category.description %}
                     <p class="category-card-desc">{{ category.description }}</p>
                     {% endif %}
+                    <div class="category-card-footer">
+                        <span class="category-card-count">{{ category.project_count }} Project{{ category.project_count|pluralize }}</span>
+                        <span class="category-card-link">Explore
+                            <svg class="category-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
                 </div>
             </a>
             {% endfor %}
@@ -135,19 +143,29 @@
             {% if has_uncategorized_projects %}
             <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=0 %}" class="category-card reveal-scale" style="transition-delay: {{ project_categories_count }}00ms">
                 <div class="category-img-box">
-                    <div class="category-img" style="background:#0e1e16; display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-muted)">
+                    {% if uncategorized_previews %}
+                    <div class="category-collage">
+                        {% for project in uncategorized_previews %}
+                        <img src="{% url 'image_thumb' project.image.name 400 %}" alt="{{ project.title }}" class="category-collage-img" loading="lazy" decoding="async">
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="category-img category-img-placeholder">
                         <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg>
                     </div>
+                    {% endif %}
                     <div class="category-card-overlay"></div>
+                    <div class="category-card-index">{{ project_categories_count|add:1|stringformat:"02d" }}</div>
                 </div>
                 <div class="category-card-content">
                     <h3 class="category-card-title">Other Videos</h3>
-                    <div class="category-card-meta">
-                        {{ uncategorized_count }} Project{{ uncategorized_count|pluralize }}
-                        <span></span>
-                        Explore Collection →
-                    </div>
                     <p class="category-card-desc">Uncategorized projects and videos.</p>
+                    <div class="category-card-footer">
+                        <span class="category-card-count">{{ uncategorized_count }} Project{{ uncategorized_count|pluralize }}</span>
+                        <span class="category-card-link">Explore
+                            <svg class="category-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
                 </div>
             </a>
             {% endif %}

@@ -324,6 +324,23 @@ def preview_view(request, username):
     uncategorized_count = sum(1 for p in projects_list if getattr(p, 'category_id', None) is None)
     has_uncategorized_projects = uncategorized_count > 0
 
+    # Build per-category project preview collages (up to 4 thumbnails each).
+    # Reuses the already-materialized projects_list — no extra DB queries.
+    # Identical images are skipped so a category never shows duplicate tiles.
+    previews_by_category = {}
+    for p in projects_list:
+        if p.image and p.category_id is not None:
+            previews = previews_by_category.setdefault(p.category_id, [])
+            if len(previews) < 4 and all(existing.image.name != p.image.name for existing in previews):
+                previews.append(p)
+    for cat in project_categories:
+        cat.preview_projects = previews_by_category.get(cat.id, [])
+    uncategorized_previews = []
+    for p in projects_list:
+        if p.image and p.category_id is None:
+            if len(uncategorized_previews) < 4 and all(existing.image.name != p.image.name for existing in uncategorized_previews):
+                uncategorized_previews.append(p)
+
     context = {
         'personal_info': personal_info,
         'experiences': experiences,
@@ -341,6 +358,7 @@ def preview_view(request, username):
         'profile': profile,
         'uncategorized_count': uncategorized_count,
         'has_uncategorized_projects': has_uncategorized_projects,
+        'uncategorized_previews': uncategorized_previews,
         # Pre-evaluated list with annotated counts — no extra DB queries in templates
         'project_categories': project_categories,
         'project_categories_count': len(project_categories),
