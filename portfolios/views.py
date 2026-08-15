@@ -326,19 +326,20 @@ def preview_view(request, username):
 
     # Build per-category project preview collages (up to 4 thumbnails each).
     # Reuses the already-materialized projects_list — no extra DB queries.
-    # Identical images are skipped so a category never shows duplicate tiles.
+    # Identical images are skipped so a category never shows duplicate tiles;
+    # projects without an image still fill a tile (rendered as a placeholder).
     previews_by_category = {}
     for p in projects_list:
-        if p.image and p.category_id is not None:
+        if p.category_id is not None:
             previews = previews_by_category.setdefault(p.category_id, [])
-            if len(previews) < 4 and all(existing.image.name != p.image.name for existing in previews):
+            if len(previews) < 4 and (not p.image or all(existing.image.name != p.image.name for existing in previews)):
                 previews.append(p)
     for cat in project_categories:
         cat.preview_projects = previews_by_category.get(cat.id, [])
     uncategorized_previews = []
     for p in projects_list:
-        if p.image and p.category_id is None:
-            if len(uncategorized_previews) < 4 and all(existing.image.name != p.image.name for existing in uncategorized_previews):
+        if p.category_id is None:
+            if len(uncategorized_previews) < 4 and (not p.image or all(existing.image.name != p.image.name for existing in uncategorized_previews)):
                 uncategorized_previews.append(p)
 
     context = {

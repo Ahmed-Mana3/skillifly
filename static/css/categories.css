@@ -590,6 +590,16 @@ h1, h2, h3, h4, .serif {
     display: block;
     transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.category-collage-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-hover);
+    color: var(--text-muted);
+}
+.category-card:hover .category-collage-placeholder {
+    transform: none;
+}
 .category-collage-img:only-child {
     grid-column: 1 / -1;
     grid-row: 1 / -1;

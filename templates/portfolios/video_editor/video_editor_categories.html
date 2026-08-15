@@ -109,14 +109,20 @@
             {% for category in project_categories %}
             <a href="{% url 'portfolio_category_detail' username=portfolio_user.username category_id=category.id %}" class="category-card reveal-scale" style="transition-delay: {{ forloop.counter0 }}00ms">
                 <div class="category-img-box">
-                    {% if category.preview_projects %}
+                    {% if category.thumbnail %}
+                    <img src="{% url 'image_thumb' category.thumbnail.name 800 %}" alt="{{ category.name }}" class="category-img" loading="lazy" decoding="async" width="800" height="450">
+                    {% elif category.preview_projects %}
                     <div class="category-collage">
                         {% for project in category.preview_projects %}
+                        {% if project.image %}
                         <img src="{% url 'image_thumb' project.image.name 400 %}" alt="{{ project.title }}" class="category-collage-img" loading="lazy" decoding="async">
+                        {% else %}
+                        <div class="category-collage-img category-collage-placeholder" title="{{ project.title }}">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1z"/></svg>
+                        </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
-                    {% elif category.thumbnail %}
-                    <img src="{% url 'image_thumb' category.thumbnail.name 800 %}" alt="{{ category.name }}" class="category-img" loading="lazy" decoding="async" width="800" height="450">
                     {% else %}
                     <div class="category-img category-img-placeholder">
                         <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg>
@@ -146,7 +152,13 @@
                     {% if uncategorized_previews %}
                     <div class="category-collage">
                         {% for project in uncategorized_previews %}
+                        {% if project.image %}
                         <img src="{% url 'image_thumb' project.image.name 400 %}" alt="{{ project.title }}" class="category-collage-img" loading="lazy" decoding="async">
+                        {% else %}
+                        <div class="category-collage-img category-collage-placeholder" title="{{ project.title }}">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1z"/></svg>
+                        </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                     {% else %}
