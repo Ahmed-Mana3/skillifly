@@ -92,6 +92,7 @@ class PersonalInfoForm(forms.Form):
 # Skills (Formset)
 # =========================
 class SkillForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     skill = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
@@ -106,6 +107,7 @@ class SkillForm(forms.Form):
 # Education (Formset)
 # =========================
 class EducationForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     school = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
@@ -147,6 +149,7 @@ class EducationForm(forms.Form):
 # Experience (Formset)
 # =========================
 class ExperienceForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     title = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
@@ -256,7 +259,7 @@ class ProjectForm(forms.Form):
     )
     category_id = forms.CharField(
         required=False,
-        widget=forms.HiddenInput(attrs={"class": "project-category-input"})
+        widget=forms.HiddenInput(attrs={"class": "project-category-input category-dropdown"})
     )
 
 
@@ -264,6 +267,7 @@ class ProjectForm(forms.Form):
 # Links (Formset)
 # =========================
 class LinkForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     name = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
@@ -290,6 +294,7 @@ class LinkForm(forms.Form):
 # Creators (Formset)
 # =========================
 class CreatorForm(forms.Form):
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     name = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={

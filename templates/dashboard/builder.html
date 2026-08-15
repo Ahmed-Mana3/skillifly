@@ -9,7 +9,37 @@
   /* Skillifly Brand Accents */
   :root {
     --accent: #8B5CF6; /* Purple */
+    --accent-alt: #8B5CF6;
     --accent-glow: rgba(139, 92, 246, 0.2);
+  }
+
+  body {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Match the Arabic builder look: normal-case labels & buttons */
+  .sf-label {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  .btn-premium {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #DB2777 100%);
+    background-size: 200% auto;
+    box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-premium:hover {
+    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.4);
+  }
+
+  .logo-mark img {
+    filter: none;
   }
 
   .builder-container {
@@ -91,8 +121,6 @@
     color: #71717a;
     font-size: 0.7rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
@@ -447,7 +475,6 @@
                     {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
                     <div>
                       <label class="sf-label">Assign to Category</label>
-                      <input type="hidden" name="{{ form.category_id.html_name }}" class="project-category-input category-dropdown" value="{{ form.category_id.value|default:'' }}">
                       <div class="category-chips-container flex flex-wrap gap-2 mt-2">
                         <button type="button" class="category-chip {% if not form.category_id.value %}active{% endif %}" data-value="" onclick="Builder.selectCategoryChip(this)">
                           Uncategorized
@@ -688,7 +715,6 @@
             {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
             <div>
               <label class="sf-label">Assign to Category</label>
-              <input type="hidden" name="projects-__prefix__-category_id" class="project-category-input category-dropdown" value="">
               <div class="category-chips-container flex flex-wrap gap-2 mt-2">
                 <button type="button" class="category-chip active" data-value="" onclick="Builder.selectCategoryChip(this)">
                   Uncategorized

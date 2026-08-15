@@ -140,16 +140,17 @@ def builder_view(request):
             messages.error(request, "Please correct the highlighted errors in your portfolio.")
 
     else:
- 
+        initial = _portfolio_initial_data(request.user)
+
         personal_form = PersonalInfoForm()
 
-        skill_formset = SkillFormSet(prefix="skills")
-        education_formset = EducationFormSet(prefix="education")
-        experience_formset = ExperienceFormSet(prefix="experience")
-        project_formset = ProjectFormSet(prefix="projects")
-        project_category_formset = ProjectCategoryFormSet(prefix="project_categories")
-        link_formset = LinkFormSet(prefix="links")
-        creator_formset = CreatorFormSet(prefix="creators")
+        skill_formset = SkillFormSet(initial=initial["skills"], prefix="skills")
+        education_formset = EducationFormSet(initial=initial["education"], prefix="education")
+        experience_formset = ExperienceFormSet(initial=initial["experience"], prefix="experience")
+        project_formset = ProjectFormSet(initial=initial["projects"], prefix="projects")
+        project_category_formset = ProjectCategoryFormSet(initial=initial["project_categories"], prefix="project_categories")
+        link_formset = LinkFormSet(initial=initial["links"], prefix="links")
+        creator_formset = CreatorFormSet(initial=initial["creators"], prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
     context = {
@@ -232,7 +233,8 @@ def update_portfolio_view(request):
     
     else:
         # Pre-fill forms with existing data
-        
+        initial = _portfolio_initial_data(user)
+
         # Personal Info
         initial_personal = {}
         if personal_info:
@@ -246,68 +248,13 @@ def update_portfolio_view(request):
             }
         personal_form = PersonalInfoForm(initial=initial_personal)
 
-        # Skills
-        skills_data = [{'skill': s.name} for s in Skill.objects.filter(user=user)]
-        skill_formset = SkillFormSetUpdate(initial=skills_data, prefix="skills")
-        
-        # Education
-        education_data = [{
-            'school': e.school,
-            'degree': e.degree,
-            'field': e.field,
-            'year': e.grade_year.year
-        } for e in Education.objects.filter(user=user)]
-        education_formset = EducationFormSetUpdate(initial=education_data, prefix="education")
-
-        # Experience
-        experience_data = []
-        for e in Experience.objects.filter(user=user):
-            start_str = e.start_date.strftime('%Y-%m') if e.start_date else ''
-            end_str = e.end_date.strftime('%Y-%m') if e.end_date else ''
-            experience_data.append({
-                'title': e.title,
-                'company': e.company,
-                'start': start_str,
-                'end': end_str,
-                'description': e.details
-            })
-        experience_formset = ExperienceFormSetUpdate(initial=experience_data, prefix="experience")
-
-        # Projects
-        project_data = [{
-            'name': p.title,
-            'url': p.url,
-            'description': p.details,
-            'video_type': p.video_type,
-            'thumbnail': p.image,
-            'category_id': p.category_id
-        } for p in Project.objects.filter(user=user)]
-        project_formset = ProjectFormSetUpdate(initial=project_data, prefix="projects")
-
-        # Project Categories
-        from core.models import ProjectCategory
-        category_data = [{
-            'id': c.id,
-            'name': c.name,
-            'description': c.description,
-            'thumbnail': c.thumbnail
-        } for c in ProjectCategory.objects.filter(user=user)]
-        project_category_formset = ProjectCategoryFormSetUpdate(initial=category_data, prefix="project_categories")
-
-        # Links
-        link_data = [{
-            'name': l.platform,
-            'url': l.url
-        } for l in Link.objects.filter(user=user)]
-        link_formset = LinkFormSetUpdate(initial=link_data, prefix="links")
-
-        # Creators
-        creator_data = [{
-            'name': c.name,
-            'image': c.image,
-            'url': c.url
-        } for c in Creator.objects.filter(user=user)]
-        creator_formset = CreatorFormSetUpdate(initial=creator_data, prefix="creators")
+        skill_formset = SkillFormSetUpdate(initial=initial["skills"], prefix="skills")
+        education_formset = EducationFormSetUpdate(initial=initial["education"], prefix="education")
+        experience_formset = ExperienceFormSetUpdate(initial=initial["experience"], prefix="experience")
+        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects")
+        project_category_formset = ProjectCategoryFormSetUpdate(initial=initial["project_categories"], prefix="project_categories")
+        link_formset = LinkFormSetUpdate(initial=initial["links"], prefix="links")
+        creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
     context = {
@@ -341,160 +288,274 @@ def update_portfolio_view(request):
     return render(request, template_name, context)
 
 
+def _portfolio_initial_data(user):
+    """Build formset initial data (with DB ids) so existing rows are updated in place."""
+    from core.models import ProjectCategory
+
+    skills = [{"id": s.id, "skill": s.name} for s in Skill.objects.filter(user=user)]
+
+    education = [{
+        "id": e.id,
+        "school": e.school,
+        "degree": e.degree,
+        "field": e.field,
+        "year": e.grade_year.year,
+    } for e in Education.objects.filter(user=user)]
+
+    experience = []
+    for e in Experience.objects.filter(user=user):
+        experience.append({
+            "id": e.id,
+            "title": e.title,
+            "company": e.company,
+            "start": e.start_date.strftime('%Y-%m') if e.start_date else '',
+            "end": e.end_date.strftime('%Y-%m') if e.end_date else '',
+            "description": e.details,
+        })
+
+    projects = [{
+        "id": p.id,
+        "name": p.title,
+        "url": p.url,
+        "description": p.details,
+        "video_type": p.video_type,
+        "thumbnail": p.image,
+        "category_id": p.category_id,
+    } for p in Project.objects.filter(user=user)]
+
+    project_categories = [{
+        "id": c.id,
+        "name": c.name,
+        "description": c.description,
+        "thumbnail": c.thumbnail,
+    } for c in ProjectCategory.objects.filter(user=user)]
+
+    links = [{"id": l.id, "name": l.platform, "url": l.url} for l in Link.objects.filter(user=user)]
+
+    creators = [{
+        "id": c.id,
+        "name": c.name,
+        "image": c.image,
+        "url": c.url,
+    } for c in Creator.objects.filter(user=user)]
+
+    return {
+        "skills": skills,
+        "education": education,
+        "experience": experience,
+        "projects": projects,
+        "project_categories": project_categories,
+        "links": links,
+        "creators": creators,
+    }
+
+
+def _category_for(category_id, category_mapping):
+    if not category_id:
+        return None
+    try:
+        return category_mapping.get(int(category_id))
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_month_year(date_str):
+    if not date_str:
+        return None
+    try:
+        y, m = map(int, date_str.split("-"))
+        return date(y, m, 1)
+    except (ValueError, AttributeError):
+        return None
+
+
+def _update_or_create(existing_map, submitted_ids, data, model_cls, user, fields):
+    """Update existing rows by id, create new ones, then delete rows no longer submitted."""
+    row_id = data.get("id")
+    if row_id and row_id in existing_map:
+        instance = existing_map[row_id]
+        for key, value in fields.items():
+            setattr(instance, key, value)
+        instance.save()
+        submitted_ids.add(row_id)
+    else:
+        model_cls.objects.create(user=user, **fields)
+
+
 def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None):
-            personal_data = personal_form.cleaned_data
+    personal_data = personal_form.cleaned_data
 
-            skills = [
-                f.cleaned_data["skill"]
-                for f in skill_formset
-                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-            ]
+    skills = [
+        f.cleaned_data
+        for f in skill_formset
+        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+    ]
 
-            education = [
-                f.cleaned_data
-                for f in education_formset
-                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-            ]
+    education = [
+        f.cleaned_data
+        for f in education_formset
+        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+    ]
 
-            experience = [
-                f.cleaned_data
-                for f in experience_formset
-                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-            ]
+    experience = [
+        f.cleaned_data
+        for f in experience_formset
+        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+    ]
 
-            projects = [
-                f.cleaned_data
-                for f in project_formset
-                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-            ]
+    projects = [
+        f.cleaned_data
+        for f in project_formset
+        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+    ]
 
-            links = [
-                f.cleaned_data
-                for f in link_formset
-                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-            ]
+    links = [
+        f.cleaned_data
+        for f in link_formset
+        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+    ]
 
-            creators = [
-                f.cleaned_data
-                for f in creator_formset
-                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-            ]
+    creators = [
+        f.cleaned_data
+        for f in creator_formset
+        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+    ]
 
-            personal_info, created = PersonalInfo.objects.update_or_create(
-                user=request.user,
-                defaults={
-                    "full_name": personal_data["fullname"],
-                    "title": personal_data["title"],
-                    "email": personal_data["email"],
-                    "phone": personal_data["phone"],
-                    "bio": personal_data["bio"],
-                    "booking_url": personal_data.get("booking_url"),
-                },
-            )
+    personal_info, created = PersonalInfo.objects.update_or_create(
+        user=request.user,
+        defaults={
+            "full_name": personal_data["fullname"],
+            "title": personal_data["title"],
+            "email": personal_data["email"],
+            "phone": personal_data["phone"],
+            "bio": personal_data["bio"],
+            "booking_url": personal_data.get("booking_url"),
+        },
+    )
 
-            # Save picture to Profile if provided
-            if "picture" in personal_data and personal_data["picture"]:
-                profile, p_created = Profile.objects.get_or_create(user=request.user)
-                profile.picture = personal_data["picture"]
-                profile.save()
+    # Save picture to Profile if provided
+    if "picture" in personal_data and personal_data["picture"]:
+        profile, p_created = Profile.objects.get_or_create(user=request.user)
+        profile.picture = personal_data["picture"]
+        profile.save()
 
-            Skill.objects.filter(user=request.user).delete()
-            for skill_name in skills:
-                Skill.objects.create(user=request.user, name=skill_name)
+    # --- Skills ---
+    existing_map = {s.id: s for s in Skill.objects.filter(user=request.user)}
+    submitted_ids = set()
+    for skill_data in skills:
+        _update_or_create(
+            existing_map, submitted_ids,
+            skill_data, Skill, request.user,
+            {"name": skill_data["skill"]},
+        )
+    for s_id, skill in existing_map.items():
+        if s_id not in submitted_ids:
+            skill.delete()
 
-            Education.objects.filter(user=request.user).delete()
-            for edu_data in education:
-                Education.objects.create(
-                    user=request.user,
-                    school=edu_data["school"],
-                    degree=edu_data["degree"],
-                    field=edu_data["field"],
-                    grade_year=date(edu_data["year"], 1, 1),  
-                )
+    # --- Education ---
+    existing_map = {e.id: e for e in Education.objects.filter(user=request.user)}
+    submitted_ids = set()
+    for edu_data in education:
+        _update_or_create(
+            existing_map, submitted_ids,
+            edu_data, Education, request.user,
+            {
+                "school": edu_data["school"],
+                "degree": edu_data["degree"],
+                "field": edu_data["field"],
+                "grade_year": date(edu_data["year"], 1, 1),
+            },
+        )
+    for e_id, edu in existing_map.items():
+        if e_id not in submitted_ids:
+            edu.delete()
 
-            Experience.objects.filter(user=request.user).delete()
-            for exp_data in experience:
-                
-                def parse_month_year(date_str):
-                    if not date_str:
-                        return None
-                    try:
-                        y, m = map(int, date_str.split("-"))
-                        return date(y, m, 1)
-                    except (ValueError, AttributeError):
-                        return None
+    # --- Experience ---
+    existing_map = {e.id: e for e in Experience.objects.filter(user=request.user)}
+    submitted_ids = set()
+    for exp_data in experience:
+        start_date = _parse_month_year(exp_data.get("start"))
+        end_date = _parse_month_year(exp_data.get("end"))
+        _update_or_create(
+            existing_map, submitted_ids,
+            exp_data, Experience, request.user,
+            {
+                "title": exp_data["title"],
+                "company": exp_data["company"],
+                "start_date": start_date or date.today(),
+                "end_date": end_date,
+                "still_working": not end_date,
+                "duration": 0.0,
+                "details": exp_data.get("description", ""),
+            },
+        )
+    for e_id, exp in existing_map.items():
+        if e_id not in submitted_ids:
+            exp.delete()
 
-                start_date = parse_month_year(exp_data.get("start"))
-                end_date = parse_month_year(exp_data.get("end"))
-                
-                Experience.objects.create(
-                    user=request.user,
-                    title=exp_data["title"],
-                    company=exp_data["company"],
-                    start_date=start_date or date.today(),
-                    end_date=end_date,
-                    still_working=not end_date,
-                    duration=0.0,
-                    details=exp_data.get("description", ""),
-                )
+    # --- Project Categories (read from DB, saved via AJAX) ---
+    from core.models import ProjectCategory
+    category_mapping = {c.id: c for c in ProjectCategory.objects.filter(user=request.user)}
 
-            # Cache existing project images to prevent data loss
-            existing_images = {p.title: p.image for p in Project.objects.filter(user=request.user) if p.image}
-            
-            # --- Project Categories ---
-            # Categories are now saved instantly via AJAX, so we just load existing ones from DB
-            from core.models import ProjectCategory
-            category_mapping = {
-                str(c.id): c
-                for c in ProjectCategory.objects.filter(user=request.user)
-            }
-            
-            Project.objects.filter(user=request.user).delete()
-            for proj_data in projects:
-                new_image = proj_data.get("thumbnail")
-                # Restore old image if no new one provided and titles match
-                if not new_image:
-                    new_image = existing_images.get(proj_data["name"])
+    # --- Projects ---
+    existing_map = {p.id: p for p in Project.objects.filter(user=request.user)}
+    submitted_ids = set()
+    for proj_data in projects:
+        new_image = proj_data.get("thumbnail")
+        fields = {
+            "title": proj_data["name"],
+            "url": proj_data.get("url"),
+            "details": proj_data.get("description"),
+            "video_type": proj_data.get("video_type", "long"),
+            "category": _category_for(proj_data.get("category_id"), category_mapping),
+        }
+        if new_image:
+            fields["image"] = new_image
+        _update_or_create(
+            existing_map, submitted_ids,
+            proj_data, Project, request.user, fields,
+        )
+    for p_id, project in existing_map.items():
+        if p_id not in submitted_ids:
+            project.delete()
 
-                cat_obj = None
-                if proj_data.get("category_id"):
-                    cat_obj = category_mapping.get(str(proj_data["category_id"]))
-                    
-                Project.objects.create(
-                    user=request.user,
-                    title=proj_data["name"],
-                    url=proj_data.get("url"),
-                    details=proj_data.get("description"),
-                    video_type=proj_data.get("video_type", "long"),
-                    image=new_image,
-                    category=cat_obj
-                )
+    # --- Links ---
+    existing_map = {l.id: l for l in Link.objects.filter(user=request.user)}
+    submitted_ids = set()
+    for link_data in links:
+        _update_or_create(
+            existing_map, submitted_ids,
+            link_data, Link, request.user,
+            {
+                "platform": link_data["name"],
+                "url": link_data["url"],
+            },
+        )
+    for l_id, link in existing_map.items():
+        if l_id not in submitted_ids:
+            link.delete()
 
-            Link.objects.filter(user=request.user).delete()
-            for link_data in links:
-                Link.objects.create(
-                    user=request.user,
-                    platform=link_data["name"],
-                    url=link_data["url"],
-                )
-            
-            # Cache existing creator images
-            existing_creator_images = {c.name: c.image for c in Creator.objects.filter(user=request.user) if c.image}
+    # --- Creators ---
+    existing_map = {c.id: c for c in Creator.objects.filter(user=request.user)}
+    submitted_ids = set()
+    for cr_data in creators:
+        fields = {
+            "name": cr_data["name"],
+            "url": cr_data.get("url"),
+        }
+        new_image = cr_data.get("image")
+        if new_image:
+            fields["image"] = new_image
+        _update_or_create(
+            existing_map, submitted_ids,
+            cr_data, Creator, request.user, fields,
+        )
+    for c_id, creator in existing_map.items():
+        if c_id not in submitted_ids:
+            creator.delete()
 
-            Creator.objects.filter(user=request.user).delete()
-            for cr_data in creators:
-                new_img = cr_data.get("image")
-                if not new_img:
-                    new_img = existing_creator_images.get(cr_data["name"])
-                Creator.objects.create(
-                    user=request.user,
-                    name=cr_data["name"],
-                    image=new_img,
-                    url=cr_data.get("url")
-                )
-            
-            # Ensure a UserPayment record exists
-            if not UserPayment.objects.filter(user=request.user).exists():
-                UserPayment.objects.create(user=request.user)
+    # Ensure a UserPayment record exists
+    if not UserPayment.objects.filter(user=request.user).exists():
+        UserPayment.objects.create(user=request.user)
 
 

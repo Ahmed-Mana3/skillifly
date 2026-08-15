@@ -508,7 +508,6 @@
                     {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
                     <div>
                       <label class="sf-label">إسناد إلى مجموعة</label>
-                      <input type="hidden" name="{{ form.category_id.html_name }}" class="project-category-input category-dropdown" value="{{ form.category_id.value|default:'' }}">
                       <div class="category-chips-container flex flex-wrap gap-2 mt-2">
                         <button type="button" class="category-chip {% if not form.category_id.value %}active{% endif %}" data-value="" onclick="Builder.selectCategoryChip(this)">
                           بدون تصنيف
@@ -749,7 +748,6 @@
             {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
             <div>
               <label class="sf-label">إسناد إلى مجموعة</label>
-              <input type="hidden" name="projects-__prefix__-category_id" class="project-category-input category-dropdown" value="">
               <div class="category-chips-container flex flex-wrap gap-2 mt-2">
                 <button type="button" class="category-chip active" data-value="" onclick="Builder.selectCategoryChip(this)">
                   بدون تصنيف

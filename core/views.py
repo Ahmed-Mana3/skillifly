@@ -1313,7 +1313,7 @@ def arabic_update_portfolio_view(request):
         LinkFormSetUpdate,
         CreatorFormSetUpdate,
     )
-    from builder.views import save_portfolio_data
+    from builder.views import save_portfolio_data, _portfolio_initial_data
 
     user = request.user
 
@@ -1357,6 +1357,7 @@ def arabic_update_portfolio_view(request):
 
     else:
         # Pre-fill forms with existing data
+        initial = _portfolio_initial_data(user)
 
         # Personal Info
         initial_personal = {}
@@ -1371,68 +1372,13 @@ def arabic_update_portfolio_view(request):
             }
         personal_form = PersonalInfoForm(initial=initial_personal)
 
-        # Skills
-        skills_data = [{'skill': s.name} for s in Skill.objects.filter(user=user)]
-        skill_formset = SkillFormSetUpdate(initial=skills_data, prefix="skills")
-
-        # Education
-        education_data = [{
-            'school': e.school,
-            'degree': e.degree,
-            'field': e.field,
-            'year': e.grade_year.year
-        } for e in Education.objects.filter(user=user)]
-        education_formset = EducationFormSetUpdate(initial=education_data, prefix="education")
-
-        # Experience
-        experience_data = []
-        for e in Experience.objects.filter(user=user):
-            start_str = e.start_date.strftime('%Y-%m') if e.start_date else ''
-            end_str = e.end_date.strftime('%Y-%m') if e.end_date else ''
-            experience_data.append({
-                'title': e.title,
-                'company': e.company,
-                'start': start_str,
-                'end': end_str,
-                'description': e.details
-            })
-        experience_formset = ExperienceFormSetUpdate(initial=experience_data, prefix="experience")
-
-        # Projects
-        project_data = [{
-            'name': p.title,
-            'url': p.url,
-            'description': p.details,
-            'video_type': p.video_type,
-            'thumbnail': p.image,
-            'category_id': p.category_id
-        } for p in Project.objects.filter(user=user)]
-        project_formset = ProjectFormSetUpdate(initial=project_data, prefix="projects")
-
-        # Project Categories
-        from core.models import ProjectCategory
-        category_data = [{
-            'id': c.id,
-            'name': c.name,
-            'description': c.description,
-            'thumbnail': c.thumbnail
-        } for c in ProjectCategory.objects.filter(user=user)]
-        project_category_formset = ProjectCategoryFormSetUpdate(initial=category_data, prefix="project_categories")
-
-        # Links
-        link_data = [{
-            'name': l.platform,
-            'url': l.url
-        } for l in Link.objects.filter(user=user)]
-        link_formset = LinkFormSetUpdate(initial=link_data, prefix="links")
-
-        # Creators
-        creator_data = [{
-            'name': c.name,
-            'image': c.image,
-            'url': c.url
-        } for c in Creator.objects.filter(user=user)]
-        creator_formset = CreatorFormSetUpdate(initial=creator_data, prefix="creators")
+        skill_formset = SkillFormSetUpdate(initial=initial["skills"], prefix="skills")
+        education_formset = EducationFormSetUpdate(initial=initial["education"], prefix="education")
+        experience_formset = ExperienceFormSetUpdate(initial=initial["experience"], prefix="experience")
+        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects")
+        project_category_formset = ProjectCategoryFormSetUpdate(initial=initial["project_categories"], prefix="project_categories")
+        link_formset = LinkFormSetUpdate(initial=initial["links"], prefix="links")
+        creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
     context = {

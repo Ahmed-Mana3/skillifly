@@ -5,6 +5,7 @@
 
 const Builder = {
     currentSection: 0,
+    isSubmitting: false,
     sectionNames: ['Personal', 'Skills', 'Education', 'Experience', 'Projects', 'Links', 'Creators', 'Reviews'],
 
     I18N: Object.assign({
@@ -118,6 +119,11 @@ const Builder = {
         this.form.addEventListener('change', () => {});
 
         this.form.addEventListener('submit', (e) => {
+            if (this.isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+
             const submitter = e.submitter || document.activeElement;
 
             if (!this.form.checkValidity()) {
@@ -125,6 +131,7 @@ const Builder = {
                 this.jumpToFirstInvalid();
                 this.showToast(this.t('beforeLaunchErrors'), "error");
             } else {
+                this.isSubmitting = true;
                 this.setSubmittingState(submitter);
                 this.showToast(this.t('savingLaunch'), "success");
             }
@@ -385,8 +392,8 @@ const Builder = {
         // Activate the clicked chip
         btn.classList.add('active');
 
-        // Update hidden input
-        const hiddenInput = container.parentElement.querySelector('.project-category-input');
+        // Update hidden input (rendered with the form's hidden fields)
+        const hiddenInput = btn.closest('.formset-item').querySelector('.project-category-input');
         if (hiddenInput) {
             hiddenInput.value = btn.dataset.value;
         }
