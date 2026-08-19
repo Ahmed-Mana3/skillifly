@@ -53,6 +53,7 @@ const Builder = {
         this.bindEvents();
         this.checkInitialErrors();
         this.setupImagePreviews();
+        this.ensureSavingOverlay();
     },
 
     cacheDOM() {
@@ -133,6 +134,7 @@ const Builder = {
             } else {
                 this.isSubmitting = true;
                 this.setSubmittingState(submitter);
+                this.showSavingOverlay('savingLaunch');
                 this.showToast(this.t('savingLaunch'), "success");
             }
         });
@@ -187,6 +189,44 @@ const Builder = {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(-50%) translateY(5rem)';
         }, type === 'error' ? 4000 : 3000);
+    },
+
+    ensureSavingOverlay() {
+        if (document.getElementById('builder-saving-overlay')) return;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'builder-saving-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,0.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:1rem;';
+        overlay.innerHTML = `
+            <div style="width:min(92vw,28rem);border-radius:1.5rem;border:1px solid rgba(255,255,255,0.12);background:rgba(10,10,10,0.96);box-shadow:0 30px 90px rgba(0,0,0,0.45);padding:1.5rem 1.5rem 1.25rem;color:#fff;text-align:center;">
+                <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1rem;">
+                    <span style="width:0.9rem;height:0.9rem;border-radius:999px;background:#8b5cf6;box-shadow:0 0 0 0 rgba(139,92,246,0.45);animation:builderPulse 1.4s infinite;"></span>
+                    <span id="builder-saving-label" style="font-weight:800;font-size:0.95rem;">${this.t('saving')}</span>
+                </div>
+                <div style="height:0.75rem;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                    <div id="builder-saving-bar" style="height:100%;width:18%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#ec4899);animation:builderProgress 1.2s ease-in-out infinite;"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes builderProgress{0%{transform:translateX(-25%)}50%{transform:translateX(340%)}100%{transform:translateX(-25%)}}@keyframes builderPulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.25);opacity:1}}';
+        document.head.appendChild(style);
+    },
+
+    showSavingOverlay(labelKey) {
+        const overlay = document.getElementById('builder-saving-overlay');
+        const label = document.getElementById('builder-saving-label');
+        if (!overlay) return;
+        if (label && labelKey) label.textContent = this.t(labelKey);
+        overlay.style.display = 'flex';
+    },
+
+    hideSavingOverlay() {
+        const overlay = document.getElementById('builder-saving-overlay');
+        if (overlay) overlay.style.display = 'none';
     },
 
     setSubmittingState(submitter) {
