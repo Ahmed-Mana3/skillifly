@@ -1,0 +1,70 @@
+{% load static %}
+
+<nav class="sticky top-16 z-40 glass-card border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="{% url 'school_home' school.slug %}" class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center gradient-brand text-white text-sm font-bold" style="font-family:'Syne',sans-serif;">
+        {% if school.logo %}
+          <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="h-full w-full object-cover">
+        {% else %}
+          {{ school.name|truncatechars:2 }}
+        {% endif %}
+      </div>
+      <span class="text-sm font-bold text-slate-800 hidden sm:block" style="font-family:'Syne',sans-serif;">{{ school.name }}</span>
+    </a>
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center gap-8">
+      <a href="{% url 'school_home' school.slug %}" class="nav-link {% if request.resolver_match.url_name == 'school_home' %}text-black{% endif %}">Dashboard</a>
+      <a href="{% url 'school_students' school.slug %}" class="nav-link {% if request.resolver_match.url_name == 'school_students' or request.resolver_match.url_name == 'school_student_detail' %}text-black{% endif %}">Students</a>
+      <a href="{% url 'school_videos' school.slug %}" class="nav-link {% if request.resolver_match.url_name == 'school_videos' or request.resolver_match.url_name == 'school_video_detail' %}text-black{% endif %}">Videos</a>
+      <div class="h-4 w-px bg-slate-200"></div>
+      <a href="{{ MAIN_SITE_URL }}{% url 'index' %}" class="flex items-center gap-2 nav-link group" title="Back to Skillifly">
+        <div class="w-7 h-7 rounded-full gradient-brand flex items-center justify-center group-hover:shadow-[0_0_12px_rgba(139,92,246,0.4)] transition-all duration-300 group-hover:scale-110">
+          <img src="{% static 'img/logo.png' %}" alt="Skillifly" class="w-4 h-4 object-contain">
+        </div>
+        <span class="text-sm">Skillifly</span>
+      </a>
+    </div>
+
+    <!-- Mobile menu button -->
+    <button id="school-mobile-menu-btn" aria-controls="school-mobile-menu" aria-expanded="false"
+      class="md:hidden p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/40 rounded-lg">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="school-mobile-menu" class="md:hidden hidden border-t border-white/5">
+    <div class="px-6 py-4 space-y-3">
+      <a href="{% url 'school_home' school.slug %}" class="block nav-link py-2 {% if request.resolver_match.url_name == 'school_home' %}text-black{% endif %}">Dashboard</a>
+      <a href="{% url 'school_students' school.slug %}" class="block nav-link py-2 {% if request.resolver_match.url_name == 'school_students' or request.resolver_match.url_name == 'school_student_detail' %}text-black{% endif %}">Students</a>
+      <a href="{% url 'school_videos' school.slug %}" class="block nav-link py-2 {% if request.resolver_match.url_name == 'school_videos' or request.resolver_match.url_name == 'school_video_detail' %}text-black{% endif %}">Videos</a>
+      <div class="h-px bg-slate-100 my-2"></div>
+      <a href="{{ MAIN_SITE_URL }}{% url 'index' %}" class="block nav-link py-2">Back to Skillifly</a>
+    </div>
+  </div>
+</nav>
+
+<script>
+(function() {
+  var btn = document.getElementById('school-mobile-menu-btn');
+  var menu = document.getElementById('school-mobile-menu');
+  if (btn && menu) {
+    btn.addEventListener('click', function() {
+      var expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', !expanded);
+      menu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', function(e) {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        btn.setAttribute('aria-expanded', 'false');
+        menu.classList.add('hidden');
+      }
+    });
+  }
+})();
+</script>

@@ -1,0 +1,364 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Student Work — {{ school.name }}{% endblock %}
+{% block meta_description %}Watch videos by {{ school.name }} students, rate them out of five stars, and leave a comment.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .videos__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+
+  /* --- Star rating --- */
+  .stars { display: inline-flex; gap: 4px; direction: ltr; }
+  .stars .star {
+    font-size: 22px;
+    line-height: 1;
+    color: #d2d2d7;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, color 120ms ease;
+  }
+  .stars .star:hover { transform: scale(1.2); }
+  .stars .star.is-fill { color: #f5a301; }
+  .stars .star.is-pop { animation: star-pop 320ms cubic-bezier(0.32, 0.72, 0.4, 1.05); }
+  @keyframes star-pop {
+    0%   { transform: scale(0.4); }
+    60%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+
+  /* --- Video cards --- */
+  .video__thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #1D4ED8, #7C3AED);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .video__thumb img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .video__thumb.has-image::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0));
+    pointer-events: none;
+  }
+  .video__play {
+    position: relative;
+    z-index: 1;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.35);
+    transition: transform 200ms cubic-bezier(0.32, 0.72, 0.4, 1.05);
+  }
+  .video__play::before {
+    content: "";
+    width: 0; height: 0;
+    margin-left: 4px;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 13px solid #7C3AED;
+  }
+  .video:hover .video__play { transform: scale(1.12); }
+
+  /* --- Action chips --- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px;
+    padding: 8px 16px;
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: #0F172A;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 100ms ease-out, background-color 200ms ease, border-color 200ms ease;
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip:hover { background: #F1F5F9; border-color: #CBD5E1; }
+  .chip.is-on { background: #FFF7E6; border-color: #F5A301; color: #8A5A00; }
+
+  /* --- Rating picker on videos --- */
+  .video__rating-picker { display: flex; align-items: center; gap: 6px; }
+  .video__rating-picker .star {
+    font-size: 24px; line-height: 1;
+    cursor: pointer; color: #d2d2d7;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, color 120ms ease;
+  }
+  .video__rating-picker .star:hover { transform: scale(1.2); }
+  .video__rating-picker .star.is-fill { color: #f5a301; }
+  .video__rating-picker .star.is-pop { animation: star-pop 320ms cubic-bezier(0.32, 0.72, 0.4, 1.05); }
+
+  /* --- Comments --- */
+  .comments__list { display: flex; flex-direction: column; gap: 14px; }
+  .comment { display: flex; gap: 10px; }
+  .comment__avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 700;
+  }
+  .comment__body { flex: 1; min-width: 0; }
+  .comment__head { display: flex; align-items: baseline; gap: 8px; }
+  .comment__author { font-size: 13px; font-weight: 700; color: #0F172A; }
+  .comment__time { font-size: 12px; color: #94A3B8; }
+  .comment__stars { font-size: 12px; color: #f5a301; letter-spacing: 1px; margin-top: 2px; }
+  .comment__text { margin-top: 3px; font-size: 14px; color: #475569; }
+  .comment__form textarea {
+    width: 100%;
+    min-height: 72px;
+    resize: vertical;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: #F8FAFC;
+    color: #0F172A;
+    outline: none;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .comment__form textarea:focus {
+    border-color: #3B82F6;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <a href="{% url 'school_home' school.slug %}" class="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-black font-bold mb-8 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Back to {{ school.name }}
+  </a>
+
+  <div class="mb-10 text-center animate-fadeInUp">
+    <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-1">Student Work</p>
+    <h1 class="text-3xl md:text-5xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">
+      Videos <span class="gradient-text">worth watching</span>
+    </h1>
+    <p class="text-slate-600 text-base font-medium max-w-xl mx-auto">Rate a video or open its page — every card is clickable.</p>
+  </div>
+
+  <div class="videos__grid">
+    {% for video in videos %}
+    <a href="{% url 'school_video_detail' school.slug video.id %}" class="gradient-border rounded-2xl bg-white block group hover:scale-[1.01] transition-all duration-300 relative overflow-hidden video" data-rate-url="{% url 'rate_school_video' school.slug video.id %}" data-comment-url="{% url 'comment_school_video' school.slug video.id %}">
+      <div class="video__thumb {% if video.image %}has-image{% endif %}" style="{% if video.image %}background:#0f172a;{% else %}background: linear-gradient(135deg, {{ video.color }}, #7C3AED);{% endif %}">
+        {% if video.image %}<img src="{% url 'image_thumb' video.image.name 800 %}" alt="{{ video.title }}" class="w-full h-full object-cover" loading="lazy" decoding="async" width="640" height="360">{% endif %}
+        <div class="video__play" aria-hidden="true"></div>
+      </div>
+      <div class="p-5">
+        <div class="flex items-center gap-2.5">
+          {% if video.student %}
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold {% if video.student.avatar_url %}overflow-hidden{% endif %}" {% if video.student.avatar_url %}style="background:#0f172a;"{% else %}style="background: linear-gradient(135deg, {{ video.student.avatar_color }}, {{ video.student.avatar_color }});"{% endif %}>{% if video.student.avatar_url %}<img src="{% url 'image_thumb' video.student.user.profile.picture.name 48 %}" alt="{{ video.student.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">{% else %}{{ video.student.initials }}{% endif %}</div>
+          <span class="text-xs text-slate-500 font-bold">{{ video.student.name }}</span>
+          {% else %}
+          <span class="text-xs text-slate-500 font-bold">{{ school.name }} Student</span>
+          {% endif %}
+        </div>
+        <h3 class="text-base font-bold text-black mt-3 leading-snug" style="font-family:'Syne',sans-serif;">{{ video.title }}</h3>
+        <div class="flex items-center gap-2.5 mt-4">
+          <div class="video__rating-picker" role="radiogroup" aria-label="Rate this video">
+            <span class="star" data-value="1" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="2" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="3" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="4" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="5" role="radio" tabindex="-1">★</span>
+          </div>
+          <button class="chip ml-auto" type="button" data-comment-toggle>💬 Comment</button>
+        </div>
+        <div class="comments mt-4 pt-4 border-t border-slate-100" hidden>
+          <div class="comments__list">
+            {% for comment in video.comments_list %}
+            <div class="comment">
+              <div class="comment__avatar" style="background: linear-gradient(135deg, {{ comment.author_color }}, {{ comment.author_color }});">{{ comment.author_name|slice:":1" }}</div>
+              <div class="comment__body">
+                <div class="comment__head"><span class="comment__author">{{ comment.author_name }}</span><span class="comment__time">{{ comment.time_label }}</span></div>
+                <div class="comment__stars">{{ comment.stars }}★</div>
+                <p class="comment__text">{{ comment.body }}</p>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-sm text-slate-500">No comments yet — be the first.</p>
+            {% endfor %}
+          </div>
+          <form class="comment__form flex flex-col gap-2.5 mt-3.5" data-comment-form novalidate>
+            <textarea placeholder="Leave a comment…" required></textarea>
+            <button type="submit" class="btn-primary text-xs py-2.5 px-5 self-end">Post</button>
+          </form>
+        </div>
+      </div>
+      <div class="absolute -bottom-6 -right-6 w-20 h-20 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-colors"></div>
+    </a>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+
+  function csrfToken() {
+    var cookie = document.cookie.split("; ").find(function (c) { return c.indexOf("csrftoken=") === 0; });
+    return cookie ? cookie.split("=")[1] : "";
+  }
+
+  function postForm(url, data) {
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken(),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(data).toString(),
+      credentials: "same-origin",
+    }).then(function (r) { return r.json(); });
+  }
+
+  function starString(n) {
+    return "★".repeat(n);
+  }
+
+  function initialsOf(name) {
+    return name.trim().split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase();
+  }
+
+  // ---- Star rating widget (for video rating picker) ----
+  function initRating(root, onRate) {
+    var stars = Array.prototype.slice.call(root.querySelectorAll(".star"));
+    var value = 0;
+
+    function paint(hoverValue) {
+      stars.forEach(function (s, i) {
+        s.classList.toggle("is-fill", i < hoverValue);
+      });
+    }
+
+    stars.forEach(function (s, i) {
+      s.addEventListener("pointerenter", function () { paint(i + 1); });
+      s.addEventListener("pointerleave", function () { paint(value); });
+      s.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        value = i + 1;
+        paint(value);
+        s.classList.remove("is-pop");
+        void s.offsetWidth;
+        s.classList.add("is-pop");
+        if (onRate) onRate(value);
+      });
+    });
+    return { get: function () { return value; } };
+  }
+
+  // ---- Star rating widget (for video rating picker) ----
+  function initRating(root, onRate) {
+    var stars = Array.prototype.slice.call(root.querySelectorAll(".star"));
+    var value = 0;
+
+    function paint(hoverValue) {
+      stars.forEach(function (s, i) {
+        s.classList.toggle("is-fill", i < hoverValue);
+      });
+    }
+
+    stars.forEach(function (s, i) {
+      s.addEventListener("pointerenter", function () { paint(i + 1); });
+      s.addEventListener("pointerleave", function () { paint(value); });
+      s.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        value = i + 1;
+        paint(value);
+        s.classList.remove("is-pop");
+        void s.offsetWidth;
+        s.classList.add("is-pop");
+        if (onRate) onRate(value);
+      });
+    });
+    return { get: function () { return value; } };
+  }
+
+  document.querySelectorAll(".video").forEach(function (card) {
+    var cardUrl = card.getAttribute("data-rate-url");
+    var commentUrl = card.getAttribute("data-comment-url");
+    var ratingSummary = card.querySelector("[data-rating-summary]");
+    var picker = card.querySelector(".video__rating-picker");
+    var pickerStars = picker.querySelectorAll(".star");
+
+    initRating(picker, function (value) {
+      postForm(cardUrl, { value: value }).then(function (res) {
+        if (res.ok) {
+          var avg = res.average !== null && res.average !== undefined ? res.average.toFixed(1) : "—";
+          if (ratingSummary) ratingSummary.textContent = avg + " (" + res.count + ")";
+          pickerStars.forEach(function (s) {
+            var n = parseInt(s.getAttribute("data-value"), 10);
+            s.classList.toggle("is-fill", n <= value);
+          });
+        }
+      });
+    });
+
+    var commentToggle = card.querySelector("[data-comment-toggle]");
+    var comments = card.querySelector(".comments");
+    commentToggle.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var opening = comments.hidden;
+      comments.hidden = !opening;
+      commentToggle.classList.toggle("is-on", opening);
+      if (opening) comments.querySelector("textarea").focus();
+    });
+
+    var form = card.querySelector("[data-comment-form]");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var textarea = this.querySelector("textarea");
+      var text = textarea.value.trim();
+      if (!text) return;
+      postForm(commentUrl, { body: text }).then(function (res) {
+        if (res.ok) {
+          var list = form.parentNode.querySelector(".comments__list");
+          list.innerHTML = "";
+          var el = document.createElement("div");
+          el.className = "comment";
+          el.innerHTML =
+            '<div class="comment__avatar" style="background: linear-gradient(135deg,#6D28D9,#6D28D9);">Yo</div>' +
+            '<div class="comment__body">' +
+              '<div class="comment__head"><span class="comment__author">' + res.author_name + '</span><span class="comment__time">Just now</span></div>' +
+              '<div class="comment__stars">' + starString(res.stars) + '</div>' +
+              '<p class="comment__text"></p>' +
+            '</div>';
+          el.querySelector(".comment__text").textContent = res.body;
+          list.appendChild(el);
+          textarea.value = "";
+        }
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

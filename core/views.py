@@ -17,8 +17,8 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP
-from .forms import RegisterForm, LoginForm, ReviewForm, ClientReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP, School, SchoolStudent, SchoolVideoRating, SchoolVideoComment, SchoolStudentRating
+from .forms import RegisterForm, LoginForm, ReviewForm, ClientReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm, SchoolAdminRegisterForm, ChooseSchoolForm
 import random
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -758,6 +758,197 @@ def arabic_client_signup_view(request):
     return render(request, 'auth/arabic_client_signup.html', context)
 
 
+def _generate_school_admin_username(name, email):
+    """Build a unique, valid username for a school admin (never picks their own)."""
+    import re as _re
+    base = _re.sub(r'[^a-zA-Z0-9_.]', '', (name or '').replace(' ', '.'))
+    base = _re.sub(r'^\.+|\.+$', '', base)
+    base = (base or (email or '').split('@')[0] or 'admin').lower()
+    base = (_re.sub(r'[^a-z0-9_.]', '', base)[:20].strip('.') or 'admin')
+    username = f"sa_{base}"
+    while CustomUser.objects.filter(username=username).exists():
+        username = f"sa_{base}{random.randint(1000, 9999)}"
+    return username
+
+
+def school_admin_signup_view(request):
+    """School admin signup: choose school, name, email, password — OTP verification required."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    request.session['signup_account_type'] = 'school_admin'
+
+    next_url = _next_url(request, 'dashboard')
+
+    if request.method == "POST":
+        form = SchoolAdminRegisterForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            username = _generate_school_admin_username(data['name'], data['email'])
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=data['email'],
+                password=data['password'],
+                first_name=data['name'],
+            )
+            user.is_active = False
+            user.save()
+            UserAccount.objects.create(
+                user=user,
+                account_type='school_admin',
+                school=data['school'],
+            )
+            _send_otp_email(request, user)
+            request.session['next_url'] = next_url
+            return redirect('verify_otp')
+        else:
+            message = form.errors
+    else:
+        form = SchoolAdminRegisterForm()
+        message = None
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': False,
+    }
+    return render(request, 'auth/school_admin_signup.html', context)
+
+
+def arabic_school_admin_signup_view(request):
+    """Arabic twin of the school admin signup form."""
+    if request.user.is_authenticated:
+        return redirect('arabic_dashboard')
+    request.session['signup_account_type'] = 'school_admin'
+
+    next_url = _next_url(request, 'arabic_dashboard')
+
+    if request.method == "POST":
+        form = SchoolAdminRegisterForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            username = _generate_school_admin_username(data['name'], data['email'])
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=data['email'],
+                password=data['password'],
+                first_name=data['name'],
+            )
+            user.is_active = False
+            user.save()
+            UserAccount.objects.create(
+                user=user,
+                account_type='school_admin',
+                school=data['school'],
+            )
+            _send_otp_email(request, user)
+            request.session['next_url'] = next_url
+            request.session['is_arabic_flow'] = True
+            return redirect('verify_otp')
+        else:
+            message = form.errors
+    else:
+        form = SchoolAdminRegisterForm()
+        message = None
+
+    # Arabic placeholders
+    form.fields['name'].widget.attrs.update({'placeholder': 'اسمك'})
+    form.fields['email'].widget.attrs.update({'placeholder': 'you@example.com'})
+    form.fields['password'].widget.attrs.update({'placeholder': 'أنشئ كلمة مرور'})
+    form.fields['school'].empty_label = "اختر مدرستك"
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': True,
+    }
+    return render(request, 'auth/arabic_school_admin_signup.html', context)
+
+
+@login_required
+def school_admin_choose_school_view(request):
+    """After Google OAuth, school admins pick their school before proceeding."""
+    user = request.user
+    account = getattr(user, 'user_account', None)
+
+    # If they already have a school set, skip straight to dashboard
+    if account and account.school:
+        return redirect('school_admin_dashboard')
+
+    next_url = _next_url(request, 'school_admin_dashboard')
+
+    if request.method == "POST":
+        form = ChooseSchoolForm(request.POST)
+        if form.is_valid():
+            school = form.cleaned_data['school']
+            if account:
+                account.school = school
+                account.save()
+            else:
+                UserAccount.objects.create(
+                    user=user,
+                    account_type='school_admin',
+                    school=school,
+                )
+            return redirect(next_url)
+        else:
+            message = form.errors
+    else:
+        form = ChooseSchoolForm()
+        message = None
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': False,
+    }
+    return render(request, 'auth/school_admin_choose_school.html', context)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_school_admin_choose_school_view(request):
+    """Arabic twin of the school admin choose-school page."""
+    user = request.user
+    account = getattr(user, 'user_account', None)
+
+    if account and account.school:
+        return redirect('arabic_school_admin_dashboard')
+
+    next_url = _next_url(request, 'arabic_school_admin_dashboard')
+
+    if request.method == "POST":
+        form = ChooseSchoolForm(request.POST)
+        if form.is_valid():
+            school = form.cleaned_data['school']
+            if account:
+                account.school = school
+                account.save()
+            else:
+                UserAccount.objects.create(
+                    user=user,
+                    account_type='school_admin',
+                    school=school,
+                )
+            return redirect(next_url)
+        else:
+            message = form.errors
+    else:
+        form = ChooseSchoolForm()
+        message = None
+
+    form.fields['school'].empty_label = "اختر مدرستك"
+
+    context = {
+        'message': message,
+        'form': form,
+        'next': next_url,
+        'is_arabic_page': True,
+    }
+    return render(request, 'auth/arabic_school_admin_choose_school.html', context)
+
+
 def signin_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -975,6 +1166,11 @@ def profile_view(request):
         'profile_picture': profile_picture,
         'user_initials': initials,
     }
+    # Check if user is enrolled in a school
+    student = SchoolStudent.objects.filter(user=user).select_related('school').first()
+    if student:
+        context['is_school_student'] = True
+        context['student_school'] = student.school
     return render(request, 'dashboard/profile.html', context)
 
 
@@ -1049,6 +1245,11 @@ def arabic_profile_view(request):
         'user_initials': initials,
         'is_arabic_page': True,
     }
+    # Check if user is enrolled in a school
+    student = SchoolStudent.objects.filter(user=user).select_related('school').first()
+    if student:
+        context['is_school_student'] = True
+        context['student_school'] = student.school
     return render(request, 'dashboard/arabic_profile.html', context)
 
 
@@ -1057,6 +1258,8 @@ def dashboard_view(request):
     """Render the dashboard page"""
     if _is_client_account(request.user):
         return redirect('client_dashboard')
+    if _is_school_admin_account(request.user):
+        return redirect('school_admin_dashboard')
     return render(request, 'dashboard/dashboard.html', _dashboard_context(request))
 
 
@@ -1065,6 +1268,8 @@ def arabic_dashboard_view(request):
     """Render the Arabic dashboard page variant for the language toggle."""
     if _is_client_account(request.user):
         return redirect('arabic_client_dashboard')
+    if _is_school_admin_account(request.user):
+        return redirect('arabic_school_admin_dashboard')
     context = _dashboard_context(request)
     context['is_arabic_page'] = True
     return render(request, 'dashboard/arabic_dashboard.html', context)
@@ -1111,7 +1316,224 @@ def _is_client_account(user):
     return bool(account and account.account_type == 'client')
 
 
-def _client_reviews_context(request):
+def _is_school_admin_account(user):
+    account = getattr(user, 'user_account', None)
+    return bool(account and account.account_type == 'school_admin')
+
+
+def _school_admin_dashboard_context(request):
+    user = request.user
+    account = getattr(user, 'user_account', None)
+    school = account.school if account else None
+    students_count = school.students.count() if school else 0
+    school_admins = []
+    admins_count = 0
+    if school:
+        school_admins = list(
+            UserAccount.objects.filter(school=school, account_type='school_admin')
+            .select_related('user')
+            .order_by('created_at')
+        )
+        admins_count = len(school_admins)
+    return {
+        'school': school,
+        'students_count': students_count,
+        'school_admins': school_admins,
+        'admins_count': admins_count,
+        'is_arabic_page': False,
+    }
+
+
+def _arabic_school_admin_dashboard_context(request):
+    ctx = _school_admin_dashboard_context(request)
+    ctx['is_arabic_page'] = True
+    return ctx
+
+
+@login_required
+def school_admin_dashboard_view(request):
+    """School admin dashboard — shows school info and student count."""
+    if not _is_school_admin_account(request.user):
+        return redirect('dashboard')
+    account = getattr(request.user, 'user_account', None)
+    if not account or not account.school:
+        return redirect('school_admin_choose_school')
+    return render(request, 'dashboard/school_admin_dashboard.html', _school_admin_dashboard_context(request))
+
+
+@login_required(login_url='arabic_signin')
+def arabic_school_admin_dashboard_view(request):
+    """Arabic twin of the school admin dashboard."""
+    if not _is_school_admin_account(request.user):
+        return redirect('arabic_dashboard')
+    account = getattr(request.user, 'user_account', None)
+    if not account or not account.school:
+        return redirect('arabic_school_admin_choose_school')
+    context = _arabic_school_admin_dashboard_context(request)
+    return render(request, 'dashboard/arabic_school_admin_dashboard.html', context)
+
+
+@login_required(login_url='signin')
+def my_school_stats_view(request):
+    """Logged-in school student sees their comments, ratings, and average-rating chart."""
+    user = request.user
+    student = SchoolStudent.objects.filter(user=user).select_related('school').first()
+    if not student:
+        messages.info(request, 'You are not enrolled in any school.')
+        return redirect('dashboard')
+
+    school = student.school
+    my_projects = Project.objects.filter(user=user).order_by('id')
+    project_ids = list(my_projects.values_list('id', flat=True))
+
+    # ── Ratings per video ──
+    video_stats = []
+    for p in my_projects:
+        avg = p.school_video_ratings.aggregate(a=Avg('value'))['a']
+        count = p.school_video_ratings.count()
+        video_stats.append({
+            'project': p,
+            'avg': round(float(avg), 1) if avg else 0,
+            'count': count,
+        })
+
+    overall_avg = SchoolVideoRating.objects.filter(
+        project__user=user
+    ).aggregate(a=Avg('value'))['a']
+
+    # ── Comments ──
+    comments = SchoolVideoComment.objects.filter(
+        project_id__in=project_ids
+    ).order_by('-created_at')[:50]
+
+    # ── Chart data: average rating grouped by date ──
+    from django.db.models.functions import TruncDate
+    daily_ratings = (
+        SchoolVideoRating.objects
+        .filter(project__user=user)
+        .annotate(date=TruncDate('created_at'))
+        .values('date')
+        .annotate(avg_value=Avg('value'), total=Count('id'))
+        .order_by('date')
+    )
+    chart_labels = [r['date'].strftime('%b %d') for r in daily_ratings]
+    chart_avgs = [round(float(r['avg_value']), 2) for r in daily_ratings]
+    chart_counts = [r['total'] for r in daily_ratings]
+
+    # ── Rating distribution (1-5 stars) ──
+    distribution = (
+        SchoolVideoRating.objects
+        .filter(project__user=user)
+        .values('value')
+        .annotate(cnt=Count('id'))
+        .order_by('value')
+    )
+    dist_map = {r['value']: r['cnt'] for r in distribution}
+    rating_distribution = [dist_map.get(i, 0) for i in range(1, 6)]
+    total_ratings = sum(rating_distribution)
+
+    # ── Student-level ratings ──
+    student_ratings = student.ratings.order_by('-created_at')[:20]
+    student_avg = student.average_rating()
+
+    context = {
+        'school': school,
+        'student': student,
+        'video_stats': video_stats,
+        'overall_avg': round(float(overall_avg), 1) if overall_avg else 0,
+        'total_video_ratings': SchoolVideoRating.objects.filter(project__user=user).count(),
+        'comments': comments,
+        'total_comments': comments.count(),
+        'chart_labels': chart_labels,
+        'chart_avgs': chart_avgs,
+        'chart_counts': chart_counts,
+        'rating_distribution': rating_distribution,
+        'total_ratings': total_ratings,
+        'student_ratings': student_ratings,
+        'student_avg': round(float(student_avg), 1) if student_avg else 0,
+        'student_ratings_count': student.ratings.count(),
+        'is_arabic_page': False,
+    }
+    return render(request, 'dashboard/my_school_stats.html', context)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_my_school_stats_view(request):
+    """Arabic twin of the student school stats page."""
+    user = request.user
+    student = SchoolStudent.objects.filter(user=user).select_related('school').first()
+    if not student:
+        messages.info(request, 'أنت غير مسجل في أي مدرسة.')
+        return redirect('arabic_dashboard')
+
+    school = student.school
+    my_projects = Project.objects.filter(user=user).order_by('id')
+    project_ids = list(my_projects.values_list('id', flat=True))
+
+    video_stats = []
+    for p in my_projects:
+        avg = p.school_video_ratings.aggregate(a=Avg('value'))['a']
+        count = p.school_video_ratings.count()
+        video_stats.append({
+            'project': p,
+            'avg': round(float(avg), 1) if avg else 0,
+            'count': count,
+        })
+
+    overall_avg = SchoolVideoRating.objects.filter(
+        project__user=user
+    ).aggregate(a=Avg('value'))['a']
+
+    comments = SchoolVideoComment.objects.filter(
+        project_id__in=project_ids
+    ).order_by('-created_at')[:50]
+
+    from django.db.models.functions import TruncDate
+    daily_ratings = (
+        SchoolVideoRating.objects
+        .filter(project__user=user)
+        .annotate(date=TruncDate('created_at'))
+        .values('date')
+        .annotate(avg_value=Avg('value'), total=Count('id'))
+        .order_by('date')
+    )
+    chart_labels = [r['date'].strftime('%b %d') for r in daily_ratings]
+    chart_avgs = [round(float(r['avg_value']), 2) for r in daily_ratings]
+    chart_counts = [r['total'] for r in daily_ratings]
+
+    distribution = (
+        SchoolVideoRating.objects
+        .filter(project__user=user)
+        .values('value')
+        .annotate(cnt=Count('id'))
+        .order_by('value')
+    )
+    dist_map = {r['value']: r['cnt'] for r in distribution}
+    rating_distribution = [dist_map.get(i, 0) for i in range(1, 6)]
+    total_ratings = sum(rating_distribution)
+
+    student_ratings = student.ratings.order_by('-created_at')[:20]
+    student_avg = student.average_rating()
+
+    context = {
+        'school': school,
+        'student': student,
+        'video_stats': video_stats,
+        'overall_avg': round(float(overall_avg), 1) if overall_avg else 0,
+        'total_video_ratings': SchoolVideoRating.objects.filter(project__user=user).count(),
+        'comments': comments,
+        'total_comments': comments.count(),
+        'chart_labels': chart_labels,
+        'chart_avgs': chart_avgs,
+        'chart_counts': chart_counts,
+        'rating_distribution': rating_distribution,
+        'total_ratings': total_ratings,
+        'student_ratings': student_ratings,
+        'student_avg': round(float(student_avg), 1) if student_avg else 0,
+        'student_ratings_count': student.ratings.count(),
+        'is_arabic_page': True,
+    }
+    return render(request, 'dashboard/arabic_my_school_stats.html', context)
     reviews = (
         ClientReview.objects.filter(reviewer=request.user)
         .select_related('user', 'user__personal_info')

@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'portfolios',
     'builder',
     'analytics',
+    'school',
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -324,7 +325,9 @@ CELERY_TASK_ALWAYS_EAGER = _env_bool("CELERY_TASK_ALWAYS_EAGER", default=DEBUG)
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "SAMEORIGIN"
-SECURE_REFERRER_POLICY = "same-origin"
+# YouTube requires the Referer header for embedded players; "same-origin"
+# suppresses it on cross-origin requests and causes Error 153.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 if not DEBUG:
     # Cookie security — only activate when HTTPS is in use.

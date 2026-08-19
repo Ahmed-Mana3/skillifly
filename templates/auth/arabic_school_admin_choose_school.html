@@ -1,0 +1,212 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}اختر مدرستك — Skillifly{% endblock %}
+
+{% block meta_description %}اختر المدرسة التي تديرها على Skillifly.{% endblock %}
+
+{% block og_title %}اختر مدرستك — Skillifly{% endblock %}
+{% block og_description %}اختر المدرسة التي تديرها على Skillifly.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#3b82f6" />
+
+<style>
+  body {
+    background-color: white !important;
+    color: #0F172A !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .arabic-rtl h1 {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arabic-rtl p,
+  .arabic-rtl li,
+  .arabic-rtl a,
+  .arabic-rtl span,
+  .arabic-rtl button,
+  .arabic-rtl label {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  }
+
+  .arabic-rtl .rtl-arrow {
+    transform: scaleX(-1);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
+    border: none !important;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
+    box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
+  }
+
+  .gradient-border {
+    background: #ffffff !important;
+    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .gradient-border::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
+  }
+
+  .nav-link {
+    color: #334155 !important;
+    font-weight: 600 !important;
+  }
+  .nav-link:hover {
+    color: #3B82F6 !important;
+  }
+
+  .logo-mark img {
+    filter: none;
+  }
+
+  .arabic-rtl .gradient-border img.animate-float {
+    filter: none;
+  }
+
+  .sf-input {
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 12px;
+    color: #0F172A !important;
+    font-family: 'Tajawal', sans-serif !important;
+  }
+
+  .sf-input:focus {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  }
+
+  .sf-label {
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+  }
+
+  .warm-lights {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(59, 130, 246, 0.09), transparent 60%),
+      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(139, 92, 246, 0.08), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(192, 38, 211, 0.07), transparent 60%),
+      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.06), transparent 60%);
+  }
+
+  .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+  .arabic-rtl a.text-blue-600:hover { color: #2563EB !important; }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
+    border-radius: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden arabic-rtl">
+  <div class="warm-lights" aria-hidden="true"></div>
+  <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 15%, rgba(59,130,246,0.08), transparent 45%), radial-gradient(circle at 20% 85%, rgba(139,92,246,0.08), transparent 45%);"></div>
+
+  <div class="w-full max-w-md relative z-10">
+
+    <!-- Card -->
+    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <a href="{% url 'arabic_landing' %}" class="inline-flex items-center gap-2 mb-6">
+          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
+          <span class="text-xl font-bold gradient-text">Skillifly</span>
+        </a>
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            مدير المدرسة
+          </span>
+        </div>
+        <h1 class="text-2xl font-bold mb-1 text-slate-900">اختر مدرستك</h1>
+        <p class="text-slate-500 text-sm">اختر المدرسة التي تديرها لإتمام إعداد حسابك.</p>
+      </div>
+
+      <!-- Error messages -->
+      {% if message %}
+      <div class="alert-error mb-6 flex items-start gap-2">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd" />
+        </svg>
+        <div>{{ message }}</div>
+      </div>
+      {% endif %}
+
+      <!-- School Selection Form -->
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <div class="mb-6">
+          <label class="sf-label">المدرسة</label>
+          {{ form.school }}
+          {% if form.school.errors %}
+          {% for error in form.school.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl">
+          تأكيد والمتابعة
+          <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('select').forEach(el => {
+    el.classList.add('sf-input');
+    el.classList.remove('form-control');
+  });
+</script>
+{% endblock %}

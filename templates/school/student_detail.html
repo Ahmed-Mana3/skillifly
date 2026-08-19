@@ -1,0 +1,124 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ student.name }} — {{ school.name }} Student{% endblock %}
+{% block meta_description %}{{ student.name }} is a {{ student.specialty|default:"student" }} at {{ school.name }}. View their profile and visit their portfolio.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .video__thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #1D4ED8, #7C3AED);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .video__thumb img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .video__thumb.has-image::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0));
+    pointer-events: none;
+  }
+  .video__play {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.35);
+    transition: transform 200ms cubic-bezier(0.32, 0.72, 0.4, 1.05);
+  }
+  .video__play::before {
+    content: "";
+    width: 0; height: 0;
+    margin-left: 4px;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 13px solid #7C3AED;
+  }
+  .group:hover .video__play { transform: scale(1.12); }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <a href="{% url 'school_home' school.slug %}" class="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-black font-bold mb-8 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Back to {{ school.name }}
+  </a>
+
+  <!-- ======= Profile header ======= -->
+  <div class="grid md:grid-cols-3 gap-5 mb-8 animate-fadeInUp">
+    <div class="md:col-span-2 gradient-border rounded-2xl p-6 sm:p-8 bg-white relative overflow-hidden group">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+        <div class="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-3xl font-bold shrink-0 shadow-xl shadow-purple-500/30 {% if student.avatar_url %}overflow-hidden{% endif %}"
+             {% if student.avatar_url %}style="background:#0f172a;"{% else %}style="background: linear-gradient(135deg, {{ student.avatar_color }}, {{ student.avatar_color }}); font-family:'Syne',sans-serif;"{% endif %}>{% if student.avatar_url %}<img src="{% url 'image_thumb' student.user.profile.picture.name 160 %}" alt="{{ student.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">{% else %}{{ student.initials }}{% endif %}</div>
+        <div class="flex-1">
+          <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-1">{{ student.specialty|default:"Student" }}</p>
+          <h1 class="text-3xl md:text-4xl font-bold mb-2 text-black" style="font-family:'Syne',sans-serif;">{{ student.name }}</h1>
+          <p class="text-slate-600 font-medium leading-relaxed max-w-lg">
+            {{ student.bio|default:"A student at "|add:school.name }}
+          </p>
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <a href="/{{ student.user.username }}/" class="btn-primary text-sm py-2.5 px-6">See Student Portfolio</a>
+          </div>
+        </div>
+      </div>
+      <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors"></div>
+    </div>
+
+    <div class="gradient-border rounded-2xl p-5 bg-white relative overflow-hidden group">
+      <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-3 font-bold">Stats</p>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-600 font-medium">Videos</span>
+          <span class="text-lg font-bold gradient-text" style="font-family:'Syne',sans-serif;">{{ student.video_count }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-600 font-medium">Avg rating</span>
+          <span class="text-lg font-bold gradient-text" style="font-family:'Syne',sans-serif;">{{ student.avg_rating|default:"—" }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-600 font-medium">School</span>
+          <span class="text-lg font-bold gradient-text" style="font-family:'Syne',sans-serif;">{{ school.name }}</span>
+        </div>
+      </div>
+      <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-colors"></div>
+    </div>
+  </div>
+
+  <!-- ======= Latest work ======= -->
+  <div class="gradient-border rounded-2xl p-6 bg-white">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Latest work</p>
+      <a href="{% url 'school_videos' school.slug %}" class="text-xs text-blue-600 font-bold hover:underline">View all</a>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-4">
+      {% for video in videos %}
+      <a href="{% url 'school_video_detail' school.slug video.id %}?student={{ student.user.username }}" class="gradient-border rounded-xl overflow-hidden bg-white block group">
+        <div class="video__thumb {% if video.image %}has-image{% endif %}" style="{% if video.image %}background:#0f172a;{% else %}background: linear-gradient(135deg, {{ video.color }}, #7C3AED);{% endif %}">
+          {% if video.image %}<img src="{% url 'image_thumb' video.image.name 800 %}" alt="{{ video.title }}" class="w-full h-full object-cover" loading="lazy" decoding="async" width="640" height="360">{% endif %}
+          <div class="video__play" aria-hidden="true"></div>
+        </div>
+        <div class="p-3">
+          <p class="text-sm font-bold text-black leading-snug" style="font-family:'Syne',sans-serif;">{{ video.title }}</p>
+          <span class="text-xs text-blue-600 font-bold inline-flex items-center gap-1 mt-1">Rate this video <span>→</span></span>
+        </div>
+      </a>
+      {% empty %}
+      <p class="text-sm text-slate-500 col-span-2">No published videos yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

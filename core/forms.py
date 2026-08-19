@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
-from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain, DiscountCode, SiteSettings
+from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain, DiscountCode, SiteSettings, School
 from django import forms
 from django.forms import formset_factory, BaseFormSet
 from django.core.validators import RegexValidator
@@ -138,6 +138,87 @@ class ClientRegisterForm(forms.Form):
         if password:
             validate_password(password, user=None)
         return password
+
+
+class SchoolAdminRegisterForm(forms.Form):
+    """Signup form for school admin accounts — school, name, email, password."""
+    school = forms.ModelChoiceField(
+        queryset=School.objects.all(),
+        required=True,
+        empty_label="Select your school",
+        widget=forms.Select(
+            attrs={
+                "id": "school_select",
+                "class": "form-control",
+            }
+        ),
+        label="School",
+    )
+    name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "id": "school_admin_name",
+                "placeholder": "Your name",
+                "class": "form-control",
+                "autocomplete": "name",
+            }
+        ),
+        label="Name",
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(
+            attrs={
+                "id": "school_admin_email",
+                "placeholder": "you@example.com",
+                "class": "form-control",
+                "autocomplete": "email",
+            }
+        )
+    )
+    password = forms.CharField(
+        required=True,
+        label="Password",
+        widget=forms.PasswordInput(
+            attrs={
+                "id": "school_admin_password",
+                "placeholder": "Create a password",
+                "class": "form-control",
+                "autocomplete": "new-password",
+            }
+        )
+    )
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if not email:
+            raise ValidationError("This field is required.")
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValidationError("An account with this email already exists. Please sign in instead.")
+        return email
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if password:
+            validate_password(password, user=None)
+        return password
+
+
+class ChooseSchoolForm(forms.Form):
+    """Form for Google OAuth school admins to pick their school after signup."""
+    school = forms.ModelChoiceField(
+        queryset=School.objects.all(),
+        required=True,
+        empty_label="Select your school",
+        widget=forms.Select(
+            attrs={
+                "id": "school_select",
+                "class": "form-control",
+            }
+        ),
+        label="School",
+    )
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(

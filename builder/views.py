@@ -7,6 +7,7 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db import transaction
 from datetime import date
 
 # Import models from core
@@ -374,14 +375,19 @@ def _update_or_create(existing_map, submitted_ids, data, model_cls, user, fields
     row_id = data.get("id")
     if row_id and row_id in existing_map:
         instance = existing_map[row_id]
+        has_changed = False
         for key, value in fields.items():
-            setattr(instance, key, value)
-        instance.save()
+            if getattr(instance, key) != value:
+                setattr(instance, key, value)
+                has_changed = True
+        if has_changed:
+            instance.save()
         submitted_ids.add(row_id)
     else:
         model_cls.objects.create(user=user, **fields)
 
 
+@transaction.atomic
 def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None):
     personal_data = personal_form.cleaned_data
 

@@ -59,7 +59,7 @@ def navbar_profile(request):
         nav_initials = user.username[:2].upper()
 
     user_account = getattr(user, 'user_account', None)
-    if user_account and user_account.account_type in ('editor', 'client'):
+    if user_account and user_account.account_type in ('editor', 'client', 'school_admin'):
         nav_account_type = user_account.account_type
 
     return {
@@ -67,6 +67,7 @@ def navbar_profile(request):
         'nav_user_initials': nav_initials,
         'nav_account_type': nav_account_type,
         'nav_is_client': nav_account_type == 'client',
+        'nav_is_school_admin': nav_account_type == 'school_admin',
     }
 
 def site_globals(request):

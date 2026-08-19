@@ -1,0 +1,178 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}School Admin Dashboard — Skillifly{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  .sa-shell {
+    min-height: 100vh;
+  }
+
+  .sa-hero-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  }
+
+  .sa-kpi-chip {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 10px 14px;
+  }
+
+  .sa-action-card {
+    border-radius: 22px;
+    background: white;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .sa-action-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6, #D946EF);
+    opacity: 0.3;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sa-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12);
+  }
+
+  .sa-action-card:hover::before {
+    opacity: 0.5;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sa-shell min-h-screen">
+  <div class="max-w-7xl mx-auto px-6 py-12">
+
+    <div class="sa-hero-card p-7 md:p-9 mb-8 animate-fadeInUp">
+      <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-2">School Admin Dashboard</p>
+      <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black flex items-center gap-2" style="font-family: 'Syne', sans-serif;">
+        <span>{{ user.first_name|default:user.username }}</span>
+        <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-8 w-8 sm:h-10 sm:w-10 object-contain" loading="lazy" decoding="async" width="40" height="40">
+      </h1>
+      <p class="text-slate-600 font-medium mb-5">
+        {% if school %}
+          Managing <strong>{{ school.name }}</strong> — {{ students_count }} student{{ students_count|pluralize }} enrolled.
+        {% else %}
+          Set up your school admin account to get started.
+        {% endif %}
+      </p>
+
+      <div class="flex flex-wrap gap-3">
+        <div class="sa-kpi-chip">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">School</p>
+          <p class="text-lg font-extrabold gradient-text" style="font-family:'Syne',sans-serif;">{{ school.name|default:"Not set" }}</p>
+        </div>
+        <div class="sa-kpi-chip">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Students</p>
+          <p class="text-lg font-extrabold gradient-text" style="font-family:'Syne',sans-serif;">{{ students_count }}</p>
+        </div>
+        <div class="sa-kpi-chip">
+          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Admins</p>
+          <p class="text-lg font-extrabold gradient-text" style="font-family:'Syne',sans-serif;">{{ admins_count }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fadeInUp" style="animation-delay: 0.1s">
+      {% if school %}
+      <a href="{% url 'school_home' school.slug %}" class="sa-action-card p-6 group transition-all duration-300 block relative overflow-hidden">
+        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">View School Page</h3>
+        <p class="text-sm text-slate-600 font-medium">See your public school page with all enrolled students and their work.</p>
+        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
+          <span>Open School Page</span>
+          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
+      </a>
+      {% endif %}
+
+      <a href="{% url 'profile' %}" class="sa-action-card p-6 group transition-all duration-300 block relative overflow-hidden">
+        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Your Profile</h3>
+        <p class="text-sm text-slate-600 font-medium">Manage your account settings and profile information.</p>
+        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
+          <span>Edit Profile</span>
+          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
+      </a>
+    </div>
+
+    <!-- School Admins List -->
+    {% if school %}
+    <div class="mt-8 animate-fadeInUp" style="animation-delay: 0.2s">
+      <div class="sa-hero-card p-7 md:p-9">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-black" style="font-family: 'Syne', sans-serif;">School Admins</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">{{ admins_count }} admin{{ admins_count|pluralize }} managing {{ school.name }}</p>
+          </div>
+        </div>
+
+        {% if school_admins %}
+        <div class="space-y-3">
+          {% for sa in school_admins %}
+          <div class="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-white hover:border-purple-200 transition-colors">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #3B82F6, #8B5CF6);">
+              <span class="text-sm font-bold text-white">
+                {% if sa.user.first_name %}{{ sa.user.first_name.0 }}{% endif %}{% if sa.user.last_name %}{{ sa.user.last_name.0 }}{% endif %}{% if not sa.user.first_name and not sa.user.last_name %}{{ sa.user.username.0|upper }}{% endif %}
+              </span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-sm text-black truncate">
+                {{ sa.user.get_full_name|default:sa.user.username }}
+                {% if sa.user == user %}
+                  <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full ml-1">You</span>
+                {% endif %}
+              </p>
+              <p class="text-xs text-slate-500 truncate">{{ sa.user.email }}</p>
+            </div>
+            <div class="text-xs text-slate-400 flex-shrink-0">
+              Joined {{ sa.created_at|date:"M Y" }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 text-center py-4">No admins found.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

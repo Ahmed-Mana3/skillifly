@@ -1,0 +1,357 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ video.title }} — Video Rating{% endblock %}
+{% block meta_description %}Watch and rate {{ video.title }}{% if video.student %} by {{ video.student.name }}{% endif %}, a {{ school.name }} student. Leave a comment below the video.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .stars { display: inline-flex; gap: 5px; direction: ltr; }
+  .stars .star {
+    font-size: 34px;
+    line-height: 1;
+    color: #d2d2d7;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, color 120ms ease;
+  }
+  .stars .star:hover { transform: scale(1.18); }
+  .stars .star.is-fill { color: #f5a301; }
+  .stars .star.is-pop { animation: star-pop 320ms cubic-bezier(0.32, 0.72, 0.4, 1.05); }
+  @keyframes star-pop {
+    0%   { transform: scale(0.4); }
+    60%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  .comment__avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .comment__stars { font-size: 12px; color: #f5a301; letter-spacing: 1px; }
+  .comment__form textarea {
+    width: 100%;
+    min-height: 88px;
+    resize: vertical;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: #F8FAFC;
+    color: #0F172A;
+    outline: none;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .comment__form textarea:focus {
+    border-color: #3B82F6;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <a href="{% url 'school_videos' school.slug %}" class="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-black font-bold mb-6 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Back to Videos
+  </a>
+
+  {% if next_video %}
+  <div class="gradient-border rounded-2xl px-6 py-5 bg-white mb-6 relative overflow-hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div class="flex-1">
+        
+        <p class="text-sm text-slate-600 font-medium mt-0.5">Next: <span class="text-black font-bold">{{ next_video.title }}</span></p>
+      </div>
+      <button type="button" id="saveNextBtn" data-next-url="{% url 'school_video_detail' school.slug next_video.id %}{% if student_filter %}?student={{ student_filter.user.username }}{% endif %}"
+              data-rate-url="{% url 'rate_school_video' school.slug video.id %}"
+              data-comment-url="{% url 'comment_school_video' school.slug video.id %}"
+              class="btn-primary text-sm font-bold py-3 px-6 inline-flex items-center justify-center gap-2 shrink-0">
+        <span id="saveNextLabel">Save &amp; next video</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </button>
+    </div>
+    <p class="text-[11px] text-slate-400 font-medium mt-2 sm:text-right">Saves your rating &amp; comment, then opens the next video.</p>
+    <div class="absolute -bottom-4 -right-4 w-20 h-20 bg-purple-500/10 rounded-full blur-xl"></div>
+  </div>
+  {% elif not next_video %}
+  <div class="gradient-border rounded-2xl px-6 py-8 bg-white mb-6 text-center relative overflow-hidden">
+    <div class="text-4xl mb-3">🎉</div>
+    <p class="text-lg font-bold text-black" style="font-family:'Syne',sans-serif;">All videos rated!</p>
+    {% if student_filter %}
+    <p class="text-sm text-slate-500 font-medium mt-1">You've gone through all of {{ student_filter.name }}'s videos.</p>
+    {% else %}
+    <p class="text-sm text-slate-500 font-medium mt-1">You've gone through all of the school's videos.</p>
+    {% endif %}
+    <a href="{% url 'school_students' school.slug %}" class="btn-primary text-sm font-bold py-2.5 px-6 mt-4 inline-flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Back to all students
+    </a>
+    <div class="absolute -bottom-4 -right-4 w-20 h-20 bg-purple-500/10 rounded-full blur-xl"></div>
+  </div>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-3 gap-5">
+
+    <!-- ======= Player ======= -->
+    <div class="lg:col-span-2 gradient-border rounded-2xl overflow-hidden bg-white animate-fadeInUp flex flex-col">
+      {% if video.embed_url %}
+      {% if video.video_type == 'reel' %}
+      <div class="relative bg-[#0a0a10] flex-1 flex items-center justify-center px-4 py-8 sm:py-10 lg:py-0 overflow-hidden">
+        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(circle at 50% 0%, rgba(124,58,237,0.14), transparent 55%), radial-gradient(circle at 50% 100%, rgba(37,99,235,0.12), transparent 55%);"></div>
+        <div class="relative {% if video.landscape %}w-full aspect-video{% else %}w-full lg:w-auto lg:h-full aspect-[9/16]{% endif %} max-w-full overflow-hidden rounded-md bg-black">
+          <iframe src="{{ video.embed_url }}" title="{{ video.title }}"
+                  class="w-full h-full" frameborder="0" referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen loading="lazy"></iframe>
+
+        </div>
+      </div>
+      {% else %}
+      <div class="relative aspect-video bg-black">
+        <iframe src="{{ video.embed_url }}" title="{{ video.title }}"
+                class="w-full h-full" frameborder="0" referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="relative {% if video.video_type == 'reel' %}my-8 mx-auto h-[calc(100vh-300px)] max-h-[860px] min-h-[440px] max-w-full aspect-[9/16]{% else %}aspect-video{% endif %} flex items-center justify-center group cursor-pointer"
+           {% if video.url %}onclick="window.open('{{ video.url }}', '_blank', 'noopener')"{% endif %}
+           style="background: linear-gradient(135deg, {{ video.color }}, #1D4ED8);">
+        <div class="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/15 backdrop-blur text-white text-[10px] font-bold uppercase tracking-widest">{{ school.name }} Student Work</div>
+        {% if video.image %}
+        <img src="{% url 'image_thumb' video.image.name 1000 %}" alt="{{ video.title }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+        <div class="absolute inset-0 bg-black/25"></div>
+        {% endif %}
+        <div class="relative w-20 h-20 rounded-full bg-white/95 flex items-center justify-center shadow-2xl shadow-black/30 transition-transform duration-300 group-hover:scale-110">
+          <div class="w-0 h-0 ml-1 border-t-[13px] border-b-[13px] border-l-[20px] border-t-transparent border-b-transparent border-l-[#7C3AED]"></div>
+        </div>
+        {% if video.url %}
+        <div class="absolute bottom-4 inset-x-0 text-center"><span class="px-4 py-1.5 rounded-full bg-white/90 text-black text-xs font-bold">Open video ↗</span></div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if video.video_type != 'reel' %}
+      <div class="p-6">
+        <p class="text-xs text-slate-500 font-bold mb-1.5">{% if video.student %}{{ video.student.name }}{% endif %}</p>
+        <h1 class="text-2xl md:text-3xl font-bold text-black leading-tight" style="font-family:'Syne',sans-serif;">
+          {{ video.title }}
+        </h1>
+        {% if video.details %}
+        <p class="text-slate-600 font-medium leading-relaxed mt-3">{{ video.details }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ======= Sidebar ======= -->
+    <div class="space-y-5 animate-fadeInUp" style="animation-delay: 0.1s">
+
+      <!-- Author -->
+      {% if video.student %}
+      <a href="{% url 'school_student_detail' school.slug video.student.user.username %}" class="gradient-border rounded-2xl p-5 bg-white block group hover:scale-[1.01] transition-all duration-300 relative overflow-hidden">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-3 font-bold">Edited by</p>
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-base font-bold {% if video.student.avatar_url %}overflow-hidden{% endif %}"
+               {% if video.student.avatar_url %}style="background:#0f172a;"{% else %}style="background: linear-gradient(135deg, {{ video.student.avatar_color }}, {{ video.student.avatar_color }}); font-family:'Syne',sans-serif;"{% endif %}>{% if video.student.avatar_url %}<img src="{% url 'image_thumb' video.student.user.profile.picture.name 64 %}" alt="{{ video.student.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">{% else %}{{ video.student.initials }}{% endif %}</div>
+          <div class="flex-1">
+            <p class="text-base font-bold text-black" style="font-family:'Syne',sans-serif;">{{ video.student.name }}</p>
+            <p class="text-xs text-slate-500 font-medium">{{ video.student.specialty|default:"Student" }}</p>
+          </div>
+          <span class="text-blue-600 text-xs font-bold inline-flex items-center gap-1">Profile <span class="group-hover:translate-x-0.5 transition-transform">→</span></span>
+        </div>
+        <div class="absolute -bottom-3 -right-3 w-14 h-14 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-colors"></div>
+      </a>
+      {% endif %}
+
+      <!-- Rating -->
+      <div class="gradient-border rounded-2xl p-6 bg-white text-center relative overflow-hidden group">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-3 font-bold">Rate this video</p>
+        <div class="flex justify-center">
+          <div class="stars" role="radiogroup" aria-label="Rate this video" data-rate-url="{% url 'rate_school_video' school.slug video.id %}">
+            <span class="star" data-value="1" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="2" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="3" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="4" role="radio" tabindex="-1">★</span>
+            <span class="star" data-value="5" role="radio" tabindex="-1">★</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 font-medium mt-3" id="ratingFeedback">{% if video.avg_rating %}Average {{ video.avg_rating }}★ — tap to rate{% else %}Tap a star to leave your rating{% endif %}</p>
+        <div class="absolute -bottom-3 -right-3 w-14 h-14 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-colors"></div>
+      </div>
+
+      <!-- Comments -->
+      <div class="gradient-border rounded-2xl p-6 bg-white">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4 font-bold">Comments</p>
+        <div class="comments__list space-y-4" id="commentsList">
+          {% for comment in comments %}
+          <div class="flex gap-3">
+            <div class="comment__avatar" style="background: linear-gradient(135deg, {{ comment.author_color }}, {{ comment.author_color }});">{{ comment.author_name|slice:":1" }}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="text-[13px] font-bold text-black">{{ comment.author_name }}</span>
+                <span class="text-xs text-slate-400">{{ comment.time_label }}</span>
+              </div>
+              <div class="comment__stars mt-0.5">{{ comment.stars }}★</div>
+              <p class="text-sm text-slate-600 mt-1">{{ comment.body }}</p>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-sm text-slate-500">No comments yet — be the first.</p>
+          {% endfor %}
+        </div>
+        <form class="comment__form flex flex-col gap-2.5 mt-5" id="commentForm" data-comment-url="{% url 'comment_school_video' school.slug video.id %}" novalidate>
+          <textarea placeholder="Leave a comment below the video…" required></textarea>
+          <button type="submit" class="btn-primary text-xs py-2.5 px-6 self-end">Post comment</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+
+  function csrfToken() {
+    var cookie = document.cookie.split("; ").find(function (c) { return c.indexOf("csrftoken=") === 0; });
+    return cookie ? cookie.split("=")[1] : "";
+  }
+
+  function postForm(url, data) {
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken(),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(data).toString(),
+      credentials: "same-origin",
+    }).then(function (r) { return r.json(); });
+  }
+
+  var AVATAR_COLORS = ["#1D4ED8", "#6D28D9", "#059669", "#DC2626", "#334155", "#0EA5E9"];
+  var selectedRating = {{ user_rating|default:"0" }};
+
+  document.querySelectorAll(".stars").forEach(function (root) {
+    var stars = Array.prototype.slice.call(root.querySelectorAll(".star"));
+    var value = 0;
+    var rateUrl = root.getAttribute("data-rate-url");
+
+    function paint(hoverValue) {
+      stars.forEach(function (s, i) { s.classList.toggle("is-fill", i < hoverValue); });
+    }
+
+    if (selectedRating > 0) {
+      value = selectedRating;
+      paint(selectedRating);
+      var feedback = document.getElementById("ratingFeedback");
+      if (feedback) feedback.textContent = "You rated this " + selectedRating + " star" + (selectedRating > 1 ? "s" : "") + " — tap to change";
+    }
+
+    stars.forEach(function (s, i) {
+      s.addEventListener("pointerenter", function () { paint(i + 1); });
+      s.addEventListener("pointerleave", function () { paint(value); });
+      s.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        value = i + 1;
+        selectedRating = value;
+        paint(value);
+        s.classList.remove("is-pop");
+        void s.offsetWidth;
+        s.classList.add("is-pop");
+        var feedback = document.getElementById("ratingFeedback");
+        if (rateUrl) {
+          postForm(rateUrl, { value: value }).then(function (res) {
+            if (res.ok) {
+              if (feedback) feedback.textContent = "Thanks — average is now " + res.average.toFixed(1) + "★ (" + res.count + " rating" + (res.count > 1 ? "s" : "") + ")";
+            }
+          });
+        } else if (feedback) {
+          feedback.textContent = "Thanks — you rated this " + value + " star" + (value > 1 ? "s" : "");
+        }
+      });
+    });
+  });
+
+  var form = document.getElementById("commentForm");
+  var list = document.getElementById("commentsList");
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var textarea = this.querySelector("textarea");
+    var text = textarea.value.trim();
+    if (!text) return;
+    var commentUrl = form.getAttribute("data-comment-url");
+    postForm(commentUrl, { body: text }).then(function (res) {
+      if (res.ok) {
+        var empty = list.querySelector("p");
+        if (empty && empty.textContent.indexOf("No comments") !== -1) empty.remove();
+        var el = document.createElement("div");
+        el.className = "flex gap-3";
+        var initials = (res.author_name || "G").trim().split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 1).toUpperCase();
+        el.innerHTML =
+          '<div class="comment__avatar" style="background: linear-gradient(135deg,' + AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)] + ',#7C3AED);">' + initials + '</div>' +
+          '<div class="flex-1 min-w-0">' +
+            '<div class="flex items-baseline gap-2">' +
+              '<span class="text-[13px] font-bold text-black">' + res.author_name + '</span>' +
+              '<span class="text-xs text-slate-400">Just now</span>' +
+            '</div>' +
+            '<div class="comment__stars mt-0.5">' + "★".repeat(res.stars) + '</div>' +
+            '<p class="text-sm text-slate-600 mt-1"></p>' +
+          '</div>';
+        el.querySelector("p").textContent = res.body;
+        list.appendChild(el);
+        textarea.value = "";
+      }
+    });
+  });
+
+  var nextBtn = document.getElementById("saveNextBtn");
+  if (nextBtn) {
+    var rateUrl = nextBtn.getAttribute("data-rate-url");
+    var commentUrl = nextBtn.getAttribute("data-comment-url");
+    var nextUrl = nextBtn.getAttribute("data-next-url");
+    nextBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      var btn = this;
+      if (btn.disabled) return;
+      var label = document.getElementById("saveNextLabel");
+      var textarea = form.querySelector("textarea");
+      var text = textarea.value.trim();
+      var promises = [];
+      if (selectedRating > 0 && rateUrl) {
+        promises.push(postForm(rateUrl, { value: selectedRating }));
+      }
+      if (text && commentUrl) {
+        promises.push(postForm(commentUrl, { body: text, stars: selectedRating || 5 }));
+      }
+      btn.disabled = true;
+      label.textContent = "Saving\u2026";
+      Promise.all(promises)
+        .then(function () {
+          window.location.href = nextUrl;
+        })
+        .catch(function () {
+          btn.disabled = false;
+          label.textContent = "Save & next video";
+          alert("Could not save. Please check your connection and try again.");
+        });
+    });
+  }
+})();
+</script>
+{% endblock %}

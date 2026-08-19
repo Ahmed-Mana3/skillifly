@@ -48,6 +48,8 @@ class CustomDomainMiddleware:
         '/submit-review-exclusive/',
         '/manage/',
         '/user-activity/',
+        '/school_admin_dashboard/',
+        '/my-school-stats/',
     )
 
     MAIN_DOMAINS = frozenset([
@@ -128,6 +130,10 @@ class LanguagePreferenceMiddleware:
         '/ar/signup/editor/': '/signup/editor/',
         '/signup/client/': '/ar/signup/client/',
         '/ar/signup/client/': '/signup/client/',
+        '/signup/school-admin/': '/ar/signup/school-admin/',
+        '/ar/signup/school-admin/': '/signup/school-admin/',
+        '/signup/school-admin/choose-school/': '/ar/signup/school-admin/choose-school/',
+        '/ar/signup/school-admin/choose-school/': '/signup/school-admin/choose-school/',
         '/signin/': '/ar/signin/',
         '/ar/signin/': '/signin/',
         '/dashboard/': '/ar/dashboard/',
@@ -138,6 +144,10 @@ class LanguagePreferenceMiddleware:
         '/ar/client_reviews/': '/client_reviews/',
         '/client_dashboard/': '/ar/client_dashboard/',
         '/ar/client_dashboard/': '/client_dashboard/',
+        '/school_admin_dashboard/': '/ar/school_admin_dashboard/',
+        '/ar/school_admin_dashboard/': '/school_admin_dashboard/',
+        '/my-school-stats/': '/ar/my-school-stats/',
+        '/ar/my-school-stats/': '/my-school-stats/',
         '/profile/': '/ar/profile/',
         '/ar/profile/': '/profile/',
         '/themes/': '/ar/themes/',

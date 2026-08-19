@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +28,7 @@ urlpatterns = [
     path('builder/', include('builder.urls')),
     path('', include('analytics.urls')),
     path('', include('core.urls')),
+    path('', include('school.urls')),
     path('', include('portfolios.urls')),  # must be last — contains <username>/ catch-all
 ]
 

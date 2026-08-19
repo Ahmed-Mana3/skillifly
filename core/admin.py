@@ -3,7 +3,7 @@ from core.models import (
     CustomUser, UserAccount, Category, Theme, Profile, PersonalInfo, 
     Experience, Education, Skill, Project, Link, 
     Subscription, UserPayment, DiscountCode, SiteSettings, 
-    Review, ClientReview, Showcase, SEOSettings, CustomDomain, ManualPayment
+    Review, ClientReview, Showcase, SEOSettings, CustomDomain, ManualPayment,
 )
 
 # Register your models here.

@@ -17,13 +17,22 @@ class UserAccount(models.Model):
     ACCOUNT_TYPE_CHOICES = [
         ('editor', 'Editor'),
         ('client', 'Client'),
+        ('school_admin', 'School Admin'),
     ]
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='user_account')
     account_type = models.CharField(
-        max_length=10,
+        max_length=15,
         choices=ACCOUNT_TYPE_CHOICES,
         default='editor',
-        help_text="editor = builds a portfolio, client = hires editors",
+        help_text="editor = builds a portfolio, client = hires editors, school_admin = manages a school",
+    )
+    school = models.ForeignKey(
+        'School',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='admins',
+        help_text="Set only for school_admin accounts — the school this user manages",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -33,7 +42,8 @@ class UserAccount(models.Model):
         verbose_name_plural = "User Accounts"
 
     def __str__(self):
-        return f"{self.user.username} ({self.account_type})"
+        extra = f" @ {self.school}" if self.school else ""
+        return f"{self.user.username} ({self.account_type}{extra})"
 
 class EmailOTP(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_otp')
@@ -157,6 +167,8 @@ class Project(models.Model):
         default='long'
     )
     slug = models.SlugField(max_length=550, blank=True, null=True)
+    media_width = models.PositiveIntegerField(null=True, blank=True, help_text="True video width in px (probed, used to size the player box)")
+    media_height = models.PositiveIntegerField(null=True, blank=True, help_text="True video height in px (probed, used to size the player box)")
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -178,7 +190,7 @@ class Project(models.Model):
         import re
         if not self.url: return None
         if 'youtu' in self.url:
-            m = re.search(r'(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=))([^"&?\/\s]{11})', self.url)
+            m = re.search(r'(?:youtu\.be\/|youtube\.com\/(?:shorts\/|(?:v|e(?:mbed)?)\/|.*[?&]v=))([^"&?\/\s]{11})', self.url)
             return m.group(1) if m else None
         return None
 
@@ -189,6 +201,32 @@ class Project(models.Model):
         if 'vimeo' in self.url:
             m = re.search(r'vimeo\.com\/(?:video\/)?([0-9]+)', self.url)
             return m.group(1) if m else None
+        return None
+
+    @property
+    def embed_url(self):
+        """Return an embeddable player URL for the project's video, or None."""
+        import re
+        if not self.url:
+            return None
+        yt = self.youtube_id
+        if yt:
+            return f'https://www.youtube.com/embed/{yt}'
+        vm = self.vimeo_id
+        if vm:
+            return f'https://player.vimeo.com/video/{vm}'
+        if 'instagram.com' in self.url:
+            m = re.search(r'instagram\.com\/reel\/([A-Za-z0-9_-]+)', self.url)
+            if m:
+                return f'https://www.instagram.com/reel/{m.group(1)}/embed/'
+        if 'drive.google.com' in self.url:
+            m = re.search(r'\/file\/d\/([A-Za-z0-9_-]+)', self.url)
+            if m:
+                return f'https://drive.google.com/file/d/{m.group(1)}/preview'
+        if 'facebook.com' in self.url or 'fb.watch' in self.url:
+            m = re.search(r'(?:facebook\.com\/|fb\.watch\/)([A-Za-z0-9_.\/-]+)', self.url)
+            if m:
+                return f'https://www.facebook.com/plugins/video.php?href={self.url}'
         return None
 # 9. Social/External Links
 class Link(models.Model):
@@ -504,4 +542,154 @@ class AffiliateProfile(models.Model):
 
     def __str__(self):
         return f"Affiliate: {self.user.username} (Balance: {self.balance} EGP)"
+
+
+class School(models.Model):
+    name = models.CharField(max_length=254, unique=True)
+    slug = models.SlugField(max_length=254, unique=True, blank=True, help_text="URL slug, e.g. serb-skool")
+    tagline = models.CharField(max_length=300, blank=True, help_text="Short tagline shown under the school name")
+    logo = models.ImageField(upload_to='schools/', blank=True, null=True)
+    discount_code = models.CharField(max_length=50, unique=True)
+    number_of_students = models.PositiveIntegerField(default=0, help_text="Fallback count; live stats are computed from Student records")
+
+    class Meta:
+        verbose_name = "School"
+        verbose_name_plural = "Schools"
+
+    def save(self, *args, **kwargs):
+        self.discount_code = self.discount_code.upper()
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class SchoolStudent(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='students')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='school_students', help_text="Link to the student's portfolio account; their public Project records become their school videos")
+    is_hidden = models.BooleanField(default=False, help_text="Hidden cards are revealed by the Show More button")
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "School Student"
+        verbose_name_plural = "School Students"
+        ordering = ['order', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['school', 'user'], name='uniq_school_student_user'),
+        ]
+
+    def _personal_info(self):
+        return getattr(self.user, 'personal_info', None)
+
+    @property
+    def name(self):
+        pi = self._personal_info()
+        if pi and pi.full_name:
+            return pi.full_name
+        full = self.user.get_full_name().strip()
+        return full or self.user.username
+
+    @property
+    def slug(self):
+        return self.user.username
+
+    @property
+    def specialty(self):
+        pi = self._personal_info()
+        if pi and pi.title:
+            return pi.title
+        return ''
+
+    @property
+    def bio(self):
+        pi = self._personal_info()
+        if pi and pi.bio:
+            return pi.bio
+        profile = getattr(self.user, 'profile', None)
+        return (profile.bio or '') if profile else ''
+
+    @property
+    def avatar_url(self):
+        profile = getattr(self.user, 'profile', None)
+        if profile and profile.picture:
+            return profile.picture.url
+        return None
+
+    @property
+    def avatar_color(self):
+        palette = ["#1D4ED8", "#6D28D9", "#059669", "#DC2626", "#334155", "#0EA5E9", "#B45309", "#BE185D"]
+        return palette[(self.pk or self.user_id or 0) % len(palette)]
+
+    def initials(self):
+        parts = self.name.split()
+        return ''.join(p[0] for p in parts[:2]).upper()
+
+    def average_rating(self):
+        from django.db.models import Avg
+        return self.ratings.aggregate(a=Avg('value'))['a']
+
+    def __str__(self):
+        return f"{self.name} ({self.school.name})"
+
+
+class SchoolVideoRating(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='school_video_ratings')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='school_video_ratings', null=True, blank=True)
+    value = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "School Video Rating"
+        verbose_name_plural = "School Video Ratings"
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'user'], name='uniq_video_rating_per_user', condition=models.Q(user__isnull=False)),
+        ]
+
+    def __str__(self):
+        return f"{self.project.title} — {self.value}★"
+
+
+class SchoolStudentRating(models.Model):
+    student = models.ForeignKey(SchoolStudent, on_delete=models.CASCADE, related_name='ratings')
+    value = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "School Student Rating"
+        verbose_name_plural = "School Student Ratings"
+
+    def __str__(self):
+        return f"{self.student.name} — {self.value}★"
+
+
+class SchoolVideoComment(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='school_video_comments')
+    author_name = models.CharField(max_length=80)
+    author_color = models.CharField(max_length=9, default='#6D28D9')
+    body = models.TextField()
+    stars = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "School Video Comment"
+        verbose_name_plural = "School Video Comments"
+        ordering = ['-created_at', '-id']
+
+    def time_label(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        diff = timezone.now() - self.created_at
+        if diff < timedelta(hours=1):
+            return f"{max(diff.seconds // 60, 1)}m"
+        if diff < timedelta(days=1):
+            return f"{diff.seconds // 3600}h"
+        if diff < timedelta(days=7):
+            return f"{diff.days}d"
+        return f"{diff.days // 7}w"
+
+    def __str__(self):
+        return f"{self.author_name}: {self.body[:40]}"
 

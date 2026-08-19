@@ -71,13 +71,20 @@ class SkilliflySocialAccountAdapter(DefaultSocialAccountAdapter):
         account_type = request.session.get("signup_account_type", "editor")
         if account_type in ("editor", "client"):
             UserAccount.objects.update_or_create(user=user, defaults={"account_type": account_type})
+        elif account_type == "school_admin":
+            # School admin: create account without school (school is chosen on a separate page)
+            UserAccount.objects.update_or_create(user=user, defaults={"account_type": "school_admin"})
         request.session.pop("signup_account_type", None)
         return user
 
     def is_auto_signup_allowed(self, request, sociallogin):
         # Clients sign up with a single Google click — skip the username picker.
+        # School admins need to pick a school on a separate page, so also skip here.
         # The session flag is intentionally left in place so save_user can read it.
-        return request.session.get("signup_account_type") == "client" or super().is_auto_signup_allowed(request, sociallogin)
+        at = request.session.get("signup_account_type")
+        if at in ("client", "school_admin"):
+            return True
+        return super().is_auto_signup_allowed(request, sociallogin)
 
     def pre_social_login(self, request, sociallogin):
         """

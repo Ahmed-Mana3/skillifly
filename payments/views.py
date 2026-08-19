@@ -73,6 +73,24 @@ def _get_or_create_subscription(name, days):
     )
     return sub
 
+
+def _is_school_code(coupon_code):
+    """Return the School object if coupon_code is a valid school discount code, else None."""
+    if not coupon_code:
+        return None
+    from core.models import School
+    try:
+        return School.objects.get(discount_code=coupon_code.strip().upper())
+    except School.DoesNotExist:
+        return None
+
+
+def _is_school_student(user, school):
+    """Return True if user is already an active student at this school."""
+    from core.models import SchoolStudent
+    return SchoolStudent.objects.filter(user=user, school=school).exists()
+
+
 # Manual Payment — InstaPay / Vodafone Cash Auto-Verification
 # -----------------------------------------------------------
 
@@ -104,8 +122,38 @@ def manual_payment_view(request, plan_type):
     master_percent = site_settings.banner_discount_percentage
 
     if coupon_code:
+        # 0) School Discount Code — special handling
+        school = _is_school_code(coupon_code)
+        if school:
+            if _is_school_student(request.user, school):
+                # Already enrolled → 25% discount on chosen plan
+                original_amount = float(amount_str)
+                discounted_amount = original_amount * 0.75
+                amount_str = f"{discounted_amount:.2f}"
+                discount_applied = '25% school discount applied!'
+            else:
+                # First time → force monthly plan, activate immediately, enroll
+                forced_plan = 'monthly'
+                forced_amount, forced_sub_name, forced_sub_days = PLAN_CATALOGUE[forced_plan]
+                sub = _get_or_create_subscription(forced_sub_name, forced_sub_days)
+                UserPayment.objects.create(
+                    user=request.user,
+                    subscription=sub,
+                    amount=0,
+                    status='paid',
+                    fawaterk_intent_key=f'MANUAL-SCHOOL-{uuid.uuid4().hex[:8].upper()}',
+                    discount_code_used=coupon_code,
+                )
+                profile, _ = Profile.objects.get_or_create(user=request.user)
+                profile.is_public = True
+                profile.save()
+                from school.utils import enroll_in_school
+                enroll_in_school(request.user, coupon_code)
+                messages.success(request, f'School code applied! Your {forced_sub_name} plan is now active.')
+                return redirect('payment_success')
+
         # 1) Master Settings Coupon
-        if coupon_code == master_code:
+        elif coupon_code == master_code:
             if master_percent >= 100:
                 # Full bypass
                 sub = _get_or_create_subscription(sub_name, sub_days)
@@ -120,6 +168,8 @@ def manual_payment_view(request, plan_type):
                 profile, _ = Profile.objects.get_or_create(user=request.user)
                 profile.is_public = True
                 profile.save()
+                from school.utils import enroll_in_school
+                enroll_in_school(request.user, coupon_code)
                 messages.success(request, f'Master Coupon applied! Your {sub_name} plan is now active.')
                 return redirect('payment_success')
             else:
@@ -150,6 +200,8 @@ def manual_payment_view(request, plan_type):
                     profile, _ = Profile.objects.get_or_create(user=request.user)
                     profile.is_public = True
                     profile.save()
+                    from school.utils import enroll_in_school
+                    enroll_in_school(request.user, coupon_code)
                     messages.success(request, f'Coupon applied! Your {sub_name} plan is now active.')
                     return redirect('payment_success')
                 else:
@@ -250,11 +302,12 @@ def manual_payment_view(request, plan_type):
     profile.is_public = True
     profile.save()
 
+    from school.utils import enroll_in_school
+    enroll_in_school(request.user, coupon_code)
+
     logger.info('Manual payment auto-verified and subscription activated for user %s', request.user.username)
     messages.success(request, f'Payment verified! Your {sub_name} subscription is now active.')
     return redirect('payment_success')
-
-
 @login_required(login_url='arabic_signin')
 def arabic_manual_payment_view(request, plan_type):
     """
@@ -282,8 +335,38 @@ def arabic_manual_payment_view(request, plan_type):
     master_percent = site_settings.banner_discount_percentage
 
     if coupon_code:
+        # 0) School Discount Code — special handling
+        school = _is_school_code(coupon_code)
+        if school:
+            if _is_school_student(request.user, school):
+                # Already enrolled → 25% discount on chosen plan
+                original_amount = float(amount_str)
+                discounted_amount = original_amount * 0.75
+                amount_str = f"{discounted_amount:.2f}"
+                discount_applied = 'تم تطبيق خصم المدرسة 25%!'
+            else:
+                # First time → force monthly plan, activate immediately, enroll
+                forced_plan = 'monthly'
+                forced_amount, forced_sub_name, forced_sub_days = PLAN_CATALOGUE[forced_plan]
+                sub = _get_or_create_subscription(forced_sub_name, forced_sub_days)
+                UserPayment.objects.create(
+                    user=request.user,
+                    subscription=sub,
+                    amount=0,
+                    status='paid',
+                    fawaterk_intent_key=f'MANUAL-SCHOOL-{uuid.uuid4().hex[:8].upper()}',
+                    discount_code_used=coupon_code,
+                )
+                profile, _ = Profile.objects.get_or_create(user=request.user)
+                profile.is_public = True
+                profile.save()
+                from school.utils import enroll_in_school
+                enroll_in_school(request.user, coupon_code)
+                messages.success(request, f'تم تطبيق كود المدرسة! خطتك {forced_sub_name} نشطة الآن.')
+                return redirect('arabic_payment_success')
+
         # 1) Master Settings Coupon
-        if coupon_code == master_code:
+        elif coupon_code == master_code:
             if master_percent >= 100:
                 # Full bypass
                 sub = _get_or_create_subscription(sub_name, sub_days)
@@ -298,6 +381,8 @@ def arabic_manual_payment_view(request, plan_type):
                 profile, _ = Profile.objects.get_or_create(user=request.user)
                 profile.is_public = True
                 profile.save()
+                from school.utils import enroll_in_school
+                enroll_in_school(request.user, coupon_code)
                 messages.success(request, f'تم تطبيق الكود الرئيسي! خطتك {sub_name} نشطة الآن.')
                 return redirect('arabic_payment_success')
             else:
@@ -328,6 +413,8 @@ def arabic_manual_payment_view(request, plan_type):
                     profile, _ = Profile.objects.get_or_create(user=request.user)
                     profile.is_public = True
                     profile.save()
+                    from school.utils import enroll_in_school
+                    enroll_in_school(request.user, coupon_code)
                     messages.success(request, f'تم تطبيق الكوبون! خطتك {sub_name} نشطة الآن.')
                     return redirect('arabic_payment_success')
                 else:
@@ -428,6 +515,9 @@ def arabic_manual_payment_view(request, plan_type):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     profile.is_public = True
     profile.save()
+
+    from school.utils import enroll_in_school
+    enroll_in_school(request.user, coupon_code)
 
     logger.info('Manual payment auto-verified and subscription activated for user %s', request.user.username)
     messages.success(request, f'تم التحقق من الدفع! اشتراكك {sub_name} نشط الآن.')
@@ -713,6 +803,10 @@ def _activate_subscription_by_intent(intent_key: str, user, plan_type: str = Non
         profile, _ = Profile.objects.get_or_create(user=user)
         profile.is_public = True
         profile.save()
+        # Safety net: enroll in school if a school code was used
+        if payment.discount_code_used:
+            from school.utils import enroll_in_school
+            enroll_in_school(user, payment.discount_code_used)
     except UserPayment.DoesNotExist:
         if plan_type and plan_type in PLAN_CATALOGUE:
             amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
