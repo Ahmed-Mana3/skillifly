@@ -10,13 +10,16 @@ def _slugify(text):
     """
     Generate a URL-safe slug from any text including Arabic.
     Uses python-slugify when available so Arabic words are
-    transliterated; falls back to Django's built-in slugify.
+    transliterated; falls back to Django's built-in slugify(allow_unicode=True).
     """
     try:
         from slugify import slugify as ps_slugify
-        return ps_slugify(text)
+        slug = ps_slugify(text)
+        if slug:
+            return slug
     except ImportError:
-        return django_slugify(text)
+        pass
+    return django_slugify(text, allow_unicode=True)
 
 
 class Category(models.Model):

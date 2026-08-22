@@ -193,8 +193,9 @@ only gates SSL/canonical display). Verified domains are injected into
 
 ### Payments & the PDF export flow
 
-- Plans are defined in `payments/views.py` (`PLAN_CATALOGUE`): Monthly 50 EGP/30d,
-  6-Month 250 EGP/180d, Annual 360 EGP/365d.
+- Plans are defined in `payments/views.py` (`PLAN_CATALOGUE`): Monthly 99 EGP/30d,
+  Annual 449 EGP/365d. (The old 6-Month plan was removed; legacy `pro_monthly`
+  payments may still exist in the DB.)
 - `UserPayment.is_active` == `status='paid'` and still within the plan's day window.
 - Portfolio visibility auto-flips to private when the last payment expires.
 - PDF export is restricted to active **annual** subscribers and runs as a Celery

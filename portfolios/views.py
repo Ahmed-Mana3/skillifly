@@ -342,6 +342,10 @@ def preview_view(request, username):
             if len(uncategorized_previews) < 4 and (not p.image or all(existing.image.name != p.image.name for existing in uncategorized_previews)):
                 uncategorized_previews.append(p)
 
+    from core.section_order import resolve_section_layout
+    category_name = profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else None
+    section_layout = resolve_section_layout(profile, category_name)
+
     context = {
         'personal_info': personal_info,
         'experiences': experiences,
@@ -364,6 +368,7 @@ def preview_view(request, username):
         'project_categories': project_categories,
         'project_categories_count': len(project_categories),
         'is_noindex': False,
+        'section_layout': section_layout,
     }
 
     # Dynamic template selection based on theme

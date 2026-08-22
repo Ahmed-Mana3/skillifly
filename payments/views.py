@@ -58,9 +58,8 @@ def arabic_pricing_view(request):
 
 # Plan definitions  {plan_type: (amount_egp, subscription_name, subscription_days)}
 PLAN_CATALOGUE = {
-    'monthly':   ('50.00',  'Monthly',  30),
-    'pro_monthly': ('250.00', '6 Months', 180),
-    'pro_annual': ('360.00', 'Annual',  365),
+    'monthly':   ('99.00',  'Monthly',  30),
+    'pro_annual': ('449.00', 'Annual',  365),
 }
 
 
@@ -225,7 +224,7 @@ def manual_payment_view(request, plan_type):
         'discount_applied': discount_applied,
     }
 
-    if request.method == 'GET':
+    if request.method == 'GET' or request.POST.get('apply_coupon'):
         return render(request, 'payment/manual_payment.html', context)
 
     # --- POST: process the uploaded receipt ---
@@ -439,7 +438,7 @@ def arabic_manual_payment_view(request, plan_type):
         'is_arabic_page': True,
     }
 
-    if request.method == 'GET':
+    if request.method == 'GET' or request.POST.get('apply_coupon'):
         return render(request, 'payment/arabic_manual_payment.html', context)
 
     # --- POST: process the uploaded receipt ---

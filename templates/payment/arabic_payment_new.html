@@ -73,30 +73,33 @@
     /* Coupon input: use same visual treatment as English page */
     .coupon-input {
         width: 100%;
-        background: rgba(17,24,39,0.5) !important; /* bg-gray-900/50 */
-        border: 1px solid rgba(55,65,81,0.8) !important; /* border-gray-700/80 */
+        background: #F8FAFC !important;
+        border: 1px solid #CBD5E1 !important;
         border-radius: 9999px;
         padding: 0.75rem 2.5rem;
-        color: #ffffff !important;
+        color: #0F172A !important;
         font-size: 0.875rem;
-        font-weight: 600;
+        font-weight: 700;
         text-align: center;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         font-family: 'Tajawal', sans-serif;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
-    .coupon-input::placeholder { color: rgba(203,213,225,0.6) !important; }
+    .coupon-input::placeholder { color: #94A3B8 !important; }
 
     .coupon-input:focus {
         outline: none;
+        background: #FFFFFF !important;
         border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
     }
 
     .arabic-rtl .coupon-icon {
         right: auto;
-        left: 0.75rem;
+        left: 0.85rem;
     }
 
     .arabic-rtl .pay-method-pill { direction: ltr; }
@@ -176,14 +179,14 @@
   </div>
 
   <!-- Pricing cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-16">
 
     <!-- Monthly -->
     <div class="gradient-border rounded-3xl p-7 animate-fadeInUp bg-white" style="animation-delay: 0.1s">
       <div class="mb-6">
         <p class="text-sm font-bold text-slate-500 tracking-widest mb-2">شهريًا</p>
         <div class="flex items-end gap-1 mb-1">
-          <span class="text-4xl font-bold text-black">50</span>
+          <span class="text-4xl font-bold text-black">99</span>
           <span class="text-slate-500 mb-1.5 font-medium">جنيه/شهر</span>
         </div>
         <p class="text-sm text-slate-400 font-medium">يُدفع شهريًا.</p>
@@ -191,22 +194,9 @@
       <button class="btn-ghost w-full justify-center" onclick="goToPayment('monthly')">اختر الخطة الشهرية</button>
     </div>
 
-    <!-- 6 Months -->
-    <div class="gradient-border rounded-3xl p-7 animate-fadeInUp bg-white" style="animation-delay: 0.2s">
-      <div class="mb-6">
-        <p class="text-sm font-bold text-slate-500 tracking-widest mb-2">6 أشهر</p>
-        <div class="flex items-end gap-1 mb-1">
-          <span class="text-4xl font-bold text-black">250</span>
-          <span class="text-slate-500 mb-1.5 font-medium">جنيه/6 أشهر</span>
-        </div>
-        <p class="text-sm text-emerald-600 font-bold">وفّر 50 جنيهًا عن الاشتراك الشهري</p>
-      </div>
-      <button class="btn-ghost w-full justify-center" onclick="goToPayment('pro_monthly')">الترقية إلى برو</button>
-    </div>
-
     <!-- Annual (highlighted) -->
     <div class="rounded-3xl p-7 relative overflow-hidden animate-fadeInUp bg-white annual-card"
-      style="animation-delay: 0.3s;">
+      style="animation-delay: 0.2s;">
 
       <div class="absolute top-4 left-4">
         <span class="px-3 py-1 rounded-full text-xs font-bold annual-badge">الأكثر شهرة</span>
@@ -215,10 +205,10 @@
       <div class="mb-6">
         <p class="text-sm font-bold text-blue-600 tracking-widest mb-2">سنويًا</p>
         <div class="flex items-end gap-1 mb-1">
-          <span class="text-4xl font-bold" style="font-family: 'Cairo', sans-serif;">360</span>
+          <span class="text-4xl font-bold" style="font-family: 'Cairo', sans-serif;">449</span>
           <span class="text-gray-400 mb-1.5">جنيه/سنة</span>
         </div>
-        <p class="text-sm text-emerald-600 font-bold">وفّر 240 جنيهًا عن الاشتراك الشهري</p>
+        <p class="text-sm text-emerald-600 font-bold">وفّر 739 جنيهًا عن الاشتراك الشهري</p>
       </div>
 
       <button class="btn-primary w-full justify-center py-3.5" onclick="goToPayment('pro_annual')">
@@ -236,8 +226,8 @@
   <div class="max-w-md mx-auto mb-16 text-center animate-fadeInUp" style="animation-delay: 0.35s">
     <div class="relative max-w-xs mx-auto">
       <input type="text" id="couponCode" placeholder="أدخل كود الخصم" class="coupon-input" />
-      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none coupon-icon">
-        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none coupon-icon">
+        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
       </div>
     </div>
     <p class="text-xs text-gray-500 mt-3">يتم تطبيق أكواد الخصم تلقائيًا أثناء الدفع.</p>

@@ -1534,6 +1534,9 @@ def arabic_my_school_stats_view(request):
         'is_arabic_page': True,
     }
     return render(request, 'dashboard/arabic_my_school_stats.html', context)
+
+
+def _client_reviews_context(request):
     reviews = (
         ClientReview.objects.filter(reviewer=request.user)
         .select_related('user', 'user__personal_info')

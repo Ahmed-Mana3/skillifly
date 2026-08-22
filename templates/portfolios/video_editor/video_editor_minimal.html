@@ -1257,6 +1257,7 @@
       }
     }
   </style>
+  {% include "portfolios/common/section_layout_css.html" %}
 </head>
 
 <body>
@@ -1309,6 +1310,8 @@
       </svg>
     </div>
   </section>
+
+  <div class="portfolio-body">
 
   <!-- Portfolio Section -->
   {% if projects %}
@@ -1645,6 +1648,8 @@
     };
   </script>
   <script src="{% static 'js/sf_analytics.js' %}"></script>
+
+  </div><!-- /.portfolio-body -->
 </body>
 
 </html>

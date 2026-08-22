@@ -60,14 +60,14 @@
   </div>
 
   <!-- Pricing cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-16">
 
     <!-- Monthly -->
     <div class="gradient-border rounded-3xl p-7 animate-fadeInUp bg-white" style="animation-delay: 0.1s">
       <div class="mb-6">
         <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly</p>
         <div class="flex items-end gap-1 mb-1">
-          <span class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">50</span>
+          <span class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">99</span>
           <span class="text-slate-500 mb-1.5 font-medium">EGP/month</span>
         </div>
         <p class="text-sm text-slate-400 font-medium">Billed monthly.</p>
@@ -75,22 +75,9 @@
       <button class="btn-ghost w-full justify-center" onclick="goToPayment('monthly')">Get monthly plan</button>
     </div>
 
-    <!-- 6 Months -->
-    <div class="gradient-border rounded-3xl p-7 animate-fadeInUp bg-white" style="animation-delay: 0.2s">
-      <div class="mb-6">
-        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">6 Months</p>
-        <div class="flex items-end gap-1 mb-1">
-          <span class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">250</span>
-          <span class="text-slate-500 mb-1.5 font-medium">EGP/6 months</span>
-        </div>
-        <p class="text-sm text-emerald-600 font-bold">Save 50 EGP vs monthly</p>
-      </div>
-      <button class="btn-ghost w-full justify-center" onclick="goToPayment('pro_monthly')">Upgrade to Pro</button>
-    </div>
-
     <!-- Annual (highlighted) -->
     <div class="rounded-3xl p-7 relative overflow-hidden animate-fadeInUp bg-white"
-      style="animation-delay: 0.3s; background: linear-gradient(160deg, #EFF6FF, #F5F3FF); border: 1px solid #BFDBFE; box-shadow: 0 20px 40px rgba(59, 130, 246, 0.05);">
+      style="animation-delay: 0.2s; background: linear-gradient(160deg, #EFF6FF, #F5F3FF); border: 1px solid #BFDBFE; box-shadow: 0 20px 40px rgba(59, 130, 246, 0.05);">
 
       <div class="absolute top-4 right-4">
         <span class="px-3 py-1 rounded-full text-xs font-bold"
@@ -100,10 +87,10 @@
       <div class="mb-6">
         <p class="text-sm font-bold text-blue-600 uppercase tracking-widest mb-2">Annual</p>
         <div class="flex items-end gap-1 mb-1">
-          <span class="text-4xl font-bold" style="font-family: 'Syne', sans-serif;">360</span>
+          <span class="text-4xl font-bold" style="font-family: 'Syne', sans-serif;">449</span>
           <span class="text-gray-400 mb-1.5">EGP/year</span>
         </div>
-        <p class="text-sm text-emerald-400 font-medium">Save 240 EGP vs monthly</p>
+        <p class="text-sm text-emerald-400 font-medium">Save 739 EGP vs monthly</p>
       </div>
 
       <button class="btn-primary w-full justify-center py-3.5" onclick="goToPayment('pro_annual')">
@@ -120,12 +107,12 @@
   <!-- Coupon Code -->
   <div class="max-w-md mx-auto mb-16 text-center animate-fadeInUp" style="animation-delay: 0.35s">
     <div class="relative max-w-xs mx-auto">
-      <input type="text" id="couponCode" placeholder="Enter Coupon Code" class="w-full bg-gray-900/50 border border-gray-700/80 rounded-full px-6 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors uppercase tracking-widest text-center text-sm font-semibold shadow-inner" />
-      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      <input type="text" id="couponCode" placeholder="Enter Coupon Code" class="w-full bg-slate-50 border border-slate-300 rounded-full px-6 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all uppercase tracking-widest text-center text-sm font-bold shadow-sm" />
+      <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
       </div>
     </div>
-    <p class="text-xs text-gray-500 mt-3">Promo codes and discounts are automatically applied during checkout.</p>
+    <p class="text-xs text-slate-500 mt-3 font-medium">Promo codes and discounts are automatically applied during checkout.</p>
   </div>
 
   <!-- Trust row -->

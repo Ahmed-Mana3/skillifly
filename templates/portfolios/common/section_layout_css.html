@@ -1,0 +1,21 @@
+{% comment %}
+  Section layout CSS block — emitted only when the user has a custom layout saved.
+  Requires: section_layout (from resolve_section_layout), with keys:
+    custom (bool), sections (list), hidden_keys (list).
+
+  For the ordering to work, the main content area must be a flex column.
+  Wrap your portfolio sections in an element with class "portfolio-body" like:
+    <main class="portfolio-body">...</main>
+{% endcomment %}
+{% if section_layout.custom %}
+<style>
+  .portfolio-body { display: flex; flex-direction: column; }
+{% for section in section_layout.sections %}{% if section.visible %}{% for sel in section.selectors %}
+  {{ sel }} { order: {{ forloop.parentloop.counter }}; }{% endfor %}
+{% else %}{% for sel in section.selectors %}
+  {{ sel }} { display: none !important; }{% endfor %}
+{% for href in section.hrefs %}
+  a[href="#{{ href }}"] { display: none !important; }{% endfor %}
+{% endif %}{% endfor %}
+</style>
+{% endif %}

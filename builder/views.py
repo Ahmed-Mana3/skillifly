@@ -34,6 +34,69 @@ from builder.forms import (
 
 @login_required
 @require_POST
+def ajax_save_section_layout(request):
+    """AJAX endpoint to save/reset the portfolio section order and visibility."""
+    from core.section_order import (
+        normalize_section_order,
+        normalize_section_visibility,
+        supported_keys,
+    )
+    import json
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    category = (
+        profile.theme.category.name.lower().replace(' ', '_')
+        if profile.theme and profile.theme.category
+        else 'video_editor'
+    )
+
+    # --- Reset ---
+    if request.POST.get('reset') == '1':
+        profile.section_order = []
+        profile.section_visibility = {}
+        profile.save(update_fields=['section_order', 'section_visibility'])
+        return JsonResponse({'success': True, 'reset': True})
+
+    raw_order = request.POST.get('section_order', '')
+    raw_visibility = request.POST.get('section_visibility', '')
+
+    try:
+        order_candidates = json.loads(raw_order) if raw_order else []
+    except (ValueError, TypeError):
+        order_candidates = []
+
+    allowed = set(supported_keys(category))
+
+    invalid_order = [k for k in order_candidates if k not in allowed]
+    if invalid_order:
+        return JsonResponse({'success': False, 'invalid_keys': invalid_order}, status=400)
+
+    order_list = normalize_section_order(order_candidates, category)
+
+    visibility_map = normalize_section_visibility(raw_visibility, category)
+    if raw_visibility:
+        raw_vis_keys = set()
+        try:
+            raw_vis_keys = set(json.loads(raw_visibility).keys())
+        except (ValueError, TypeError):
+            pass
+        invalid_vis = [k for k in raw_vis_keys if k not in allowed]
+        if invalid_vis:
+            return JsonResponse({'success': False, 'invalid_keys': invalid_vis}, status=400)
+
+    # Prevent hiding every section
+    visible_count = sum(1 for k in allowed if visibility_map.get(k, True))
+    if visible_count == 0:
+        return JsonResponse({'success': False, 'error': 'At least one section must be visible.'}, status=400)
+
+    profile.section_order = order_list
+    profile.section_visibility = visibility_map
+    profile.save(update_fields=['section_order', 'section_visibility'])
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
 def ajax_save_category(request):
     """AJAX endpoint to instantly save or update a ProjectCategory."""
     from core.models import ProjectCategory
@@ -154,6 +217,14 @@ def builder_view(request):
         creator_formset = CreatorFormSet(initial=initial["creators"], prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
+
+    from core.section_order import resolve_section_layout
+    import json as _json
+    _cat_name = profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else None
+    section_layout = resolve_section_layout(profile, _cat_name)
+    section_rows = section_layout['sections']
+    section_visibility_json = _json.dumps(section_layout.get('sections', []))
+
     context = {
         "personal_form": personal_form,
         "skill_formset": skill_formset,
@@ -166,7 +237,12 @@ def builder_view(request):
         "reviews": ClientReview.objects.filter(user=request.user).order_by('-created_at'),
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
-        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True
+        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True,
+        "section_layout": section_layout,
+        "section_rows": section_rows,
+        "section_visibility_json": section_visibility_json,
+        "is_custom_layout": section_layout['custom'],
+        "default_section_order": section_layout['default_order'],
     }
     template_name = 'dashboard/builder.html'
     if profile and profile.theme:
@@ -258,6 +334,14 @@ def update_portfolio_view(request):
         creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
+
+    from core.section_order import resolve_section_layout
+    import json as _json
+    _cat_name = profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else None
+    section_layout = resolve_section_layout(profile, _cat_name)
+    section_rows = section_layout['sections']
+    section_visibility_json = _json.dumps(section_layout.get('sections', []))
+
     context = {
         "personal_form": personal_form,
         "skill_formset": skill_formset,
@@ -271,7 +355,12 @@ def update_portfolio_view(request):
         "is_update": True,
         "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
-        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True
+        "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True,
+        "section_layout": section_layout,
+        "section_rows": section_rows,
+        "section_visibility_json": section_visibility_json,
+        "is_custom_layout": section_layout['custom'],
+        "default_section_order": section_layout['default_order'],
     }
     template_name = 'dashboard/builder.html'
     if profile and profile.theme:

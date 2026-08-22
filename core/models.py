@@ -86,6 +86,8 @@ class Profile(models.Model):
     visits = models.PositiveIntegerField(default=0)
     is_public = models.BooleanField(default=False)
     last_seen = models.DateTimeField(null=True, blank=True)
+    section_order = models.JSONField(blank=True, default=list, help_text="Ordered list of section keys for portfolio display")
+    section_visibility = models.JSONField(blank=True, default=dict, help_text="Map of section key -> bool controlling portfolio section visibility")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -299,7 +301,7 @@ class ManualPayment(models.Model):
     ]
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='manual_payments')
-    plan_type = models.CharField(max_length=20)                   # 'monthly' | 'pro_monthly' | 'pro_annual'
+    plan_type = models.CharField(max_length=20)                   # 'monthly' | 'pro_annual' (legacy: 'pro_monthly')
     amount_expected = models.DecimalField(max_digits=8, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='vodafone')
     sender_identifier = models.CharField(max_length=100)          # phone number or instapay handle
