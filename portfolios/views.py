@@ -268,8 +268,8 @@ def preview_view(request, username):
     if not profile.is_public and request.user != user and user.username != 'alex_mercer':
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    # Don't log visits for mock user
-    if user.username != 'alex_mercer':
+    # Don't log visits for mock user or owner visiting their own portfolio
+    if user.username != 'alex_mercer' and (not request.user.is_authenticated or request.user != user):
         profile.visits += 1
         profile.save(update_fields=['visits'])
 
@@ -441,7 +441,7 @@ def portfolio_reels(request, username):
     if profile and not profile.is_public and request.user != user and user.username != 'alex_mercer':
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    if user.username != 'alex_mercer' and profile:
+    if user.username != 'alex_mercer' and profile and (not request.user.is_authenticated or request.user != user):
         profile.visits += 1
         profile.save(update_fields=['visits'])
 
@@ -514,7 +514,7 @@ def portfolio_long_videos(request, username):
     if profile and not profile.is_public and request.user != user and user.username != 'alex_mercer':
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    if user.username != 'alex_mercer' and profile:
+    if user.username != 'alex_mercer' and profile and (not request.user.is_authenticated or request.user != user):
         profile.visits += 1
         profile.save(update_fields=['visits'])
 
@@ -663,7 +663,7 @@ def portfolio_category_detail(request, username, category_id):
     # simple view tracking
     cat_key = f'viewed_category_{category.id}'
     if not request.session.get(cat_key, False):
-        if profile and hasattr(profile, 'save') and user.username != 'alex_mercer':
+        if profile and hasattr(profile, 'save') and user.username != 'alex_mercer' and (not request.user.is_authenticated or request.user != user):
             profile.visits += 1
             profile.save(update_fields=['visits'])
         request.session[cat_key] = True

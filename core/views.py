@@ -2442,7 +2442,7 @@ def portfolio_category_detail(request, username, category_id):
     # simple view tracking
     cat_key = f'viewed_category_{category.id}'
     if not request.session.get(cat_key, False):
-        if profile:
+        if profile and user.username != 'alex_mercer' and (not request.user.is_authenticated or request.user != user):
             profile.visits += 1
             profile.save(update_fields=['visits'])
         request.session[cat_key] = True

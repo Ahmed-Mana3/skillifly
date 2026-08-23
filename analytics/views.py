@@ -49,6 +49,12 @@ def track_analytics(request):
             return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
 
         user = get_object_or_404(CustomUser, username=username)
+
+        # Ignore analytics tracking if the logged-in user is visiting their own portfolio
+        if request.user.is_authenticated and request.user == user:
+            response = JsonResponse({'status': 'ignored', 'message': 'Owner visit ignored'})
+            response["Access-Control-Allow-Origin"] = "*"
+            return response
         
         # Get or create the visit session
         visit, created = AnalyticsVisit.objects.get_or_create(
