@@ -1,95 +1,140 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Build Your Portfolio — Skillifly{% endblock %}
+{% block title %}أنشئ ملفك المهني خطوة بخطوة — Skillifly{% endblock %}
+
+{% block meta_description %}ابنِ ملفًا مهنيًا (بورتفوليو) يعرض أفضل أعمالك: أضف مهاراتك وخبراتك وفيديوهاتك، ثم انشره برابطك الخاص خلال دقائق.{% endblock %}
+
+{% block og_title %}أنشئ ملفك المهني خطوة بخطوة — Skillifly{% endblock %}
+{% block og_description %}منشئ الملفات المهنية من Skillifly: أضف بياناتك ومهاراتك وأعمالك، وانشر بورتفوليو يجذب العملاء.{% endblock %}
+{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block twitter_title %}أنشئ ملفك المهني خطوة بخطوة — Skillifly{% endblock %}
+{% block twitter_description %}ابنِ بورتفوليو احترافي لأعمالك وانشره خلال دقائق.{% endblock %}
+{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/builder_v2.css' %}?v={% now 'U' %}">
+
+<meta property="og:locale" content="ar_AR" />
+<meta name="robots" content="noindex, follow" />
+
 <noscript><style>.bx-panel { display: block !important; }</style></noscript>
+
+<style>
+  /* نفس تصميم النسخة الإنجليزية تمامًا (Syne + DM Sans من base.html) —
+     التعديلات أدناه لتصحيح الاتجاه فقط، دون تغيير الهوية البصرية. */
+
+  /* تباعد الأحرف يكسر اتصال الحروف العربية — يُعطَّل داخل الأداة فقط */
+  .arabic-rtl .bx-root,
+  .arabic-rtl .bx-root * {
+    letter-spacing: 0;
+  }
+
+  /* عناوين URL والأرقام تُعرض باتجاه LTR كما في النسخة الإنجليزية */
+  .arabic-rtl .bx-input[dir="ltr"] {
+    text-align: left;
+    direction: ltr;
+  }
+
+  /* انعكاس الأسهم الاتجاهية لتناسب قراءة RTL */
+  .arabic-rtl [data-action="next"] svg,
+  .arabic-rtl [data-action="prev"] svg {
+    transform: scaleX(-1);
+  }
+
+  /* موضع شارة نوع العنصر وزر الحذف على حافة البداية */
+  .arabic-rtl .bx-item-num {
+    left: auto;
+    right: 16px;
+  }
+
+  .arabic-rtl .bx-remove {
+    right: auto;
+    left: 12px;
+  }
+</style>
 {% endblock %}
 
 {% block ambient_orbs %}{% endblock %}
 
 {% block content %}
-<div class="bx-root" id="builder-root" data-category="{{ category }}">
+<div class="bx-root arabic-rtl" id="builder-root" data-category="{{ category }}">
 
   <header class="bx-header">
     <div>
-      <p class="bx-eyebrow"><span class="bx-eyebrow-dot"></span> Portfolio Builder</p>
-      <h1 class="bx-title">
-        {% if is_update %}Update your portfolio{% else %}Build your portfolio{% endif %}
-      </h1>
+      <p class="bx-eyebrow"><span class="bx-eyebrow-dot"></span> منشئ الملف المهني</p>
+      <h1 class="bx-title">{% if is_update %}حدِّث ملفك المهني{% else %}أنشئ ملفك المهني{% endif %}</h1>
       <p class="bx-subtitle">
-        Fill in the sections below — your changes go live the moment you save.
-        Sections marked with a check are complete.
+        املأ الأقسام أدناه — تعديلاتك تظهر مباشرة بعد الحفظ.
+        علامة الصحّ تعني أن القسم مكتمِل.
       </p>
     </div>
     <div class="bx-header-actions">
       {% if is_update %}
       <a href="{% url 'preview' username=request.user.username %}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        View live site
+        عرض موقعك المنشور
       </a>
       {% endif %}
       <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button>
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+        {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
       </button>
     </div>
   </header>
 
-  <div class="bx-progress" role="group" aria-label="Completion progress">
+  <div class="bx-progress" role="group" aria-label="نسبة إنجاز الملف">
     <div class="bx-progress-track"><div class="bx-progress-fill" id="bx-progress-fill"></div></div>
-    <span class="bx-progress-label" id="bx-progress-label">0 of 7 sections</span>
+    <span class="bx-progress-label" id="bx-progress-label">0 من 7 أقسام مكتملة</span>
   </div>
 
   <div class="bx-layout">
 
-    <nav class="bx-sidebar" aria-label="Portfolio sections">
-      <p class="bx-nav-label-cap">Sections</p>
+    <nav class="bx-sidebar" aria-label="أقسام الملف المهني">
+      <p class="bx-nav-label-cap">الأقسام</p>
       <ol class="bx-nav-list" id="bx-nav">
         <li><button type="button" class="bx-nav-item is-active" data-nav-key="identity" aria-current="true">
           <span class="bx-nav-num">1</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Personal identity</span><span class="bx-nav-desc">Name, role, contact</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">بياناتك الشخصية</span><span class="bx-nav-desc">الاسم والمسمى الوظيفي والتواصل</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="skills">
           <span class="bx-nav-num">2</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">{% if category == 'video_editor' %}Software skills{% else %}Expertise{% endif %}</span><span class="bx-nav-desc">Tools you use daily</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">{% if category == 'video_editor' %}مهارات البرامج{% else %}مجالات خبرتك{% endif %}</span><span class="bx-nav-desc">الأدوات التي تستخدمها يوميًا</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="education">
           <span class="bx-nav-num">3</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Education</span><span class="bx-nav-desc">Degrees &amp; courses</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">التعليم</span><span class="bx-nav-desc">الشهادات والدورات</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="experience">
           <span class="bx-nav-num">4</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Experience</span><span class="bx-nav-desc">Roles &amp; freelance work</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">الخبرة العملية</span><span class="bx-nav-desc">الوظائف والأعمال الحرة</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="projects">
           <span class="bx-nav-num">5</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">{% if category == 'video_editor' %}Work showcase{% else %}Projects{% endif %}</span><span class="bx-nav-desc">Your best work</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">{% if category == 'video_editor' %}أعمالك المميزة{% elif category == 'student' %}مشاريعك الأكاديمية{% else %}مشاريعك{% endif %}</span><span class="bx-nav-desc">أفضل ما أنجزته</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="links">
           <span class="bx-nav-num">6</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Links</span><span class="bx-nav-desc">Social profiles</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">روابطك</span><span class="bx-nav-desc">حساباتك على المنصات</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="creators">
           <span class="bx-nav-num">7</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Creators you've worked with</span><span class="bx-nav-desc">Collaborators</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">من تعاونت معهم</span><span class="bx-nav-desc">صنّاع محتوى وعلامات تجارية</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="reviews">
           <span class="bx-nav-num">8</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Client reviews</span><span class="bx-nav-desc">Testimonials</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">آراء العملاء</span><span class="bx-nav-desc">شهادات وتوصيات</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
       </ol>
-      <p class="bx-sidebar-tip"><strong>Tip:</strong> jump between sections freely — we'll flag anything missing before you save.</p>
+      <p class="bx-sidebar-tip"><strong>نصيحة:</strong> تنقّل بين الأقسام بحرّية — سننبّهك لأي شيء ناقص قبل الحفظ.</p>
     </nav>
 
     <form method="POST" id="portfolio-form" enctype="multipart/form-data" class="bx-form" novalidate>
@@ -104,66 +149,66 @@
         <section class="bx-panel is-active" id="panel-identity" data-key="identity" tabindex="-1" aria-labelledby="heading-identity">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 1</p>
-              <h2 class="bx-panel-title" id="heading-identity">Personal identity</h2>
-              <p class="bx-panel-desc">This is the first thing visitors see — make it count.</p>
+              <p class="bx-panel-kicker">القسم 1</p>
+              <h2 class="bx-panel-title" id="heading-identity">بياناتك الشخصية</h2>
+              <p class="bx-panel-desc">هذا أول ما يشاهده الزوار — اجعله مؤثرًا.</p>
             </div>
           </div>
           <div class="bx-panel-body">
             {% if theme_name == 'animated' or theme_name == 'animated_dark' or theme_name == 'creative_white' %}
             <div class="bx-field">
-              <div class="bx-label-row"><span class="bx-label">Profile picture</span><span class="bx-opt">Required by your theme</span></div>
+              <div class="bx-label-row"><span class="bx-label">الصورة الشخصية</span><span class="bx-opt">مطلوبة حسب القالب الذي اخترته</span></div>
               <div class="bx-upload">
                 <label class="bx-dropzone">
                   <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                  <span class="bx-drop-hint">Upload a photo</span>
-                  <span class="bx-drop-sub">PNG or JPG, square works best</span>
+                  <span class="bx-drop-hint">ارفع صورتك</span>
+                  <span class="bx-drop-sub">PNG أو JPG، والصورة المربعة هي الأفضل</span>
                   <input type="file" name="picture" accept="image/*" class="bx-file-input">
                 </label>
                 <div class="bx-upload-meta">
                   {% if request.user.profile.picture %}
-                  <img src="{{ request.user.profile.picture.url }}" alt="Current profile picture" class="bx-upload-preview">
-                  <span class="bx-upload-name">Current picture — uploading replaces it</span>
+                  <img src="{{ request.user.profile.picture.url }}" alt="صورتك الشخصية الحالية" class="bx-upload-preview">
+                  <span class="bx-upload-name">صورتك الحالية — رفع صورة جديدة يستبدلها</span>
                   {% else %}
-                  <span class="bx-upload-name">No file chosen</span>
+                  <span class="bx-upload-name">لم يتم اختيار ملف</span>
                   {% endif %}
-                  <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
+                  <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>إزالة</button>
                 </div>
               </div>
             </div>
             {% endif %}
             <div class="bx-grid-2">
               <div class="bx-field bx-span-2">
-                <label class="bx-label-row" for="f-fullname"><span class="bx-label">Full name</span><span class="bx-req" aria-hidden="true">*</span></label>
-                <input class="bx-input" type="text" id="f-fullname" name="fullname" value="{{ personal_form.fullname.value|default:'' }}" placeholder="e.g. Liam Devlin" required autocomplete="name">
+                <label class="bx-label-row" for="f-fullname"><span class="bx-label">الاسم الكامل</span><span class="bx-req" aria-hidden="true">*</span></label>
+                <input class="bx-input" type="text" id="f-fullname" name="fullname" value="{{ personal_form.fullname.value|default:'' }}" placeholder="مثال: محمد أحمد" required autocomplete="name">
                 <p class="bx-field-error" role="alert"></p>
               </div>
               <div class="bx-field bx-span-2">
-                <label class="bx-label-row" for="f-title"><span class="bx-label">Job title / role</span><span class="bx-req" aria-hidden="true">*</span></label>
-                <input class="bx-input" type="text" id="f-title" name="title" value="{{ personal_form.title.value|default:'' }}" placeholder="e.g. Senior Video Editor" required>
+                <label class="bx-label-row" for="f-title"><span class="bx-label">المسمى الوظيفي</span><span class="bx-req" aria-hidden="true">*</span></label>
+                <input class="bx-input" type="text" id="f-title" name="title" value="{{ personal_form.title.value|default:'' }}" placeholder="مثال: محرر فيديو أول" required>
                 <p class="bx-field-error" role="alert"></p>
               </div>
               <div class="bx-field">
-                <label class="bx-label-row" for="f-email"><span class="bx-label">Email address</span><span class="bx-opt">Optional</span></label>
-                <input class="bx-input" type="email" id="f-email" name="email" value="{{ personal_form.email.value|default:'' }}" placeholder="you@example.com" autocomplete="email">
+                <label class="bx-label-row" for="f-email"><span class="bx-label">البريد الإلكتروني</span><span class="bx-opt">اختياري</span></label>
+                <input class="bx-input" type="email" id="f-email" name="email" dir="ltr" value="{{ personal_form.email.value|default:'' }}" placeholder="you@example.com" autocomplete="email">
                 <p class="bx-field-error" role="alert"></p>
               </div>
               <div class="bx-field">
-                <label class="bx-label-row" for="f-phone"><span class="bx-label">Phone number</span><span class="bx-opt">Optional</span></label>
-                <input class="bx-input" type="tel" id="f-phone" name="phone" value="{{ personal_form.phone.value|default:'' }}" placeholder="+1 (555) 123-4567" pattern="[0-9+\-\s()]{7,20}">
-                <p class="bx-hint">Shown on your public portfolio.</p>
+                <label class="bx-label-row" for="f-phone"><span class="bx-label">رقم الهاتف</span><span class="bx-opt">اختياري</span></label>
+                <input class="bx-input" type="tel" id="f-phone" name="phone" dir="ltr" value="{{ personal_form.phone.value|default:'' }}" placeholder="+20 100 123 4567" pattern="[0-9+\-\s()]{7,20}">
+                <p class="bx-hint">يظهر للزوار في ملفك العام.</p>
                 <p class="bx-field-error" role="alert"></p>
               </div>
               <div class="bx-field bx-span-2">
-                <label class="bx-label-row" for="f-booking"><span class="bx-label">Booking link</span><span class="bx-opt">Optional</span></label>
-                <input class="bx-input" type="text" id="f-booking" name="booking_url" value="{{ personal_form.booking_url.value|default:'' }}" placeholder="wa.me/15551234567 or calendly.com/you">
-                <p class="bx-hint">WhatsApp, Calendly or any booking page — clients can hire you in one click.</p>
+                <label class="bx-label-row" for="f-booking"><span class="bx-label">رابط الحجز</span><span class="bx-opt">اختياري</span></label>
+                <input class="bx-input" type="text" id="f-booking" name="booking_url" dir="ltr" value="{{ personal_form.booking_url.value|default:'' }}" placeholder="wa.me/201001234567 أو calendly.com/you">
+                <p class="bx-hint">واتساب أو Calendly أو أي صفحة حجز — يستطيع العملاء التواصل معك بنقرة واحدة.</p>
                 <p class="bx-field-error" role="alert"></p>
               </div>
               <div class="bx-field bx-span-2">
-                <label class="bx-label-row" for="f-bio"><span class="bx-label">Short bio</span><span class="bx-opt">Optional</span></label>
-                <textarea class="bx-input" id="f-bio" name="bio" rows="4" data-char-counter placeholder="Two or three sentences about who you are and the work you love doing…">{{ personal_form.bio.value|default:'' }}</textarea>
-                <span class="bx-char-count" aria-live="polite">0 characters</span>
+                <label class="bx-label-row" for="f-bio"><span class="bx-label">نبذة مختصرة</span><span class="bx-opt">اختياري</span></label>
+                <textarea class="bx-input" id="f-bio" name="bio" rows="4" data-char-counter placeholder="جملتان أو ثلاث عن شخصك ونوع الأعمال التي تحب العمل عليها…">{{ personal_form.bio.value|default:'' }}</textarea>
+                <span class="bx-char-count" aria-live="polite">0 حرف</span>
                 <p class="bx-field-error" role="alert"></p>
               </div>
             </div>
@@ -172,12 +217,12 @@
             <span></span>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -186,13 +231,13 @@
         <section class="bx-panel" id="panel-skills" data-key="skills" tabindex="-1" aria-labelledby="heading-skills">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 2</p>
-              <h2 class="bx-panel-title" id="heading-skills">{% if category == 'video_editor' %}Software skills{% else %}Expertise{% endif %}</h2>
-              <p class="bx-panel-desc">The tools and skills clients hire you for.</p>
+              <p class="bx-panel-kicker">القسم 2</p>
+              <h2 class="bx-panel-title" id="heading-skills">{% if category == 'video_editor' %}مهارات البرامج{% else %}مجالات خبرتك{% endif %}</h2>
+              <p class="bx-panel-desc">الأدوات والمهارات التي يوظّفك بسببها العملاء.</p>
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="skills">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add skill
+              أضف مهارة
             </button>
           </div>
           {{ skill_formset.management_form }}
@@ -201,13 +246,13 @@
               {% for form in skill_formset %}
               <div class="bx-item">
                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Skill</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this skill">
+                <span class="bx-item-num">مهارة</span>
+                <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذه المهارة">
                   <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">Skill name</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.skill.html_name }}" value="{{ form.skill.value|default:'' }}" class="bx-input" placeholder="e.g. Adobe Premiere Pro" required>
+                  <label class="bx-label-row"><span class="bx-label">اسم المهارة</span><span class="bx-req" aria-hidden="true">*</span></label>
+                  <input type="text" name="{{ form.skill.html_name }}" value="{{ form.skill.value|default:'' }}" class="bx-input" placeholder="مثال: Adobe Premiere Pro" required>
                   <p class="bx-field-error" role="alert"></p>
                 </div>
                 <div style="display:none">{{ form.DELETE }}</div>
@@ -218,24 +263,24 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
               </div>
-              <p class="bx-empty-title">No skills yet</p>
-              <p class="bx-empty-sub">Add the software and techniques you're strongest at.</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="skills">Add your first skill</button>
+              <p class="bx-empty-title">لا توجد مهارات بعد</p>
+              <p class="bx-empty-sub">أضف البرامج والتقنيات التي تتقنها أكثر من غيرها.</p>
+              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="skills">أضف أول مهارة</button>
             </div>
           </div>
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -244,13 +289,13 @@
         <section class="bx-panel" id="panel-education" data-key="education" tabindex="-1" aria-labelledby="heading-education">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 3</p>
-              <h2 class="bx-panel-title" id="heading-education">Education</h2>
-              <p class="bx-panel-desc">Degrees, courses and certifications. Entirely optional.</p>
+              <p class="bx-panel-kicker">القسم 3</p>
+              <h2 class="bx-panel-title" id="heading-education">التعليم</h2>
+              <p class="bx-panel-desc">الشهادات والدورات الاعتمادات. اختياري تمامًا.</p>
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="education">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add education
+              أضف مؤهلًا دراسيًا
             </button>
           </div>
           {{ education_formset.management_form }}
@@ -259,23 +304,23 @@
               {% for form in education_formset %}
               <div class="bx-item">
                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Education</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this education entry">
+                <span class="bx-item-num">تعليم</span>
+                <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا المؤهل الدراسي">
                   <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 <div class="bx-grid-2">
                   <div class="bx-field bx-span-2">
-                    <label class="bx-label-row"><span class="bx-label">School / university</span><span class="bx-req" aria-hidden="true">*</span></label>
-                    <input type="text" name="{{ form.school.html_name }}" value="{{ form.school.value|default:'' }}" class="bx-input" placeholder="e.g. Cairo University" required>
+                    <label class="bx-label-row"><span class="bx-label">المدرسة / الجامعة</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <input type="text" name="{{ form.school.html_name }}" value="{{ form.school.value|default:'' }}" class="bx-input" placeholder="مثال: جامعة القاهرة" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Degree / field</span><span class="bx-req" aria-hidden="true">*</span></label>
-                    <input type="text" name="{{ form.degree.html_name }}" value="{{ form.degree.value|default:'' }}" class="bx-input" placeholder="e.g. Bachelor of Arts" required>
+                    <label class="bx-label-row"><span class="bx-label">الدرجة العلمية / التخصص</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <input type="text" name="{{ form.degree.html_name }}" value="{{ form.degree.value|default:'' }}" class="bx-input" placeholder="مثال: بكالوريوس فنون" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Graduation year</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <label class="bx-label-row"><span class="bx-label">سنة التخرج</span><span class="bx-req" aria-hidden="true">*</span></label>
                     <input type="number" name="{{ form.year.html_name }}" value="{{ form.year.value|default:'' }}" class="bx-input" placeholder="2024" min="1950" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
@@ -288,24 +333,24 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/></svg>
               </div>
-              <p class="bx-empty-title">No education added</p>
-              <p class="bx-empty-sub">Many creatives skip this — it's up to you.</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="education">Add education</button>
+              <p class="bx-empty-title">لم تُضِف أي مؤهل دراسي</p>
+              <p class="bx-empty-sub">كثير من صنّاع المحتوى يتجاوزون هذا القسم — الأمر يعود لك.</p>
+              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="education">أضف مؤهلًا دراسيًا</button>
             </div>
           </div>
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -314,13 +359,13 @@
         <section class="bx-panel" id="panel-experience" data-key="experience" tabindex="-1" aria-labelledby="heading-experience">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 4</p>
-              <h2 class="bx-panel-title" id="heading-experience">Experience</h2>
-              <p class="bx-panel-desc">Jobs, freelance work and collaborations.</p>
+              <p class="bx-panel-kicker">القسم 4</p>
+              <h2 class="bx-panel-title" id="heading-experience">الخبرة العملية</h2>
+              <p class="bx-panel-desc">الوظائف والأعمال الحرة والتعاونات.</p>
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="experience">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add experience
+              أضف خبرة عملية
             </button>
           </div>
           {{ experience_formset.management_form }}
@@ -329,34 +374,34 @@
               {% for form in experience_formset %}
               <div class="bx-item">
                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Experience</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this experience entry">
+                <span class="bx-item-num">خبرة</span>
+                <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذه الخبرة العملية">
                   <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 <div class="bx-grid-2">
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Job title</span><span class="bx-req" aria-hidden="true">*</span></label>
-                    <input type="text" name="{{ form.title.html_name }}" value="{{ form.title.value|default:'' }}" class="bx-input" placeholder="e.g. Video Editor" required>
+                    <label class="bx-label-row"><span class="bx-label">المسمى الوظيفي</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <input type="text" name="{{ form.title.html_name }}" value="{{ form.title.value|default:'' }}" class="bx-input" placeholder="مثال: محرر فيديو" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Company</span><span class="bx-req" aria-hidden="true">*</span></label>
-                    <input type="text" name="{{ form.company.html_name }}" value="{{ form.company.value|default:'' }}" class="bx-input" placeholder="e.g. Creative Studio" required>
+                    <label class="bx-label-row"><span class="bx-label">جهة العمل</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <input type="text" name="{{ form.company.html_name }}" value="{{ form.company.value|default:'' }}" class="bx-input" placeholder="مثال: استوديو إبداعي" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Start date</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <label class="bx-label-row"><span class="bx-label">تاريخ البدء</span><span class="bx-req" aria-hidden="true">*</span></label>
                     <input type="month" name="{{ form.start.html_name }}" value="{{ form.start.value|default:'' }}" class="bx-input" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">End date</span><span class="bx-opt">Leave blank if current</span></label>
+                    <label class="bx-label-row"><span class="bx-label">تاريخ الانتهاء</span><span class="bx-opt">اتركه فارغًا إذا كنت ما زلت تعمل هناك</span></label>
                     <input type="month" name="{{ form.end.html_name }}" value="{{ form.end.value|default:'' }}" class="bx-input">
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field bx-span-2">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'student' %}What was your role / task?{% else %}What did you do there?{% endif %}</span><span class="bx-opt">Optional</span></label>
-                    <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="Your role, wins and measurable results…">{{ form.description.value|default:'' }}</textarea>
+                    <label class="bx-label-row"><span class="bx-label">{% if category == 'student' %}ما كان دورك أو مهمتك؟{% else %}ما كانت مهامك هناك؟{% endif %}</span><span class="bx-opt">اختياري</span></label>
+                    <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="دورك وإنجازاتك ونتائج ملموسة حققتها…">{{ form.description.value|default:'' }}</textarea>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                 </div>
@@ -368,24 +413,24 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg>
               </div>
-              <p class="bx-empty-title">No experience yet</p>
-              <p class="bx-empty-sub">Add roles to show your track record.</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="experience">Add your first role</button>
+              <p class="bx-empty-title">لا توجد خبرات بعد</p>
+              <p class="bx-empty-sub">أضف وظائفك لإبراز مسيرتك المهنية.</p>
+              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="experience">أضف أول وظيفة</button>
             </div>
           </div>
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -394,13 +439,13 @@
         <section class="bx-panel" id="panel-projects" data-key="projects" tabindex="-1" aria-labelledby="heading-projects">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 5</p>
-              <h2 class="bx-panel-title" id="heading-projects">{% if category == 'video_editor' %}Work showcase{% elif category == 'student' %}Academic projects{% else %}Projects{% endif %}</h2>
-              <p class="bx-panel-desc">Lead with your strongest work — first impressions matter.</p>
+              <p class="bx-panel-kicker">القسم 5</p>
+              <h2 class="bx-panel-title" id="heading-projects">{% if category == 'video_editor' %}أعمالك المميزة{% elif category == 'student' %}مشاريعك الأكاديمية{% else %}مشاريعك{% endif %}</h2>
+              <p class="bx-panel-desc">ابدأ بأقوى أعمالك — الانطباع الأول يصنع الفرق.</p>
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="projects">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add project
+              أضف عملًا
             </button>
           </div>
           {{ project_formset.management_form }}
@@ -409,12 +454,12 @@
           <div class="bx-cats-block">
             <div class="bx-cats-head">
               <div>
-                <h3 class="bx-cats-title">Collections</h3>
-                <p class="bx-cats-sub">Group projects into showcases like "Music Videos" or "Commercials".</p>
+                <h3 class="bx-cats-title">المجموعات</h3>
+                <p class="bx-cats-sub">نظّم أعمالك في مجموعات مثل «فيديوهات كليبات» أو «إعلانات تجارية».</p>
               </div>
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-sm" data-action="open-category-modal">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                New collection
+                مجموعة جديدة
               </button>
             </div>
             <div id="builder-categories-grid" class="bx-cats-grid">
@@ -422,10 +467,10 @@
               <div class="bx-cat-card" data-category-id="{{ cat.id }}" data-name="{{ cat.name }}" data-description="{{ cat.description|default:'' }}" data-thumbnail-url="{% if cat.thumbnail %}{{ cat.thumbnail.url }}{% endif %}">
                 {% if cat.thumbnail %}<img src="{{ cat.thumbnail.url }}" alt="" class="bx-cat-bg">{% endif %}
                 <div class="bx-cat-actions">
-                  <button type="button" class="bx-cat-action" data-action="edit-category" data-category-id="{{ cat.id }}" aria-label="Edit collection {{ cat.name }}">
+                  <button type="button" class="bx-cat-action" data-action="edit-category" data-category-id="{{ cat.id }}" aria-label="تعديل المجموعة {{ cat.name }}">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
                   </button>
-                  <button type="button" class="bx-cat-action is-danger" data-action="delete-category" data-category-id="{{ cat.id }}" aria-label="Delete collection {{ cat.name }}">
+                  <button type="button" class="bx-cat-action is-danger" data-action="delete-category" data-category-id="{{ cat.id }}" aria-label="حذف المجموعة {{ cat.name }}">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
                   </button>
                 </div>
@@ -434,8 +479,8 @@
               </div>
               {% empty %}
               <div id="no-categories-state" style="grid-column: 1/-1;" class="bx-empty">
-                <p class="bx-empty-title" style="margin:0;">No collections yet</p>
-                <p class="bx-empty-sub" style="margin:0 0 4px;">Without collections, all videos display under "Other Videos".</p>
+                <p class="bx-empty-title" style="margin:0;">لا توجد مجموعات بعد</p>
+                <p class="bx-empty-sub" style="margin:0 0 4px;">بدون مجموعات، ستظهر جميع الفيديوهات تحت «فيديوهات أخرى».</p>
               </div>
               {% endfor %}
             </div>
@@ -447,22 +492,22 @@
               {% for form in project_formset %}
               <div class="bx-item">
                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Project</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this project">
+                <span class="bx-item-num">عمل</span>
+                <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا العمل">
                   <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 <div class="bx-grid-2">
                   <div class="bx-field bx-span-2">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video title{% else %}Project name{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
-                    <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="e.g. Brand Campaign 2025" required>
+                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}عنوان الفيديو{% else %}اسم المشروع{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
+                    <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="مثال: حملة إعلانية 2025" required>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
 
                   {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
                   <div class="bx-field bx-span-2">
-                    <span class="bx-label-row"><span class="bx-label">Collection</span><span class="bx-opt">Optional</span></span>
-                    <div class="bx-chips category-chips-container" role="group" aria-label="Assign to collection">
-                      <button type="button" class="bx-chip {% if not form.category_id.value %}is-active{% endif %}" data-value="">Uncategorized</button>
+                    <span class="bx-label-row"><span class="bx-label">المجموعة</span><span class="bx-opt">اختياري</span></span>
+                    <div class="bx-chips category-chips-container" role="group" aria-label="اختر مجموعة هذا العمل">
+                      <button type="button" class="bx-chip {% if not form.category_id.value %}is-active{% endif %}" data-value="">بدون مجموعة</button>
                       {% for cat in request.user.project_categories.all %}
                       <button type="button" class="bx-chip {% if form.category_id.value|stringformat:'s' == cat.id|stringformat:'s' %}is-active{% endif %}" data-value="{{ cat.id }}">{{ cat.name }}</button>
                       {% endfor %}
@@ -471,39 +516,39 @@
                   {% endif %}
 
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
-                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="YouTube, Vimeo or TikTok URL">
-                    <p class="bx-hint">YouTube, Vimeo and TikTok links are embedded automatically.</p>
+                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}رابط الفيديو{% else %}رابط المشروع{% endif %}</span><span class="bx-opt">اختياري</span></label>
+                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك">
+                    <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك تُدمج تلقائيًا في ملفك.</p>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Display size</span></label>
+                    <label class="bx-label-row"><span class="bx-label">حجم العرض</span></label>
                     {{ form.video_type }}
                   </div>
                   <div class="bx-field bx-span-2">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Your role in this video{% else %}What was your role?{% endif %}</span><span class="bx-opt">Optional</span></label>
-                    <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="Editor? Colorist? Motion designer? Say what you did…">{{ form.description.value|default:'' }}</textarea>
+                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}دورك في هذا الفيديو{% else %}ما كان دورك؟{% endif %}</span><span class="bx-opt">اختياري</span></label>
+                    <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="مونتاج؟ تصحيح ألوان؟ موشن جرافيك؟ اذكر ما قمت به…">{{ form.description.value|default:'' }}</textarea>
                     <p class="bx-field-error" role="alert"></p>
                   </div>
                   {% if show_project_images %}
                   <div class="bx-field bx-span-2">
-                    <span class="bx-label-row"><span class="bx-label">Thumbnail</span><span class="bx-opt">Optional</span></span>
+                    <span class="bx-label-row"><span class="bx-label">الصورة المصغرة</span><span class="bx-opt">اختيارية</span></span>
                     <div class="bx-upload">
                       <label class="bx-dropzone">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                        <span class="bx-drop-hint">Upload thumbnail</span>
-                        <span class="bx-drop-sub">Used as the cover image</span>
+                        <span class="bx-drop-hint">ارفع الصورة المصغرة</span>
+                        <span class="bx-drop-sub">تُستخدم كصورة الغلاف</span>
                         <input type="file" name="{{ form.thumbnail.html_name }}" accept="image/*" class="bx-file-input">
                       </label>
                       <div class="bx-upload-meta">
                         {% if form.thumbnail.value %}
-                        <img src="{{ form.thumbnail.value.url }}" alt="Current thumbnail" class="bx-upload-preview">
-                        <span class="bx-upload-name">Current image — uploading replaces it</span>
+                        <img src="{{ form.thumbnail.value.url }}" alt="الصورة المصغرة الحالية" class="bx-upload-preview">
+                        <span class="bx-upload-name">الصورة الحالية — رفع صورة جديدة يستبدلها</span>
                         {% else %}
                         <img class="bx-upload-preview" alt="" hidden>
-                        <span class="bx-upload-name">No file chosen</span>
+                        <span class="bx-upload-name">لم يتم اختيار ملف</span>
                         {% endif %}
-                        <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
+                        <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>إزالة</button>
                       </div>
                     </div>
                     <p class="bx-field-error" role="alert"></p>
@@ -518,24 +563,24 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
               </div>
-              <p class="bx-empty-title">No projects yet</p>
-              <p class="bx-empty-sub">{% if category == 'video_editor' %}Add your best videos — 3 to 6 strong pieces beat a long list.{% else %}Add your best work — quality over quantity.{% endif %}</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="projects">Add your first project</button>
+              <p class="bx-empty-title">لا توجد أعمال بعد</p>
+              <p class="bx-empty-sub">{% if category == 'video_editor' %}أضف أفضل فيديوهاتك — من 3 إلى 6 أعمال قوية أفضل من قائمة طويلة.{% else %}أضف أفضل أعمالك — الجودة قبل الكمية.{% endif %}</p>
+              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="projects">أضف أول عمل</button>
             </div>
           </div>
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -561,13 +606,13 @@
         <section class="bx-panel" id="panel-links" data-key="links" tabindex="-1" aria-labelledby="heading-links">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 6</p>
-              <h2 class="bx-panel-title" id="heading-links">Links</h2>
-              <p class="bx-panel-desc">Where clients can find and follow you.</p>
+              <p class="bx-panel-kicker">القسم 6</p>
+              <h2 class="bx-panel-title" id="heading-links">روابطك</h2>
+              <p class="bx-panel-desc">حيث يجدك العملاء ويتابعون أعمالك.</p>
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="links">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add link
+              أضف رابطًا
             </button>
           </div>
           {{ link_formset.management_form }}
@@ -576,18 +621,18 @@
               {% for form in link_formset %}
               <div class="bx-item">
                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Link</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this link">
+                <span class="bx-item-num">رابط</span>
+                <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا الرابط">
                   <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">Platform name</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="e.g. Instagram" required>
+                  <label class="bx-label-row"><span class="bx-label">اسم المنصة</span><span class="bx-req" aria-hidden="true">*</span></label>
+                  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="مثال: إنستغرام" required>
                   <p class="bx-field-error" role="alert"></p>
                 </div>
                 <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">URL</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="instagram.com/yourhandle" required>
+                  <label class="bx-label-row"><span class="bx-label">الرابط</span><span class="bx-req" aria-hidden="true">*</span></label>
+                  <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" placeholder="instagram.com/yourhandle" required>
                   <p class="bx-field-error" role="alert"></p>
                 </div>
                 <div style="display:none">{{ form.DELETE }}</div>
@@ -598,24 +643,24 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
               </div>
-              <p class="bx-empty-title">No links yet</p>
-              <p class="bx-empty-sub">Add Instagram, YouTube, Behance — wherever your work lives.</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="links">Add your first link</button>
+              <p class="bx-empty-title">لا توجد روابط بعد</p>
+              <p class="bx-empty-sub">أضف إنستغرام ويوتيوب وبيهانس — أيًا كان مكان وجود أعمالك.</p>
+              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="links">أضف أول رابط</button>
             </div>
           </div>
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -624,13 +669,13 @@
         <section class="bx-panel" id="panel-creators" data-key="creators" tabindex="-1" aria-labelledby="heading-creators">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 7</p>
-              <h2 class="bx-panel-title" id="heading-creators">Creators you've worked with</h2>
-              <p class="bx-panel-desc">People and brands you've collaborated with.</p>
+              <p class="bx-panel-kicker">القسم 7</p>
+              <h2 class="bx-panel-title" id="heading-creators">من تعاونت معهم</h2>
+              <p class="bx-panel-desc">الأشخاص والعلامات التجارية التي عملت معها.</p>
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="creators">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add creator
+              أضف متعاونًا
             </button>
           </div>
           {{ creator_formset.management_form }}
@@ -639,37 +684,37 @@
               {% for form in creator_formset %}
               <div class="bx-item">
                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Creator</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this creator">
+                <span class="bx-item-num">متعاون</span>
+                <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا المتعاون">
                   <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">Creator name</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="e.g. MrBeast" required>
+                  <label class="bx-label-row"><span class="bx-label">اسم المتعاون</span><span class="bx-req" aria-hidden="true">*</span></label>
+                  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="مثال: MrBeast" required>
                   <p class="bx-field-error" role="alert"></p>
                 </div>
                 <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">Profile link</span><span class="bx-opt">Optional</span></label>
-                  <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="https://…">
+                  <label class="bx-label-row"><span class="bx-label">رابط حسابه</span><span class="bx-opt">اختياري</span></label>
+                  <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" placeholder="https://…">
                   <p class="bx-field-error" role="alert"></p>
                 </div>
                 <div class="bx-field">
-                  <span class="bx-label-row"><span class="bx-label">Avatar</span><span class="bx-opt">Optional</span></span>
+                  <span class="bx-label-row"><span class="bx-label">صورته</span><span class="bx-opt">اختيارية</span></span>
                   <div class="bx-upload">
                     <label class="bx-dropzone">
                       <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                      <span class="bx-drop-hint">Upload avatar</span>
+                      <span class="bx-drop-hint">ارفع صورته</span>
                       <input type="file" name="{{ form.image.html_name }}" accept="image/*" class="bx-file-input">
                     </label>
                     <div class="bx-upload-meta">
                       {% if form.image.value %}
-                      <img src="{{ form.image.value.url }}" alt="Current avatar" class="bx-upload-preview">
-                      <span class="bx-upload-name">Current image — uploading replaces it</span>
+                      <img src="{{ form.image.value.url }}" alt="الصورة الحالية" class="bx-upload-preview">
+                      <span class="bx-upload-name">الصورة الحالية — رفع صورة جديدة يستبدلها</span>
                       {% else %}
                       <img class="bx-upload-preview" alt="" hidden>
-                      <span class="bx-upload-name">No file chosen</span>
+                      <span class="bx-upload-name">لم يتم اختيار ملف</span>
                       {% endif %}
-                      <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
+                      <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>إزالة</button>
                     </div>
                   </div>
                   <p class="bx-field-error" role="alert"></p>
@@ -682,24 +727,24 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
               </div>
-              <p class="bx-empty-title">No collaborators added</p>
-              <p class="bx-empty-sub">Featuring names clients recognize builds instant trust.</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="creators">Add a creator</button>
+              <p class="bx-empty-title">لم تُضِف أي تعاونات</p>
+              <p class="bx-empty-sub">ذكر أسماء يعرفها عملاؤك يبني الثقة فورًا.</p>
+              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="creators">أضف متعاونًا</button>
             </div>
           </div>
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -708,11 +753,11 @@
         <section class="bx-panel" id="panel-reviews" data-key="reviews" tabindex="-1" aria-labelledby="heading-reviews">
           <div class="bx-panel-head">
             <div>
-              <p class="bx-panel-kicker">Section 8</p>
-              <h2 class="bx-panel-title" id="heading-reviews">Client reviews</h2>
-              <p class="bx-panel-desc">Feature the testimonials that build trust.</p>
+              <p class="bx-panel-kicker">القسم 8</p>
+              <h2 class="bx-panel-title" id="heading-reviews">آراء العملاء</h2>
+              <p class="bx-panel-desc">أبرز الآراء التي تبني ثقة العملاء بك.</p>
             </div>
-            <a href="{% url 'reviews_management' %}" class="bx-btn bx-btn-ghost bx-btn-sm">Manage all reviews</a>
+            <a href="{% url 'arabic_reviews_management' %}" class="bx-btn bx-btn-ghost bx-btn-sm">إدارة جميع الآراء</a>
           </div>
 
           {% if reviews %}
@@ -728,29 +773,29 @@
                   {% endif %}
                   <div>
                     <p class="bx-review-name">{{ review.user_name }}</p>
-                    <p class="bx-review-role">{{ review.user_title|default:"Client" }}</p>
+                    <p class="bx-review-role">{{ review.user_title|default:"عميل" }}</p>
                   </div>
                 </div>
                 <div class="bx-review-right">
-                  <div class="bx-stars" role="img" aria-label="{{ review.rating }} out of 5 stars">
+                  <div class="bx-stars" role="img" aria-label="{{ review.rating }} من 5 نجوم">
                     {% for i in "12345" %}
                     <svg class="bx-star {% if forloop.counter <= review.rating %}is-filled{% endif %}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     {% endfor %}
                   </div>
                   <span class="bx-badge {% if review.is_featured %}is-listed{% else %}is-pending{% endif %}"
-                    data-listed-label="Listed on portfolio" data-pending-label="Pending">
-                    {% if review.is_featured %}Listed on portfolio{% else %}Pending{% endif %}
+                    data-listed-label="منشور في ملفك المهني" data-pending-label="بانتظار النشر">
+                    {% if review.is_featured %}منشور في ملفك المهني{% else %}بانتظار النشر{% endif %}
                   </span>
                 </div>
               </div>
               <p class="bx-review-quote">"{{ review.content }}"</p>
               <div class="bx-review-foot">
-                <span class="bx-review-date">{{ review.created_at|date:"M j, Y" }}</span>
+                <span class="bx-review-date">{{ review.created_at|date:"Y/m/j" }}</span>
                 <button type="button"
                   class="bx-toggle-btn {% if review.is_featured %}is-on{% else %}is-off{% endif %}"
                   data-action="toggle-review" data-review-id="{{ review.id }}"
-                  data-list-label="List on portfolio" data-remove-label="Remove from portfolio">
-                  {% if review.is_featured %}Remove from portfolio{% else %}List on portfolio{% endif %}
+                  data-list-label="انشر في ملفك المهني" data-remove-label="إزالة من ملفك المهني">
+                  {% if review.is_featured %}إزالة من ملفك المهني{% else %}انشر في ملفك المهني{% endif %}
                 </button>
               </div>
             </div>
@@ -761,25 +806,25 @@
             <div class="bx-empty-icon">
               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.563.563 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
             </div>
-            <p class="bx-empty-title">No client reviews yet</p>
-            <p class="bx-empty-sub">Share your personal review link with clients — their quotes appear here automatically.</p>
-            <a href="{% url 'reviews_management' %}" class="bx-btn bx-btn-primary bx-btn-sm">Get your review link</a>
+            <p class="bx-empty-title">لا توجد آراء عملاء بعد</p>
+            <p class="bx-empty-sub">شارك رابط التقييم الخاص بك مع عملائك — ستظهر آراؤهم هنا تلقائيًا.</p>
+            <a href="{% url 'arabic_reviews_management' %}" class="bx-btn bx-btn-primary bx-btn-sm">احصل على رابط التقييم</a>
           </div>
           {% endif %}
 
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
-              Back
+              رجوع
             </button>
             <div class="bx-foot-end">
               <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="next" data-nav-next hidden>
-                Next section
+                القسم التالي
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
               </button>
             </div>
           </footer>
@@ -790,22 +835,22 @@
   </div>
 
   <div class="bx-savebar" id="bx-savebar" role="status">
-    <span class="bx-savebar-text"><span class="bx-dirty-dot" aria-hidden="true"></span><span>You have unsaved changes</span></span>
+    <span class="bx-savebar-text"><span class="bx-dirty-dot" aria-hidden="true"></span><span>لديك تغييرات غير محفوظة</span></span>
     <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-sm" data-save-button>
-      {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+      {% if is_update %}حفظ التغييرات{% else %}انشر ملفك المهني{% endif %}
     </button>
   </div>
 </div>
 
 <script type="text/html" id="skills-empty-form">
   {% for hidden in skill_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Skill</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this skill">
+  <span class="bx-item-num">مهارة</span>
+  <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذه المهارة">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
   <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">Skill name</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="skills-__prefix__-skill" class="bx-input" placeholder="e.g. Adobe Premiere Pro" required>
+    <label class="bx-label-row"><span class="bx-label">اسم المهارة</span><span class="bx-req" aria-hidden="true">*</span></label>
+    <input type="text" name="skills-__prefix__-skill" class="bx-input" placeholder="مثال: Adobe Premiere Pro" required>
     <p class="bx-field-error" role="alert"></p>
   </div>
   <div style="display:none"><input type="checkbox" name="skills-__prefix__-DELETE"></div>
@@ -813,23 +858,23 @@
 
 <script type="text/html" id="education-empty-form">
   {% for hidden in education_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Education</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this education entry">
+  <span class="bx-item-num">تعليم</span>
+  <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا المؤهل الدراسي">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
   <div class="bx-grid-2">
     <div class="bx-field bx-span-2">
-      <label class="bx-label-row"><span class="bx-label">School / university</span><span class="bx-req" aria-hidden="true">*</span></label>
-      <input type="text" name="education-__prefix__-school" class="bx-input" placeholder="e.g. Cairo University" required>
+      <label class="bx-label-row"><span class="bx-label">المدرسة / الجامعة</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <input type="text" name="education-__prefix__-school" class="bx-input" placeholder="مثال: جامعة القاهرة" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Degree / field</span><span class="bx-req" aria-hidden="true">*</span></label>
-      <input type="text" name="education-__prefix__-degree" class="bx-input" placeholder="e.g. Bachelor of Arts" required>
+      <label class="bx-label-row"><span class="bx-label">الدرجة العلمية / التخصص</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <input type="text" name="education-__prefix__-degree" class="bx-input" placeholder="مثال: بكالوريوس فنون" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Graduation year</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <label class="bx-label-row"><span class="bx-label">سنة التخرج</span><span class="bx-req" aria-hidden="true">*</span></label>
       <input type="number" name="education-__prefix__-year" class="bx-input" placeholder="2024" min="1950" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
@@ -839,34 +884,34 @@
 
 <script type="text/html" id="experience-empty-form">
   {% for hidden in experience_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Experience</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this experience entry">
+  <span class="bx-item-num">خبرة</span>
+  <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذه الخبرة العملية">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
   <div class="bx-grid-2">
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Job title</span><span class="bx-req" aria-hidden="true">*</span></label>
-      <input type="text" name="experience-__prefix__-title" class="bx-input" placeholder="e.g. Video Editor" required>
+      <label class="bx-label-row"><span class="bx-label">المسمى الوظيفي</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <input type="text" name="experience-__prefix__-title" class="bx-input" placeholder="مثال: محرر فيديو" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Company</span><span class="bx-req" aria-hidden="true">*</span></label>
-      <input type="text" name="experience-__prefix__-company" class="bx-input" placeholder="e.g. Creative Studio" required>
+      <label class="bx-label-row"><span class="bx-label">جهة العمل</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <input type="text" name="experience-__prefix__-company" class="bx-input" placeholder="مثال: استوديو إبداعي" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Start date</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <label class="bx-label-row"><span class="bx-label">تاريخ البدء</span><span class="bx-req" aria-hidden="true">*</span></label>
       <input type="month" name="experience-__prefix__-start" class="bx-input" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">End date</span><span class="bx-opt">Leave blank if current</span></label>
+      <label class="bx-label-row"><span class="bx-label">تاريخ الانتهاء</span><span class="bx-opt">اتركه فارغًا إذا كنت ما زلت تعمل هناك</span></label>
       <input type="month" name="experience-__prefix__-end" class="bx-input">
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field bx-span-2">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'student' %}What was your role / task?{% else %}What did you do there?{% endif %}</span><span class="bx-opt">Optional</span></label>
-      <textarea name="experience-__prefix__-description" class="bx-input" rows="3" placeholder="Your role, wins and measurable results…"></textarea>
+      <label class="bx-label-row"><span class="bx-label">{% if category == 'student' %}ما كان دورك أو مهمتك؟{% else %}ما كانت مهامك هناك؟{% endif %}</span><span class="bx-opt">اختياري</span></label>
+      <textarea name="experience-__prefix__-description" class="bx-input" rows="3" placeholder="دورك وإنجازاتك ونتائج ملموسة حققتها…"></textarea>
       <p class="bx-field-error" role="alert"></p>
     </div>
   </div>
@@ -875,22 +920,22 @@
 
 <script type="text/html" id="projects-empty-form">
   {% for hidden in project_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Project</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this project">
+  <span class="bx-item-num">عمل</span>
+  <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا العمل">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
   <div class="bx-grid-2">
     <div class="bx-field bx-span-2">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video title{% else %}Project name{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
-      <input type="text" name="projects-__prefix__-name" class="bx-input" placeholder="e.g. Brand Campaign 2025" required>
+      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}عنوان الفيديو{% else %}اسم المشروع{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
+      <input type="text" name="projects-__prefix__-name" class="bx-input" placeholder="مثال: حملة إعلانية 2025" required>
       <p class="bx-field-error" role="alert"></p>
     </div>
 
     {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
     <div class="bx-field bx-span-2">
-      <span class="bx-label-row"><span class="bx-label">Collection</span><span class="bx-opt">Optional</span></span>
-      <div class="bx-chips category-chips-container" role="group" aria-label="Assign to collection">
-        <button type="button" class="bx-chip is-active" data-value="">Uncategorized</button>
+      <span class="bx-label-row"><span class="bx-label">المجموعة</span><span class="bx-opt">اختياري</span></span>
+      <div class="bx-chips category-chips-container" role="group" aria-label="اختر مجموعة هذا العمل">
+        <button type="button" class="bx-chip is-active" data-value="">بدون مجموعة</button>
         {% for cat in request.user.project_categories.all %}
         <button type="button" class="bx-chip" data-value="{{ cat.id }}">{{ cat.name }}</button>
         {% endfor %}
@@ -899,34 +944,37 @@
     {% endif %}
 
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
-      <input type="text" name="projects-__prefix__-url" class="bx-input" placeholder="YouTube, Vimeo or TikTok URL">
-      <p class="bx-hint">YouTube, Vimeo and TikTok links are embedded automatically.</p>
+      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}رابط الفيديو{% else %}رابط المشروع{% endif %}</span><span class="bx-opt">اختياري</span></label>
+      <input type="text" name="projects-__prefix__-url" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك">
+      <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك تُدمج تلقائيًا في ملفك.</p>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Display size</span></label>
-      {{ project_formset.empty_form.video_type }}
+      <label class="bx-label-row"><span class="bx-label">حجم العرض</span></label>
+      <select name="projects-__prefix__-video_type" class="sf-input">
+        <option value="long">فيديو طويل</option>
+        <option value="reel">ريلز / فيديو قصير</option>
+      </select>
     </div>
     <div class="bx-field bx-span-2">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Your role in this video{% else %}What was your role?{% endif %}</span><span class="bx-opt">Optional</span></label>
-      <textarea name="projects-__prefix__-description" class="bx-input" rows="3" placeholder="Editor? Colorist? Motion designer? Say what you did…"></textarea>
+      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}دورك في هذا الفيديو{% else %}ما كان دورك؟{% endif %}</span><span class="bx-opt">اختياري</span></label>
+      <textarea name="projects-__prefix__-description" class="bx-input" rows="3" placeholder="مونتاج؟ تصحيح ألوان؟ موشن جرافيك؟ اذكر ما قمت به…"></textarea>
       <p class="bx-field-error" role="alert"></p>
     </div>
     {% if show_project_images %}
     <div class="bx-field bx-span-2">
-      <span class="bx-label-row"><span class="bx-label">Thumbnail</span><span class="bx-opt">Optional</span></span>
+      <span class="bx-label-row"><span class="bx-label">الصورة المصغرة</span><span class="bx-opt">اختيارية</span></span>
       <div class="bx-upload">
         <label class="bx-dropzone">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-          <span class="bx-drop-hint">Upload thumbnail</span>
-          <span class="bx-drop-sub">Used as the cover image</span>
+          <span class="bx-drop-hint">ارفع الصورة المصغرة</span>
+          <span class="bx-drop-sub">تُستخدم كصورة الغلاف</span>
           <input type="file" name="projects-__prefix__-thumbnail" accept="image/*" class="bx-file-input">
         </label>
         <div class="bx-upload-meta">
           <img class="bx-upload-preview" alt="" hidden>
-          <span class="bx-upload-name">No file chosen</span>
-          <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
+          <span class="bx-upload-name">لم يتم اختيار ملف</span>
+          <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>إزالة</button>
         </div>
       </div>
       <p class="bx-field-error" role="alert"></p>
@@ -946,18 +994,18 @@
 
 <script type="text/html" id="links-empty-form">
   {% for hidden in link_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Link</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this link">
+  <span class="bx-item-num">رابط</span>
+  <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا الرابط">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
   <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">Platform name</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="links-__prefix__-name" class="bx-input" placeholder="e.g. Instagram" required>
+    <label class="bx-label-row"><span class="bx-label">اسم المنصة</span><span class="bx-req" aria-hidden="true">*</span></label>
+    <input type="text" name="links-__prefix__-name" class="bx-input" placeholder="مثال: إنستغرام" required>
     <p class="bx-field-error" role="alert"></p>
   </div>
   <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">URL</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="links-__prefix__-url" class="bx-input" placeholder="instagram.com/yourhandle" required>
+    <label class="bx-label-row"><span class="bx-label">الرابط</span><span class="bx-req" aria-hidden="true">*</span></label>
+    <input type="text" name="links-__prefix__-url" class="bx-input" dir="ltr" placeholder="instagram.com/yourhandle" required>
     <p class="bx-field-error" role="alert"></p>
   </div>
   <div style="display:none"><input type="checkbox" name="links-__prefix__-DELETE"></div>
@@ -965,32 +1013,32 @@
 
 <script type="text/html" id="creators-empty-form">
   {% for hidden in creator_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Creator</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this creator">
+  <span class="bx-item-num">متعاون</span>
+  <button type="button" class="bx-remove" data-action="remove-item" aria-label="إزالة هذا المتعاون">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
   <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">Creator name</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="creators-__prefix__-name" class="bx-input" placeholder="e.g. MrBeast" required>
+    <label class="bx-label-row"><span class="bx-label">اسم المتعاون</span><span class="bx-req" aria-hidden="true">*</span></label>
+    <input type="text" name="creators-__prefix__-name" class="bx-input" placeholder="مثال: MrBeast" required>
     <p class="bx-field-error" role="alert"></p>
   </div>
   <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">Profile link</span><span class="bx-opt">Optional</span></label>
-    <input type="text" name="creators-__prefix__-url" class="bx-input" placeholder="https://…">
+    <label class="bx-label-row"><span class="bx-label">رابط حسابه</span><span class="bx-opt">اختياري</span></label>
+    <input type="text" name="creators-__prefix__-url" class="bx-input" dir="ltr" placeholder="https://…">
     <p class="bx-field-error" role="alert"></p>
   </div>
   <div class="bx-field">
-    <span class="bx-label-row"><span class="bx-label">Avatar</span><span class="bx-opt">Optional</span></span>
+    <span class="bx-label-row"><span class="bx-label">صورته</span><span class="bx-opt">اختيارية</span></span>
     <div class="bx-upload">
       <label class="bx-dropzone">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-        <span class="bx-drop-hint">Upload avatar</span>
+        <span class="bx-drop-hint">ارفع صورته</span>
         <input type="file" name="creators-__prefix__-image" accept="image/*" class="bx-file-input">
       </label>
       <div class="bx-upload-meta">
         <img class="bx-upload-preview" alt="" hidden>
-        <span class="bx-upload-name">No file chosen</span>
-        <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
+        <span class="bx-upload-name">لم يتم اختيار ملف</span>
+        <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>إزالة</button>
       </div>
     </div>
     <p class="bx-field-error" role="alert"></p>
@@ -1002,10 +1050,10 @@
   <div class="bx-overlay-card bx-modal-card" id="category-modal-content">
     <div class="bx-modal-head">
       <div>
-        <h3 class="bx-modal-title" id="cat-modal-title">New collection</h3>
-        <p class="bx-modal-desc">Name your collection, describe it, and add a cover image.</p>
+        <h3 class="bx-modal-title" id="cat-modal-title">مجموعة جديدة</h3>
+        <p class="bx-modal-desc">سمِّ مجموعتك واكتب وصفًا لها وأضف صورة غلاف.</p>
       </div>
-      <button type="button" class="bx-modal-close" data-action="close-category-modal" aria-label="Close dialog">
+      <button type="button" class="bx-modal-close" data-action="close-category-modal" aria-label="إغلاق النافذة">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
@@ -1013,27 +1061,27 @@
     <div class="bx-modal-grid">
       <div class="bx-modal-col">
         <div class="bx-field">
-          <label class="bx-label-row" for="cat-modal-name"><span class="bx-label">Collection name</span><span class="bx-req" aria-hidden="true">*</span></label>
-          <input type="text" id="cat-modal-name" class="bx-input" placeholder="e.g. Wedding Films, Music Videos…">
-          <p class="bx-field-error" id="cat-modal-name-error" role="alert">Collection name is required.</p>
+          <label class="bx-label-row" for="cat-modal-name"><span class="bx-label">اسم المجموعة</span><span class="bx-req" aria-hidden="true">*</span></label>
+          <input type="text" id="cat-modal-name" class="bx-input" placeholder="مثال: أفلام زفاف، فيديوهات كليبات…">
+          <p class="bx-field-error" id="cat-modal-name-error" role="alert">اسم المجموعة مطلوب.</p>
         </div>
         <div class="bx-field">
-          <label class="bx-label-row" for="cat-modal-desc"><span class="bx-label">Description</span><span class="bx-opt">Optional</span></label>
-          <textarea id="cat-modal-desc" class="bx-input" rows="4" placeholder="What kind of work belongs here?"></textarea>
+          <label class="bx-label-row" for="cat-modal-desc"><span class="bx-label">الوصف</span><span class="bx-opt">اختياري</span></label>
+          <textarea id="cat-modal-desc" class="bx-input" rows="4" placeholder="ما نوع الأعمال التي تنتمي إلى هذه المجموعة؟"></textarea>
         </div>
       </div>
       <div class="bx-modal-col">
         <div class="bx-field">
-          <span class="bx-label-row"><span class="bx-label">Cover image</span><span class="bx-opt">Optional</span></span>
+          <span class="bx-label-row"><span class="bx-label">صورة الغلاف</span><span class="bx-opt">اختيارية</span></span>
           <div class="bx-upload">
             <label class="bx-dropzone" style="min-height:120px;">
               <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-              <span class="bx-drop-hint">Upload cover</span>
+              <span class="bx-drop-hint">ارفع صورة الغلاف</span>
               <input type="file" id="cat-modal-thumb" accept="image/*" class="bx-file-input">
             </label>
             <div class="bx-upload-meta">
               <img id="cat-thumb-preview" class="bx-upload-preview" alt="" hidden>
-              <span class="bx-upload-name" id="cat-thumb-name">No file chosen</span>
+              <span class="bx-upload-name" id="cat-thumb-name">لم يتم اختيار ملف</span>
             </div>
           </div>
         </div>
@@ -1042,8 +1090,8 @@
     <input type="hidden" id="cat-modal-id" value="">
 
     <div class="bx-modal-foot">
-      <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="close-category-modal">Cancel</button>
-      <button type="button" class="bx-btn bx-btn-primary bx-btn-md" data-action="save-category-modal">Save collection</button>
+      <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="close-category-modal">إلغاء</button>
+      <button type="button" class="bx-btn bx-btn-primary bx-btn-md" data-action="save-category-modal">حفظ المجموعة</button>
     </div>
   </div>
 </div>
@@ -1051,12 +1099,59 @@
 <div class="bx-overlay" id="bx-saving-overlay" aria-hidden="true">
   <div class="bx-overlay-card bx-saving-card" role="status">
     <div class="bx-saving-spinner" aria-hidden="true"></div>
-    <p class="bx-saving-label" id="bx-saving-label">Saving…</p>
+    <p class="bx-saving-label" id="bx-saving-label">جارٍ الحفظ…</p>
   </div>
 </div>
 
 <div class="bx-toasts" id="bx-toasts" aria-live="polite"></div>
 <div class="bx-toasts" id="bx-toasts-alert" aria-live="assertive" style="bottom:150px;"></div>
 
+<script>
+  window.BuilderI18n = {
+    secIdentity: 'بياناتك الشخصية',
+    secSkills: 'المهارات',
+    secEducation: 'التعليم',
+    secExperience: 'الخبرة العملية',
+    secProjects: 'المشاريع',
+    secLinks: 'الروابط',
+    secCreators: 'المتعاونون',
+    secReviews: 'آراء العملاء',
+    kickerPrefix: 'القسم {n}',
+    progressOf: '{done} من {total} أقسام مكتملة',
+    charsCount: '{n} حرف',
+    msgStepAttention: 'بعض الحقول في هذا القسم تحتاج مراجعة — يمكنك المتابعة، وسننبّهك لأي ناقص قبل الحفظ.',
+    msgFixBeforeLaunch: 'يرجى تصحيح الحقول المظللة قبل النشر.',
+    fieldGeneric: 'يرجى التحقق من هذا الحقل.',
+    fieldPhone: 'أدخل رقم هاتف صحيح.',
+    fieldEmail: 'أدخل بريدًا إلكترونيًا صحيحًا.',
+    savingOverlay: 'جارٍ حفظ ملفك المهني…',
+    savingBtn: ' جارٍ الحفظ…',
+    noFile: 'لم يتم اختيار ملف',
+    msgRemoved: 'تمت الإزالة — اضغط «تراجع» لاستعادتها.',
+    undo: 'تراجع',
+    msgRestored: 'تمت الاستعادة.',
+    modalEditTitle: 'تعديل المجموعة',
+    modalNewTitle: 'مجموعة جديدة',
+    coverCurrent: 'الغلاف الحالي — رفع صورة جديدة يستبدله',
+    emptyCollectionsTitle: 'لا توجد مجموعات بعد',
+    emptyCollectionsSub: 'بدون مجموعات، ستظهر جميع الفيديوهات تحت «فيديوهات أخرى».',
+    confirmDeleteCollection: 'حذف هذه المجموعة؟ ستصبح الأعمال بداخلها «بدون مجموعة».',
+    msgConfigError: 'خطأ في الإعدادات — حدِّث الصفحة وحاول مجددًا.',
+    msgSaveCategoryFail: 'تعذر حفظ المجموعة.',
+    msgCategoryCreated: 'تم إنشاء مجموعة «{name}»!',
+    msgCategoryUpdated: 'تم تحديث مجموعة «{name}».',
+    msgDeleteCategoryFail: 'تعذر حذف المجموعة.',
+    msgCategoryDeleted: 'تم حذف المجموعة.',
+    msgNetworkError: 'خطأ في الشبكة — حاول مجددًا.',
+    msgServerError: 'خطأ في الاتصال بالخادم.',
+    msgTokenMissing: 'انتهت صلاحية الجلسة — يرجى تحديث الصفحة.',
+    badgeListed: 'منشور في ملفك المهني',
+    badgePending: 'بانتظار النشر',
+    btnRemoveFromPortfolio: 'إزالة من ملفك المهني',
+    btnListOnPortfolio: 'انشر في ملفك المهني',
+    msgReviewLive: 'ظهر التقييم الآن في ملفك المهني.',
+    msgReviewHidden: 'تم إخفاء التقييم من ملفك المهني.'
+  };
+</script>
 <script src="{% static 'js/builder_v2.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

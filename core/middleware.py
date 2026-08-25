@@ -116,7 +116,7 @@ class LanguagePreferenceMiddleware:
     the request is redirected to the counterpart (query string preserved).
     Visiting any ``/ar/`` page also persists the Arabic choice, so picking
     Arabic from the toggle -- or arriving via a direct ``/ar/`` link -- sticks
-    across visits. Pages with no counterpart (``/terms/``, ``/builder/`` etc.)
+    across visits. Pages with no counterpart (``/terms/`` etc.)
     are left untouched.
     """
 
@@ -154,6 +154,8 @@ class LanguagePreferenceMiddleware:
         '/ar/themes/': '/themes/',
         '/builder/update/': '/ar/update/',
         '/ar/update/': '/builder/update/',
+        '/builder/': '/ar/builder/',
+        '/ar/builder/': '/builder/',
         '/examples/': '/ar/examples/',
         '/ar/examples/': '/examples/',
         '/dashboard/analytics/': '/ar/dashboard/analytics/',

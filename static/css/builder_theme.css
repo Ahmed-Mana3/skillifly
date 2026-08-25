@@ -53,7 +53,7 @@ body.builder-body::before {
     background: #F8FAFC;
     border: 1px solid #E2E8F0;
     border-radius: 20px;
-    padding: 2rem;
+    padding: 2.25rem 2rem;
     position: relative;
     margin-bottom: 2rem;
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
@@ -173,6 +173,101 @@ body.builder-body::before {
     background-position: right center;
 }
 
+/* ─── Formset Controls (add / remove) ─── */
+.add-btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: #EEF2FF;
+    border: 1.5px dashed #A5B4FC;
+    color: #4F46E5;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+}
+
+.add-btn-pill:hover {
+    background: #E0E7FF;
+    border-style: solid;
+    border-color: #6366F1;
+}
+
+.add-btn-pill:active {
+    transform: scale(0.97);
+}
+
+.remove-item-btn {
+    position: absolute;
+    top: 14px;
+    inset-inline-end: 14px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94A3B8;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.remove-item-btn:hover {
+    background: #FEF2F2;
+    border-color: #FECACA;
+    color: #DC2626;
+}
+
+.remove-item-btn:active {
+    transform: scale(0.92);
+}
+
+.formset-item {
+    padding-top: 3rem;
+}
+
+/* Clear vertical separation between cards */
+#skills-container,
+#links-container,
+#creators-container {
+    gap: 1.35rem;
+}
+
+/* Collection card actions — hover-reveal on pointers that support it,
+   always visible on touch devices */
+.cat-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.category-manager-card:hover .cat-actions,
+.category-manager-card:focus-within .cat-actions {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .cat-actions {
+        opacity: 1;
+    }
+}
+
+/* Step counter pill — readable on the light page background */
+.step-label {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+    color: #64748B !important;
+}
+
 /* ─── Media Assets ─── */
 .preview-box {
     width: 100%;
@@ -184,6 +279,8 @@ body.builder-body::before {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #94A3B8;
+    font-size: 0.75rem;
 }
 
 /* ─── Sticky Action Bar ─── */
@@ -223,6 +320,7 @@ body.builder-body::before {
     }
     .glass-panel {
         padding: 1.5rem;
+        border-radius: 18px;
     }
     .formset-item {
         padding: 1.5rem;
@@ -237,5 +335,108 @@ body.builder-body::before {
         text-align: center;
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
+    }
+
+    /* Prevent iOS Safari zoom-on-focus */
+    .sf-input,
+    select.sf-input,
+    textarea.sf-input {
+        font-size: 16px !important;
+    }
+
+    /* Wizard footers: stack with primary action on top */
+    .builder-container form .flex.justify-between.mt-12 {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-top: 2rem;
+    }
+
+    /* Comfortable touch targets for chips */
+    .category-chip {
+        padding: 0.65rem 1.1rem;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+/* Tablet & below: pin section tabs under the site navbar */
+@media (max-width: 1023px) {
+    .builder-tabs {
+        position: sticky;
+        top: 64px;
+        z-index: 400;
+        margin-inline: -1.5rem;
+        margin-bottom: 2rem;
+        padding: 0.65rem 1rem 0.9rem;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid #E2E8F0;
+        box-shadow: 0 6px 16px -10px rgba(15, 23, 42, 0.18);
+    }
+}
+
+@media (max-width: 400px) {
+    .builder-container.arabic-rtl {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .builder-tabs {
+        margin-inline: -1rem;
+        gap: 0.5rem;
+    }
+
+    .glass-panel {
+        padding: 1.15rem;
+    }
+}
+
+/* Category modal on phones: single column, scrollable, thumb-friendly */
+@media (max-width: 767px) {
+    .cat-modal-card {
+        max-width: calc(100vw - 1.5rem) !important;
+        margin: 0.75rem !important;
+        padding: 1.5rem 1.25rem !important;
+        border-radius: 1.25rem !important;
+        max-height: calc(100dvh - 1.5rem);
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .cat-modal-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+    }
+
+    #cat-thumb-label {
+        height: 150px !important;
+    }
+
+    .cat-modal-card h3 {
+        font-size: 1.45rem !important;
+    }
+
+    .cat-modal-foot {
+        flex-wrap: wrap !important;
+    }
+
+    .cat-modal-foot button {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 46px;
+    }
+
+    /* Touch targets inside the dark modal card */
+    #cat-modal-close {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    #cat-modal-name,
+    #cat-modal-desc {
+        font-size: 16px !important;
     }
 }

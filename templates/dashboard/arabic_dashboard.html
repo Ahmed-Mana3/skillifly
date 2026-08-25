@@ -662,8 +662,8 @@
             {% else %}
             <a class="sf-task sf-task-todo" href="
               {% if item.key == 'personal' %}{% url 'arabic_update_portfolio' %}
-              {% elif item.key == 'projects' %}{% url 'arabic_update_portfolio' %}#section-4
-              {% elif item.key == 'skills' %}{% url 'arabic_update_portfolio' %}#section-1
+              {% elif item.key == 'projects' %}{% url 'arabic_update_portfolio' %}#projects
+              {% elif item.key == 'skills' %}{% url 'arabic_update_portfolio' %}#skills
               {% elif item.key == 'theme' %}{% url 'arabic_themes' %}
               {% elif item.key == 'publish' %}{% if has_active_payment %}#visibility{% else %}{% url 'arabic_payment' %}{% endif %}
               {% endif %}">
@@ -700,7 +700,7 @@
         <i data-lucide="x" class="!h-[18px] !w-[18px]"></i>
       </button>
     </div>
-    <a href="{% url 'arabic_update_portfolio' %}#section-4" class="btn-primary btn-sm w-full">
+    <a href="{% url 'arabic_update_portfolio' %}#projects" class="btn-primary btn-sm w-full">
       انتقل إلى المشاريع
     </a>
   </div>

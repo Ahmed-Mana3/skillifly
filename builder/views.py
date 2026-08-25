@@ -161,6 +161,26 @@ def ajax_delete_category(request):
 
 @login_required
 def builder_view(request):
+    return _builder_flow(request)
+
+
+@login_required
+def arabic_builder_view(request):
+    """Arabic (RTL) twin of builder_view served at /ar/builder/."""
+    return _builder_flow(request, arabic=True)
+
+
+def _translate_project_video_types(project_formset):
+    """Swap video_type choice labels for the Arabic UI (values unchanged)."""
+    for form in project_formset.forms + [project_formset.empty_form]:
+        if 'video_type' in form.fields:
+            form.fields['video_type'].choices = [
+                ('long', 'فيديو طويل'),
+                ('reel', 'ريلز / فيديو قصير'),
+            ]
+
+
+def _builder_flow(request, arabic=False):
     if request.method == "POST":
         personal_form = PersonalInfoForm(request.POST, request.FILES)
 
@@ -171,6 +191,9 @@ def builder_view(request):
         project_category_formset = ProjectCategoryFormSet(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSet(request.POST, prefix="links")
         creator_formset = CreatorFormSet(request.POST, request.FILES, prefix="creators")
+
+        if arabic:
+            _translate_project_video_types(project_formset)
 
         if (
             personal_form.is_valid()
@@ -201,7 +224,10 @@ def builder_view(request):
             print(f"Project Errors: {project_formset.errors}")
             print(f"Link Errors: {link_formset.errors}")
             from django.contrib import messages
-            messages.error(request, "Please correct the highlighted errors in your portfolio.")
+            error_msg = ("يرجى تصحيح الأخطاء المظللة في ملفك المهني."
+                         if arabic else
+                         "Please correct the highlighted errors in your portfolio.")
+            messages.error(request, error_msg)
 
     else:
         initial = _portfolio_initial_data(request.user)
@@ -215,6 +241,9 @@ def builder_view(request):
         project_category_formset = ProjectCategoryFormSet(initial=initial["project_categories"], prefix="project_categories")
         link_formset = LinkFormSet(initial=initial["links"], prefix="links")
         creator_formset = CreatorFormSet(initial=initial["creators"], prefix="creators")
+
+        if arabic:
+            _translate_project_video_types(project_formset)
 
     profile = getattr(request.user, 'profile', None)
 
@@ -235,7 +264,7 @@ def builder_view(request):
         "link_formset": link_formset,
         "creator_formset": creator_formset,
         "reviews": ClientReview.objects.filter(user=request.user).order_by('-created_at'),
-        "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
+        "category": profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
         "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True,
         "section_layout": section_layout,
@@ -243,7 +272,12 @@ def builder_view(request):
         "section_visibility_json": section_visibility_json,
         "is_custom_layout": section_layout['custom'],
         "default_section_order": section_layout['default_order'],
+        "is_arabic_page": arabic,
     }
+
+    if arabic:
+        return render(request, 'dashboard/arabic_builder_v2.html', context)
+
     template_name = 'dashboard/builder.html'
     if profile and profile.theme:
         category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"
@@ -262,14 +296,24 @@ def builder_view(request):
 
 @login_required
 def update_portfolio_view(request):
+    return _update_flow(request)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_update_portfolio_view(request):
+    """Arabic (RTL) twin of update_portfolio_view served at /ar/update/."""
+    return _update_flow(request, arabic=True)
+
+
+def _update_flow(request, arabic=False):
     user = request.user
-    
+
     # helper for existing data
     personal_info = PersonalInfo.objects.filter(user=user).first()
-    
+
     if request.method == "POST":
         personal_form = PersonalInfoForm(request.POST, request.FILES) # Start with POST data
-        
+
         skill_formset = SkillFormSetUpdate(request.POST, prefix="skills")
         education_formset = EducationFormSetUpdate(request.POST, prefix="education")
         experience_formset = ExperienceFormSetUpdate(request.POST, prefix="experience")
@@ -277,6 +321,9 @@ def update_portfolio_view(request):
         project_category_formset = ProjectCategoryFormSetUpdate(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSetUpdate(request.POST, prefix="links")
         creator_formset = CreatorFormSetUpdate(request.POST, request.FILES, prefix="creators")
+
+        if arabic:
+            _translate_project_video_types(project_formset)
 
         if (
             personal_form.is_valid()
@@ -296,7 +343,7 @@ def update_portfolio_view(request):
                     profile.is_public = True
                     profile.save()
 
-            return redirect("dashboard")
+            return redirect("arabic_dashboard" if arabic else "dashboard")
         else:
             print("--- UPDATE PORTFOLIO VALIDATION ERRORS ---")
             print(f"Personal Form Errors: {personal_form.errors}")
@@ -306,8 +353,11 @@ def update_portfolio_view(request):
             print(f"Project Errors: {project_formset.errors}")
             print(f"Link Errors: {link_formset.errors}")
             from django.contrib import messages
-            messages.error(request, "Could not save changes. Please check the form for errors.")
-    
+            error_msg = ("تعذر حفظ التغييرات. يرجى التحقق من الأخطاء في النموذج."
+                         if arabic else
+                         "Could not save changes. Please check the form for errors.")
+            messages.error(request, error_msg)
+
     else:
         # Pre-fill forms with existing data
         initial = _portfolio_initial_data(user)
@@ -333,6 +383,9 @@ def update_portfolio_view(request):
         link_formset = LinkFormSetUpdate(initial=initial["links"], prefix="links")
         creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")
 
+        if arabic:
+            _translate_project_video_types(project_formset)
+
     profile = getattr(request.user, 'profile', None)
 
     from core.section_order import resolve_section_layout
@@ -353,7 +406,7 @@ def update_portfolio_view(request):
         "creator_formset": creator_formset,
         "reviews": ClientReview.objects.filter(user=request.user).order_by('-created_at'),
         "is_update": True,
-        "category": profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else "theme",
+        "category": profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "theme",
         "theme_name": profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default",
         "show_project_images": (f"{profile.theme.category.name.lower()}_{profile.theme.name.lower()}".replace(" ", "_") not in ['video_editor_reels', 'video_editor_creative_reels', 'developer_creative']) if profile and profile.theme and profile.theme.category else True,
         "section_layout": section_layout,
@@ -361,7 +414,12 @@ def update_portfolio_view(request):
         "section_visibility_json": section_visibility_json,
         "is_custom_layout": section_layout['custom'],
         "default_section_order": section_layout['default_order'],
+        "is_arabic_page": arabic,
     }
+
+    if arabic:
+        return render(request, 'dashboard/arabic_builder_v2.html', context)
+
     template_name = 'dashboard/builder.html'
     if profile and profile.theme:
         category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"

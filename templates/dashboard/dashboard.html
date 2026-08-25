@@ -664,9 +664,9 @@
             </div>
             {% else %}
             <a class="sf-task sf-task-todo" href="
-              {% if item.key == 'personal' %}{% url 'update_portfolio' %}
-              {% elif item.key == 'projects' %}{% url 'update_portfolio' %}#section-4
-              {% elif item.key == 'skills' %}{% url 'update_portfolio' %}#section-1
+              {% if item.key == 'personal' %}{% url 'update_portfolio' %}#identity
+              {% elif item.key == 'projects' %}{% url 'update_portfolio' %}#projects
+              {% elif item.key == 'skills' %}{% url 'update_portfolio' %}#skills
               {% elif item.key == 'theme' %}{% url 'themes' %}
               {% elif item.key == 'publish' %}{% if has_active_payment %}#visibility{% else %}{% url 'payment' %}{% endif %}
               {% endif %}">
@@ -703,7 +703,7 @@
         <i data-lucide="x" class="!h-[18px] !w-[18px]"></i>
       </button>
     </div>
-    <a href="{% url 'update_portfolio' %}#section-4" class="btn-primary btn-sm w-full">
+    <a href="{% url 'update_portfolio' %}#projects" class="btn-primary btn-sm w-full">
       Go to projects
     </a>
   </div>

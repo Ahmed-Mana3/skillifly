@@ -476,6 +476,7 @@
   </a>
 
   <!-- Ambient background orbs -->
+  {% block ambient_orbs %}
   {% if is_arabic_page %}
   <div class="orb w-96 h-96 opacity-[0.06] animate-pulse-slow" style="background: #3B82F6; top: -10%; left: -5%;"></div>
   <div class="orb orb-purple w-80 h-80 opacity-[0.05] animate-pulse-slow"
@@ -489,6 +490,7 @@
   <div class="orb orb-pink w-64 h-64 opacity-[0.04] animate-pulse-slow"
     style="background: #C026D3; bottom: 10%; left: 20%; animation-delay: 4s;"></div>
   {% endif %}
+  {% endblock %}
 
   <!-- Navbar -->
   <nav class="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/5 {% if is_arabic_page %}arabic-nav{% endif %}">

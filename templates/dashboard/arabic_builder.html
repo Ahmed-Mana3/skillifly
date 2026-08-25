@@ -13,7 +13,7 @@
 {% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/builder_theme.css' %}">
+<link rel="stylesheet" href="{% static 'css/builder_theme.css' %}?v={% now 'U' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -122,7 +122,7 @@
     animation: errorPulse 0.5s ease-in-out 2;
   }
 
-  /* Navigation Tabs */
+  /* Navigation Tabs (light-theme values — page body is white) */
   .builder-tabs {
     display: flex;
     justify-content: center;
@@ -133,7 +133,7 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     margin-bottom: 3rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid #E2E8F0;
   }
 
   @media (max-width: 768px) {
@@ -147,36 +147,37 @@
     flex-shrink: 0;
     padding: 0.6rem 1rem;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    color: #71717a;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #475569;
     font-size: 0.7rem;
     font-weight: 700;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    backdrop-filter: blur(10px);
   }
 
   .tab-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+    color: #0F172A;
     transform: translateY(-1px);
   }
 
   .tab-btn.active {
-    background: rgba(139, 92, 246, 0.15);
-    border-color: rgba(139, 92, 246, 0.4);
-    color: #a78bfa;
-    box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.3);
+    background: linear-gradient(135deg, #2563EB, #7C3AED);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.45);
   }
 
   .tab-num {
     width: 1.25rem;
     height: 1.25rem;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.05);
+    background: #F1F5F9;
+    color: #64748B;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -185,13 +186,14 @@
   }
 
   .tab-btn.active .tab-num {
-    background: #8b5cf6;
-    color: white;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
   }
 
   .tab-btn.has-error {
-    border-color: rgba(244, 63, 94, 0.5);
-    color: #fb7185;
+    background: #FFF1F2;
+    border-color: #FDA4AF;
+    color: #E11D48;
   }
 
   /* Category Manager & Chips Overhaul */
@@ -207,30 +209,32 @@
     font-size: 0.75rem;
     font-weight: 600;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #a1a1aa;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
   }
   .category-chip:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #0F172A;
     transform: translateY(-1px);
   }
   .category-chip.active {
-    background: rgba(139, 92, 246, 0.15);
-    border-color: rgba(139, 92, 246, 0.45);
-    color: #c084fc;
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+    background: #EEF2FF;
+    border-color: #8B5CF6;
+    color: #6D28D9;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14);
   }
   .logo-mark img {
     filter: none;
   }
 </style>
 {% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
 
 {% block content %}
   <div class="max-w-5xl mx-auto px-6 builder-container arabic-rtl" id="builder-container" data-category="{{ category }}">
@@ -245,7 +249,7 @@
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
         البنية التحتية لملفك المهني نشطة
       </div>
-      <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tight">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl font-black mb-4 tracking-tight">
         صمّم <span class="gradient-text">هويتك</span>
       </h1>
         <p class="text-zinc-500 max-w-xl text-lg leading-relaxed">
@@ -450,10 +454,10 @@
 
             {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
             <!-- Category Management Center -->
-            <div class="mb-10 p-6 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md">
-              <div class="flex items-center justify-between mb-6">
+            <div class="cats-manager mb-10 p-6 rounded-2xl border border-slate-200 bg-slate-50/60">
+              <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                 <div>
-                  <h3 class="text-lg font-bold text-white">إدارة المجموعات</h3>
+                  <h3 class="text-lg font-bold text-slate-900">إدارة المجموعات</h3>
                   <p class="text-xs text-zinc-500 mt-1">نظّم مشاريعك في معارض منفصلة (مثال: فيديوهات موسيقية، إعلانات).</p>
                 </div>
                 <button type="button" class="btn-premium px-4 py-2 text-xs" onclick="Builder.openCategoryModalFor(null)">+ إنشاء مجموعة</button>
@@ -472,7 +476,7 @@
                   </div>
 
                   <!-- Actions -->
-                  <div class="relative z-10 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="cat-actions relative z-10 flex justify-end gap-2">
                     <button type="button" class="w-7 h-7 rounded-lg bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center text-xs" onclick="Builder.editCategory('{{ cat.id }}')" title="تعديل المجموعة">
                       <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     </button>
@@ -488,7 +492,7 @@
                   </div>
                 </div>
                 {% empty %}
-                <div id="no-categories-state" class="col-span-full py-8 text-center border border-dashed border-white/5 rounded-xl text-zinc-500 text-xs">
+                <div id="no-categories-state" class="col-span-full py-8 text-center border border-dashed border-slate-300 rounded-xl text-zinc-500 text-xs">
                   لم تُنشأ مجموعات بعد. ستظهر المشاريع في "فيديوهات أخرى".
                 </div>
                 {% endfor %}
@@ -591,7 +595,7 @@
               </div>
               {% endfor %}
             </div>
-            <div class="mt-20 pt-12 border-t border-white/5 flex flex-col md:flex-row gap-6 items-center justify-between">
+            <div class="mt-20 pt-12 border-t border-slate-200 flex flex-col md:flex-row gap-6 items-center justify-between">
               <button type="button" onclick="Builder.switchSection(Builder.currentSection - 1)" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/5 text-zinc-500 hover:text-white hover:bg-white/5 transition-all font-black text-[10px] uppercase tracking-widest">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                 الخطوة السابقة
@@ -828,6 +832,7 @@
        style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);">
 
     <div id="category-modal-content"
+         class="cat-modal-card"
          style="position:relative; width:100%; max-width:640px; margin:1rem; background:linear-gradient(135deg,#141414 0%,#0a0a0a 100%); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2.5rem; box-shadow:0 40px 120px rgba(0,0,0,0.8); transform:scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);">
 
       <!-- Close Button -->
@@ -848,7 +853,7 @@
       <input type="hidden" id="cat-modal-id" value="">
 
       <!-- Form Body -->
-      <div style="display:grid; grid-template-columns:1fr 180px; gap:1.5rem; align-items:start;">
+      <div class="cat-modal-grid" style="display:grid; grid-template-columns:1fr 180px; gap:1.5rem; align-items:start;">
 
         <!-- Left: Text Fields -->
         <div style="display:flex; flex-direction:column; gap:1.25rem;">
@@ -885,7 +890,7 @@
       </div>
 
       <!-- Footer Actions -->
-      <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.07);">
+      <div class="cat-modal-foot" style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.07);">
         <button type="button" onclick="Builder.closeCategoryModal()"
                 style="padding:0.625rem 1.25rem; border-radius:0.75rem; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#a1a1aa; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;"
                 onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">إلغاء</button>

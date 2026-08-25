@@ -1,5 +1,6 @@
 from django.urls import path, include
 from core import views
+from builder import views as builder_views
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -20,6 +21,7 @@ urlpatterns = [
     path('ar/signin/', views.arabic_signin_view, name='arabic_signin'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('ar/dashboard/', views.arabic_dashboard_view, name='arabic_dashboard'),
+    path('ar/builder/', builder_views.arabic_builder_view, name='arabic_builder'),
     path('client_dashboard/', views.client_dashboard_view, name='client_dashboard'),
     path('ar/client_dashboard/', views.arabic_client_dashboard_view, name='arabic_client_dashboard'),
     path('school_admin_dashboard/', views.school_admin_dashboard_view, name='school_admin_dashboard'),
@@ -36,7 +38,7 @@ urlpatterns = [
     path('ar/profile/', views.arabic_profile_view, name='arabic_profile'),
     path('themes/', views.themes, name='themes'),
     path('ar/themes/', views.arabic_themes, name='arabic_themes'),
-    path('ar/update/', views.arabic_update_portfolio_view, name='arabic_update_portfolio'),
+    path('ar/update/', builder_views.arabic_update_portfolio_view, name='arabic_update_portfolio'),
     path('dashboard/seo/', views.seo_settings_view, name='seo_settings'),
     path('ar/dashboard/seo/', views.arabic_seo_settings_view, name='arabic_seo_settings'),
     path('dashboard/domain/', views.custom_domain_view, name='custom_domain'),
