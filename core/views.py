@@ -1596,6 +1596,44 @@ def _dashboard_context(request):
     # Check if we need to show the category notification
     show_category_notification = request.session.pop('show_category_notification', False)
 
+    # --- Dashboard redesign context (additive) -------------------------------
+    projects_count = request.user.projects.count()
+    skills_count = request.user.skills.count()
+    has_personal_info = hasattr(request.user, 'personal_info')
+
+    seo_obj = getattr(request.user, 'seo_settings', None)
+    seo_configured = bool(
+        seo_obj and (seo_obj.meta_title or seo_obj.meta_description or seo_obj.og_image)
+    )
+
+    domain_obj = getattr(request.user, 'custom_domain', None)
+    has_custom_domain = bool(domain_obj and domain_obj.domain)
+
+    subscription_days = payment.subscription.days if (payment and payment.subscription) else 0
+    if subscription_days >= 365:
+        plan_name = 'Annual Pro'
+        plan_name_ar = 'برو سنوي'
+    elif subscription_days > 0:
+        plan_name = 'Monthly Pro'
+        plan_name_ar = 'برو شهري'
+    else:
+        plan_name = 'Free'
+        plan_name_ar = 'مجاني'
+
+    plan_state = 'active' if has_active_payment else ('expired' if payment else 'free')
+    plan_progress = (
+        min(100, round((days_left / subscription_days) * 100)) if subscription_days else 0
+    )
+
+    checklist_items = [
+        {'key': 'personal', 'done': has_personal_info},
+        {'key': 'projects', 'done': projects_count > 0},
+        {'key': 'skills', 'done': skills_count > 0},
+        {'key': 'theme', 'done': bool(profile.theme)},
+        {'key': 'publish', 'done': bool(has_active_payment and profile.is_public)},
+    ]
+    checklist_done = sum(1 for item in checklist_items if item['done'])
+
     return {
         'profile': profile,
         'days_left': days_left,
@@ -1608,6 +1646,20 @@ def _dashboard_context(request):
         'is_annual_subscriber': is_annual_subscriber,
         'site_settings': site_settings,
         'show_category_notification': show_category_notification,
+        'projects_count': projects_count,
+        'skills_count': skills_count,
+        'has_personal_info': has_personal_info,
+        'seo_configured': seo_configured,
+        'has_custom_domain': has_custom_domain,
+        'plan_name': plan_name,
+        'plan_name_ar': plan_name_ar,
+        'plan_state': plan_state,
+        'subscription_days': subscription_days,
+        'plan_progress': plan_progress,
+        'checklist_items': checklist_items,
+        'checklist_done': checklist_done,
+        'checklist_total': len(checklist_items),
+        'checklist_progress': int(round(100.0 * checklist_done / len(checklist_items))),
     }
 
 @login_required

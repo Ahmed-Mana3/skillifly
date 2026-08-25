@@ -51,9 +51,10 @@ const Builder = {
     init() {
         this.cacheDOM();
         this.bindEvents();
-        this.checkInitialErrors();
+        const jumpedToErrors = this.checkInitialErrors();
         this.setupImagePreviews();
         this.ensureSavingOverlay();
+        if (!jumpedToErrors) this.openSectionFromHash();
     },
 
     cacheDOM() {
@@ -401,7 +402,7 @@ const Builder = {
         if (firstError) {
             const panel = firstError.closest('.section-panel');
             const panelId = panel ? panel.id.replace('section-', '') : null;
-            
+
             if (panelId !== null) {
                 this.switchSection(parseInt(panelId));
                 setTimeout(() => {
@@ -414,7 +415,18 @@ const Builder = {
                     this.tabs[i].classList.add('has-error');
                 }
             });
+            return true;
         }
+
+        return false;
+    },
+
+    openSectionFromHash() {
+        if (!location.hash) return;
+        const target = document.getElementById(location.hash.slice(1));
+        if (!target || !target.classList.contains('section-panel')) return;
+        const index = Array.from(this.panels).indexOf(target);
+        if (index > -1) this.switchSection(index, true);
     },
 
     // ==========================================

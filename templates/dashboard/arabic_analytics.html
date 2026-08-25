@@ -3,13 +3,13 @@
 
 {% block title %}رؤى الزوار — Skillifly{% endblock %}
 
-{% block meta_description %}تابع إحصائيات زيارات ملفك المهني: إجمالي المشاهدات، الزوار الفريدون، وأكثر المشاريع نقرًا.{% endblock %}
+{% block meta_description %}تابع إحصائيات زيارات ملفك المهني: إجمالي المشاهدات، الزوار الفريدون، مصادر الزيارات، الأجهزة، وأكثر المشاريع نقرًا.{% endblock %}
 
 {% block og_title %}رؤى الزوار — Skillifly{% endblock %}
-{% block og_description %}بيانات أداء ملفك المهني في الوقت الفعلي.{% endblock %}
+{% block og_description %}بيانات أداء حقيقية ودقيقة لملفك المهني.{% endblock %}
 {% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 {% block twitter_title %}رؤى الزوار — Skillifly{% endblock %}
-{% block twitter_description %}بيانات أداء ملفك المهني في الوقت الفعلي.{% endblock %}
+{% block twitter_description %}بيانات أداء حقيقية ودقيقة لملفك المهني.{% endblock %}
 {% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
@@ -135,7 +135,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 arabic-rtl">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 animate-fade-in">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 animate-fade-in">
         <div>
             <a href="{% url 'arabic_dashboard' %}" class="inline-flex items-center gap-2 text-slate-500 hover:text-black transition-colors mb-4 group">
                 <svg class="w-4 h-4 back-arrow group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@
                 <span class="font-bold text-xs tracking-widest">العودة إلى لوحة التحكم</span>
             </a>
             <h1 class="text-3xl sm:text-4xl font-bold text-black">رؤى الزوار</h1>
-            <p class="text-slate-500 font-medium mt-1">بيانات أداء ملفك المهني في الوقت الفعلي.</p>
+            <p class="text-slate-500 font-medium mt-1">بيانات أداء حقيقية ودقيقة لملفك المهني.</p>
         </div>
 
         <div class="flex items-center gap-3 p-1.5 bg-slate-100 rounded-2xl w-fit">
@@ -153,53 +153,98 @@
         </div>
     </div>
 
+    {% if not has_data %}
+    <!-- Empty state -->
+    <div class="glass-card rounded-[2rem] p-8 mb-8 animate-fade-in flex flex-col sm:flex-row items-center gap-6">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+            <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-black">لا توجد بيانات زوار بعد</h3>
+            <p class="text-sm text-slate-500 mt-1 leading-relaxed">
+                شارك رابط ملفك المهني على إنستغرام أو واتساب أو لينكدإن أو في سيرتك الذاتية — ستظهر كل زيارة هنا خلال ثوانٍ، مع معرفة مصدرها وما نقر عليه الزوار.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10 animate-fade-in" style="animation-delay: 0.1s;">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 animate-fade-in" style="animation-delay: 0.1s;">
+        <!-- Total Views -->
         <div class="stat-card p-6 rounded-3xl">
             <p class="text-xs font-black text-slate-400 tracking-widest mb-1">إجمالي المشاهدات</p>
-            <div class="flex items-end justify-between">
+            <div class="flex items-end justify-between gap-2">
                 <h2 class="text-4xl font-bold text-black">{{ total_views }}</h2>
-                {% if legacy_views > 0 %}
-                <div class="text-slate-400 text-[10px] font-black bg-slate-50 px-2 py-1 rounded-lg flex items-center gap-1" title="المشاهدات التاريخية المسجلة قبل تفعيل التحليلات المتقدمة.">
-                    <span>+{{ legacy_views }} سابقة</span>
-                </div>
+                {% if views_change != None %}
+                    <span class="text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 {% if views_change >= 0 %}text-emerald-600 bg-emerald-50{% else %}text-rose-600 bg-rose-50{% endif %}" title="مقارنة بالـ {{ active_days }} يومًا السابقة">
+                        {{ views_change|stringformat:"+d" }}%
+                    </span>
+                {% else %}
+                    <span class="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg" title="لا توجد بيانات في الفترة السابقة للمقارنة.">جديد</span>
                 {% endif %}
-                <div class="text-emerald-500 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    <span>نمو</span>
-                </div>
             </div>
+            <p class="text-[11px] text-slate-400 font-semibold mt-2">منذ البداية: {{ all_time_views }}{% if legacy_views > 0 %} ({{ legacy_views }} قبل التحليلات){% endif %}</p>
         </div>
+        <!-- Unique Visitors -->
         <div class="stat-card p-6 rounded-3xl">
             <p class="text-xs font-black text-slate-400 tracking-widest mb-1">الزوار الفريدون</p>
-            <div class="flex items-end justify-between">
+            <div class="flex items-end justify-between gap-2">
                 <h2 class="text-4xl font-bold text-black">{{ unique_visitors }}</h2>
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
+                {% if visitors_change != None %}
+                    <span class="text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 {% if visitors_change >= 0 %}text-emerald-600 bg-emerald-50{% else %}text-rose-600 bg-rose-50{% endif %}" title="مقارنة بالـ {{ active_days }} يومًا السابقة">
+                        {{ visitors_change|stringformat:"+d" }}%
+                    </span>
+                {% else %}
+                    <span class="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg" title="لا توجد بيانات في الفترة السابقة للمقارنة.">جديد</span>
+                {% endif %}
             </div>
+            <p class="text-[11px] text-slate-400 font-semibold mt-2">{% if views_per_visitor %}≈ {{ views_per_visitor }} مشاهدات لكل زائر{% else %}&nbsp;{% endif %}</p>
         </div>
+        <!-- Avg Time -->
         <div class="stat-card p-6 rounded-3xl">
-            <p class="text-xs font-black text-slate-400 tracking-widest mb-1">متوسط الوقت (دقيقة)</p>
-            <div class="flex items-end justify-between">
+            <p class="text-xs font-black text-slate-400 tracking-widest mb-1">متوسط وقت التصفح (دقيقة)</p>
+            <div class="flex items-end justify-between gap-2">
                 <h2 class="text-4xl font-bold text-black">{{ avg_duration }}</h2>
-                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
+                {% if duration_change != None %}
+                    <span class="text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 {% if duration_change >= 0 %}text-emerald-600 bg-emerald-50{% else %}text-rose-600 bg-rose-50{% endif %}" title="مقارنة بالـ {{ active_days }} يومًا السابقة">
+                        {{ duration_change|stringformat:"+d" }}%
+                    </span>
+                {% else %}
+                    <span class="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg" title="لا توجد بيانات في الفترة السابقة للمقارنة.">جديد</span>
+                {% endif %}
             </div>
+            <p class="text-[11px] text-slate-400 font-semibold mt-2">متوسط المدة التي يقضيها الزائر</p>
+        </div>
+        <!-- Bounce Rate -->
+        <div class="stat-card p-6 rounded-3xl">
+            <p class="text-xs font-black text-slate-400 tracking-widest mb-1">معدل الارتداد</p>
+            <div class="flex items-end justify-between gap-2">
+                <h2 class="text-4xl font-bold text-black">{{ bounce_rate }}%</h2>
+                {% if bounce_change != None and bounce_change != 0 %}
+                    <span class="text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 {% if bounce_change <= 0 %}text-emerald-600 bg-emerald-50{% else %}text-rose-600 bg-rose-50{% endif %}" title="مقارنة بالـ {{ active_days }} يومًا السابقة — الأقل أفضل">
+                        {{ bounce_change|stringformat:"+d" }}%
+                    </span>
+                {% else %}
+                    <span class="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">&nbsp;</span>
+                {% endif %}
+            </div>
+            <p class="text-[11px] text-slate-400 font-semibold mt-2">الزوار الذين غادروا خلال 10 ثوانٍ</p>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in" style="animation-delay: 0.2s;">
         <!-- Main Chart -->
         <div class="lg:col-span-2 glass-card rounded-[2rem] p-8">
-            <h3 class="text-lg font-bold text-black mb-8">نظرة عامة على الحركة</h3>
+            <div class="flex items-start justify-between mb-8 gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-black">نظرة عامة على الزيارات</h3>
+                    {% if best_day and best_day.value > 0 %}
+                    <p class="text-xs text-slate-400 font-bold mt-1">أفضل يوم: {{ best_day.label }} · {{ best_day.value }} مشاهدة</p>
+                    {% endif %}
+                </div>
+            </div>
             <div class="h-[300px]">
                 <canvas id="viewsChart"></canvas>
             </div>
@@ -207,13 +252,16 @@
 
         <!-- Top Projects -->
         <div class="glass-card rounded-[2rem] p-8">
-            <h3 class="text-lg font-bold text-black mb-8">نقرات المشاريع</h3>
+            <h3 class="text-lg font-bold text-black mb-2">نقرات المشاريع</h3>
+            <p class="text-xs text-slate-400 font-bold mb-6">
+                {% if ctr > 0 %}{{ ctr }}% من الزوار فتحوا أحد مشاريعك{% elif total_views > 0 %}لم يفتح أحد أي مشروع بعد في هذه الفترة{% else %}% الزوار الذين يفتحون مشروعًا سيظهر هنا{% endif %}
+            </p>
             <div class="space-y-6">
                 {% for project in top_projects %}
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-bold text-slate-700 truncate pr-4">{{ project.project__title }}</span>
-                        <span class="text-xs font-black text-blue-600">{{ project.clicks }}</span>
+                        <span class="text-sm font-bold text-slate-700 truncate pr-4">{{ project.title }}</span>
+                        <span class="text-xs font-black text-blue-600 whitespace-nowrap">{{ project.clicks }} نقرة · {{ project.percentage }}%</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: {{ project.percentage }}%"></div>
@@ -221,62 +269,102 @@
                 </div>
                 {% empty %}
                 <div class="text-center py-10">
-                    <p class="text-sm text-slate-400 font-medium">لم يتم تسجيل أي نقرات على المشاريع بعد.</p>
+                    <p class="text-sm text-slate-400 font-medium">لم يتم تسجيل أي نقرات على المشاريع في هذه الفترة.</p>
                 </div>
                 {% endfor %}
             </div>
+        </div>
+
+        <!-- Traffic Sources -->
+        <div class="glass-card rounded-[2rem] p-8">
+            <h3 class="text-lg font-bold text-black mb-6">مصادر الزيارات</h3>
+            <div class="space-y-4">
+                {% for src in traffic_sources %}
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5M10.172 13.828a4 4 0 010-5.656l3-3a4 4 0 015.656 5.656l-1.5 1.5" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700 truncate">{{ src.name }}</span>
+                    </div>
+                    <div class="text-left shrink-0">
+                        <span class="text-xs font-black text-slate-500 block">{{ src.count }}</span>
+                        <span class="text-[10px] font-bold text-slate-400">{{ src.percentage }}%</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-slate-400 text-center py-8 font-medium">في انتظار بيانات الزوار...</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Devices -->
+        <div class="glass-card rounded-[2rem] p-8">
+            <h3 class="text-lg font-bold text-black mb-6">الأجهزة</h3>
+            <div class="space-y-5">
+                {% for device in devices %}
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-slate-700">{{ device.name }}</span>
+                        <span class="text-xs font-black text-purple-600">{{ device.count }} · {{ device.percentage }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ device.percentage }}%; background: linear-gradient(90deg,#8B5CF6,#EC4899);"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-slate-400 text-center py-8 font-medium">في انتظار بيانات الزوار...</p>
+                {% endfor %}
+            </div>
+            {% if browsers %}
+            <div class="mt-6 pt-5 border-t border-slate-100">
+                <p class="text-[10px] font-black text-slate-400 tracking-widest mb-3">أكثر المتصفحات استخدامًا</p>
+                <div class="flex flex-wrap gap-2">
+                    {% for browser, count in browsers %}
+                    <span class="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-lg">{{ browser }} · {{ count }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Locations -->
         <div class="glass-card rounded-[2rem] p-8">
-            <h3 class="text-lg font-bold text-black mb-8">أهم المواقع</h3>
-            <div class="space-y-5">
+            <h3 class="text-lg font-bold text-black mb-6">أهم الدول</h3>
+            <div class="space-y-4">
                 {% for loc in top_locations %}
                 <div class="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-colors">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
-                            {{ loc.country|slice:":2"|upper }}
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                            {% if loc.country == 'Unknown' %}?{% else %}{{ loc.country|slice:":2"|upper }}{% endif %}
                         </div>
-                        <span class="text-sm font-bold text-slate-700">{{ loc.country }}</span>
+                        <span class="text-sm font-bold text-slate-700 truncate">{{ loc.country }}</span>
                     </div>
-                    <span class="text-xs font-black text-slate-400">{{ loc.count }} زيارة</span>
+                    <div class="text-left shrink-0">
+                        <span class="text-xs font-black text-slate-500 block">{{ loc.count }} زائر</span>
+                        <span class="text-[10px] font-bold text-slate-400">{{ loc.percentage }}%</span>
+                    </div>
                 </div>
                 {% empty %}
-                <p class="text-sm text-slate-400 text-center py-10 font-medium">في انتظار بيانات الزوار...</p>
+                <p class="text-sm text-slate-400 text-center py-8 font-medium">في انتظار بيانات الزوار...</p>
                 {% endfor %}
             </div>
         </div>
+    </div>
 
-        <!-- Placeholder for more insights -->
-        <div class="lg:col-span-2 glass-card rounded-[2rem] p-8 border-dashed border-2 border-slate-200 bg-transparent relative overflow-hidden cursor-not-allowed select-none">
-
-            <!-- Corner Badges -->
-            <div class="absolute top-6 left-6">
-                <div class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100/80 backdrop-blur-sm border border-slate-200/60 shadow-sm">
-                    <span class="text-[10px] font-black text-slate-500 tracking-widest">قريبًا</span>
-                </div>
-            </div>
-
-            <div class="absolute top-6 right-6">
-                <div class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-blue-50/80 backdrop-blur-sm border border-blue-100 shadow-sm">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                    </span>
-                    <span class="text-[10px] font-black text-blue-600 tracking-widest">قيد التطوير</span>
-                </div>
-            </div>
-
-            <div class="flex flex-col items-center justify-center py-10 text-center mt-4 opacity-60 grayscale-[0.5]">
-                <div class="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-5 shadow-inner">
-                    <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                </div>
-                <h4 class="text-lg font-bold text-slate-500">الخرائط الحرارية وبيانات الأجهزة</h4>
-                <p class="text-sm text-slate-400 max-w-sm mt-2 leading-relaxed">نحن نعمل على تطوير رؤى أعمق حول كيفية تفاعل المستخدمين مع أعمالك. ستتمكن قريبًا من معرفة الأماكن الدقيقة التي ينقر فيها الزوار والأجهزة التي يستخدمونها.</p>
-            </div>
+    <!-- Tip -->
+    <div class="mt-8 glass-card rounded-[2rem] p-6 flex items-start gap-4 animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
         </div>
+        <p class="text-sm text-slate-500 leading-relaxed font-medium">
+            <span class="font-bold text-slate-700">نصيحة:</span>
+            زيارات الروبوتات وزياراتك الخاصة مستثناة تلقائيًا، لذلك تعكس هذه الأرقام أشخاصًا حقيقيين. قارن آخر 30 يومًا بالفترة السابقة عبر الشارات أعلاه لتعرف إن كانت جهودك في المشاركة تُثمر.
+        </p>
     </div>
 </div>
 
@@ -288,36 +376,62 @@
         type: 'line',
         data: {
             labels: chartData.map(d => d.label),
-            datasets: [{
-                label: 'المشاهدات',
-                data: chartData.map(d => d.value),
-                borderColor: '#3B82F6',
-                backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                borderWidth: 4,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#3B82F6',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
+            datasets: [
+                {
+                    label: 'المشاهدات',
+                    data: chartData.map(d => d.views),
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 4,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#3B82F6',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'الزوار الفريدون',
+                    data: chartData.map(d => d.visitors),
+                    borderColor: '#8B5CF6',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2.5,
+                    tension: 0.4,
+                    fill: false,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#8B5CF6',
+                    pointBorderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false }
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    rtl: true,
+                    labels: { usePointStyle: true, boxWidth: 8, font: { size: 11, weight: '600' }, color: '#64748B' }
+                }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     grid: { color: '#F1F5F9' },
-                    ticks: { font: { size: 10, weight: '600' }, color: '#94A3B8' }
+                    ticks: { font: { size: 10, weight: '600' }, color: '#94A3B8', stepSize: 1, precision: 0 }
                 },
                 x: {
                     grid: { display: false },
-                    ticks: { font: { size: 10, weight: '600' }, color: '#94A3B8' }
+                    ticks: {
+                        font: { size: 10, weight: '600' }, color: '#94A3B8',
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 10
+                    }
                 }
             }
         }

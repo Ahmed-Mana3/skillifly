@@ -1,0 +1,1 @@
+{% if key == 'personal' %}Add your personal info{% elif key == 'projects' %}Add at least one project{% elif key == 'skills' %}Add your skills{% elif key == 'theme' %}Choose a theme{% elif key == 'publish' %}Publish your portfolio{% endif %}
