@@ -1,4 +1,4 @@
-/* ═══ ANIMATED THEME — Light Mode ═══ */
+/* ═══ ANIMATED THEME — Dark Mode ═══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0a0a0a;
@@ -39,17 +39,22 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 }
 
 /* Nav */
-.navbar{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;background:var(--glass);backdrop-filter:blur(16px);padding:16px 40px;border-radius:100px;display:flex;gap:40px;box-shadow:var(--shadow-sm);border:1px solid rgba(255,255,255,0.8);transition:all .4s}
-.navbar.hidden{top:-80px}
-.nav-links{display:flex;gap:32px}
-.nav-links a{color:var(--text);text-decoration:none;font-weight:600;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.1em;position:relative}
-.nav-links a::after{content:'';position:absolute;bottom:-6px;left:0;width:0;height:2px;background:var(--grad);transition:width .3s}
-.nav-links a:hover::after{width:100%}
-.nav-brand{font-weight:800;font-size:1.2rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
-@media(max-width:768px){.nav-links{display:none}.navbar{width:calc(100% - 32px);left:16px;right:16px;transform:none;justify-content:center;padding:14px 20px;top:12px}}
+.navbar{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:36px;padding:12px 38px;border-radius:100px;background:rgba(10,10,14,0.6);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--border);box-shadow:0 10px 40px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.02),inset 0 1px 0 rgba(255,255,255,0.06);transition:top .45s cubic-bezier(0.4,0,0.2,1),opacity .45s,filter .45s}
+.navbar.hidden{top:-90px;opacity:0;filter:blur(6px);pointer-events:none}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{color:#e5e7eb;text-decoration:none;font-weight:600;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.12em;position:relative;padding:6px 2px;opacity:.88;transition:color .3s,opacity .3s}
+.nav-links a:hover{color:#fff;opacity:1}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:0;width:100%;height:2px;border-radius:99px;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(0.4,0,0.2,1)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-weight:800;font-size:1.35rem;letter-spacing:.08em;line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
+.nav-brand::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--grad);flex-shrink:0;animation:pulseDot 2.4s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 6px var(--accent-1)}50%{box-shadow:0 0 16px var(--accent-3)}}
+@media(max-width:768px){.nav-links{display:none}.navbar{width:calc(100% - 32px);left:16px;right:16px;transform:none;justify-content:center;padding:12px 20px;top:12px}}
 
 /* Hero */
 .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;z-index:1;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 92% 72% at 50% 45%,rgba(5,5,8,0.62) 0%,rgba(5,5,8,0.36) 48%,transparent 80%)}
+.hero>*{position:relative;z-index:1}
 .hero-avatar-box{position:relative;margin-bottom:40px;width:220px;height:220px}
 .hero-avatar{width:100%;height:100%;border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;overflow:hidden;border:6px solid #fff;box-shadow:var(--shadow-lg);position:relative;z-index:2;animation:floatAvatar 6s ease-in-out infinite, morphBorder 8s linear infinite}
 .hero-avatar img{width:100%;height:100%;object-fit:cover;transform:scale(1.05);transition:transform .5s}
@@ -69,13 +74,13 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;over
 @keyframes spinRingReverse{100%{transform:rotate(-360deg)}}
 
 .hero-subtitle{font-size:1rem;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--text-muted);margin-bottom:20px;background:var(--surface);padding:8px 24px;border-radius:100px;box-shadow:var(--shadow-sm);display:inline-block;animation:fadeUp .8s .2s both}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,10vw,8rem);line-height:0.9;color:var(--text);margin-bottom:30px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,10vw,8rem);line-height:0.9;color:#fff;margin-bottom:30px}
 .hero-title .word{display:inline-block;overflow:hidden}
 .hero-title .word span{display:inline-block;animation:slideUp .8s cubic-bezier(0.2,1,0.3,1) both}
-.hero-title .grad-text{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:gradMove 3s ease infinite}
+.hero-title .grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:gradMove 3s ease infinite;filter:drop-shadow(0 3px 18px rgba(0,0,0,0.7)) drop-shadow(0 1px 1px rgba(0,0,0,0.55))}
 @keyframes gradMove{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
-.hero-bio{font-size:1.2rem;max-width:600px;line-height:1.6;color:var(--text-muted);margin-bottom:40px;animation:fadeUp .8s .6s both}
+.hero-bio{font-size:1.2rem;max-width:620px;line-height:1.65;color:#f2f4f7;margin-bottom:40px;animation:fadeUp .8s .6s both;text-shadow:0 1px 4px rgba(0,0,0,0.75),0 0 22px rgba(0,0,0,0.45)}
 
 .btn-group{display:flex;gap:20px;justify-content:center;animation:fadeUp .8s .8s both;flex-wrap:wrap}
 .btn-main{padding:18px 40px;border-radius:100px;background:var(--text);color:var(--bg);font-weight:700;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.1em;text-decoration:none;position:relative;overflow:hidden;transition:all .3s;display:inline-flex;align-items:center;gap:10px}

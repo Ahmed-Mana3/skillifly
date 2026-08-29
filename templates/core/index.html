@@ -72,7 +72,7 @@
   }
   .pricing-card:hover { transform: translateY(-6px); }
   .pricing-featured {
-    box-shadow: 0 0 0 2px rgba(99,102,241,0.6), 0 32px 72px -20px rgba(99,102,241,0.35) !important;
+    box-shadow: 0 0 0 2px rgba(124,58,237,0.6), 0 32px 72px -20px rgba(124,58,237,0.35) !important;
     transform: translateY(-8px) scale(1.02);
     z-index: 10;
   }
@@ -106,6 +106,131 @@
     padding: 4px 14px; border-radius: 999px; letter-spacing: 0.02em;
   }
 
+  /* ── Hero theme showcase ────────────────────────────── */
+  .showcase-wrap { position: relative; margin: 5.5rem auto 0; max-width: 5xl; }
+  .showcase-frame {
+    position: relative;
+    border-radius: 1.25rem;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.18), 0 8px 20px -8px rgba(15, 23, 42, 0.1);
+    overflow: hidden;
+  }
+  /* Tab strip: window dots + active tab + new-tab, connected to the toolbar */
+  .showcase-bar {
+    display: flex; align-items: flex-end; gap: 10px;
+    padding: 8px 14px 0;
+    background: #E9EDF2;
+  }
+  .showcase-dot { width: 11px; height: 11px; border-radius: 999px; flex-shrink: 0; margin-bottom: 10px; }
+  .showcase-tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08); border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    padding: 7px 12px;
+    max-width: 46%; min-width: 0;
+    font-size: 0.68rem; font-weight: 600; color: #475569;
+  }
+  .showcase-favicon {
+    width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0;
+    background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  }
+  .showcase-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .showcase-tab-x { width: 11px; height: 11px; color: #94A3B8; flex-shrink: 0; }
+  .showcase-tab-new {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; margin-bottom: 5px; border-radius: 6px;
+    color: #94A3B8; font-size: 0.85rem; font-weight: 700;
+  }
+  /* Toolbar: nav buttons + address bar */
+  .showcase-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    background: #fff;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .showcase-toolbar-btn { width: 13px; height: 13px; color: #94A3B8; flex-shrink: 0; }
+  .showcase-url {
+    flex: 1; min-width: 0;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #F1F5F9; border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 0.72rem; color: #64748B; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-align: left;
+  }
+  .showcase-lock { width: 10px; height: 10px; color: #10b981; flex-shrink: 0; }
+  @media (max-width: 480px) {
+    .showcase-tab { max-width: 58%; }
+    .showcase-nav-btn { display: none; }
+  }
+  .showcase-viewport {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background:
+      linear-gradient(100deg, #f8fafc 30%, #f1f5f9 50%, #f8fafc 70%) 0 0 / 200% 100%;
+    animation: showcase-shimmer 1.6s linear infinite;
+  }
+  /* The portfolio renders at 200% layout size and is scaled down to 50%,
+     simulating a browser zoomed out to 50% — the whole page width is
+     visible inside the window, just smaller. */
+  .showcase-viewport iframe {
+    position: absolute; top: 0; left: 0;
+    width: 200%; height: 200%;
+    border: 0;
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
+  /* Non-interactive only until loaded so the shimmer never eats scroll events;
+     once loaded, touchpad scrolling works inside — same-origin scroll chaining
+     hands scrolling back to the landing page at the portfolio's top/bottom. */
+  .showcase-viewport:not(.is-loaded) iframe { pointer-events: none; }
+  .showcase-viewport.is-loaded { animation: none; background: #fff; }
+  .showcase-open {
+    position: absolute; right: 12px; bottom: 12px; z-index: 5;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(15, 23, 42, 0.85); color: #fff;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px;
+    opacity: 0.9; transition: opacity .2s ease, background .2s ease;
+    backdrop-filter: blur(4px);
+  }
+  .showcase-open:hover { opacity: 1; background: #7C3AED; }
+  .showcase-hint {
+    position: absolute; left: 12px; bottom: 12px; z-index: 5;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255, 255, 255, 0.92); color: #475569;
+    font-size: 0.68rem; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    pointer-events: none;
+    transition: opacity .4s ease;
+  }
+  .showcase-hint.is-hidden { opacity: 0; }
+  @keyframes showcase-shimmer { to { background-position: -200% 0; } }
+
+  .showcase-chips {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin-top: 1.25rem;
+  }
+  .showcase-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 999px;
+    background: #fff; border: 1px solid rgba(15, 23, 42, 0.12);
+    font-size: 0.8rem; font-weight: 700; color: #475569;
+    cursor: pointer; transition: all .2s ease;
+  }
+  .showcase-chip:hover { border-color: rgba(124, 58, 237, 0.5); color: #7C3AED; }
+  .showcase-chip.is-active {
+    background: #7C3AED; border-color: #7C3AED; color: #fff;
+    box-shadow: 0 6px 16px -6px rgba(124, 58, 237, 0.55);
+  }
+  .showcase-caption {
+    margin-top: 0.9rem; text-align: center;
+    font-size: 0.75rem; font-weight: 600; color: #94A3B8;
+  }
+
   /* ── Trust bar ──────────────────────────────────────── */
   .trust-bar {
     display: flex; flex-wrap: wrap; align-items: center;
@@ -136,9 +261,33 @@
   .btn-ghost { border: 1px solid rgba(0,0,0,0.15) !important; color: #0F172A !important; }
   .btn-ghost:hover { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.3) !important; }
   .nav-link { color: #334155 !important; font-weight: 600 !important; }
-  .nav-link:hover { color: #3B82F6 !important; }
-  .orb { opacity: 0.25 !important; filter: blur(120px) !important; }
+  .nav-link:hover { color: #7C3AED !important; }
   footer { border-top: 1px solid rgba(0,0,0,0.1) !important; background: #F8FAFC; }
+
+  /* ── Clean white canvas: hide blue/purple background glows ── */
+  .orb, .orb-blue, .orb-purple { display: none !important; }
+
+  /* ── Solid brand-purple buttons ─────────────────────── */
+  .btn-primary {
+    background: #7C3AED !important;
+    background-image: none !important;
+    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+  }
+  .btn-primary:hover {
+    background: #6D28D9 !important;
+    background-image: none !important;
+    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+  }
+  .btn-primary:active { background: #5B21B6 !important; }
+
+  /* ── Purple brand accents (replaces blue/purple/pink mixes) ── */
+  .gradient-text {
+    background: none !important;
+    -webkit-background-clip: initial !important; background-clip: initial !important;
+    -webkit-text-fill-color: #7C3AED !important; color: #7C3AED !important;
+  }
+  .gradient-border { border: 1px solid rgba(124, 58, 237, 0.14) !important; }
+  .gradient-border::before { background: rgba(124, 58, 237, 0.14) !important; }
 </style>
 {% endblock %}
 
@@ -147,7 +296,6 @@
 <!-- 1. HERO SECTION -->
 <section class="min-h-[90vh] flex items-center justify-center px-6 py-20 relative overflow-hidden">
   <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.1]" style="background: radial-gradient(circle, #3B82F6, transparent 70%);"></div>
 
   <div class="max-w-6xl mx-auto text-center relative z-10">
     <!-- Trust Badge -->
@@ -175,13 +323,64 @@
         </a>
         <p class="absolute -bottom-7 left-0 right-0 text-[11px] text-slate-900 font-medium hidden sm:block text-center">No credit card required</p>
       </div>
-      <a href="{% url 'examples' %}" class="btn-ghost text-lg px-10 py-4.5 w-full sm:w-auto text-center">
-        See Live Examples
+      <a href="#0" onclick="var s=document.querySelector('[data-showcase]'); if(s){event.preventDefault(); s.scrollIntoView({behavior:'smooth', block:'center'});}"
+         class="btn-ghost text-lg px-10 py-4.5 w-full sm:w-auto text-center hidden md:inline-flex md:items-center md:justify-center">
+        ▸ See It In Action
+      </a>
+      <a href="{% url 'examples' %}" class="btn-ghost text-lg px-10 py-4.5 w-full sm:w-auto text-center md:hidden">
+        See live examples
+        <svg class="w-4 h-4 inline-block -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
 
+    <!-- Live theme showcase -->
+    {{ theme_live_urls|json_script:"theme-live-urls" }}
+    <div class="showcase-wrap animate-fadeInUp max-w-4xl hidden md:block" style="animation-delay: 0.25s" data-showcase>
+      <div class="showcase-frame">
+        <div class="showcase-bar" aria-hidden="true">
+          <span class="showcase-dot" style="background:#F87171"></span>
+          <span class="showcase-dot" style="background:#FBBF24"></span>
+          <span class="showcase-dot" style="background:#34D399"></span>
+          <span class="showcase-tab">
+            <span class="showcase-favicon"></span>
+            <span class="showcase-tab-title" data-showcase-tab-title>Skillifly</span>
+            <svg class="showcase-tab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </span>
+          <span class="showcase-tab-new">+</span>
+        </div>
+        <div class="showcase-toolbar" aria-hidden="true">
+          <svg class="showcase-toolbar-btn showcase-nav-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <svg class="showcase-toolbar-btn showcase-nav-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          <svg class="showcase-toolbar-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          <span class="showcase-url">
+            <svg class="showcase-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span data-showcase-url>skillifly.cloud</span>
+          </span>
+          <svg class="showcase-toolbar-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 6v.01M12 12v.01M12 18v.01"/></svg>
+        </div>
+        <div class="showcase-viewport" data-showcase-viewport>
+          <iframe id="hero-showcase-iframe" title="Live portfolio built with Skillifly" loading="lazy"
+                  tabindex="-1" data-src="{{ showcase_initial_src }}"
+                  data-zoom="{{ showcase_zoom }}" data-rotate="{% if showcase_auto_rotate %}1{% else %}0{% endif %}"></iframe>
+          <span class="showcase-hint" data-showcase-hint>Scroll to explore ↓</span>
+          <a class="showcase-open" data-showcase-open href="{{ showcase_initial_src }}" target="_blank" rel="noopener">
+            View live portfolio
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="showcase-chips" role="tablist" aria-label="Theme previews">
+        {% for chip in showcase_chips %}
+        <button type="button" class="showcase-chip{% if chip.active %} is-active{% endif %}" role="tab"
+                {% if chip.active %}aria-selected="true"{% else %}aria-selected="false"{% endif %}
+                data-theme-slug="{{ chip.slug }}" data-theme-label="{{ chip.label }}">{{ chip.label }}</button>
+        {% endfor %}
+      </div>
+      <p class="showcase-caption">Live portfolios built with Skillifly — scroll inside to explore, tap a theme to switch. Yours could be next.</p>
+    </div>
+
     <!-- Stats -->
-    <div class="flex flex-col md:flex-row justify-center items-center mt-20 md:mt-24 pt-10 md:pt-12 animate-fadeInUp md:divide-x divide-y md:divide-y-0 divide-slate-200 space-y-10 md:space-y-0" style="animation-delay: 0.3s; border-top: 1px solid rgba(0,0,0,0.1);">
+    <div class="flex flex-col md:flex-row justify-center items-center mt-16 md:mt-20 pt-10 md:pt-12 animate-fadeInUp md:divide-x divide-y md:divide-y-0 divide-slate-200 space-y-10 md:space-y-0" style="animation-delay: 0.3s; border-top: 1px solid rgba(0,0,0,0.1);">
       <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
         <p class="text-3xl md:text-4xl font-bold gradient-text mb-1" style="font-family: 'Syne', sans-serif;">{{ portfolios_count }}</p>
         <p class="text-sm text-slate-900 font-semibold">Portfolios created</p>
@@ -235,6 +434,70 @@
     </div>
   </div>
 </section>
+
+<!-- 2.5 COMMUNITY PORTFOLIOS (from the live examples page) -->
+{% if showcases %}
+<section class="px-6 py-24 relative hidden md:block">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-14 md:mb-16">
+      <p class="text-xs sm:text-sm font-bold text-blue-800 uppercase tracking-[0.3em] mb-4">Real Portfolios, Real Users</p>
+      <h2 class="text-3xl sm:text-4xl md:text-6xl font-extrabold text-black tracking-tight leading-tight mb-4" style="font-family: 'Syne', sans-serif;">
+        Made with <span class="gradient-text">Skillifly</span>
+      </h2>
+      <p class="text-slate-900 text-lg max-w-2xl mx-auto">Live portfolios built by our community — open one and see what yours could look like.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for showcase in showcases %}
+      <a href="{% url 'preview' showcase.profile.user.username %}" target="_blank" rel="noopener"
+         class="testimonial-card gradient-border rounded-3xl overflow-hidden group block">
+        <div class="relative h-52 bg-slate-100 overflow-hidden">
+          {% if showcase.preview_image %}
+            <img src="{{ showcase.preview_image.url }}" alt="{{ showcase.profile.user.username }}'s portfolio" loading="lazy"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          {% elif showcase.profile.picture %}
+            <img src="{{ showcase.profile.picture.url }}" alt="{{ showcase.profile.user.username }}'s portfolio" loading="lazy"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10">
+              <span class="text-4xl font-black gradient-text" style="font-family:'Syne',sans-serif;">{{ showcase.profile.user.username|first|upper }}</span>
+            </div>
+          {% endif %}
+          <span class="absolute top-4 right-4 inline-flex items-center gap-1.5 bg-white/90 backdrop-blur text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm">
+            <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+            Live
+          </span>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <h3 class="text-lg font-bold text-slate-900 truncate">
+              {% if showcase.title %}{{ showcase.title }}{% else %}{{ showcase.profile.user.username|title }}{% endif %}
+            </h3>
+            {% if showcase.profile.theme %}
+            <span class="shrink-0 text-[11px] font-bold uppercase tracking-wide text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">{{ showcase.profile.theme.name }}</span>
+            {% endif %}
+          </div>
+          <p class="text-sm text-slate-900 leading-relaxed line-clamp-2">
+            {{ showcase.description|default:showcase.profile.bio|default:"Explore this professional portfolio built with Skillifly." }}
+          </p>
+          <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-purple-700 group-hover:gap-2.5 transition-all">
+            View portfolio
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-12">
+      <a href="{% url 'examples' %}" class="btn-ghost inline-flex items-center gap-2 text-base px-8 py-3.5 rounded-xl">
+        Explore all live examples
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- 3. TESTIMONIALS -->
 <section class="px-6 py-24 relative overflow-hidden">
@@ -489,7 +752,6 @@
 <section class="px-6 py-24">
   <div class="max-w-5xl mx-auto">
     <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden bg-white border border-slate-100 shadow-2xl shadow-slate-200">
-      <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(circle at 50% 50%, #3B82F6, transparent 70%);"></div>
       <div class="relative z-10">
         <h2 class="text-3xl sm:text-4xl md:text-6xl font-extrabold mb-6 text-black" style="font-family: 'Syne', sans-serif;">
           Ready to Stand Out?
@@ -505,9 +767,140 @@
     </div>
   </div>
 </section>
+{% endblock %}
 
 {% block extra_scripts %}
 <script>
+  // ── Hero live theme showcase ─────────────────────────
+  (function () {
+    var iframe    = document.getElementById('hero-showcase-iframe');
+    var viewport  = document.querySelector('[data-showcase-viewport]');
+    var openLink  = document.querySelector('[data-showcase-open]');
+    var urlPill   = document.querySelector('[data-showcase-url]');
+    var tabTitle  = document.querySelector('[data-showcase-tab-title]');
+    var chips     = Array.prototype.slice.call(document.querySelectorAll('[data-theme-slug]'));
+    if (!iframe || !chips.length) return;
+
+    // Real portfolio per theme (server-provided); mock preview is the fallback.
+    var liveUrls = {};
+    try {
+      var mapEl = document.getElementById('theme-live-urls');
+      if (mapEl) liveUrls = JSON.parse(mapEl.textContent);
+    } catch (e) { liveUrls = {}; }
+
+    var index = 0;
+    var userPinned = false;
+    var hovering = false;
+    var lastActivity = 0;
+    var hint = document.querySelector('[data-showcase-hint]');
+
+    function markActivity() { lastActivity = Date.now(); }
+
+    // The parent page gets mouseleave the moment the cursor crosses into the
+    // iframe, so hover/scroll detection must also be bound INSIDE the frame
+    // (same-origin). Rebound on every theme switch — old listeners die with
+    // the old document.
+    function bindFrame() {
+      var doc;
+      try { doc = iframe.contentDocument; } catch (e) { doc = null; }
+      if (!doc) return;
+      doc.documentElement.addEventListener('mouseenter', function () { hovering = true; });
+      doc.documentElement.addEventListener('mouseleave', function () { hovering = false; });
+      ['mousemove', 'wheel', 'scroll', 'touchmove'].forEach(function (evt) {
+        doc.addEventListener(evt, markActivity, { passive: true });
+      });
+      if (hint) {
+        doc.addEventListener('scroll', function () { hint.classList.add('is-hidden'); }, { passive: true });
+      }
+    }
+
+    function srcFor(slug) {
+      var u = liveUrls[slug];
+      // embed=1 keeps the hero frame from inflating the owner's visit stats
+      if (u) return u + (u.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
+      return '/preview/' + slug + '/';
+    }
+    function pillFor(slug) {
+      var u = liveUrls[slug];
+      if (!u) return 'skillifly.cloud/you';
+      var name = u.replace(/^\/+|\/+$/g, '');
+      return name ? 'skillifly.cloud/' + name : 'skillifly.cloud';
+    }
+    function tabTitleFor(chip) {
+      var u = liveUrls[chip.dataset.themeSlug];
+      var who = u ? u.replace(/^\/+|\/+$/g, '').split('?')[0] : chip.dataset.themeLabel;
+      return (who || 'Portfolio') + ' — Skillifly';
+    }
+
+    // Browser-zoom simulation controlled from the manage page: the portfolio is
+    // laid out at (100/zoom)% and scaled down so it always fills the window.
+    function applyZoom() {
+      var zoom = parseInt(iframe.getAttribute('data-zoom'), 10);
+      if (isNaN(zoom)) zoom = 50;
+      zoom = Math.min(100, Math.max(10, zoom));
+      var pct = 100 / (zoom / 100);
+      iframe.style.width = pct + '%';
+      iframe.style.height = pct + '%';
+      iframe.style.transform = 'scale(' + (zoom / 100) + ')';
+    }
+    applyZoom();
+
+    function activate(i) {
+      index = (i + chips.length) % chips.length;
+      var chip = chips[index];
+      chips.forEach(function (c) {
+        var on = c === chip;
+        c.classList.toggle('is-active', on);
+        c.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      var url = srcFor(chip.dataset.themeSlug);
+      viewport.classList.remove('is-loaded');
+      iframe.src = url;
+      if (openLink) openLink.href = url;
+      if (urlPill) urlPill.textContent = pillFor(chip.dataset.themeSlug);
+      iframe.onload = function () { viewport.classList.add('is-loaded'); bindFrame(); };
+    }
+
+    // Lazy start only when the showcase is near the viewport
+    function start() {
+      activate(index);
+    }
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { start(); io.disconnect(); }
+      }, { rootMargin: '200px' });
+      io.observe(viewport);
+    } else {
+      start();
+    }
+
+    chips.forEach(function (chip, i) {
+      chip.addEventListener('click', function () {
+        userPinned = true;
+        activate(i);
+      });
+    });
+
+    // Don't yank the frame away mid-scroll/explore
+    var wrap = document.querySelector('[data-showcase]');
+    if (wrap) {
+      wrap.addEventListener('mouseenter', function () { hovering = true; });
+      wrap.addEventListener('mouseleave', function () { hovering = false; });
+    }
+
+    // Gentle auto-rotate until the visitor takes control (optionally disabled
+    // from the manage page). Never while the pointer is over/inside the frame,
+    // or within 3s of any interaction (scroll, wheel, touch) inside the theme.
+    if (iframe.getAttribute('data-rotate') !== '0') {
+      setInterval(function () {
+        var idle = Date.now() - lastActivity > 3000;
+        if (!userPinned && !hovering && idle && document.visibilityState === 'visible' && viewport.classList.contains('is-loaded')) {
+          activate(index + 1);
+        }
+      }, 7000);
+    }
+  })();
+
   // FAQ Accordion
   document.querySelectorAll('details').forEach((details) => {
     details.addEventListener('toggle', () => {
@@ -575,6 +968,4 @@
     }
   })();
 </script>
-{% endblock %}
-
 {% endblock %}

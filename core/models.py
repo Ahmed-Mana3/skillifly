@@ -335,6 +335,28 @@ class SiteSettings(models.Model):
     banner_coupon_code = models.CharField(max_length=50, default="SKILLIFLY2026", help_text="Coupon code to show in the banner.")
     banner_is_active = models.BooleanField(default=True, help_text="Whether the payment banner is enabled globally.")
 
+    # Homepage hero showcase — the fake-browser tabs under the hero CTAs.
+    showcase_themes = models.JSONField(
+        default=list, blank=True,
+        help_text="Ordered list of theme slugs shown as tabs on the landing page, e.g. ['creative_white','animated_dark','monochrome','categories'].",
+    )
+    showcase_default_theme = models.CharField(
+        max_length=100, blank=True, default='',
+        help_text="Theme slug loaded first in the hero showcase (must be one of showcase_themes).",
+    )
+    showcase_auto_rotate = models.BooleanField(
+        default=True,
+        help_text="Automatically rotate through the shown themes until a visitor interacts.",
+    )
+    showcase_zoom = models.PositiveIntegerField(
+        default=50, validators=[MinValueValidator(10), MaxValueValidator(100)],
+        help_text="Zoom % of the embedded portfolio preview (100 = full size, 50 = zoomed out to half).",
+    )
+    showcase_overrides = models.JSONField(
+        default=dict, blank=True,
+        help_text="Map of theme slug to a username whose portfolio is pinned for that tab ('' or missing = auto-pick the best available).",
+    )
+
     class Meta:
         verbose_name = "Site Settings"
         verbose_name_plural = "Site Settings"

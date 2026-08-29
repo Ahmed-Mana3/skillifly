@@ -132,13 +132,13 @@
     transform: scaleX(-1);
   }
 
-  /* Gradient text — readable on white */
+  /* Gradient text — same brand purple as the English landing */
   .gradient-text {
-    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    color: transparent;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #7C3AED !important;
+    color: #7C3AED !important;
   }
 
   /* Buttons — English landing uses base.html defaults for btn-primary */
@@ -157,19 +157,16 @@
     background: rgba(255, 255, 255, 0.95) !important;
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04) !important;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px);
   }
 
-  .testimonial-card {
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.12) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+  /* Testimonials — match English landing */
+  .testimonial-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
   .testimonial-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 26px 50px -24px rgba(15, 23, 42, 0.16) !important;
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1) !important;
   }
 
   .pricing-card {
@@ -230,12 +227,13 @@
 
   .gradient-border {
     background: #ffffff !important;
-    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(124, 58, 237, 0.14) !important;
     transition: all 0.3s ease;
   }
 
   .gradient-border::before {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
+    background: rgba(124, 58, 237, 0.14) !important;
   }
 
   /* Nav */
@@ -245,7 +243,7 @@
   }
 
   .nav-link:hover {
-    color: #3B82F6 !important;
+    color: #7C3AED !important;
   }
 
   .hero-badge {
@@ -266,15 +264,6 @@
     font-family: 'Syne', sans-serif !important;
     font-weight: 800 !important;
     font-variant-numeric: tabular-nums;
-  }
-
-  /* Feature icon chips */
-  .icon-chip {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .group:hover .icon-chip {
-    transform: scale(1.12) rotate(-4deg);
   }
 
   /* Reveal-on-scroll */
@@ -302,13 +291,6 @@
     }
   }
 
-  /* Soft slate-tinted sections with subtle borders for clean visual sectioning */
-  .section-warm {
-    background: #F8FAFC !important;
-    border-top: 1px solid rgba(15, 23, 42, 0.06) !important;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
-  }
-
   /* Very light blue/purple lights that float in the background of every section */
   .warm-lights {
     position: absolute;
@@ -322,6 +304,21 @@
       radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.06), transparent 60%);
   }
 
+  /* ── Match English landing: clean white canvas, solid brand-purple buttons ── */
+  .warm-lights { display: none !important; }
+  .orb, .orb-blue, .orb-purple { display: none !important; }
+  .btn-primary {
+    background: #7C3AED !important;
+    background-image: none !important;
+    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+  }
+  .btn-primary:hover {
+    background: #6D28D9 !important;
+    background-image: none !important;
+    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+  }
+  .btn-primary:active { background: #5B21B6 !important; }
+
   /* Focus visibility */
   a:focus-visible,
   button:focus-visible,
@@ -329,6 +326,124 @@
     outline: none;
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
     border-radius: 12px;
+  }
+
+  /* ── Hero theme showcase ────────────────────────────── */
+  .showcase-wrap { position: relative; margin: 5.5rem auto 0; max-width: 5xl; }
+  .showcase-frame {
+    position: relative;
+    border-radius: 1.25rem;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.18), 0 8px 20px -8px rgba(15, 23, 42, 0.1);
+    overflow: hidden;
+  }
+  .showcase-bar {
+    display: flex; align-items: flex-end; gap: 10px;
+    padding: 8px 14px 0;
+    background: #E9EDF2;
+  }
+  .showcase-dot { width: 11px; height: 11px; border-radius: 999px; flex-shrink: 0; margin-bottom: 10px; }
+  .showcase-tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08); border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    padding: 7px 12px;
+    max-width: 46%; min-width: 0;
+    font-size: 0.68rem; font-weight: 600; color: #475569;
+  }
+  .showcase-tab { direction: ltr; }
+  .showcase-favicon {
+    width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0;
+    background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  }
+  .showcase-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .showcase-tab-x { width: 11px; height: 11px; color: #94A3B8; flex-shrink: 0; }
+  .showcase-tab-new {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; margin-bottom: 5px; border-radius: 6px;
+    color: #94A3B8; font-size: 0.85rem; font-weight: 700;
+  }
+  .showcase-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    background: #fff;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .showcase-toolbar-btn { width: 13px; height: 13px; color: #94A3B8; flex-shrink: 0; }
+  .showcase-url {
+    flex: 1; min-width: 0;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #F1F5F9; border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 0.72rem; color: #64748B; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-align: left; direction: ltr;
+  }
+  .showcase-lock { width: 10px; height: 10px; color: #10b981; flex-shrink: 0; }
+  @media (max-width: 480px) {
+    .showcase-tab { max-width: 58%; }
+    .showcase-nav-btn { display: none; }
+  }
+  .showcase-viewport {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background:
+      linear-gradient(100deg, #f8fafc 30%, #f1f5f9 50%, #f8fafc 70%) 0 0 / 200% 100%;
+    animation: showcase-shimmer 1.6s linear infinite;
+  }
+  .showcase-viewport iframe {
+    position: absolute; top: 0; left: 0;
+    width: 200%; height: 200%;
+    border: 0;
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
+  .showcase-viewport:not(.is-loaded) iframe { pointer-events: none; }
+  .showcase-viewport.is-loaded { animation: none; background: #fff; }
+  .showcase-open {
+    position: absolute; right: 12px; bottom: 12px; z-index: 5;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(15, 23, 42, 0.85); color: #fff;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px;
+    opacity: 0.9; transition: opacity .2s ease, background .2s ease;
+    backdrop-filter: blur(4px);
+  }
+  .showcase-open:hover { opacity: 1; background: #7C3AED; }
+  .showcase-hint {
+    position: absolute; right: 12px; bottom: 12px; z-index: 5;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255, 255, 255, 0.92); color: #475569;
+    font-size: 0.68rem; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    pointer-events: none;
+    transition: opacity .4s ease;
+  }
+  .showcase-hint.is-hidden { opacity: 0; }
+  @keyframes showcase-shimmer { to { background-position: -200% 0; } }
+
+  .showcase-chips {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin-top: 1.25rem;
+  }
+  .showcase-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 999px;
+    background: #fff; border: 1px solid rgba(15, 23, 42, 0.12);
+    font-size: 0.8rem; font-weight: 700; color: #475569;
+    cursor: pointer; transition: all .2s ease;
+  }
+  .showcase-chip:hover { border-color: rgba(124, 58, 237, 0.5); color: #7C3AED; }
+  .showcase-chip.is-active {
+    background: #7C3AED; border-color: #7C3AED; color: #fff;
+    box-shadow: 0 6px 16px -6px rgba(124, 58, 237, 0.55);
+  }
+  .showcase-caption {
+    margin-top: 0.9rem; text-align: center;
+    font-size: 0.75rem; font-weight: 600; color: #94A3B8;
   }
 </style>
 {% endblock %}
@@ -339,7 +454,7 @@
 <section class="min-h-[90vh] flex items-center justify-center px-6 py-20 relative overflow-hidden arabic-rtl">
   <!-- Hero background elements (matched to English landing) -->
   <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.1]" style="background: radial-gradient(circle, #3B82F6, transparent 70%);"></div>
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.1]" style="display: none;"></div>
 
   <div class="max-w-6xl mx-auto text-center relative z-10">
     <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-8 animate-fadeInUp whitespace-nowrap">
@@ -355,7 +470,7 @@
       أنشئ ملفًا مهنيًا<br /><span class="gradient-text">يفتح لك فرصًا أفضل</span>
     </h1>
 
-    <p class="text-base sm:text-lg md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
+    <p class="text-base sm:text-lg md:text-2xl text-slate-900 max-w-3xl mx-auto leading-relaxed mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
       اعرض مهاراتك وخبراتك ومشاريعك في دقائق. اختر تصميمًا احترافيًا، ثم شارك رابط ملفك المهني مع العملاء وأصحاب العمل بثقة.
     </p>
 
@@ -369,6 +484,52 @@
       <a href="{% url 'arabic_examples' %}" class="btn-ghost text-lg px-10 py-4 w-full sm:w-auto text-center rounded-2xl">
         شاهد نماذج جاهزة
       </a>
+    </div>
+
+    <!-- Live theme showcase (hidden on phones, like the English landing) -->
+    {{ theme_live_urls|json_script:"theme-live-urls" }}
+    <div class="showcase-wrap animate-fadeInUp max-w-4xl hidden md:block" style="animation-delay: 0.25s" data-showcase>
+      <div class="showcase-frame">
+        <div class="showcase-bar" aria-hidden="true">
+          <span class="showcase-dot" style="background:#F87171"></span>
+          <span class="showcase-dot" style="background:#FBBF24"></span>
+          <span class="showcase-dot" style="background:#34D399"></span>
+          <span class="showcase-tab">
+            <span class="showcase-favicon"></span>
+            <span class="showcase-tab-title" data-showcase-tab-title>Skillifly</span>
+            <svg class="showcase-tab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </span>
+          <span class="showcase-tab-new">+</span>
+        </div>
+        <div class="showcase-toolbar" aria-hidden="true">
+          <svg class="showcase-toolbar-btn showcase-nav-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <svg class="showcase-toolbar-btn showcase-nav-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          <svg class="showcase-toolbar-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          <span class="showcase-url">
+            <svg class="showcase-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span data-showcase-url>skillifly.cloud</span>
+          </span>
+          <svg class="showcase-toolbar-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 6v.01M12 12v.01M12 18v.01"/></svg>
+        </div>
+        <div class="showcase-viewport" data-showcase-viewport>
+          <iframe id="hero-showcase-iframe" title="Live portfolio built with Skillifly" loading="lazy"
+                  tabindex="-1" data-src="{{ showcase_initial_src }}"
+                  data-zoom="{{ showcase_zoom }}" data-rotate="{% if showcase_auto_rotate %}1{% else %}0{% endif %}"></iframe>
+          <span class="showcase-hint" data-showcase-hint>مرّر للاستكشاف ↓</span>
+          <a class="showcase-open" data-showcase-open href="{{ showcase_initial_src }}" target="_blank" rel="noopener">
+            عرض الملف مباشرة
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="showcase-chips" role="tablist" aria-label="معاينة التصاميم">
+        {% for chip in showcase_chips %}
+        <button type="button" class="showcase-chip{% if chip.active %} is-active{% endif %}" role="tab"
+                {% if chip.active %}aria-selected="true"{% else %}aria-selected="false"{% endif %}
+                data-theme-slug="{{ chip.slug }}" data-theme-label="{{ chip.label }}">{{ chip.label }}</button>
+        {% endfor %}
+      </div>
+      <p class="showcase-caption">ملفات مهنية حقيقية صُنعت بـ Skillifly — مرّر داخلها لاستكشافها، واضغط على أي تصميم للتبديل. ملفك قد يكون التالي.</p>
     </div>
 
     <div class="flex flex-col md:flex-row justify-center items-center mt-20 md:mt-24 pt-10 md:pt-12 animate-fadeInUp md:divide-x md:divide-x-reverse divide-y md:divide-y-0 divide-slate-200 space-y-10 md:space-y-0" style="animation-delay: 0.3s; border-top: 1px solid rgba(15,23,42,0.08);">
@@ -389,43 +550,108 @@
 </section>
 
 <!-- ===== 2. WHY SKILLIFLY ===== -->
-<section class="px-6 py-24 section-warm relative overflow-hidden arabic-rtl">
+<section class="px-6 py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden arabic-rtl">
   <div class="warm-lights" aria-hidden="true"></div>
   <div class="max-w-7xl mx-auto">
     <div class="text-center mb-16 md:mb-20 reveal">
       <p class="text-xs sm:text-sm font-bold text-blue-800 tracking-[0.3em] mb-4">لماذا Skillifly؟</p>
-      <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">
+      <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-black tracking-tight leading-tight">
         سريع وواضح. <br class="block sm:hidden" /><span class="gradient-text">مصمم ليُظهر قيمتك.</span>
       </h2>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <div class="gradient-border rounded-3xl p-8 group reveal">
-        <div class="icon-chip w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
           <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
         <h3 class="text-xl font-bold mb-3 text-slate-900">إعداد سريع وسلس</h3>
-        <p class="text-slate-600 leading-relaxed">لا تحتاج إلى أسابيع من التصميم والتجارب. يساعدك منشئ Skillifly على تحويل بياناتك إلى صفحة جاهزة للمشاركة خلال دقائق.</p>
+        <p class="text-slate-900 leading-relaxed">لا تحتاج إلى أسابيع من التصميم والتجارب. يساعدك منشئ Skillifly على تحويل بياناتك إلى صفحة جاهزة للمشاركة خلال دقائق.</p>
       </div>
 
-      <div class="gradient-border rounded-3xl p-8 group reveal" style="transition-delay: 0.08s">
-        <div class="icon-chip w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6">
+      <div class="gradient-border rounded-3xl p-8 group reveal shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.08s">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
           <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
         <h3 class="text-xl font-bold mb-3 text-slate-900">تصاميم احترافية</h3>
-        <p class="text-slate-600 leading-relaxed">اختر من بين قوالب مصممة لتقديم أعمالك بوضوح وأناقة، حتى يلمس الزائر خبرتك من أول نظرة.</p>
+        <p class="text-slate-900 leading-relaxed">اختر من بين قوالب مصممة لتقديم أعمالك بوضوح وأناقة، حتى يلمس الزائر خبرتك من أول نظرة.</p>
       </div>
 
-      <div class="gradient-border rounded-3xl p-8 group reveal" style="transition-delay: 0.16s">
-        <div class="icon-chip w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6">
+      <div class="gradient-border rounded-3xl p-8 group reveal shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.16s">
+        <div class="w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
           <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         </div>
         <h3 class="text-xl font-bold mb-3 text-slate-900">تحليلات واضحة</h3>
-        <p class="text-slate-600 leading-relaxed">تابع أداء ملفك واعرف عدد الزيارات والمشاريع التي تجذب الاهتمام، لتطوّر حضورك المهني بناءً على بيانات حقيقية.</p>
+        <p class="text-slate-900 leading-relaxed">تابع أداء ملفك واعرف عدد الزيارات والمشاريع التي تجذب الاهتمام، لتطوّر حضورك المهني بناءً على بيانات حقيقية.</p>
       </div>
     </div>
   </div>
 </section>
+
+<!-- ===== 2.5 COMMUNITY PORTFOLIOS (made with Skillifly) ===== -->
+{% if showcases %}
+<section class="px-6 py-24 relative overflow-hidden arabic-rtl hidden md:block">
+  <div class="warm-lights" aria-hidden="true"></div>
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-14 md:mb-16 reveal">
+      <p class="text-xs sm:text-sm font-bold text-blue-800 tracking-[0.3em] mb-4">ملفات حقيقية من مستخدمين حقيقيين</p>
+      <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-black tracking-tight leading-tight mb-4">
+        صُنع بواسطة <span class="gradient-text">Skillifly</span>
+      </h2>
+      <p class="text-slate-900 text-lg max-w-2xl mx-auto">ملفات مهنية مباشرة بناها مجتمعنا — افتح واحدة وشاهد ما الذي قد يبدو عليه ملفك.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for showcase in showcases %}
+      <a href="{% url 'preview' showcase.profile.user.username %}" target="_blank" rel="noopener"
+         class="testimonial-card gradient-border rounded-3xl overflow-hidden group block">
+        <div class="relative h-52 bg-slate-100 overflow-hidden">
+          {% if showcase.preview_image %}
+            <img src="{{ showcase.preview_image.url }}" alt="{{ showcase.profile.user.username }}: {{ showcase.title|default:'ملف مهني' }}" loading="lazy"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          {% elif showcase.profile.picture %}
+            <img src="{{ showcase.profile.picture.url }}" alt="{{ showcase.profile.user.username }}: {{ showcase.title|default:'ملف مهني' }}" loading="lazy"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10">
+              <span class="text-4xl font-black gradient-text" style="font-family:'Syne',sans-serif;">{{ showcase.profile.user.username|first|upper }}</span>
+            </div>
+          {% endif %}
+          <span class="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-white/90 backdrop-blur text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm">
+            <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+            مباشر
+          </span>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <h3 class="text-lg font-bold text-slate-900 truncate">
+              {% if showcase.title %}{{ showcase.title }}{% else %}{{ showcase.profile.user.username|title }}{% endif %}
+            </h3>
+            {% if showcase.profile.theme %}
+            <span class="shrink-0 text-[11px] font-bold uppercase tracking-wide text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">{{ showcase.profile.theme.name }}</span>
+            {% endif %}
+          </div>
+          <p class="text-sm text-slate-900 leading-relaxed line-clamp-2">
+            {{ showcase.description|default:showcase.profile.bio|default:"استكشف هذا الملف المهني الاحترافي الذي تم إنشاؤه باستخدام Skillifly." }}
+          </p>
+          <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-purple-700 group-hover:gap-2.5 transition-all">
+            عرض الملف
+            <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-12">
+      <a href="{% url 'arabic_examples' %}" class="btn-ghost inline-flex items-center gap-2 text-base px-8 py-3.5 rounded-xl">
+        استكشف كل النماذج الجاهزة
+        <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- ===== 3. TESTIMONIALS ===== -->
 <section class="px-6 py-24 relative overflow-hidden arabic-rtl">
@@ -435,7 +661,7 @@
       <h2 class="text-4xl md:text-6xl font-black mb-6 text-slate-900" >
         يثق به <span class="gradient-text">أصحاب المهارات</span>
       </h2>
-      <p class="text-slate-600 text-lg">انضم إلى مستخدمين يعرضون أعمالهم بثقة ويشاركون قصتهم المهنية بطريقة أوضح.</p>
+      <p class="text-slate-900 text-lg">انضم إلى مستخدمين يعرضون أعمالهم بثقة ويشاركون قصتهم المهنية بطريقة أوضح.</p>
     </div>
 
     {% if reviews %}
@@ -444,12 +670,12 @@
       <div class="testimonial-card glass-card rounded-3xl p-8 flex flex-col h-full reveal">
         <div class="flex gap-1 text-amber-400 mb-4" aria-label="التقييم: {{ review.rating }} من 5">
           {% for i in "12345" %}
-            <svg class="w-4 h-4 {% if forloop.counter <= review.rating %}fill-current{% else %}text-gray-300{% endif %}" viewBox="0 0 20 20">
+            <svg class="w-4 h-4 {% if forloop.counter <= review.rating %}fill-current{% else %}text-gray-600{% endif %}" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
             </svg>
           {% endfor %}
         </div>
-        <p class="text-slate-700 leading-relaxed mb-6 flex-grow">«{{ review.content }}»</p>
+        <p class="text-slate-900 italic leading-relaxed mb-6 flex-grow">«{{ review.content }}»</p>
         <div class="flex items-center gap-4 mt-auto pt-6 border-t border-slate-100">
           <div class="w-12 h-12 rounded-full border-2 border-white shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
             {% if review.image_url %}
@@ -463,7 +689,7 @@
           <div>
             <p class="font-bold text-slate-900">{{ review.user_name }}</p>
             {% if review.user_title %}
-              <p class="text-xs text-slate-500">{{ review.user_title }}</p>
+              <p class="text-xs text-slate-900">{{ review.user_title }}</p>
             {% endif %}
           </div>
         </div>
@@ -472,14 +698,14 @@
     </div>
     {% else %}
     <div class="text-center py-12 glass-card rounded-3xl">
-      <p class="text-slate-600">لا توجد تقييمات بعد. كن أول من يشارك تجربته.</p>
+      <p class="text-slate-900 italic">لا توجد تقييمات بعد. كن أول من يشارك تجربته.</p>
     </div>
     {% endif %}
   </div>
 </section>
 
 <!-- ===== 5. PRICING ===== -->
-<section class="px-4 sm:px-6 py-24 section-warm relative overflow-hidden arabic-rtl" id="pricing">
+<section class="px-4 sm:px-6 py-24 bg-slate-50 relative overflow-hidden arabic-rtl" id="pricing">
   <div class="warm-lights" aria-hidden="true"></div>
   <div class="max-w-7xl mx-auto">
 
@@ -535,7 +761,7 @@
           </span>
         </div>
         <!-- تدرج الخلفية -->
-        <div class="absolute inset-0 rounded-3xl pointer-events-none" style="background: linear-gradient(160deg,#EFF6FF 0%,#F5F3FF 60%,#fff 100%);"></div>
+        <div class="absolute inset-0 rounded-3xl pointer-events-none" style="background: #ffffff;"></div>
 
         <div class="relative z-10 flex flex-col flex-1">
           <div class="mb-5 pt-3">
@@ -552,7 +778,7 @@
             <p id="pro-note" class="text-xs text-emerald-600 font-bold mt-0.5">~37 جنيهًا فقط شهريًا</p>
           </div>
 
-          <div class="h-px mb-5" style="background: linear-gradient(to left, transparent, #c7d2fe, transparent);"></div>
+          <div class="h-px mb-5" style="background: linear-gradient(to left, transparent, #E2E8F0, transparent);"></div>
           <ul class="space-y-3.5 flex-1 mb-8">
             <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>جميع التصاميم المميزة</span></li>
             <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>رابط عام على skillifly.cloud/اسمك</span></li>
@@ -640,7 +866,7 @@
   <div class="max-w-3xl mx-auto">
     <div class="text-center mb-16 reveal">
       <h2 class="text-3xl md:text-5xl font-black mb-4 text-slate-900">أسئلة <span class="gradient-text">شائعة</span></h2>
-      <p class="text-slate-600">إجابات سريعة تساعدك على البدء بثقة.</p>
+      <p class="text-slate-900">إجابات سريعة تساعدك على البدء بثقة.</p>
     </div>
 
     <div class="space-y-4">
@@ -681,9 +907,9 @@
 <section class="px-6 py-24 arabic-rtl">
   <div class="max-w-5xl mx-auto">
     <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden bg-white border border-slate-100 shadow-2xl shadow-slate-200">
-      <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(circle at 50% 50%, #3B82F6, transparent 70%);"></div>
+      <div class="absolute inset-0 opacity-[0.03]" style="display: none;"></div>
       <div class="relative z-10">
-        <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 text-slate-900">
+        <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 text-black">
           جاهز لتقديم أفضل ما لديك؟
         </h2>
         <p class="text-slate-800 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium">ابدأ ملفك المهني الآن، واعرض مهاراتك ومشاريعك بأفضل صورة.</p>
@@ -701,6 +927,123 @@
 
 {% block extra_scripts %}
 <script>
+  // ── Hero live theme showcase ─────────────────────────
+  (function () {
+    var iframe    = document.getElementById('hero-showcase-iframe');
+    var viewport  = document.querySelector('[data-showcase-viewport]');
+    var openLink  = document.querySelector('[data-showcase-open]');
+    var urlPill   = document.querySelector('[data-showcase-url]');
+    var tabTitle  = document.querySelector('[data-showcase-tab-title]');
+    var chips     = Array.prototype.slice.call(document.querySelectorAll('[data-theme-slug]'));
+    if (!iframe || !chips.length) return;
+
+    var liveUrls = {};
+    try {
+      var mapEl = document.getElementById('theme-live-urls');
+      if (mapEl) liveUrls = JSON.parse(mapEl.textContent);
+    } catch (e) { liveUrls = {}; }
+
+    var index = 0;
+    var userPinned = false;
+    var hovering = false;
+    var lastActivity = 0;
+    var hint = document.querySelector('[data-showcase-hint]');
+
+    function markActivity() { lastActivity = Date.now(); }
+
+    function bindFrame() {
+      var doc;
+      try { doc = iframe.contentDocument; } catch (e) { doc = null; }
+      if (!doc) return;
+      doc.documentElement.addEventListener('mouseenter', function () { hovering = true; });
+      doc.documentElement.addEventListener('mouseleave', function () { hovering = false; });
+      ['mousemove', 'wheel', 'scroll', 'touchmove'].forEach(function (evt) {
+        doc.addEventListener(evt, markActivity, { passive: true });
+      });
+      if (hint) {
+        doc.addEventListener('scroll', function () { hint.classList.add('is-hidden'); }, { passive: true });
+      }
+    }
+
+    function srcFor(slug) {
+      var u = liveUrls[slug];
+      if (u) return u + (u.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
+      return '/preview/' + slug + '/';
+    }
+    function pillFor(slug) {
+      var u = liveUrls[slug];
+      if (!u) return 'skillifly.cloud/you';
+      var name = u.replace(/^\/+|\/+$/g, '');
+      return name ? 'skillifly.cloud/' + name : 'skillifly.cloud';
+    }
+    function tabTitleFor(chip) {
+      var u = liveUrls[chip.dataset.themeSlug];
+      var who = u ? u.replace(/^\/+|\/+$/g, '').split('?')[0] : chip.dataset.themeLabel;
+      return (who || 'Portfolio') + ' — Skillifly';
+    }
+
+    function applyZoom() {
+      var zoom = parseInt(iframe.getAttribute('data-zoom'), 10);
+      if (isNaN(zoom)) zoom = 50;
+      zoom = Math.min(100, Math.max(10, zoom));
+      var pct = 100 / (zoom / 100);
+      iframe.style.width = pct + '%';
+      iframe.style.height = pct + '%';
+      iframe.style.transform = 'scale(' + (zoom / 100) + ')';
+    }
+    applyZoom();
+
+    function activate(i) {
+      index = (i + chips.length) % chips.length;
+      var chip = chips[index];
+      chips.forEach(function (c) {
+        var on = c === chip;
+        c.classList.toggle('is-active', on);
+        c.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      var url = srcFor(chip.dataset.themeSlug);
+      viewport.classList.remove('is-loaded');
+      iframe.src = url;
+      if (openLink) openLink.href = url;
+      if (urlPill) urlPill.textContent = pillFor(chip.dataset.themeSlug);
+      iframe.onload = function () { viewport.classList.add('is-loaded'); bindFrame(); };
+    }
+
+    function start() {
+      activate(index);
+    }
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { start(); io.disconnect(); }
+      }, { rootMargin: '200px' });
+      io.observe(viewport);
+    } else {
+      start();
+    }
+
+    chips.forEach(function (chip, i) {
+      chip.addEventListener('click', function () {
+        userPinned = true;
+        activate(i);
+      });
+    });
+
+    var wrap = document.querySelector('[data-showcase]');
+    if (wrap) {
+      wrap.addEventListener('mouseenter', function () { hovering = true; });
+      wrap.addEventListener('mouseleave', function () { hovering = false; });
+    }
+
+    if (iframe.getAttribute('data-rotate') !== '0') {
+      setInterval(function () {
+        var idle = Date.now() - lastActivity > 3000;
+        if (!userPinned && !hovering && idle && document.visibilityState === 'visible' && viewport.classList.contains('is-loaded')) {
+          activate(index + 1);
+        }
+      }, 7000);
+    }
+  })();
+
   (function () {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

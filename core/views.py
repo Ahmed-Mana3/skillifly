@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 from urllib.parse import quote
 from decimal import Decimal
 from django.conf import settings
@@ -17,7 +18,7 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP, School, SchoolStudent, SchoolVideoRating, SchoolVideoComment, SchoolStudentRating
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP, School, SchoolStudent, SchoolVideoRating, SchoolVideoComment, SchoolStudentRating, SiteSettings
 from .forms import RegisterForm, LoginForm, ReviewForm, ClientReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm, SchoolAdminRegisterForm, ChooseSchoolForm
 import random
 from django.core.mail import send_mail
@@ -506,6 +507,106 @@ from portfolios.views import (
 
 
 
+DEFAULT_SHOWCASE_THEMES = ['creative_white', 'animated_dark', 'monochrome', 'categories']
+
+SHOWCASE_THEME_LABELS = {
+    'creative_white': '🤍 Creative White',
+    'animated_dark': '🌙 Animated Dark',
+    'monochrome': '◑ Monochrome',
+    'categories': '🗂 Categories',
+}
+
+
+def _theme_slug(theme):
+    return theme.name.lower().replace('-', '_').replace(' ', '_') if theme else ''
+
+
+def _active_paid_user_ids():
+    """User IDs with a status=paid subscription that hasn't expired yet."""
+    latest_paid = {}
+    for payment in UserPayment.objects.filter(
+        status='paid', user__isnull=False
+    ).select_related('subscription').order_by('date'):
+        latest_paid[payment.user_id] = payment  # ascending date → last wins
+    return {uid for uid, p in latest_paid.items() if p.is_active}
+
+
+def _showcase_settings():
+    """Return (settings, themes, default, zoom, auto_rotate, overrides)."""
+    settings = SiteSettings.objects.first()
+    themes = (settings.showcase_themes if settings and settings.showcase_themes else [])
+    if not themes:
+        themes = list(DEFAULT_SHOWCASE_THEMES)
+    zoom = settings.showcase_zoom if settings else 50
+    auto_rotate = True if not settings else settings.showcase_auto_rotate
+    overrides = (settings.showcase_overrides or {}) if settings else {}
+    # Keep the setting in sync so the manage page always reflects it
+    if settings and list(settings.showcase_themes or []) != themes:
+        settings.showcase_themes = themes
+        settings.save(update_fields=['showcase_themes'])
+    default = settings.showcase_default_theme if settings and settings.showcase_default_theme in themes else themes[0]
+    return settings, themes, default, zoom, auto_rotate, overrides
+
+
+def _showcase_context():
+    """Shared context for the hero live-theme showcase (landing + Arabic landing).
+
+    Maps each theme slug to a live portfolio URL. Explicit per-theme overrides
+    (set on the manage page) win; anything left is auto-picked from curated
+    showcases, then any public profile on the theme. The mock preview is only
+    the last-resort fallback. Only users with an active subscription qualify —
+    preview_view auto-flips unpaid profiles to private, which would render a
+    403 inside the hero frame.
+    """
+    _, showcase_themes, default_theme, showcase_zoom, auto_rotate, overrides = _showcase_settings()
+    active_user_ids = _active_paid_user_ids()
+
+    theme_live_urls = {}
+    # Pass 0: pinned portfolios from the manage page
+    for slug in showcase_themes:
+        uname = (overrides.get(slug) or '').strip().strip('/')
+        if not uname:
+            continue
+        pinned = Profile.objects.filter(
+            user__username=uname, is_public=True
+        ).select_related('user', 'theme').first()
+        if pinned and pinned.user_id in active_user_ids:
+            theme_live_urls[slug] = '/' + pinned.user.username + '/'
+    # Pass 1: curated showcase portfolios, pass 2: any public profile to fill gaps
+    for qs in (
+        Profile.objects.filter(is_public=True, showcase__is_active=True),
+        Profile.objects.filter(is_public=True),
+    ):
+        for profile in qs.select_related('user', 'theme'):
+            slug = _theme_slug(profile.theme)
+            if slug and profile.user_id in active_user_ids and slug not in theme_live_urls:
+                theme_live_urls[slug] = '/' + profile.user.username + '/'
+
+    chips = []
+    for i, slug in enumerate(showcase_themes):
+        chips.append({
+            'slug': slug,
+            'label': SHOWCASE_THEME_LABELS.get(slug, slug.replace('_', ' ').title()),
+            'active': i == 0,
+            'url': theme_live_urls.get(slug) or ('/preview/%s/' % slug),
+            'preview_url': theme_live_urls.get(slug, ''),
+        })
+    initial_src = theme_live_urls.get(default_theme) or ('/preview/' + default_theme + '/')
+    pill_host = initial_src.replace('/preview/', '').strip('/').split('?')[0]
+
+    return {
+        'theme_live_urls': theme_live_urls,
+        'showcase_chips': chips,
+        'showcase_themes': showcase_themes,
+        'showcase_default_theme': default_theme,
+        'showcase_zoom': showcase_zoom,
+        'showcase_auto_rotate': auto_rotate,
+        'showcase_initial_src': initial_src,
+        'showcase_initial_host': pill_host or 'skillifly.cloud',
+        'showcase_overrides': overrides,
+    }
+
+
 def index(request):
     """Render the home/landing page — redirect authenticated users to dashboard"""
     if request.user.is_authenticated:
@@ -516,13 +617,22 @@ def index(request):
     
     # Get featured reviews
     reviews = Review.objects.filter(is_featured=True).order_by('order', '-created_at')[:6]
-    
+
+    # Featured community portfolios (same source as the live examples page)
+    showcases = Showcase.objects.filter(is_active=True).select_related(
+        'profile__user', 'profile__theme'
+    ).order_by('order', '-created_at')[:6]
+
     context = {
         'portfolios_count': portfolios_count,
         'themes_count': themes_count,
         'total_visits': total_visits,
         'reviews': reviews,
+        'showcases': showcases,
     }
+
+    # Hero live-theme showcase (shared with the Arabic landing).
+    context.update(_showcase_context())
     return render(request, 'core/index.html', context)
 
 
@@ -555,13 +665,22 @@ def arabic_landing_view(request):
             },
         ]
 
+    # Featured community portfolios (same source as the live examples page)
+    showcases = Showcase.objects.filter(is_active=True).select_related(
+        'profile__user', 'profile__theme'
+    ).order_by('order', '-created_at')[:6]
+
     context = {
         'portfolios_count': portfolios_count,
         'themes_count': themes_count,
         'total_visits': total_visits,
         'reviews': reviews,
+        'showcases': showcases,
         'is_arabic_page': True,
     }
+
+    # Hero live-theme showcase (shared with the English landing).
+    context.update(_showcase_context())
     return render(request, 'core/arabic_landing.html', context)
 
 
@@ -2237,8 +2356,8 @@ def admin_dashboard(request):
 @user_passes_test(lambda u: u.is_superuser)
 def manage_dashboard(request):
     """Admin hub for superusers to access all management pages."""
-    from .models import DiscountCode, SiteSettings
-    from .forms import DiscountCodeForm, SiteSettingsForm
+    from .models import DiscountCode, SiteSettings, Theme as ThemeModel
+    from .forms import DiscountCodeForm, SiteSettingsForm, ShowcaseSettingsForm
     
     discount_codes = DiscountCode.objects.all().order_by('-created_at')
     site_settings = SiteSettings.objects.first()
@@ -2247,14 +2366,210 @@ def manage_dashboard(request):
         
     discount_form = DiscountCodeForm()
     banner_form = SiteSettingsForm(instance=site_settings)
-    
+
+    # Homepage hero showcase controls
+    _, showcase_themes, default_theme, showcase_zoom, auto_rotate, overrides = _showcase_settings()
+
+    # Candidate portfolios per theme for the override dropdowns (public + paid)
+    active_user_ids = _active_paid_user_ids()
+    theme_options = {}
+    for profile in Profile.objects.filter(is_public=True).select_related('user', 'theme'):
+        if profile.user_id not in active_user_ids:
+            continue
+        slug = _theme_slug(profile.theme) or 'default'
+        label = profile.user.username
+        if profile.user.get_full_name().strip():
+            label += ' — ' + profile.user.get_full_name().strip()
+        theme_options.setdefault(slug, []).append((profile.user.username, label))
+
+    # Every known theme slug, so new tabs can be added from the manage page
+    known_slugs = []
+    for t in ThemeModel.objects.all():
+        slug = _theme_slug(t)
+        if slug and slug not in known_slugs:
+            known_slugs.append(slug)
+    for slug in DEFAULT_SHOWCASE_THEMES:
+        if slug not in known_slugs:
+            known_slugs.append(slug)
+
+    theme_choices = [(s, SHOWCASE_THEME_LABELS.get(s, s.replace('_', ' ').title())) for s in known_slugs]
+    showcase_form = ShowcaseSettingsForm(
+        instance=site_settings,
+        theme_choices=theme_choices,
+    )
+
+    theme_rows = []
+    for slug in showcase_themes:
+        theme_rows.append({
+            'slug': slug,
+            'label': SHOWCASE_THEME_LABELS.get(slug, slug.replace('_', ' ').title()),
+            'current_override': (overrides.get(slug) or ''),
+            'options': theme_options.get(slug, []),
+        })
+
+    # 'Made with Skillifly' section entries (who appears on the landing page)
+    from .models import Showcase
+    showcases = Showcase.objects.select_related('profile__user', 'profile__theme').all()
+    showcase_candidates = (
+        Profile.objects.filter(is_public=True)
+        .exclude(showcase__isnull=False)
+        .select_related('user', 'theme')
+        .order_by('user__username')
+    )
+
     context = {
         'discount_codes': discount_codes,
         'site_settings': site_settings,
         'discount_form': discount_form,
         'banner_form': banner_form,
+        # Homepage hero showcase
+        'showcase_form': showcase_form,
+        'showcase_themes': showcase_themes,
+        'showcase_rows': theme_rows,
+        'showcase_themes_json': json.dumps(showcase_themes),
+        'showcase_overrides_json': json.dumps(overrides),
+        'showcase_default_theme': default_theme,
+        'showcase_zoom': showcase_zoom,
+        'showcase_auto_rotate': auto_rotate,
+        'showcase_overrides': overrides,
+        'theme_options': theme_options,
+        'theme_options_json': json.dumps(theme_options),
+        'theme_choices_raw': theme_choices,
+        'showcase_labels': SHOWCASE_THEME_LABELS,
+        # Made with Skillifly section
+        'showcases': showcases,
+        'showcase_candidates': showcase_candidates,
     }
     return render(request, 'core/manage.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_showcase_update(request):
+    """Save the homepage hero-showcase settings (tabs, zoom, rotate, overrides)."""
+    from .forms import ShowcaseSettingsForm
+
+    settings = SiteSettings.objects.first()
+    if not settings:
+        settings = SiteSettings.objects.create()
+
+    theme_choices = []
+    for t in Theme.objects.all():
+        slug = _theme_slug(t)
+        if slug and slug not in [c[0] for c in theme_choices]:
+            theme_choices.append((slug, SHOWCASE_THEME_LABELS.get(slug, slug.replace('_', ' ').title())))
+    for slug in DEFAULT_SHOWCASE_THEMES:
+        if slug not in [c[0] for c in theme_choices]:
+            theme_choices.append((slug, SHOWCASE_THEME_LABELS.get(slug, slug.replace('_', ' ').title())))
+
+    form = ShowcaseSettingsForm(request.POST, instance=settings, theme_choices=theme_choices)
+    if form.is_valid():
+        form.save()
+
+        # Ordered theme tab list (JSON) — re-parsed so the JSONField never
+        # receives the raw string.
+        try:
+            theme_list = json.loads(form.cleaned_data.get('showcase_themes') or '[]')
+        except (ValueError, TypeError):
+            theme_list = []
+        theme_list = [str(s) for s in theme_list if isinstance(s, str)] if isinstance(theme_list, list) else []
+        if not theme_list:
+            theme_list = list(DEFAULT_SHOWCASE_THEMES)
+        settings.showcase_themes = theme_list
+        default = str(form.cleaned_data.get('showcase_default_theme') or '')
+        settings.showcase_default_theme = default if default in theme_list else theme_list[0]
+        settings.save(update_fields=['showcase_themes', 'showcase_default_theme'])
+
+        raw = request.POST.get('showcase_overrides', '')
+        try:
+            overrides = json.loads(raw) if raw.strip() else {}
+        except (ValueError, TypeError):
+            overrides = {}
+        if not isinstance(overrides, dict):
+            overrides = {}
+        settings.showcase_overrides = {str(k): (str(v) if v else '') for k, v in overrides.items()}
+        settings.save(update_fields=['showcase_overrides'])
+        messages.success(request, 'Homepage showcase settings saved.')
+    else:
+        messages.error(request, 'Could not save homepage showcase settings: %s' % dict(form.errors))
+    return redirect('manage_dashboard')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_showcase_entry_add(request):
+    """Add a public profile to the landing page 'Made with Skillifly' section."""
+    from django.db.models import Max
+    from .models import Showcase
+
+    username = (request.POST.get('username') or '').strip()
+    if not username:
+        messages.error(request, 'Choose a portfolio to add.')
+        return redirect('manage_dashboard')
+    profile = Profile.objects.filter(user__username=username, is_public=True).select_related('user').first()
+    if not profile:
+        messages.error(request, f"No public portfolio found for '{username}'.")
+        return redirect('manage_dashboard')
+    max_order = Showcase.objects.aggregate(m=Max('order'))['m'] or 0
+    _, created = Showcase.objects.get_or_create(
+        profile=profile,
+        defaults={'is_active': True, 'order': max_order + 1},
+    )
+    if created:
+        messages.success(request, f"Added {profile.user.username} to Made with Skillifly.")
+    else:
+        messages.success(request, f"{profile.user.username} was already in the showcase.")
+    return redirect('manage_dashboard')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_showcase_entry_toggle(request, pk):
+    """Show/hide a single 'Made with Skillifly' entry."""
+    from .models import Showcase
+
+    entry = get_object_or_404(Showcase, pk=pk)
+    entry.is_active = not entry.is_active
+    entry.save(update_fields=['is_active'])
+    username = entry.profile.user.username
+    messages.success(request, f"{username} is now {'shown' if entry.is_active else 'hidden'} in Made with Skillifly.")
+    return redirect('manage_dashboard')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_showcase_entry_move(request, pk, direction):
+    """Reorder entries by swapping the target with its adjacent neighbour."""
+    from .models import Showcase
+
+    entry = get_object_or_404(Showcase, pk=pk)
+    ordered = list(Showcase.objects.order_by('order', '-created_at').select_related('profile__user'))
+    idx = next((i for i, e in enumerate(ordered) if e.pk == entry.pk), None)
+    if idx is None:
+        return redirect('manage_dashboard')
+    other = idx - 1 if direction == 'up' else idx + 1
+    if other < 0 or other >= len(ordered):
+        messages.error(request, 'This entry is already at the edge.')
+        return redirect('manage_dashboard')
+    ordered[idx], ordered[other] = ordered[other], ordered[idx]
+    for i, e in enumerate(ordered):
+        if e.order != i:
+            Showcase.objects.filter(pk=e.pk).update(order=i)
+    messages.success(request, 'Made with Skillifly order updated.')
+    return redirect('manage_dashboard')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_showcase_entry_delete(request, pk):
+    """Remove an entry from the 'Made with Skillifly' section entirely."""
+    from .models import Showcase
+
+    entry = get_object_or_404(Showcase, pk=pk)
+    username = entry.profile.user.username
+    entry.delete()
+    messages.success(request, f"Removed {username} from Made with Skillifly.")
+    return redirect('manage_dashboard')
 
 
 

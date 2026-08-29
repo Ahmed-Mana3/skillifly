@@ -64,6 +64,11 @@ urlpatterns = [
     
     # Management - Move more specific ones UP
     path('manage/affiliates/', views.manage_affiliates, name='manage_affiliates'),
+    path('manage/showcase/update/', views.manage_showcase_update, name='manage_showcase_update'),
+    path('manage/showcase/entry/add/', views.manage_showcase_entry_add, name='manage_showcase_entry_add'),
+    path('manage/showcase/entry/toggle/<int:pk>/', views.manage_showcase_entry_toggle, name='manage_showcase_entry_toggle'),
+    path('manage/showcase/entry/move/<int:pk>/<str:direction>/', views.manage_showcase_entry_move, name='manage_showcase_entry_move'),
+    path('manage/showcase/entry/delete/<int:pk>/', views.manage_showcase_entry_delete, name='manage_showcase_entry_delete'),
     path('manage/blog/', include('blog.dashboard_urls')),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
     path('affiliate/', views.affiliate_view, name='affiliate'),

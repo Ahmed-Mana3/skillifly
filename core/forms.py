@@ -375,3 +375,34 @@ class SiteSettingsForm(forms.ModelForm):
             'banner_coupon_code': forms.TextInput(attrs={'class': 'sf-input', 'placeholder': 'e.g. WELCOME2026'}),
             'banner_is_active': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'}),
         }
+
+
+class ShowcaseSettingsForm(forms.ModelForm):
+    """Homepage hero-showcase controls (the fake-browser tabs on the landing page).
+
+    showcase_themes arrives as a JSON array string from the manage UI's hidden
+    input (ordered list of enabled theme slugs) and is re-parsed by the view —
+    it stays a CharField here on purpose so form.save() never writes the raw
+    string into the JSONField column. Portfolio overrides are likewise handled
+    by the view from a dedicated hidden field.
+    """
+
+    showcase_themes = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'id': 'showcase_themes_input'}),
+        help_text='JSON array of theme slugs in display order (managed by the UI).',
+    )
+
+    class Meta:
+        model = SiteSettings
+        fields = ['showcase_default_theme', 'showcase_auto_rotate', 'showcase_zoom']
+        widgets = {
+            'showcase_default_theme': forms.Select(attrs={'class': 'sf-input'}),
+            'showcase_auto_rotate': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'}),
+            'showcase_zoom': forms.NumberInput(attrs={'class': 'sf-input', 'min': 10, 'max': 100}),
+        }
+
+    def __init__(self, *args, theme_choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if theme_choices:
+            self.fields['showcase_default_theme'].choices = theme_choices

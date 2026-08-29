@@ -268,8 +268,11 @@ def preview_view(request, username):
     if not profile.is_public and request.user != user and user.username != 'alex_mercer':
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    # Don't log visits for mock user or owner visiting their own portfolio
-    if user.username != 'alex_mercer' and (not request.user.is_authenticated or request.user != user):
+    # Don't log visits for mock user, owner visiting their own portfolio,
+    # or landing-page embeds (?embed=1) so hero impressions don't inflate stats
+    if (user.username != 'alex_mercer'
+            and (not request.user.is_authenticated or request.user != user)
+            and request.GET.get('embed') != '1'):
         profile.visits += 1
         profile.save(update_fields=['visits'])
 
