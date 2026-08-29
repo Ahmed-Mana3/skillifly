@@ -135,7 +135,7 @@ class Education(models.Model):
 # 7. Skills
 class Skill(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="skills")
-    name = models.CharField(max_length=254)
+    name = models.CharField(max_length=500)
 
 
     def __str__(self):
@@ -304,7 +304,7 @@ class ManualPayment(models.Model):
     plan_type = models.CharField(max_length=20)                   # 'monthly' | 'pro_annual' (legacy: 'pro_monthly')
     amount_expected = models.DecimalField(max_digits=8, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='vodafone')
-    sender_identifier = models.CharField(max_length=100)          # phone number or instapay handle
+    sender_identifier = models.CharField(max_length=500)          # phone number or instapay handle
     receipt_image = models.ImageField(upload_to='receipts/')
     status = models.CharField(max_length=20, default='pending', choices=STATUS_CHOICES)
     rejection_reason = models.TextField(blank=True, null=True)

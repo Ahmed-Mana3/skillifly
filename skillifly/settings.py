@@ -156,16 +156,15 @@ if _db_url:
     import urllib.parse as _urlparse
     _parsed = _urlparse.urlparse(_db_url)
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": _parsed.path.lstrip("/"),
-            "USER": _parsed.username or "",
-            "PASSWORD": _parsed.password or "",
-            "HOST": _parsed.hostname or "localhost",
-            "PORT": str(_parsed.port or 5432),
-            "CONN_MAX_AGE": int(os.environ.get("DB_CONN_MAX_AGE", "60")),
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'skillifly',
+        'USER': 'skillifly_user',
+        'PASSWORD': '#dev.ahmed.medhaT1#',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
         }
-    }
+}
 else:
     # SQLite fallback for local development — do NOT use in production.
     DATABASES = {
