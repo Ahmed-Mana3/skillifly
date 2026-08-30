@@ -1239,6 +1239,7 @@
       .project-card, .button, .nav-cta, .social-links a { transition: none; }
     }
   </style>
+  {% include "portfolios/common/section_layout_css.html" %}
 </head>
 <body>
   <div class="site-shell">
@@ -1270,7 +1271,10 @@
       </button>
     </header>
 
-    <main>
+    <!-- .portfolio-body: reorderable via section_layout_css.html when a
+         custom layout is saved. The hero stays first (order 0), the footer
+         is pinned last (order 999). -->
+    <main class="portfolio-body">
       <section class="hero" id="main" aria-labelledby="hero-title">
         <div class="hero-content">
           <p class="eyebrow">{{ personal_info.title|default:"The editor clients remember" }}</p>
@@ -1578,6 +1582,7 @@
         <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
       </div>
     </footer>
+  </main>
   </div>
 
   <script>

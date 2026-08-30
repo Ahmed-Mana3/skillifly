@@ -41,7 +41,28 @@ const BX_I18N = Object.assign({
   btnRemoveFromPortfolio: 'Remove from portfolio',
   btnListOnPortfolio: 'List on portfolio',
   msgReviewLive: 'Review is now live on your portfolio.',
-  msgReviewHidden: 'Review hidden from your portfolio.'
+  msgReviewHidden: 'Review hidden from your portfolio.',
+  secOrder: 'Section layout',
+  msgOrderSaved: 'Layout saved — your portfolio now shows sections in this order.',
+  msgOrderSaveFail: 'Failed to save the layout — please try again.',
+  msgOrderReset: 'Section order reset to the theme default.',
+  msgOrderResetFail: 'Failed to reset — please try again.',
+  msgOrderMinVisible: 'At least one section must stay visible.',
+  orderHideSection: 'Hide',
+  orderShowSection: 'Show',
+  orderMoveUp: 'Move up',
+  orderMoveDown: 'Move down',
+  orderSaving: ' Saving…',
+  orderStatusUnsaved: 'Unsaved changes',
+  orderConfirmResetTitle: 'Reset section layout?',
+  orderConfirmResetDesc: 'This clears your custom order and shows every section again. You can re-arrange afterwards, but this step can\u2019t be undone.',
+  orderConfirmResetOk: 'Reset layout',
+  msgOrderAlreadyDefault: 'Already using the theme default order.',
+  msgOrderFlushFail: 'Your section layout couldn\u2019t be saved, so nothing else was saved either. Please try again.',
+  orderLiveMoved: '{name} moved to position {n} of {total}',
+  orderLiveHidden: '{name} hidden from your portfolio',
+  orderLiveShown: '{name} visible again',
+  orderLiveSaved: 'Layout saved.'
 }, window.BuilderI18n || {});
 
 function bxt(key, vars) {
@@ -58,14 +79,15 @@ const BX = {
   currentKey: 'identity',
   isDirty: false,
   isSubmitting: false,
+  layoutFlushed: false,
   undoStack: [],
   lastSubmitter: null,
-  order: ['identity', 'skills', 'education', 'experience', 'projects', 'links', 'creators', 'reviews'],
+  order: ['identity', 'skills', 'education', 'experience', 'projects', 'links', 'creators', 'reviews', 'order'],
 
   ORDERS_BY_CATEGORY: {
-    student: ['identity', 'education', 'skills', 'experience', 'projects', 'creators', 'reviews', 'links'],
-    video_editor: ['identity', 'projects', 'skills', 'creators', 'reviews', 'experience', 'education', 'links'],
-    developer: ['identity', 'skills', 'experience', 'projects', 'creators', 'reviews', 'education', 'links']
+    student: ['identity', 'education', 'skills', 'experience', 'projects', 'creators', 'reviews', 'links', 'order'],
+    video_editor: ['identity', 'projects', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'],
+    developer: ['identity', 'skills', 'experience', 'projects', 'creators', 'reviews', 'education', 'links', 'order']
   },
 
   SECTION_LABELS: {
@@ -92,6 +114,7 @@ const BX = {
     this.cachePanels();
     this.applySectionOrder();
     this.bindEvents();
+    BXSectionOrder.init();
     this.setupCharCounters();
     this.refreshEmptyStates();
     this.refreshProgress();
@@ -110,8 +133,11 @@ const BX = {
 
   applySectionOrder() {
     const preferred = this.ORDERS_BY_CATEGORY[this.category] || this.ORDERS_BY_CATEGORY.developer;
+    // Preferred keys whose panel is absent (e.g. the layout panel only ships
+    // for the minimal theme) are dropped; reordering only requires that the
+    // remaining keys cover every rendered panel.
     const valid = preferred.filter(k => this.panelByKeyExists(k));
-    if (valid.length !== preferred.length || valid.length !== this.panels.length) return;
+    if (valid.length !== this.panels.length) return;
 
     this.order = valid;
     valid.forEach((key, i) => {
@@ -177,6 +203,14 @@ const BX = {
         case 'save-category-modal': this.saveCategoryModal(); break;
         case 'toggle-review': this.toggleReview(actionEl.dataset.reviewId, actionEl); break;
         case 'clear-upload': this.clearUpload(actionEl); break;
+        case 'order-up': BXSectionOrder.moveRow(actionEl.closest('.bx-order-row'), -1); break;
+        case 'order-down': BXSectionOrder.moveRow(actionEl.closest('.bx-order-row'), 1); break;
+        case 'order-toggle-visibility': BXSectionOrder.toggleVisibility(actionEl.closest('.bx-order-row')); break;
+        case 'order-preset': BXSectionOrder.applyPreset(actionEl.dataset.order); break;
+        case 'order-save': BXSectionOrder.save(); break;
+        case 'order-reset': BXSectionOrder.reset(); break;
+        case 'order-confirm-save': BXSectionOrder.confirmReset(); break;
+        case 'order-confirm-cancel': BXSectionOrder.closeConfirm(); break;
       }
     });
 
@@ -208,7 +242,8 @@ const BX = {
     this.form.addEventListener('submit', (e) => this.handleSubmit(e));
 
     window.addEventListener('beforeunload', (e) => {
-      if (this.isDirty && !this.isSubmitting) {
+      const layoutPending = !!(BXSectionOrder.list && BXSectionOrder.hasPending());
+      if ((this.isDirty || layoutPending) && !this.isSubmitting) {
         e.preventDefault();
         e.returnValue = '';
         return e.returnValue;
@@ -407,9 +442,32 @@ const BX = {
     return { valid: count === 0, count, first };
   },
 
-  handleSubmit(e) {
+  async handleSubmit(e) {
     if (this.isSubmitting) {
       e.preventDefault();
+      return;
+    }
+
+    // The section layout saves through its own AJAX endpoint, so the form POST
+    // would silently drop pending layout edits. Flush them first, then replay
+    // the submit. preventDefault must run synchronously — before any await —
+    // or the browser navigates away mid-flush.
+    if (this.layoutFlushed) {
+      this.layoutFlushed = false;
+    } else if (BXSectionOrder.list && BXSectionOrder.hasPending()) {
+      e.preventDefault();
+      const flushed = await BXSectionOrder.flush();
+      if (!flushed) {
+        this.toast(bxt('msgOrderFlushFail'), 'error');
+        this.goTo('order');
+        return;
+      }
+      this.layoutFlushed = true;
+      try {
+        this.form.requestSubmit(e.submitter || undefined);
+      } catch (err) {
+        this.form.requestSubmit();
+      }
       return;
     }
 
@@ -1093,6 +1151,488 @@ const BX = {
     if (!location.hash) return;
     const key = location.hash.slice(1);
     if (this.order.includes(key)) this.goTo(key);
+  }
+};
+
+/* ========================================================================
+   Section layout panel — drag & drop ordering + visibility for the
+   minimal theme. Talks to the ajax_save_section_layout endpoint; the
+   public template reorders sections via CSS `order` (see
+   portfolios/common/section_layout_css.html). Pending edits mark the page
+   dirty (savebar + beforeunload) and are flushed by the main form submit
+   so "Save changes" never drops them.
+   ======================================================================== */
+const BXSectionOrder = {
+  DRAG_KEY: 'text/plain',
+
+  init() {
+    this.list = document.getElementById('bx-order-list');
+    if (!this.list) return;
+    this.confirmEl = document.getElementById('bx-order-confirm');
+    this.status = document.getElementById('bx-order-status');
+    this.saveBtn = document.getElementById('bx-order-save');
+    this.resetBtn = this.list.closest('.bx-panel') ?
+      this.list.closest('.bx-panel').querySelector('[data-action="order-reset"]') : null;
+    this.liveEl = document.getElementById('bx-order-live');
+    this.chips = Array.from(this.list.closest('.bx-panel')
+      .querySelectorAll('[data-action="order-preset"]'));
+    this.saveUrl = (document.getElementById('ajax-save-layout-url') || {}).value || '';
+    this.saving = false;
+    this.lastSavePromise = null;
+    // Whether the SERVER currently holds a custom layout — drives the status
+    // chip and lets "Reset" no-op when there is nothing saved to reset.
+    this.serverCustom = !!(this.status && this.status.classList.contains('is-custom'));
+    this.bindDrag();
+    this.bindConfirm();
+    this.baseline = this.serialize();
+    this.refresh();
+  },
+
+  bindConfirm() {
+    if (!this.confirmEl) return;
+
+    this.confirmEl.addEventListener('click', (e) => {
+      if (e.target === this.confirmEl) this.closeConfirm();
+    });
+
+    this.confirmEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.closeConfirm();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const els = Array.from(this.confirmEl.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )).filter(el => !el.disabled && el.offsetParent !== null);
+      if (!els.length) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  },
+
+  rows() {
+    return Array.from(this.list.querySelectorAll('.bx-order-row'));
+  },
+
+  bindDrag() {
+    let dragged = null;
+
+    // Arm dragging only from the grip handle so clicks on the row controls
+    // never turn into accidental drags. Re-armed on every grip press.
+    this.list.addEventListener('pointerdown', (e) => {
+      const row = e.target.closest('.bx-order-row');
+      if (row && e.target.closest('.bx-order-grip')) {
+        row.draggable = true;
+      }
+    });
+    document.addEventListener('pointerup', () => {
+      this.rows().forEach(r => {
+        if (!r.classList.contains('is-dragging')) r.draggable = false;
+      });
+    });
+
+    this.list.addEventListener('dragstart', (e) => {
+      const row = e.target.closest('.bx-order-row');
+      if (!row || !row.draggable) return;
+      dragged = row;
+      row.classList.add('is-dragging');
+      try { e.dataTransfer.setData(this.DRAG_KEY, row.dataset.key || ''); } catch (err) { /* legacy */ }
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    this.list.addEventListener('dragover', (e) => {
+      if (!dragged) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const target = e.target.closest('.bx-order-row');
+      if (!target || target === dragged) return;
+      const rect = target.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      target.classList.toggle('is-drop-before', before);
+      target.classList.toggle('is-drop-after', !before);
+    });
+
+    this.list.addEventListener('drop', (e) => {
+      if (!dragged) return;
+      e.preventDefault();
+      const target = e.target.closest('.bx-order-row');
+      if (target && target !== dragged) {
+        const before = target.classList.contains('is-drop-before');
+        this.list.insertBefore(dragged, before ? target : target.nextSibling);
+      }
+      this.clearDragMarks();
+      dragged.draggable = false;
+      dragged.classList.remove('is-dragging');
+      this.announceMove(dragged);
+      dragged = null;
+      this.refresh();
+    });
+
+    this.list.addEventListener('dragend', () => {
+      if (dragged) {
+        dragged.draggable = false;
+        dragged.classList.remove('is-dragging');
+      }
+      this.clearDragMarks();
+      dragged = null;
+    });
+  },
+
+  clearDragMarks() {
+    this.list.querySelectorAll('.is-drop-before, .is-drop-after').forEach(r =>
+      r.classList.remove('is-drop-before', 'is-drop-after'));
+  },
+
+  moveRow(row, delta) {
+    if (!row) return;
+    const sibling = delta < 0 ? row.previousElementSibling : row.nextElementSibling;
+    if (!sibling) return;
+    this.list.insertBefore(row, delta < 0 ? sibling : sibling.nextSibling);
+    this.announceMove(row);
+    this.refresh();
+  },
+
+  rowName(row) {
+    return ((row && row.querySelector('.bx-order-name')) || {}).textContent || '';
+  },
+
+  announceMove(row) {
+    const rows = this.rows();
+    const idx = rows.indexOf(row) + 1;
+    if (idx > 0) {
+      this.announce(bxt('orderLiveMoved',
+        { name: this.rowName(row), n: idx, total: rows.length }));
+    }
+  },
+
+  toggleVisibility(row) {
+    if (!row) return;
+    const hiding = row.dataset.visible !== '0';
+    const hiddenCount = this.rows().filter(r => r.dataset.visible === '0').length;
+    if (hiding && hiddenCount + 1 >= this.rows().length) {
+      this.notify('error', bxt('msgOrderMinVisible'));
+      row.classList.add('is-blocked');
+      setTimeout(() => row.classList.remove('is-blocked'), 900);
+      return;
+    }
+    this.paintRow(row, hiding ? '0' : '1');
+    this.announce(bxt(hiding ? 'orderLiveHidden' : 'orderLiveShown',
+      { name: this.rowName(row) }));
+    this.refresh();
+  },
+
+  paintRow(row, visible) {
+    row.dataset.visible = visible;
+    row.classList.toggle('is-hidden', visible === '0');
+    const eye = row.querySelector('.bx-order-eye');
+    if (eye) {
+      const hidden = visible === '0';
+      eye.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+      const name = (row.querySelector('.bx-order-name') || {}).textContent || '';
+      eye.setAttribute('aria-label',
+        ((hidden ? bxt('orderShowSection') : bxt('orderHideSection')) + ' ' + name).trim());
+    }
+  },
+
+  applyPreset(rawOrder) {
+    if (!rawOrder) return;
+    const defaultOrder = (this.list.dataset.defaultOrder || '').split(',').filter(Boolean);
+    let keys = rawOrder === '__default__'
+      ? defaultOrder
+      : String(rawOrder).split(',').map(s => s.trim()).filter(Boolean);
+    const byKey = {};
+    this.rows().forEach(r => { byKey[r.dataset.key] = r; });
+    keys = keys.filter(k => byKey[k]);
+    this.rows().forEach(r => { if (!keys.includes(r.dataset.key)) keys.push(r.dataset.key); });
+    keys.forEach(key => this.list.appendChild(byKey[key]));
+    this.refresh();
+  },
+
+  collect() {
+    const order = [];
+    const visibility = {};
+    this.rows().forEach(r => {
+      order.push(r.dataset.key);
+      visibility[r.dataset.key] = r.dataset.visible !== '0';
+    });
+    return { order, visibility };
+  },
+
+  serialize() {
+    return JSON.stringify(this.collect());
+  },
+
+  hasPending() {
+    return !!this.list && this.serialize() !== this.baseline;
+  },
+
+  markBaseline() {
+    this.baseline = this.serialize();
+    document.body.classList.remove('bx-layout-dirty');
+  },
+
+  announce(message) {
+    if (this.liveEl && message) this.liveEl.textContent = message;
+  },
+
+  isDefaultState() {
+    const defaultOrder = (this.list.dataset.defaultOrder || '').split(',').filter(Boolean);
+    const { order, visibility } = this.collect();
+    const orderMatches = order.length === defaultOrder.length &&
+      defaultOrder.every((key, i) => order[i] === key);
+    const allVisible = Object.keys(visibility).every(k => visibility[k]);
+    return orderMatches && allVisible;
+  },
+
+  setStatus() {
+    if (!this.status) return;
+    const pending = this.hasPending();
+    const labelCustom = this.status.dataset.labelCustom || 'Custom layout';
+    const labelDefault = this.status.dataset.labelDefault || 'Theme default';
+    const labelUnsaved = this.status.dataset.labelUnsaved || bxt('orderStatusUnsaved');
+    this.status.classList.toggle('is-custom', !pending && this.serverCustom);
+    this.status.classList.toggle('is-unsaved', pending);
+    this.status.textContent = pending
+      ? labelUnsaved
+      : (this.serverCustom ? labelCustom : labelDefault);
+  },
+
+  refreshChips() {
+    if (!this.chips || !this.chips.length) return;
+    const order = this.collect().order.join(',');
+    const defaultOrder = this.list.dataset.defaultOrder || '';
+    this.chips.forEach(chip => {
+      const chipOrder = chip.dataset.order === '__default__' ? defaultOrder : chip.dataset.order;
+      const active = chipOrder === order;
+      chip.classList.toggle('is-active', active);
+      chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  },
+
+  refresh() {
+    const rows = this.rows();
+    rows.forEach((row, i) => {
+      const num = row.querySelector('.bx-order-num');
+      if (num) num.textContent = i + 1;
+      const up = row.querySelector('[data-action="order-up"]');
+      const down = row.querySelector('[data-action="order-down"]');
+      const disableUp = i === 0;
+      const disableDown = i === rows.length - 1;
+      // A disabled button drops focus to <body>; hand it to the still-usable
+      // sibling so keyboard users stay on the row they were reordering.
+      if (up) {
+        if (disableUp && document.activeElement === up && down && !disableDown) down.focus();
+        up.disabled = disableUp;
+      }
+      if (down) {
+        if (disableDown && document.activeElement === down && up && !disableUp) up.focus();
+        down.disabled = disableDown;
+      }
+    });
+    document.body.classList.toggle('bx-layout-dirty', this.hasPending());
+    if (this.saveBtn) this.saveBtn.disabled = !this.hasPending();
+    this.refreshChips();
+    this.setStatus();
+  },
+
+  csrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+           document.querySelector('meta[name="csrf-token"]')?.content;
+  },
+
+  save() {
+    if (!this.saveUrl || this.saving) return;
+    if (!this.hasPending()) return;
+    this.doSave();
+  },
+
+  // Saving is reversible and already an explicit intent, so no confirm step.
+  // The modal is reserved for Reset, the one destructive action here.
+  reset() {
+    if (!this.saveUrl || this.saving) return;
+    if (!this.serverCustom && !this.hasPending()) {
+      this.notify('info', bxt('msgOrderAlreadyDefault'));
+      return;
+    }
+    if (!this.confirmEl) {
+      this.doReset();
+      return;
+    }
+    const title = this.confirmEl.querySelector('#bx-order-confirm-title');
+    const desc = this.confirmEl.querySelector('#bx-order-confirm-desc');
+    const ok = this.confirmEl.querySelector('[data-action="order-confirm-save"]');
+    if (title) title.textContent = bxt('orderConfirmResetTitle');
+    if (desc) desc.textContent = bxt('orderConfirmResetDesc');
+    if (ok) ok.textContent = bxt('orderConfirmResetOk');
+    this.confirmOpener = document.activeElement || this.resetBtn;
+    this.confirmEl.classList.add('is-open');
+    this.confirmEl.setAttribute('aria-hidden', 'false');
+    setTimeout(() => (ok || this.confirmEl).focus(), 60);
+  },
+
+  closeConfirm() {
+    if (!this.confirmEl) return;
+    this.confirmEl.classList.remove('is-open');
+    this.confirmEl.setAttribute('aria-hidden', 'true');
+    const opener = this.confirmOpener || this.resetBtn;
+    if (opener && typeof opener.focus === 'function') opener.focus();
+  },
+
+  confirmReset() {
+    this.closeConfirm();
+    this.doReset();
+  },
+
+  showSaved() {
+    const el = document.getElementById('bx-order-saved');
+    if (!el) {
+      this.notify('success', bxt('msgOrderSaved'));
+      return;
+    }
+
+    clearTimeout(this.savedTimer);
+    el.classList.remove('is-leaving');
+    el.classList.add('is-open');
+
+    const dismiss = () => {
+      if (!el.classList.contains('is-open')) return;
+      el.classList.remove('is-open');
+      el.classList.add('is-leaving');
+      this.savedTimer = setTimeout(() => el.classList.remove('is-leaving'), 260);
+    };
+
+    const close = el.querySelector('.bx-order-saved-close');
+    if (close) close.onclick = dismiss;
+
+    this.savedTimer = setTimeout(dismiss, 4200);
+  },
+
+  async persist() {
+    const { order, visibility } = this.collect();
+    const body = new URLSearchParams({
+      section_order: JSON.stringify(order),
+      section_visibility: JSON.stringify(visibility)
+    });
+    try {
+      const res = await fetch(this.saveUrl, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': this.csrfToken(),
+                   'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        let detail = '';
+        if (data && data.error) detail = ' — ' + data.error;
+        else if (data && Array.isArray(data.invalid_keys) && data.invalid_keys.length) {
+          detail = ' — ' + data.invalid_keys.join(', ');
+        }
+        return { ok: false, detail };
+      }
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, network: true };
+    }
+  },
+
+  // Used by the form submit path: persist pending layout edits so the main
+  // "Save changes" never drops them. Returns true when nothing is pending or
+  // the save succeeded.
+  async flush() {
+    if (!this.hasPending()) return true;
+    if (this.saving && this.lastSavePromise) {
+      const ok = await this.lastSavePromise.catch(() => false);
+      if (ok && !this.hasPending()) return true;
+    }
+    if (!this.hasPending()) return true;
+    const { ok } = await this.persist();
+    if (ok) {
+      this.serverCustom = !this.isDefaultState();
+      this.markBaseline();
+      this.refresh();
+    }
+    return ok;
+  },
+
+  async doSave() {
+    if (this.saving) return;
+    const btn = this.saveBtn;
+    const original = btn ? btn.innerHTML : '';
+    this.saving = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = bxt('orderSaving');
+    }
+    const run = (async () => {
+      const { ok, detail, network } = await this.persist();
+      if (!ok) {
+        this.notify('error', (network ? bxt('msgNetworkError') : bxt('msgOrderSaveFail')) + (detail || ''));
+        return false;
+      }
+      this.serverCustom = !this.isDefaultState();
+      this.markBaseline();
+      this.refresh();
+      this.showSaved();
+      this.announce(bxt('orderLiveSaved'));
+      return true;
+    })();
+    this.lastSavePromise = run;
+    try {
+      return await run;
+    } finally {
+      this.saving = false;
+      if (btn) {
+        btn.innerHTML = original;
+        btn.disabled = !this.hasPending();
+      }
+    }
+  },
+
+  async doReset() {
+    if (this.saving) return;
+    this.saving = true;
+    if (this.resetBtn) this.resetBtn.disabled = true;
+    try {
+      const body = new URLSearchParams({ reset: '1' });
+      const res = await fetch(this.saveUrl, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': this.csrfToken(),
+                   'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        this.notify('error', bxt('msgOrderResetFail'));
+        return;
+      }
+      this.applyPreset('__default__');
+      this.rows().forEach(r => this.paintRow(r, '1'));
+      this.serverCustom = false;
+      this.markBaseline();
+      this.refresh();
+      this.notify('success', bxt('msgOrderReset'));
+    } catch (err) {
+      this.notify('error', bxt('msgNetworkError'));
+    } finally {
+      this.saving = false;
+      if (this.resetBtn) this.resetBtn.disabled = false;
+    }
+  },
+
+  notify(type, message) {
+    if (window.BX && typeof BX.toast === 'function') {
+      BX.toast(message, type);
+    } else {
+      alert(message);
+    }
   }
 };
 

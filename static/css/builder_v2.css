@@ -1241,7 +1241,8 @@ select.sf-input {
   max-width: calc(100vw - 32px);
 }
 
-body.bx-is-dirty .bx-savebar {
+body.bx-is-dirty .bx-savebar,
+body.bx-layout-dirty .bx-savebar {
   transform: translate(-50%, 0);
 }
 
@@ -1734,7 +1735,8 @@ body.bx-is-dirty .bx-savebar {
     padding: 10px 10px 10px 16px;
   }
 
-  body.bx-is-dirty .bx-savebar {
+  body.bx-is-dirty .bx-savebar,
+  body.bx-layout-dirty .bx-savebar {
     transform: translateY(0);
   }
 
@@ -1881,5 +1883,453 @@ body.bx-is-dirty .bx-savebar {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Section layout panel (order + visibility) — minimal theme
+   ========================================================================== */
+
+/* Screen-reader-only feedback (drag/hide/save announcements) */
+.bx-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bx-order-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--bx-muted);
+  background: var(--bx-surface-2);
+  border: 1px solid var(--bx-border);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.bx-order-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bx-faint);
+}
+
+.bx-order-status.is-custom {
+  color: var(--bx-accent-deep);
+  background: var(--bx-accent-tint);
+  border-color: var(--bx-accent-ring);
+}
+
+.bx-order-status.is-custom::before {
+  background: var(--bx-accent);
+}
+
+/* Pending, not-yet-saved edits — amber so it reads as "attention", distinct
+   from the saved "Custom layout" state. */
+.bx-order-status.is-unsaved {
+  color: var(--bx-warn);
+  background: var(--bx-warn-bg);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+.bx-order-status.is-unsaved::before {
+  background: var(--bx-warn);
+}
+
+.bx-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bx-order-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bx-surface);
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius-item);
+  box-shadow: var(--bx-shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.bx-order-row:hover {
+  border-color: var(--bx-border-strong);
+}
+
+.bx-order-row.is-dragging {
+  opacity: 0.45;
+  border-style: dashed;
+  border-color: var(--bx-accent);
+}
+
+.bx-order-row.is-drop-before {
+  box-shadow: inset 0 3px 0 var(--bx-accent);
+}
+
+.bx-order-row.is-drop-after {
+  box-shadow: inset 0 -3px 0 var(--bx-accent);
+}
+
+.bx-order-grip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--bx-faint);
+  cursor: grab;
+  padding: 2px;
+}
+
+.bx-order-row.is-dragging .bx-order-grip {
+  cursor: grabbing;
+}
+
+.bx-order-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--bx-accent-deep);
+  background: var(--bx-accent-tint);
+}
+
+.bx-order-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--bx-accent);
+  background: var(--bx-accent-tint);
+  flex-shrink: 0;
+}
+
+.bx-order-name {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--bx-text);
+}
+
+.bx-order-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bx-order-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bx-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.bx-order-btn:hover {
+  background: var(--bx-surface-2);
+  color: var(--bx-text);
+}
+
+.bx-order-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--bx-muted);
+}
+
+.bx-order-eye .bx-eye-off {
+  display: none;
+}
+
+.bx-order-row.is-hidden {
+  background: var(--bx-field-bg);
+}
+
+.bx-order-row.is-hidden .bx-order-num {
+  color: var(--bx-faint);
+  background: var(--bx-surface-2);
+}
+
+.bx-order-row.is-hidden .bx-order-name {
+  color: var(--bx-faint);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.bx-order-row.is-hidden .bx-order-icon {
+  color: var(--bx-faint);
+  background: var(--bx-surface-2);
+}
+
+.bx-order-row.is-hidden .bx-order-eye {
+  color: var(--bx-warn);
+}
+
+.bx-order-row.is-hidden .bx-order-eye .bx-eye-on {
+  display: none;
+}
+
+.bx-order-row.is-hidden .bx-order-eye .bx-eye-off {
+  display: inline-flex;
+}
+
+.bx-order-row.is-blocked .bx-order-eye {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mobile & small devices: collapse each row into two clean lines — reorder and
+   visibility controls up top, the section label beneath, aligned with the icon
+   column — so long or translated labels never truncate or crowd the buttons. */
+@media (max-width: 640px) {
+  .bx-order-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .bx-order-actions {
+    margin-inline-start: auto;
+  }
+
+  .bx-order-name {
+    flex-basis: 100%;
+    order: 5;
+    padding-inline-start: 26px; /* grip (14px) + gap (12px) — lines up under the icon */
+  }
+}
+
+/* Touch screens: comfortable tappable targets for reorder/visibility buttons */
+@media (pointer: coarse) {
+  .bx-order-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ==========================================================================
+   Layout-save confirmation dialog
+   ========================================================================== */
+
+.bx-confirm-card {
+  max-width: 400px;
+  padding: 30px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.bx-confirm-icon {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bx-accent);
+  background: linear-gradient(135deg, var(--bx-accent-tint) 0%, #ffffff 100%);
+  border: 1px solid var(--bx-accent-ring);
+  box-shadow: 0 10px 24px -10px rgba(124, 58, 237, 0.4);
+  margin-bottom: 16px;
+}
+
+.bx-confirm-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--bx-text);
+  margin: 0 0 6px;
+}
+
+.bx-confirm-desc {
+  font-size: 13.5px;
+  color: var(--bx-muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.bx-confirm-actions {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.bx-confirm-actions .bx-btn {
+  flex: 1;
+  min-height: 46px;
+}
+
+.bx-confirm-card :focus-visible {
+  outline: 2px solid var(--bx-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .bx-confirm-card {
+    padding: 26px 18px 18px;
+    border-radius: 16px;
+  }
+
+  .bx-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .bx-confirm-actions .bx-btn {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   Layout-save success popup
+   ========================================================================== */
+
+.bx-order-saved {
+  position: fixed;
+  bottom: 104px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px) scale(0.97);
+  z-index: 1150;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  max-width: calc(100vw - 32px);
+  padding: 13px 14px 13px 15px;
+  background: var(--bx-surface);
+  border: 1px solid var(--bx-border-strong);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.28);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              visibility 0s linear 0.3s;
+}
+
+.bx-order-saved.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+  transition: opacity 0.24s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+}
+
+.bx-order-saved-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--bx-brand-a) 0%, var(--bx-brand-b) 60%, var(--bx-brand-c) 140%);
+  box-shadow: 0 8px 18px -6px rgba(124, 58, 237, 0.5);
+}
+
+.bx-order-saved-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.bx-order-saved-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--bx-text);
+  line-height: 1.2;
+}
+
+.bx-order-saved-sub {
+  font-size: 12.5px;
+  color: var(--bx-muted);
+  line-height: 1.4;
+}
+
+.bx-order-saved-link {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--bx-accent);
+  text-decoration: none;
+  width: fit-content;
+}
+
+.bx-order-saved-link:hover {
+  text-decoration: underline;
+}
+
+.bx-order-saved-close {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  margin-inline-start: 2px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--bx-faint);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.bx-order-saved-close:hover {
+  background: var(--bx-surface-2);
+  color: var(--bx-text);
+}
+
+.bx-order-saved :focus-visible {
+  outline: 2px solid var(--bx-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .bx-order-saved {
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    padding: 12px 12px 12px 13px;
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bx-order-saved {
+    transition-duration: 0.01ms !important;
   }
 }

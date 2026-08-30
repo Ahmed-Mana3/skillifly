@@ -30,6 +30,9 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
     h1,
@@ -315,6 +318,15 @@
       50% {
         transform: translateX(-50%) translateY(10px);
       }
+    }
+
+    /* Portfolio body wrapper — must grow to fill remaining body height
+       so the footer stays pinned at the bottom. Always a flex column so
+       section_layout_css.html ordering + footer order:999 work. */
+    .portfolio-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Sections */
@@ -917,6 +929,8 @@
       padding: 4rem 2rem 3rem;
       text-align: center;
       position: relative;
+      margin-top: auto;
+      width: 100%;
     }
 
     footer::before {
@@ -1401,36 +1415,18 @@
   </section>
   {% endif %}
 
-  <!-- Client Reviews Section -->
-  {% if reviews %}
-  <section id="reviews">
-    <h2 class="section-title">Client Reviews</h2>
-    <p class="section-subtitle">What clients say about working with me.</p>
+  <!-- Education Section -->
+  {% if education %}
+  <section id="education">
+    <h2 class="section-title">Education</h2>
+    <p class="section-subtitle">Academic foundations that shaped my creative journey.</p>
 
-    <div class="reviews-grid">
-      {% for review in reviews %}
-      <div class="review-card">
-        <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
-          {% for i in "12345" %}
-          <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
-          {% endfor %}
-        </div>
-        <p class="review-content">"{{ review.content }}"</p>
-        <div class="review-author">
-          {% if review.image_name %}
-          <img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
-          {% else %}
-          <div class="review-avatar-placeholder">{{ review.initials }}</div>
-          {% endif %}
-          <div>
-            <div class="review-name">{{ review.user_name }}</div>
-            {% if review.user_title %}
-            <div class="review-title">{{ review.user_title }}</div>
-            {% endif %}
-          </div>
-        </div>
+    <div class="education-grid">
+      {% for edu in education %}
+      <div class="edu-card">
+        <div class="edu-school">{{ edu.school }}</div>
+        <div class="edu-degree">{{ edu.degree }} · {{ edu.field }}</div>
+        <span class="edu-year">Class of {{ edu.grade_year|date:"Y" }}</span>
       </div>
       {% endfor %}
     </div>
@@ -1466,18 +1462,36 @@
   </div>
   {% endif %}
 
-  <!-- Education Section -->
-  {% if education %}
-  <section id="education">
-    <h2 class="section-title">Education</h2>
-    <p class="section-subtitle">Academic foundations that shaped my creative journey.</p>
+  <!-- Client Reviews Section -->
+  {% if reviews %}
+  <section id="reviews">
+    <h2 class="section-title">Client Reviews</h2>
+    <p class="section-subtitle">What clients say about working with me.</p>
 
-    <div class="education-grid">
-      {% for edu in education %}
-      <div class="edu-card">
-        <div class="edu-school">{{ edu.school }}</div>
-        <div class="edu-degree">{{ edu.degree }} · {{ edu.field }}</div>
-        <span class="edu-year">Class of {{ edu.grade_year|date:"Y" }}</span>
+    <div class="reviews-grid">
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+          {% for i in "12345" %}
+          <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          {% endfor %}
+        </div>
+        <p class="review-content">"{{ review.content }}"</p>
+        <div class="review-author">
+          {% if review.image_name %}
+          <img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" class="review-avatar" loading="lazy" decoding="async" width="96" height="96">
+          {% else %}
+          <div class="review-avatar-placeholder">{{ review.initials }}</div>
+          {% endif %}
+          <div>
+            <div class="review-name">{{ review.user_name }}</div>
+            {% if review.user_title %}
+            <div class="review-title">{{ review.user_title }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -1541,6 +1555,7 @@
     </div>
   </footer>
 
+  </div><!-- /.portfolio-body -->
 
 
   <script>
@@ -1649,7 +1664,6 @@
   </script>
   <script src="{% static 'js/sf_analytics.js' %}"></script>
 
-  </div><!-- /.portfolio-body -->
 </body>
 
 </html>

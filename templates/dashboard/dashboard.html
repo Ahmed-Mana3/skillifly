@@ -3,6 +3,8 @@
 
 {% block title %}Dashboard — Skillifly{% endblock %}
 
+{% block ambient_orbs %}{% endblock %}
+
 {% block extra_head %}
 <script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
 <style>
@@ -16,15 +18,9 @@
     --brand: #6d28d9;
   }
 
-  /* Flat canvas — keep the ambient blue/purple orbs, hide only the noise layer */
+  /* Flat canvas — ambient orbs are removed via the ambient_orbs block; hide the noise layer */
   body:has(.dash)::before { display: none !important; }
   body:has(.dash) { background: #FAFBFC !important; }
-
-  /* On desktop screens, hide the purple and pink background lights */
-  @media (min-width: 1024px) {
-    body:has(.dash) .orb-purple,
-    body:has(.dash) .orb-pink { display: none; }
-  }
 
   /* Workspace cards and membership card share one grid row at xl */
   @media (min-width: 1280px) {

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+    {% include "portfolios/common/section_layout_css.html" %}
 </head>
 <body>
 
@@ -97,6 +98,11 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Reorderable sections live inside .portfolio-body so the saved
+         section layout can reorder them (see section_layout_css.html).
+         The hero and marquee strip above stay pinned. -->
+    <div class="portfolio-body">
 
     <!-- ─── CATEGORY GRID SECTION ─── -->
     <section class="section" id="work">
@@ -193,7 +199,7 @@
 
     <!-- ─── STATS BAR ─── -->
     {% if projects or skills %}
-    <div class="reveal">
+    <div class="reveal stats-block">
         <div class="stats-bar">
             {% if projects %}
             <div class="stat-cell">
@@ -423,6 +429,8 @@
             <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name|default:portfolio_user.username }}. All rights reserved.</p>
         </div>
     </footer>
+
+    </div><!-- /.portfolio-body -->
 
     <!-- ─── JAVASCRIPT INTERACTIONS ─── -->
     <script>

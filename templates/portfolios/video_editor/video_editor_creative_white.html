@@ -12,6 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/creative_white.css' %}">
+    {% include "portfolios/common/section_layout_css.html" %}
     <style>
         /* Creators Section */
         .creators-marquee-container {
@@ -350,8 +351,13 @@
     </div>
     {% endif %}
 
+    <!-- Reorderable sections live inside .portfolio-body so the saved
+         section layout can reorder them (see section_layout_css.html).
+         The hero, skill marquee and stats bar above stay pinned. -->
+    <div class="portfolio-body">
+
     {% if creators %}
-    <section class="creators-section">
+    <section class="creators-section" id="creators">
         <div class="section-inner" style="padding-bottom: 0;">
             <div class="section-label reveal">Collaborations</div>
             <h2 class="section-heading reveal">CREATORS I<br>WORKED WITH</h2>
@@ -631,6 +637,8 @@
             <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
         </div>
     </footer>
+
+    </div><!-- /.portfolio-body -->
 
     <script>
         /* ─── Floating Particles ─── */

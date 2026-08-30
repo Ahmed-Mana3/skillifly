@@ -828,6 +828,7 @@
             .skill-name { font-size: 0.78rem; }
         }
     </style>
+    {% include "portfolios/common/section_layout_css.html" %}
 </head>
 <body>
     <div class="hero-glow"></div>
@@ -891,6 +892,11 @@
         <div class="film-hole"></div>
         {% endfor %}
     </div>
+
+    <!-- Reorderable sections live inside .portfolio-body so the saved
+         section layout can reorder them (see section_layout_css.html).
+         The hero, skill marquee and filmstrip above stay pinned. -->
+    <div class="portfolio-body">
 
     <!-- Category Grid -->
     <section class="section" id="work">
@@ -1090,6 +1096,8 @@
         </a>
         <p style="margin-top: 16px; color: var(--text-muted); font-size: 0.85rem;">© {% now "Y" %} {{ personal_info.full_name|default:portfolio_user.username }}. All rights reserved.</p>
     </footer>
+
+    </div><!-- /.portfolio-body -->
 
     <script>
         // Navbar Scroll Effect

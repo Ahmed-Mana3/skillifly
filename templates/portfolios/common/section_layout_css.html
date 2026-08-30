@@ -6,10 +6,20 @@
   For the ordering to work, the main content area must be a flex column.
   Wrap your portfolio sections in an element with class "portfolio-body" like:
     <main class="portfolio-body">...</main>
+
+  Note: themes usually center sections with `margin: 0 auto; max-width: Npx`.
+  In a flex container, auto cross-axis margins disable `align-items: stretch`
+  and would collapse each section to its content width, so direct children get
+  an explicit `width: 100%` here (their `max-width` + auto margins still keep
+  them centered on wide viewports).
+  Any footer nested inside the wrapper is pinned to the end (order 999) so it
+  always sits under every section regardless of saved order.
 {% endcomment %}
 {% if section_layout.custom %}
 <style>
   .portfolio-body { display: flex; flex-direction: column; }
+  .portfolio-body > * { width: 100%; }
+  .portfolio-body > footer { order: 999; }
 {% for section in section_layout.sections %}{% if section.visible %}{% for sel in section.selectors %}
   {{ sel }} { order: {{ forloop.parentloop.counter }}; }{% endfor %}
 {% else %}{% for sel in section.selectors %}

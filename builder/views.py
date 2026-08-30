@@ -39,6 +39,7 @@ def ajax_save_section_layout(request):
     from core.section_order import (
         normalize_section_order,
         normalize_section_visibility,
+        profile_theme_slug,
         supported_keys,
     )
     import json
@@ -49,6 +50,9 @@ def ajax_save_section_layout(request):
         if profile.theme and profile.theme.category
         else 'video_editor'
     )
+    # Themes with their own DOM order (categories) validate against their
+    # own supported set, not the family default.
+    theme = profile_theme_slug(profile)
 
     # --- Reset ---
     if request.POST.get('reset') == '1':
@@ -65,15 +69,16 @@ def ajax_save_section_layout(request):
     except (ValueError, TypeError):
         order_candidates = []
 
-    allowed = set(supported_keys(category))
+    supported = supported_keys(category, theme)
+    allowed = set(supported)
 
     invalid_order = [k for k in order_candidates if k not in allowed]
     if invalid_order:
         return JsonResponse({'success': False, 'invalid_keys': invalid_order}, status=400)
 
-    order_list = normalize_section_order(order_candidates, category)
+    order_list = normalize_section_order(order_candidates, category, theme)
 
-    visibility_map = normalize_section_visibility(raw_visibility, category)
+    visibility_map = normalize_section_visibility(raw_visibility, category, theme)
     if raw_visibility:
         raw_vis_keys = set()
         try:
@@ -89,8 +94,17 @@ def ajax_save_section_layout(request):
     if visible_count == 0:
         return JsonResponse({'success': False, 'error': 'At least one section must be visible.'}, status=400)
 
-    profile.section_order = order_list
-    profile.section_visibility = visibility_map
+    # Keep only real overrides (hidden sections); "visible: true" entries are
+    # the model's implied default. A result indistinguishable from the theme
+    # default is stored as "no custom layout" so the builder status chip and
+    # resolve_section_layout stay truthful after a user drags everything back.
+    visibility_map = {k: v for k, v in visibility_map.items() if v is False}
+    if order_list == list(supported) and not visibility_map:
+        profile.section_order = []
+        profile.section_visibility = {}
+    else:
+        profile.section_order = order_list
+        profile.section_visibility = visibility_map
     profile.save(update_fields=['section_order', 'section_visibility'])
     return JsonResponse({'success': True})
 
@@ -247,12 +261,24 @@ def _builder_flow(request, arabic=False):
 
     profile = getattr(request.user, 'profile', None)
 
-    from core.section_order import resolve_section_layout
+    from core.section_order import (
+        normalize_category,
+        resolve_section_layout,
+        presets_for,
+        section_layout_supported,
+    )
     import json as _json
-    _cat_name = profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else None
+    _cat_name = (normalize_category(profile.theme.category.name)
+                 if profile and profile.theme and profile.theme.category else None)
+    # resolve_section_layout auto-derives the theme from profile.theme, so
+    # themes with per-theme defaults (minimal, categories) resolve correctly.
     section_layout = resolve_section_layout(profile, _cat_name)
     section_rows = section_layout['sections']
     section_visibility_json = _json.dumps(section_layout.get('sections', []))
+    # The layout panel only ships for themes whose public template includes
+    # the section_layout_css block.
+    section_layout_enabled = section_layout_supported(_cat_name, section_layout_theme_name(profile))
+    section_presets = presets_for(_cat_name, section_layout_theme_name(profile)) if section_layout_enabled else []
 
     context = {
         "personal_form": personal_form,
@@ -272,6 +298,8 @@ def _builder_flow(request, arabic=False):
         "section_visibility_json": section_visibility_json,
         "is_custom_layout": section_layout['custom'],
         "default_section_order": section_layout['default_order'],
+        "section_layout_enabled": section_layout_enabled,
+        "section_presets": section_presets,
         "is_arabic_page": arabic,
     }
 
@@ -297,6 +325,13 @@ def _builder_flow(request, arabic=False):
 @login_required
 def update_portfolio_view(request):
     return _update_flow(request)
+
+
+def section_layout_theme_name(profile):
+    """Normalized theme slug ('minimal', 'creative', ...) or '' when unset."""
+    if profile is not None and profile.theme is not None and profile.theme.name:
+        return profile.theme.name.lower().strip().replace(' ', '_')
+    return ''
 
 
 @login_required(login_url='arabic_signin')
@@ -388,12 +423,20 @@ def _update_flow(request, arabic=False):
 
     profile = getattr(request.user, 'profile', None)
 
-    from core.section_order import resolve_section_layout
+    from core.section_order import (
+        normalize_category,
+        resolve_section_layout,
+        presets_for,
+        section_layout_supported,
+    )
     import json as _json
-    _cat_name = profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else None
+    _cat_name = (normalize_category(profile.theme.category.name)
+                 if profile and profile.theme and profile.theme.category else None)
     section_layout = resolve_section_layout(profile, _cat_name)
     section_rows = section_layout['sections']
     section_visibility_json = _json.dumps(section_layout.get('sections', []))
+    section_layout_enabled = section_layout_supported(_cat_name, section_layout_theme_name(profile))
+    section_presets = presets_for(_cat_name, section_layout_theme_name(profile)) if section_layout_enabled else []
 
     context = {
         "personal_form": personal_form,
@@ -414,6 +457,8 @@ def _update_flow(request, arabic=False):
         "section_visibility_json": section_visibility_json,
         "is_custom_layout": section_layout['custom'],
         "default_section_order": section_layout['default_order'],
+        "section_layout_enabled": section_layout_enabled,
+        "section_presets": section_presets,
         "is_arabic_page": arabic,
     }
 

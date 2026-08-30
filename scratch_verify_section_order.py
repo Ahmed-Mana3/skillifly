@@ -16,6 +16,7 @@ from django.template.loader import get_template
 from django.template import TemplateDoesNotExist
 from django.test import RequestFactory
 from bs4 import BeautifulSoup
+from core.section_order import resolve_section_layout
 
 TEMPLATES = [
     'portfolios/video_editor/video_editor_minimal.html',
@@ -36,13 +37,22 @@ TEMPLATES = [
     'portfolios/student/student_classic_scholar.html',
 ]
 
-ORDERABLE = {'projects', 'skills', 'experience', 'education', 'links'}
+# Templates that opt into layout ordering via section_layout_css.html.
+ORDERABLE_THEME = 'portfolios/video_editor/video_editor_minimal.html'
 _img = SimpleNamespace(name='img.jpg')
 
 
-def base_ctx(order):
+def base_ctx(order, visibility=None):
+    """Renderable context for any theme template.
+
+    ``section_layout`` is the context preview_view hands every template (via
+    resolve_section_layout); templates consume that, not the raw list.
+    """
+    stub_profile = SimpleNamespace(section_order=order,
+                                   section_visibility=visibility or {})
     return {
         'section_order': order,
+        'section_layout': resolve_section_layout(stub_profile, 'video_editor'),
         'personal_info': SimpleNamespace(
             full_name='Test User', title='Editor', bio='Bio', email='t@t.com',
             phone='010', booking_url='', picture=None,
@@ -87,19 +97,32 @@ for name in TEMPLATES:
     if '.portfolio-body { display: flex' in html_off:
         problems.append('guard failed: flex CSS present with empty order')
 
-    # B) active: wrapper + direct children + css
-    if '.portfolio-body { display: flex' not in html_on:
-        problems.append('flex CSS missing with order set')
-    soup = BeautifulSoup(html_on, 'html.parser')
-    wrappers = soup.select('.portfolio-body')
-    if len(wrappers) != 1:
-        problems.append(f'wrapper count={len(wrappers)}')
+    if name == ORDERABLE_THEME:
+        # B) active: wrapper + direct children + css
+        if '.portfolio-body { display: flex' not in html_on:
+            problems.append('flex CSS missing with order set')
+        if '.portfolio-body > footer { order: 999; }' not in html_on:
+            problems.append('footer-under-sections guarantee missing')
+        soup = BeautifulSoup(html_on, 'html.parser')
+        wrappers = soup.select('.portfolio-body')
+        if len(wrappers) != 1:
+            problems.append(f'wrapper count={len(wrappers)}')
+        else:
+            # Every supported key must map to a section that is a DIRECT child
+            # of the wrapper; themes use their own ids (#portfolio, #connect).
+            from core.section_order import SECTION_META, supported_keys
+            direct_ids = {c.get('id') for c in wrappers[0].find_all('section', recursive=False)
+                          if c.get('id')}
+            for key in supported_keys('video_editor'):
+                has_child = any((sel.startswith('#') and sel.lstrip('#') in direct_ids)
+                                or (sel.startswith('.') and wrappers[0].select(sel))
+                                for sel in SECTION_META[key]['selectors'])
+                if not has_child:
+                    problems.append(f'{key} not a direct child of .portfolio-body')
     else:
-        direct_ids = [c.get('id') for c in wrappers[0].find_all('section', recursive=False)
-                      if c.get('id')]
-        missing = ORDERABLE - set(direct_ids)
-        if missing:
-            problems.append(f'not direct children: {sorted(missing)}')
+        # C) layout CSS stays scoped: non-orderable themes never emit it
+        if '.portfolio-body { display: flex' in html_on:
+            problems.append('flex CSS present in a non-orderable theme')
 
     # Balance smoke-test: empty querysets must still yield exactly one wrapper
     empty_ctx = base_ctx(['projects', 'skills', 'experience', 'education', 'links'])

@@ -654,6 +654,7 @@
             }
         }
     </style>
+    {% include "portfolios/common/section_layout_css.html" %}
 </head>
 
 <body>
@@ -705,8 +706,13 @@
         </div>
     </section>
 
+    <!-- Reorderable sections live inside .portfolio-body so the saved
+         section layout can reorder them (see section_layout_css.html).
+         The hero with its portfolio CTA cards above stays pinned. -->
+    <div class="portfolio-body">
+
     {% if creators %}
-    <div class="creators-section">
+    <div class="creators-section" id="creators">
         <div class="creators-label">Worked With</div>
         <div class="creators-marquee">
             <div class="creators-track">
@@ -825,6 +831,8 @@
             </div>
         </div>
     </footer>
+
+    </div><!-- /.portfolio-body -->
 
     <script>
         // --- Creator Initials Avatar Logic ---

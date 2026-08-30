@@ -215,6 +215,7 @@
             }
         }
     </style>
+    {% include "portfolios/common/section_layout_css.html" %}
 </head>
 <body>
 <div class="page-wrapper">
@@ -283,6 +284,11 @@
             {% endif %}
         </div>
     </section>
+
+    <!-- Reorderable sections live inside .portfolio-body so the saved
+         section layout can reorder them (see section_layout_css.html).
+         The hero above stays pinned. -->
+    <div class="portfolio-body">
 
     {% if creators %}
     <section class="section" id="creators">
@@ -500,6 +506,8 @@
             © {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.
         </p>
     </footer>
+
+    </div><!-- /.portfolio-body -->
 
     <script>
     /* Custom Cursor */

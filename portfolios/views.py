@@ -345,8 +345,9 @@ def preview_view(request, username):
             if len(uncategorized_previews) < 4 and (not p.image or all(existing.image.name != p.image.name for existing in uncategorized_previews)):
                 uncategorized_previews.append(p)
 
-    from core.section_order import resolve_section_layout
-    category_name = profile.theme.category.name.lower() if profile and profile.theme and profile.theme.category else None
+    from core.section_order import resolve_section_layout, normalize_category
+    category_name = (normalize_category(profile.theme.category.name)
+                     if profile and profile.theme and profile.theme.category else None)
     section_layout = resolve_section_layout(profile, category_name)
 
     context = {

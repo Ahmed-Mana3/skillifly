@@ -139,3 +139,153 @@ class SavePortfolioDataTests(TestCase):
 
         project = Project.objects.get(user=self.user, title="Brand New")
         self.assertTrue(project.image)
+
+
+class SectionLayoutEndpointTests(TestCase):
+    """ajax_save_section_layout: save, validation, and reset."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="layout1", email="layout1@example.com", password="pass12345"
+        )
+        Profile.objects.create(user=self.user)
+        self.client.force_login(self.user)
+        self.url = "/builder/ajax/save-section-layout/"
+
+    def test_save_valid_order_and_visibility(self):
+        payload = {
+            "section_order": '["reviews", "projects", "skills", "experience", "education", "links", "contact", "creators"]',
+            "section_visibility": '{"creators": false, "education": false}',
+        }
+        res = self.client.post(self.url, payload)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.json()["success"])
+        profile = Profile.objects.get(user=self.user)
+        self.assertEqual(profile.section_order[0], "reviews")
+        self.assertFalse(profile.section_visibility["creators"])
+
+    def test_unknown_keys_rejected(self):
+        res = self.client.post(self.url, {"section_order": '["bogus_section"]'})
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("bogus_section", res.json()["invalid_keys"])
+
+    def test_missing_sections_appended(self):
+        res = self.client.post(self.url, {"section_order": '["skills"]'})
+        self.assertEqual(res.status_code, 200)
+        saved = Profile.objects.get(user=self.user).section_order
+        self.assertEqual(saved[0], "skills")
+        # Every supported section stays reachable.
+        self.assertEqual(len(saved), 8)
+
+    def test_hiding_every_section_rejected(self):
+        payload = {
+            "section_order": '["projects", "skills"]',
+            "section_visibility": '{"projects": false, "skills": false, "experience": false, "education": false, "reviews": false, "creators": false, "links": false, "contact": false}',
+        }
+        res = self.client.post(self.url, payload)
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("error", res.json())
+
+    def test_reset_clears_layout(self):
+        profile = Profile.objects.get(user=self.user)
+        profile.section_order = ["reviews", "projects"]
+        profile.section_visibility = {"creators": False}
+        profile.save()
+        res = self.client.post(self.url, {"reset": "1"})
+        self.assertEqual(res.status_code, 200)
+        profile.refresh_from_db()
+        self.assertEqual(profile.section_order, [])
+        self.assertEqual(profile.section_visibility, {})
+
+    def test_login_required(self):
+        self.client.logout()
+        res = self.client.post(self.url, {"reset": "1"})
+        self.assertEqual(res.status_code, 302)
+
+
+class SectionLayoutPanelTests(TestCase):
+    """The layout panel renders only for themes whose public template ships
+    the section_layout_css block (core.section_order.LAYOUT_ENABLED_THEMES).
+    """
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="paneluser", email="panel@example.com", password="pass12345"
+        )
+
+    def _pick_theme(self, name):
+        """Get or seed the named theme under the Video Editor category."""
+        from core.models import Theme, Category
+        cat, _ = Category.objects.get_or_create(name="Video Editor")
+        theme, _ = Theme.objects.get_or_create(name=name, defaults={"category": cat})
+        if theme.category is None:
+            theme.category = cat
+            theme.save()
+        return theme
+
+    def test_minimal_theme_gets_layout_panel(self):
+        theme = self._pick_theme("Minimal")
+        Profile.objects.create(user=self.user, theme=theme)
+        self.client.force_login(self.user)
+        res = self.client.get("/builder/")
+        self.assertEqual(res.status_code, 200)
+        html = res.content.decode()
+        self.assertTrue(res.context["section_layout_enabled"])
+        self.assertIn('data-key="order"', html)
+        self.assertIn("bx-order-list", html)
+        self.assertTrue(res.context["section_presets"])
+
+    def test_non_video_editor_theme_has_no_layout_panel(self):
+        from core.models import Theme, Category
+        cat, _ = Category.objects.get_or_create(name="Developer")
+        theme, _ = Theme.objects.get_or_create(name="Creative", defaults={"category": cat})
+        if theme.category is None:
+            theme.category = cat
+            theme.save()
+        Profile.objects.create(user=self.user, theme=theme)
+        self.client.force_login(self.user)
+        res = self.client.get("/builder/")
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(res.context["section_layout_enabled"])
+        self.assertNotIn('data-key="order"', res.content.decode())
+
+    def test_custom_order_persists_to_context(self):
+        from core.section_order import resolve_section_layout
+        theme = self._pick_theme("Minimal")
+        Profile.objects.create(
+            user=self.user, theme=theme,
+            section_order=["reviews", "projects", "skills", "experience", "education", "links", "contact", "creators"],
+        )
+        layout = resolve_section_layout(Profile.objects.get(user=self.user), "video_editor")
+        self.assertTrue(layout["custom"])
+        self.assertEqual(layout["order_keys"][0], "reviews")
+
+
+class PresetsForTests(TestCase):
+    """presets_for filters unsupported keys per theme family."""
+
+    def test_video_editor_presets_complete(self):
+        from core.section_order import presets_for
+        rows = presets_for("video_editor")
+        self.assertEqual(len(rows), 3)
+        for row in rows:
+            self.assertTrue(set(row["order"]).issubset(set(row["order"])))
+            self.assertEqual(len(row["order"]), 8)
+            self.assertIn("label_ar", row)
+
+    def test_display_name_category_matches_slug(self):
+        # The builder UI and the public page must agree whether the category
+        # is stored as "Video Editor" (label) or "video_editor" (slug).
+        from core.section_order import presets_for, supported_keys
+        self.assertEqual(supported_keys("Video Editor"), supported_keys("video_editor"))
+        self.assertEqual([r["key"] for r in presets_for("Video Editor")],
+                         [r["key"] for r in presets_for("video_editor")])
+
+    def test_developer_presets_filter_unsupported_keys(self):
+        from core.section_order import presets_for
+        rows = presets_for("developer")
+        for row in rows:
+            self.assertNotIn("reviews", row["order"])
+            self.assertNotIn("contact", row["order"])

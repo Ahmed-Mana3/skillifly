@@ -1361,6 +1361,7 @@
             }
         }
     </style>
+    {% include "portfolios/common/section_layout_css.html" %}
 </head>
 
 <body>
@@ -1457,6 +1458,11 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Reorderable sections live inside .portfolio-body so the saved
+         section layout can reorder them (see section_layout_css.html).
+         The hero, skill marquee and stats bar above stay pinned. -->
+    <div class="portfolio-body">
 
     <!-- ─── PROJECTS ─── -->
     {% if projects %}
@@ -1764,6 +1770,8 @@
             <p class="footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
         </div>
     </footer>
+
+    </div><!-- /.portfolio-body -->
 
     <script>
         /* ─── Custom Cursor ─── */
