@@ -124,4 +124,3 @@ def api_create_tag(request):
         return JsonResponse({'id': tag.id, 'name': tag.name, 'slug': tag.slug})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-
