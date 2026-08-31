@@ -1,0 +1,25 @@
+# Skillifly
+
+> Skillifly is a portfolio builder for video editors and creative professionals: build a bilingual (English/Arabic) portfolio with reels and long-form work, publish it at skillifly.cloud/@username or a custom domain, and track visitors with built-in analytics.
+
+Skillifly is a paid SaaS with Free, Pro and Pro Annual plans, billed in Egyptian pounds via Fawaterk, InstaPay or Vodafone Cash. Portfolios treat video as a first-class citizen: short-form reels and long-form projects are separate content types, each with its own layout, and premium subscribers get PDF export and per-portfolio analytics. Every page is available in English and Arabic (right-to-left).
+
+## Product
+
+- [Portfolio examples](https://skillifly.cloud/examples/): Real portfolios built on Skillifly.
+- [Theme gallery](https://skillifly.cloud/themes/): Portfolio themes for video editors, developers and students.
+- [Pricing](https://skillifly.cloud/payment/): Free plan plus Pro Monthly (99 EGP/30 days) and Pro Annual (449 EGP/365 days).
+- [Sign up](https://skillifly.cloud/signup/): Create a free account (editor, client or school admin).
+- [Affiliate program](https://skillifly.cloud/affiliate/): Earn commissions by referring new subscribers.
+
+## Company
+
+- [Blog](https://blog.skillifly.cloud/): Product news and video-editing career guides, in English and Arabic.
+- [Contact](https://skillifly.cloud/contact/): Support and sales contact form.
+- [Terms of Service](https://skillifly.cloud/terms/): Terms of Service.
+- [Privacy Policy](https://skillifly.cloud/privacy/): Privacy Policy.
+
+## Optional
+
+- [Sitemap](https://skillifly.cloud/sitemap.xml): XML sitemap of public pages, schools and portfolios.
+- [robots.txt](https://skillifly.cloud/robots.txt): Crawler rules.

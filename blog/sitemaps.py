@@ -23,7 +23,8 @@ class CategorySitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        return Category.objects.all().order_by('name')
+        # Only categories that have at least one published post
+        return Category.objects.filter(posts__status='published').distinct().order_by('name')
 
     def location(self, obj):
         return f'/category/{obj.slug}/'
@@ -35,7 +36,8 @@ class TagSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        return Tag.objects.all().order_by('name')
+        # Only tags that have at least one published post
+        return Tag.objects.filter(posts__status='published').distinct().order_by('name')
 
     def location(self, obj):
         return f'/tag/{obj.slug}/'

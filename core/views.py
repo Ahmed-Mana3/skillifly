@@ -1948,35 +1948,56 @@ logger = logging.getLogger('core')
 
 
 def sitemap_view(request):
-    """Return an enhanced sitemap.xml. Domain-aware for custom domains."""
-    from datetime import date as _date
-    from .models import Profile
+    """Return a domain-aware sitemap.xml.
+
+    Main domain: marketing pages (with Arabic hreflang alternates where an
+    indexable twin exists), public school pages and every public portfolio.
+    Custom domain: only the domain owner's portfolio.
+
+    No fabricated lastmod: static/school entries omit it (Google distrusts a
+    constant date), portfolio entries use the profile's real updated_at.
+    Single-file format is valid up to 50,000 URLs — if public profiles ever
+    approach that, split profiles into a sitemap index.
+    """
+    from .models import Profile, School
 
     # Detect if we're on a custom domain
     custom_user = getattr(request, 'custom_domain_user', None)
 
     pages = []
 
+    def add(path, priority, changefreq, lastmod=None, ar_path=None):
+        entry = {
+            'loc': request.build_absolute_uri(path),
+            'lastmod': lastmod,
+            'changefreq': changefreq,
+            'priority': priority,
+        }
+        # Only declare alternates for pairs where BOTH pages are indexable
+        # (e.g. /ar/themes/ and /ar/payment/ are noindex, so no alternate).
+        if ar_path:
+            entry['alternates'] = [
+                {'hreflang': 'en', 'href': request.build_absolute_uri(path)},
+                {'hreflang': 'ar', 'href': request.build_absolute_uri(ar_path)},
+                {'hreflang': 'x-default', 'href': request.build_absolute_uri(path)},
+            ]
+        pages.append(entry)
+
     # If it's NOT a custom domain, include static main site pages with top priority
     if not custom_user:
-        SITE_LAUNCH_DATE = _date(2024, 1, 1)
-        static_paths = [
-            ('/', '1.0', 'daily'),
-            ('/examples/', '0.9', 'weekly'),
-            ('/themes/', '0.9', 'weekly'),
-            ('/signin/', '0.8', 'monthly'),
-            ('/payment/', '0.7', 'monthly'),
-            ('/contact/', '0.5', 'monthly'),
-            ('/terms/', '0.3', 'monthly'),
-            ('/privacy/', '0.3', 'monthly'),
-        ]
-        for path, priority, freq in static_paths:
-            pages.append({
-                'loc': request.build_absolute_uri(path),
-                'lastmod': SITE_LAUNCH_DATE,
-                'changefreq': freq,
-                'priority': priority,
-            })
+        add('/', '1.0', 'daily', ar_path='/ar/')
+        add('/examples/', '0.9', 'weekly', ar_path='/ar/examples/')
+        add('/themes/', '0.9', 'weekly')
+        add('/signup/', '0.8', 'monthly', ar_path='/ar/signup/')
+        add('/signin/', '0.8', 'monthly', ar_path='/ar/signin/')
+        add('/payment/', '0.7', 'monthly')
+        add('/affiliate/', '0.6', 'weekly')
+        add('/contact/', '0.5', 'monthly')
+        add('/terms/', '0.3', 'monthly')
+        add('/privacy/', '0.3', 'monthly')
+
+        for school in School.objects.order_by('slug'):
+            add(f'/school/{school.slug}/', '0.6', 'weekly')
 
         # Global sitemap for all public profiles
         public_profiles = Profile.objects.filter(is_public=True).select_related('user')
@@ -1987,10 +2008,10 @@ def sitemap_view(request):
     for profile in public_profiles:
         username = profile.user.username
         lastmod = (profile.updated_at or profile.created_at).date()
-        
+
         # Determine prefix (empty for custom domain, /@username for main domain)
         prefix = "" if custom_user else f"/@{username}"
-        
+
         # Main portfolio page (well indexed)
         pages.append({
             'loc': request.build_absolute_uri(f'{prefix}/'),
@@ -2005,23 +2026,67 @@ def sitemap_view(request):
 
 
 def robots_txt_view(request):
-    """Return robots.txt disallowing admin, builder, dashboard, reels, and project subpages"""
-    content_lines = [
-        "User-agent: *",
-        "Disallow: /admin/",
-        "Disallow: /builder/",
-        "Disallow: /dashboard/",
-        "Disallow: /accounts/",
-        "Disallow: /*/reels/",
-        "Disallow: /*/long-videos/",
-        "Disallow: /*/category/",
-        "Disallow: /@*/reels/",
-        "Disallow: /@*/long-videos/",
-        "Disallow: /@*/category/",
-        "",
-        "Sitemap: " + request.build_absolute_uri('/sitemap.xml')
-    ]
-    return HttpResponse("\n".join(content_lines), content_type="text/plain")
+    """robots.txt for the current host.
+
+    Main domain: blocks private/auth-only areas (and their Arabic twins) and
+    the meta-noindexed portfolio subpages, and advertises both the platform
+    and blog sitemaps. Custom domain: blocks the portfolio subpages at their
+    root-relative paths (/reels/, ...) plus admin/auth, and advertises only
+    that domain's sitemap.
+    """
+    custom_user = getattr(request, 'custom_domain_user', None)
+
+    if custom_user:
+        rules = [
+            'User-agent: *',
+            'Disallow: /admin/',
+            'Disallow: /accounts/',
+            'Disallow: /reels/',
+            'Disallow: /long-videos/',
+            'Disallow: /category/',
+        ]
+        sitemap_lines = ['Sitemap: ' + request.build_absolute_uri('/sitemap.xml')]
+    else:
+        rules = [
+            'User-agent: *',
+            'Disallow: /admin/',
+            'Disallow: /accounts/',
+            'Disallow: /builder/',
+            'Disallow: /ar/builder/',
+            'Disallow: /dashboard/',
+            'Disallow: /ar/dashboard/',
+            'Disallow: /client_dashboard/',
+            'Disallow: /ar/client_dashboard/',
+            'Disallow: /school_admin_dashboard/',
+            'Disallow: /ar/school_admin_dashboard/',
+            'Disallow: /client_reviews/',
+            'Disallow: /ar/client_reviews/',
+            'Disallow: /my-school-stats/',
+            'Disallow: /ar/my-school-stats/',
+            'Disallow: /profile/',
+            'Disallow: /ar/profile/',
+            'Disallow: /review/',
+            'Disallow: /ar/review/',
+            'Disallow: /manage/',
+            'Disallow: /export/',
+            # Portfolio subpages are meta-noindexed; blocked here to save crawl
+            # budget. The wildcard rules also cover the /@username/ prefixed form.
+            'Disallow: /*/reels/',
+            'Disallow: /*/long-videos/',
+            'Disallow: /*/category/',
+        ]
+        sitemap_lines = [
+            'Sitemap: ' + request.build_absolute_uri('/sitemap.xml'),
+            'Sitemap: https://blog.skillifly.cloud/sitemap.xml',
+        ]
+
+    content = '\n'.join(rules + [''] + sitemap_lines) + '\n'
+    return HttpResponse(content, content_type='text/plain')
+
+
+def llms_txt_view(request):
+    """Serve llms.txt (llmstxt.org) so LLM agents can discover the product."""
+    return render(request, 'core/llms.txt', content_type='text/plain')
 
 
 

@@ -36,6 +36,7 @@ class CustomDomainMiddleware:
         '/toggle-visibility/',
         '/sitemap.xml',
         '/robots.txt',
+        '/llms.txt',
         '/sw.js',
         '/favicon.ico',
         '/terms/',

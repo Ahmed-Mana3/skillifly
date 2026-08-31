@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from urllib.parse import quote
-from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount
+from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount, School, CustomDomain
 from django.utils import timezone
 from datetime import timedelta
 import json
@@ -475,3 +475,72 @@ class ReviewsManagementAvatarTests(TestCase):
         self.review.refresh_from_db()
         self.assertFalse(bool(self.review.user_image))
         self.assertEqual(response.status_code, 302)
+
+
+class CrawlerFilesTests(TestCase):
+    """Crawler-facing files: sitemap.xml, robots.txt and llms.txt."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='mapme',
+            email='mapme@example.com',
+            password='pass12345',
+        )
+        Profile.objects.create(user=self.user, is_public=True)
+        self.school = School.objects.create(
+            name='Map High',
+            slug='map-high',
+            discount_code='MAPHIGH',
+        )
+
+    def test_llms_txt_is_served(self):
+        response = self.client.get('/llms.txt')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/plain', response['Content-Type'])
+        self.assertIn(b'# Skillifly', response.content)
+        self.assertIn(b'https://skillifly.cloud/payment/', response.content)
+
+    def test_sitemap_lists_marketing_pages_schools_and_profiles(self):
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        xml = response.content.decode()
+        self.assertIn('xmlns:xhtml', xml)
+        self.assertIn('/ar/', xml)
+        self.assertIn('hreflang="ar"', xml)
+        self.assertIn('hreflang="x-default"', xml)
+        self.assertIn('/school/map-high/', xml)
+        self.assertIn('/@mapme/', xml)
+
+    def test_sitemap_has_no_fabricated_static_lastmod(self):
+        response = self.client.get('/sitemap.xml')
+        self.assertNotContains(response, '<lastmod>2024-01-01</lastmod>')
+
+    def test_robots_blocks_private_areas_and_lists_blog_sitemap(self):
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        for rule in (
+            'Disallow: /admin/',
+            'Disallow: /manage/',
+            'Disallow: /ar/dashboard/',
+            'Disallow: /client_dashboard/',
+            'Disallow: /*/reels/',
+        ):
+            self.assertIn(rule, body)
+        self.assertIn('Sitemap: https://blog.skillifly.cloud/sitemap.xml', body)
+
+    def test_custom_domain_robots_and_sitemap_are_self_contained(self):
+        CustomDomain.objects.create(user=self.user, domain='mapme.design', is_active=True)
+
+        robots = self.client.get('/robots.txt', HTTP_HOST='mapme.design')
+        self.assertEqual(robots.status_code, 200)
+        body = robots.content.decode()
+        self.assertIn('Disallow: /reels/', body)
+        self.assertIn('Disallow: /admin/', body)
+        self.assertNotIn('blog.skillifly.cloud', body)
+
+        sitemap = self.client.get('/sitemap.xml', HTTP_HOST='mapme.design')
+        self.assertEqual(sitemap.status_code, 200)
+        xml = sitemap.content.decode()
+        self.assertIn('http://mapme.design/</loc>', xml)
+        self.assertNotIn('/signup/', xml)

@@ -48,6 +48,7 @@ urlpatterns = [
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
     path('sitemap.xml', views.sitemap_view, name='sitemap'),
     path('robots.txt', views.robots_txt_view, name='robots_txt'),
+    path('llms.txt', views.llms_txt_view, name='llms_txt'),
     path('export/pdf/start/', views.export_pdf_start, name='export_pdf_start'),
     path('export/pdf/status/<int:job_id>/', views.export_pdf_status, name='export_pdf_status'),
     path('export/pdf/download/<int:job_id>/', views.export_pdf_download, name='export_pdf_download'),
