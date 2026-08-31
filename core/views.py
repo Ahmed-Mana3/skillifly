@@ -1849,9 +1849,16 @@ def themes(request):
             
         return redirect('preview', username=request.user.username)
     
-    themes = Theme.objects.all()
-    categories = Category.objects.all()
-    return render(request, 'dashboard/themes.html', {'themes': themes, 'categories' : categories})
+    themes = Theme.objects.select_related('category')
+    categories = Category.objects.annotate(theme_count=Count('theme'))
+    profile = Profile.objects.filter(user=request.user).first()
+    popular_ids = set(Theme.objects.order_by('-use_num').values_list('id', flat=True)[:3])
+    return render(request, 'dashboard/themes.html', {
+        'themes': themes,
+        'categories': categories,
+        'current_theme_id': profile.theme_id if profile else None,
+        'popular_ids': popular_ids,
+    })
 
 
 @login_required(login_url='arabic_signin')
