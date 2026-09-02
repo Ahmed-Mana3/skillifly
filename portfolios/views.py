@@ -94,21 +94,21 @@ def get_or_create_mock_user():
 
 def examples_view(request):
     """Render the live examples page featuring showcased portfolios"""
-    showcases = Showcase.objects.filter(is_active=True).select_related('profile__user', 'profile__theme')
-    portfolios_count = Profile.objects.count()
+    showcases = Showcase.objects.filter(is_active=True).select_related(
+        'profile__user__personal_info', 'profile__theme',
+    )
     return render(request, 'core/examples.html', {
         'showcases': showcases,
-        'portfolios_count': portfolios_count
     })
 
 
 def arabic_examples_view(request):
     """Render the Arabic examples page variant for the language toggle."""
-    showcases = Showcase.objects.filter(is_active=True).select_related('profile__user', 'profile__theme')
-    portfolios_count = Profile.objects.count()
+    showcases = Showcase.objects.filter(is_active=True).select_related(
+        'profile__user__personal_info', 'profile__theme',
+    )
     return render(request, 'core/arabic_examples.html', {
         'showcases': showcases,
-        'portfolios_count': portfolios_count,
         'is_arabic_page': True,
     })
 
