@@ -372,6 +372,7 @@ def preview_view(request, username):
         'project_categories': project_categories,
         'project_categories_count': len(project_categories),
         'is_noindex': False,
+        'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
         'section_layout': section_layout,
     }
 
@@ -484,6 +485,8 @@ def portfolio_reels(request, username):
         'links': links,
         'category_id': category_id,
         'is_noindex': True,
+        'is_subpage': True,
+        'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)
 
@@ -557,6 +560,8 @@ def portfolio_long_videos(request, username):
         'links': links,
         'category_id': category_id,
         'is_noindex': True,
+        'is_subpage': True,
+        'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)
 
@@ -627,6 +632,8 @@ def portfolio_video_detail(request, username, slug):
         'username': username,
         'category_id': category_id,
         'is_noindex': True,
+        'is_subpage': True,
+        'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)
 
@@ -693,5 +700,7 @@ def portfolio_category_detail(request, username, category_id):
         'personal_info': personal_info,
         'username': username,
         'is_noindex': True,
+        'is_subpage': True,
+        'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)

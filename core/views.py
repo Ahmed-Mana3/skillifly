@@ -2016,8 +2016,8 @@ def sitemap_view(request):
         pages.append({
             'loc': request.build_absolute_uri(f'{prefix}/'),
             'lastmod': lastmod,
-            'changefreq': 'weekly',
-            'priority': '0.9',
+            'changefreq': 'daily',
+            'priority': '1.0',
         })
         # Note: Reels and individual project pages are intentionally excluded from sitemap
         # to ensure main portfolio pages get maximum crawl equity.

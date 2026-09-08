@@ -149,21 +149,21 @@ DEFAULT_SECTION_ORDER = list(SECTION_ORDER_DEFAULTS['video_editor'])
 # hide together.
 SECTION_META = {
     'projects': {'label': 'Work Showcase', 'label_ar': 'معرض الأعمال', 'icon': '▶',
-                 'selectors': ['#portfolio', '#projects', '#work', '.stats-block']},
+                 'selectors': ['#portfolio', '#projects', '#work', '.stats-block', '#expeditions']},
     'skills': {'label': 'Software Skills', 'label_ar': 'المهارات', 'icon': '⚡',
-               'selectors': ['#skills']},
+               'selectors': ['#skills', '#gear']},
     'experience': {'label': 'Work Experience', 'label_ar': 'الخبرات العملية', 'icon': '📋',
                    'selectors': ['#experience']},
     'education': {'label': 'Education', 'label_ar': 'التعليم', 'icon': '🎓',
                   'selectors': ['#education']},
     'reviews': {'label': 'Client Reviews', 'label_ar': 'آراء العملاء', 'icon': '⭐',
-                'selectors': ['#reviews']},
+                'selectors': ['#reviews', '#dispatches']},
     'creators': {'label': 'Creators & Inspiration', 'label_ar': 'المبدعون والإلهام', 'icon': '✨',
                  'selectors': ['#creators', '.creators-marquee-container']},
     'links': {'label': 'Social Links', 'label_ar': 'روابط التواصل', 'icon': '🔗',
               'selectors': ['#connect', '#links']},
     'contact': {'label': 'Contact CTA', 'label_ar': 'قسم التواصل', 'icon': '✉️',
-                'selectors': ['#contact']},
+                'selectors': ['#contact', '#signal']},
 }
 
 CATEGORY_LABEL_OVERRIDES = {
