@@ -7,6 +7,7 @@
 
 {% block extra_head %}
 <script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/agent_copilot.css' %}?v={% now 'U' %}">
 <style>
   /* Dashboard design system (scoped to .dash) */
   .dash {
@@ -932,4 +933,6 @@
   })();
 </script>
 {% endif %}
+{% include "agent/copilot_drawer.html" %}
+<script src="{% static 'js/agent_copilot.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

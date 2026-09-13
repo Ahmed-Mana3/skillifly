@@ -14,6 +14,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/builder_v2.css' %}?v={% now 'U' %}">
+<link rel="stylesheet" href="{% static 'css/agent_copilot.css' %}?v={% now 'U' %}">
 
 <meta property="og:locale" content="ar_AR" />
 <meta name="robots" content="noindex, follow" />
@@ -21,6 +22,10 @@
 <noscript><style>.bx-panel { display: block !important; }</style></noscript>
 
 <style>
+  #agent-copilot-trigger {
+    display: none !important;
+  }
+
   /* نفس تصميم النسخة الإنجليزية تمامًا (Syne + DM Sans من base.html) —
      التعديلات أدناه لتصحيح الاتجاه فقط، دون تغيير الهوية البصرية. */
 
@@ -1300,4 +1305,6 @@
   };
 </script>
 <script src="{% static 'js/builder_v2.js' %}?v={% now 'U' %}"></script>
+{% include "agent/copilot_drawer.html" %}
+<script src="{% static 'js/agent_copilot.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

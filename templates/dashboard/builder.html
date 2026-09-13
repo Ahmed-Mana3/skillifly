@@ -5,6 +5,12 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/builder_v2.css' %}?v={% now 'U' %}">
+<link rel="stylesheet" href="{% static 'css/agent_copilot.css' %}?v={% now 'U' %}">
+<style>
+  #agent-copilot-trigger {
+    display: none !important;
+  }
+</style>
 <noscript><style>.bx-panel { display: block !important; }</style></noscript>
 {% endblock %}
 
@@ -1184,4 +1190,6 @@
 <div class="bx-toasts" id="bx-toasts-alert" aria-live="assertive" style="bottom:150px;"></div>
 
 <script src="{% static 'js/builder_v2.js' %}?v={% now 'U' %}"></script>
+{% include "agent/copilot_drawer.html" %}
+<script src="{% static 'js/agent_copilot.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

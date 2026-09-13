@@ -44,6 +44,7 @@ django-cors-headers==4.3.1
 PyJWT==2.11.0
 cryptography==46.0.7
 google-genai==2.0.1
+groq==0.13.1
 
 # Rich Text Editor for Blog
 django-ckeditor-5==0.2.20

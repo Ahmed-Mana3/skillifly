@@ -71,7 +71,7 @@
       z-index: 1000;
       display: flex;
       align-items: center;
-      padding: 0 3rem;
+      padding: 0 2rem;
     }
 
     .nav-container {
@@ -329,10 +329,14 @@
       flex-direction: column;
     }
 
-    /* Sections */
+    /* Sections
+       Note: .portfolio-body is a flex column; `margin: 0 auto` disables
+       flex stretch, so an explicit width:100% is required to keep sections
+       full-width (their max-width + auto margins still center them). */
     section {
       padding: 6rem 2rem;
       max-width: 1600px;
+      width: 100%;
       margin: 0 auto;
       position: relative;
     }
@@ -546,14 +550,31 @@
 
     /* Experience Section */
     #experience {
-      background: linear-gradient(135deg, rgba(0, 217, 255, 0.05) 0%, rgba(255, 0, 110, 0.05) 100%);
+      background: var(--bg-card);
       border-top: 1px solid var(--border-color);
-      max-width: 100%;
+      border-bottom: 1px solid var(--border-color);
     }
 
-    #experience>div {
-      max-width: 1600px;
-      margin: 0 auto;
+    @media (min-width: 1601px) {
+      #experience {
+        background: transparent;
+        border: 0;
+        isolation: isolate;
+      }
+
+      #experience::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 100vw;
+        transform: translateX(-50%);
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        z-index: -1;
+      }
     }
 
     .timeline {
@@ -593,7 +614,7 @@
     .timeline-item::before {
       content: '';
       position: absolute;
-      left: -67px;
+      left: -63px;
       top: 5px;
       width: 18px;
       height: 18px;
@@ -642,11 +663,8 @@
     .creators-marquee-container {
       width: 100%;
       overflow: hidden;
-      padding: 60px 0;
+      padding: 40px 0;
       position: relative;
-      background: rgba(26, 31, 58, 0.5);
-      border-top: 1px solid var(--border-color);
-      border-bottom: 1px solid var(--border-color);
       mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
       -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
     }
@@ -1090,7 +1108,7 @@
       }
 
       .timeline-item::before {
-        left: -50px;
+        left: -53px;
       }
 
       .nav-links {
@@ -1223,7 +1241,7 @@
       }
 
       .timeline-item::before {
-        left: -39px;
+        left: -37px;
         width: 16px;
         height: 16px;
       }
@@ -1388,29 +1406,27 @@
   <!-- Experience Section -->
   {% if experiences %}
   <section id="experience">
-    <div>
-      <h2 class="section-title">Professional Journey</h2>
-      <p class="section-subtitle">A track record of delivering exceptional work across diverse projects.</p>
+    <h2 class="section-title">Professional Journey</h2>
+    <p class="section-subtitle">A track record of delivering exceptional work across diverse projects.</p>
 
-      <div class="timeline">
-        {% for exp in experiences %}
-        <div class="timeline-item">
-          <div class="timeline-date">
-            {{ exp.start_date|date:"M Y" }} —
-            {% if exp.still_working %}
-            <span style="color: #00ff88;">Present</span>
-            {% else %}
-            {{ exp.end_date|date:"M Y" }}
-            {% endif %}
-          </div>
-          <div class="timeline-title">{{ exp.title }}</div>
-          <div class="timeline-company">{{ exp.company }}</div>
-          {% if exp.details %}
-          <div class="timeline-desc">{{ exp.details }}</div>
+    <div class="timeline">
+      {% for exp in experiences %}
+      <div class="timeline-item">
+        <div class="timeline-date">
+          {{ exp.start_date|date:"M Y" }} —
+          {% if exp.still_working %}
+          <span style="color: #00ff88;">Present</span>
+          {% else %}
+          {{ exp.end_date|date:"M Y" }}
           {% endif %}
         </div>
-        {% endfor %}
+        <div class="timeline-title">{{ exp.title }}</div>
+        <div class="timeline-company">{{ exp.company }}</div>
+        {% if exp.details %}
+        <div class="timeline-desc">{{ exp.details }}</div>
+        {% endif %}
       </div>
+      {% endfor %}
     </div>
   </section>
   {% endif %}
@@ -1523,7 +1539,7 @@
   {% endif %}
 
   <!-- Final CTA -->
-  <section id="contact" style="padding-top: 2rem;">
+  <section id="contact">
     <div class="cta-final">
       <h2>Ready to Bring Your Vision to Life?</h2>
       <p>Let's create something extraordinary together. Whether you have a concept or raw footage, I'll transform it

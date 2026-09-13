@@ -717,3 +717,55 @@ class SchoolVideoComment(models.Model):
     def __str__(self):
         return f"{self.author_name}: {self.body[:40]}"
 
+
+# =============================================================================
+# Agent Models
+# =============================================================================
+class AgentConversation(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='agent_conversations')
+    title = models.CharField(max_length=255, default='Skillifly AI')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    workflow_state = models.JSONField(blank=True, null=True, help_text="Active guided AI workflow state (e.g. add_project, change_theme, bio wizard)")
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"AgentConversation: {self.user.username} - {self.title}"
+
+
+class AgentMessage(models.Model):
+    conversation = models.ForeignKey(AgentConversation, on_delete=models.CASCADE, related_name='messages')
+    sender = models.CharField(
+        max_length=20,
+        choices=[('user', 'User'), ('agent', 'Agent'), ('system', 'System')],
+    )
+    text = models.TextField()
+    tool_calls = models.JSONField(blank=True, null=True)
+    tool_results = models.JSONField(blank=True, null=True)
+    actions_applied = models.JSONField(blank=True, null=True)
+    quick_replies = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender}: {self.text[:50]}"
+
+
+class PortfolioSnapshot(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='portfolio_snapshots')
+    message = models.ForeignKey(AgentMessage, on_delete=models.SET_NULL, null=True, blank=True, related_name='snapshots')
+    snapshot_data = models.JSONField()
+    description = models.CharField(max_length=255, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Snapshot for {self.user.username} at {self.created_at}"
+

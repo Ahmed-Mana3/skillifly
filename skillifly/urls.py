@@ -29,6 +29,7 @@ urlpatterns = [
     path('', include('analytics.urls')),
     path('', include('core.urls')),
     path('', include('school.urls')),
+    path('agent/', include('agent.urls')),
     path('', include('portfolios.urls')),  # must be last — contains <username>/ catch-all
 ]
 

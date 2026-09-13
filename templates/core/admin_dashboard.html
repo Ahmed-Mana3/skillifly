@@ -6,14 +6,64 @@
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+    :root {
+        --bg-dark: #FFFFFF;
+        --bg-card: #FFFFFF;
+        --text-primary: #0F172A;
+        --text-muted: #64748B;
+        --border-subtle: rgba(0, 0, 0, 0.08);
+    }
+    body { background-color: white !important; color: #0F172A !important; }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08), 0 5px 15px -5px rgba(0,0,0,0.04) !important;
+        backdrop-filter: blur(20px) !important;
+    }
+    .gradient-border {
+        background: white !important;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08) !important;
+        border: 1px solid rgba(124, 58, 237, 0.14) !important;
+    }
+    .gradient-border::before {
+        background: rgba(124, 58, 237, 0.14) !important;
+    }
+    .gradient-text {
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        background-clip: initial !important;
+        -webkit-text-fill-color: #7C3AED !important;
+        color: #7C3AED !important;
+    }
+    .btn-primary {
+        background: #7C3AED !important;
+        background-image: none !important;
+        box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+    }
+    .btn-primary:hover {
+        background: #6D28D9 !important;
+        background-image: none !important;
+        box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+    }
+    .btn-primary:active { background: #5B21B6 !important; }
+    .orb, .orb-blue, .orb-purple { display: none !important; }
     .stat-card {
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .stat-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 20px 40px -15px rgba(124, 58, 237, 0.15) !important;
     }
     .user-row:hover {
-        background-color: #f8fafc;
+        background-color: #F5F3FF;
+    }
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    @keyframes fadeInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 </style>
 {% endblock %}
@@ -23,75 +73,89 @@
     <!-- Header & Filters -->
     <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10 animate-fadeInUp">
         <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-3">
-                Admin Exclusive
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-6">
+                <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Admin Exclusive</span>
             </div>
-            <h1 class="text-4xl font-bold mb-2 text-black" style="font-family: 'Syne', sans-serif;">
-                Admin <span class="gradient-text">Dashboard</span> <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain">
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 text-slate-900" style="font-family: 'Syne', sans-serif;">
+                Admin <span class="gradient-text">Dashboard</span>
+                <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain ml-2">
             </h1>
-            <p class="text-slate-600 font-medium">Viewing growth from {{ start_date|date:"M d" }} to {{ end_date|date:"M d, Y" }}.</p>
+            <p class="text-slate-600 font-medium text-lg">Viewing growth from {{ start_date|date:"M d" }} to {{ end_date|date:"M d, Y" }}.</p>
         </div>
 
-        <form method="GET" class="flex flex-wrap items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-            <div class="flex flex-col gap-1">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">Start Date</span>
-                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="date-input px-3 py-2 border rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-blue-500">
+        <form method="GET" class="flex flex-wrap items-end gap-4 glass-card p-4 rounded-2xl">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Start Date</span>
+                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="sf-input px-3 py-2.5 text-sm">
             </div>
-            <div class="flex flex-col gap-1">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">End Date</span>
-                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="date-input px-3 py-2 border rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-blue-500">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2 tracking-widest">End Date</span>
+                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="sf-input px-3 py-2.5 text-sm">
             </div>
-            <div class="flex flex-col gap-1">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2">Group By</span>
-                <select name="period" class="date-input px-3 py-2 border rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-blue-500 bg-white">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Group By</span>
+                <select name="period" class="sf-input px-3 py-2.5 text-sm bg-white">
                     <option value="day" {% if period == 'day' %}selected{% endif %}>Days</option>
                     <option value="week" {% if period == 'week' %}selected{% endif %}>Weeks</option>
                 </select>
             </div>
-            <button type="submit" class="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-slate-200 mt-4 lg:mt-0">
+            <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold">
                 Apply Filters
             </button>
         </form>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
-        <div class="stat-card gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group shadow-sm border border-slate-100">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Total Users</p>
-            <p class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">{{ total_users }}</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
+        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Total Users</p>
+            <p class="text-4xl font-bold text-slate-900" style="font-family: 'Syne', sans-serif;">{{ total_users }}</p>
+            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(59,130,246,0.08);"></div>
+            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(59,130,246,0.08);">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
         </div>
-        <div class="stat-card gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group shadow-sm border border-slate-100">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Paid Users</p>
-            <p class="text-4xl font-bold text-emerald-600" style="font-family: 'Syne', sans-serif;">{{ total_paid_users|default:0 }}</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Paid Users</p>
+            <p class="text-4xl font-bold" style="color: #10b981; font-family: 'Syne', sans-serif;">{{ total_paid_users|default:0 }}</p>
+            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(16,185,129,0.08);"></div>
+            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.08);">
+                <svg class="w-5 h-5" style="color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
         </div>
-        <div class="stat-card gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group shadow-sm border border-slate-100">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Conversion Rate</p>
-            <p class="text-4xl font-bold text-purple-600" style="font-family: 'Syne', sans-serif;">{{ conversion_rate }}%</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors"></div>
+        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Conversion Rate</p>
+            <p class="text-4xl font-bold" style="color: #8B5CF6; font-family: 'Syne', sans-serif;">{{ conversion_rate }}%</p>
+            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(139,92,246,0.08);"></div>
+            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(139,92,246,0.08);">
+                <svg class="w-5 h-5" style="color: #8B5CF6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
         </div>
-        <div class="stat-card gradient-border rounded-2xl p-6 bg-white relative overflow-hidden group shadow-sm border border-slate-100">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">Revenue</p>
-            <p class="text-4xl font-bold text-amber-500" style="font-family: 'Syne', sans-serif;">EGP {{ total_revenue|floatformat:0 }}</p>
-            <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors"></div>
+        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Revenue</p>
+            <p class="text-4xl font-bold" style="color: #F59E0B; font-family: 'Syne', sans-serif;">EGP {{ total_revenue|floatformat:0 }}</p>
+            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(245,158,11,0.08);"></div>
+            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.08);">
+                <svg class="w-5 h-5" style="color: #F59E0B;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
         </div>
     </div>
 
     <!-- Growth Chart -->
-    <div class="gradient-border rounded-2xl bg-white p-8 mb-10 animate-fadeInUp shadow-sm border border-slate-100" style="animation-delay: 0.2s">
-        <div class="flex items-center justify-between mb-8">
-            <h3 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">User Growth Trend</h3>
+    <div class="gradient-border rounded-2xl p-8 mb-10 animate-fadeInUp" style="animation-delay: 0.2s">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <h3 class="text-lg font-bold text-slate-900" style="font-family: 'Syne', sans-serif;">User Growth Trend</h3>
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    <span class="w-3 h-3 rounded-full" style="background: #7C3AED;"></span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {% if period == 'week' %}Weekly{% else %}Daily{% endif %} Signups
                     </span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    <span class="w-3 h-3 rounded-full" style="background: #10b981;"></span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {% if period == 'week' %}Weekly{% else %}Daily{% endif %} Payments
                     </span>
                 </div>
@@ -103,49 +167,49 @@
     </div>
 
     <!-- Users Table -->
-    <div class="gradient-border rounded-2xl bg-white overflow-hidden animate-fadeInUp shadow-sm border border-slate-100" style="animation-delay: 0.3s">
-        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <h3 class="text-lg font-bold text-black" style="font-family: 'Syne', sans-serif;">Users Directory</h3>
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total: {{ users_list.count }} users</span>
+    <div class="gradient-border rounded-2xl overflow-hidden animate-fadeInUp" style="animation-delay: 0.3s">
+        <div class="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style="background: rgba(124,58,237,0.03);">
+            <h3 class="text-lg font-bold text-slate-900" style="font-family: 'Syne', sans-serif;">Users Directory</h3>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: {{ users_list.count }} users</span>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50">
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">User Details</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contact Info</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Financials</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Engagement</th>
+                    <tr>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">User Details</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">Contact Info</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">Financials</th>
+                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">Engagement</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-50">
                     {% for u in users_list %}
                     <tr class="user-row transition-colors">
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-500/20">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-lg" style="background: linear-gradient(135deg, #7C3AED, #6D28D9); box-shadow: 0 8px 16px -6px rgba(124,58,237,0.35);">
                                     {{ u.username|slice:":2"|upper }}
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <p class="text-sm font-bold text-black">{{ u.username }}</p>
-                                        <a href="/{{ u.username }}/" target="_blank" class="text-slate-400 hover:text-blue-500 transition-colors" title="View Portfolio">
+                                        <p class="text-sm font-bold text-slate-900">{{ u.username }}</p>
+                                        <a href="/{{ u.username }}/" target="_blank" class="text-slate-400 hover:text-purple-600 transition-colors" title="View Portfolio">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                         </a>
                                     </div>
-                                    <p class="text-[11px] text-slate-500 font-medium">@{{ u.username }}</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">@{{ u.username }}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-8 py-5">
-                            <div class="flex flex-col gap-1">
+                            <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    <span class="text-xs font-medium text-slate-700">{{ u.email }}</span>
+                                    <span class="text-xs font-medium text-slate-600">{{ u.email }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    <span class="text-xs font-bold text-blue-600">
+                                    <span class="text-xs font-bold" style="color: #7C3AED;">
                                         {% if u.profile.phone_number %}
                                             {{ u.profile.phone_number }}
                                         {% elif u.personal_info.phone %}
@@ -160,11 +224,11 @@
                         <td class="px-8 py-5">
                             <div class="flex flex-col gap-1.5 items-start">
                                 {% if u.id in paid_user_ids %}
-                                    <span class="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background: rgba(16,185,129,0.08); color: #10b981;">
                                         Paid
                                     </span>
                                 {% else %}
-                                    <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background: rgba(100,116,139,0.08); color: #94A3B8;">
                                         Free
                                     </span>
                                 {% endif %}
@@ -183,7 +247,10 @@
                                 <div>
                                     <p class="text-[10px] font-bold {% if u.profile.is_online %}text-emerald-500{% else %}text-slate-400{% endif %}">
                                         {% if u.profile.is_online %}
-                                            Online Now
+                                            <span class="inline-flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                Online Now
+                                            </span>
                                         {% else %}
                                             Seen: {{ u.profile.last_seen|timesince }} ago
                                         {% endif %}
@@ -214,11 +281,11 @@
         const paidValues = {{ paid_values|safe }};
 
         const signupGradient = ctx.createLinearGradient(0, 0, 0, 350);
-        signupGradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-        signupGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        signupGradient.addColorStop(0, 'rgba(124, 58, 237, 0.15)');
+        signupGradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
 
         const paidGradient = ctx.createLinearGradient(0, 0, 0, 350);
-        paidGradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+        paidGradient.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
         paidGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
 
         new Chart(ctx, {
@@ -229,17 +296,17 @@
                     {
                         label: '{% if period == "week" %}Weekly{% else %}Daily{% endif %} Signups',
                         data: signupValues,
-                        borderColor: '#3b82f6',
+                        borderColor: '#7C3AED',
                         borderWidth: 3,
                         backgroundColor: signupGradient,
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
                         pointBackgroundColor: '#fff',
-                        pointBorderColor: '#3b82f6',
+                        pointBorderColor: '#7C3AED',
                         pointBorderWidth: 2,
                         pointHoverRadius: 6,
-                        pointHoverBackgroundColor: '#3b82f6',
+                        pointHoverBackgroundColor: '#7C3AED',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 2
                     },
@@ -271,26 +338,28 @@
                         mode: 'index',
                         intersect: false,
                         backgroundColor: '#fff',
-                        titleColor: '#000',
-                        bodyColor: '#64748b',
-                        borderColor: '#e2e8f0',
+                        titleColor: '#0F172A',
+                        bodyColor: '#64748B',
+                        borderColor: 'rgba(124, 58, 237, 0.14)',
                         borderWidth: 1,
                         padding: 12,
-                        displayColors: true
+                        displayColors: true,
+                        titleFont: { family: "'Syne', sans-serif", weight: '700' },
+                        bodyFont: { family: "'DM Sans', sans-serif", weight: '500' }
                     }
                 },
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } }
+                        ticks: { color: '#94a3b8', font: { family: "'DM Sans', sans-serif", size: 10, weight: 'bold' } }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f1f5f9' },
+                        grid: { color: 'rgba(124, 58, 237, 0.06)' },
                         ticks: { 
                             precision: 0,
                             color: '#94a3b8', 
-                            font: { size: 10, weight: 'bold' }
+                            font: { family: "'DM Sans', sans-serif", size: 10, weight: 'bold' }
                         }
                     }
                 }
@@ -300,18 +369,25 @@
 </script>
 
 <style>
-    .gradient-text {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .sf-input {
+        width: 100%;
+        background: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: #0F172A !important;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        outline: none;
     }
-    .animate-fadeInUp {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
+    .sf-input:focus {
+        border-color: #7C3AED !important;
+        background: #FFFFFF !important;
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1) !important;
     }
-    @keyframes fadeInUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+    .sf-input::placeholder {
+        color: #64748B;
     }
 </style>
 {% endblock %}

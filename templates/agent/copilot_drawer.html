@@ -1,0 +1,273 @@
+{% load static %}
+<!-- Skillifly AI Floating Trigger & Drawer -->
+<div id="agent-copilot-root" data-lang="{% if is_arabic_page %}ar{% else %}en{% endif %}" data-csrf="{{ csrf_token }}">
+
+  <!-- Floating Trigger Button -->
+  <button id="agent-copilot-trigger" class="agent-trigger-btn" type="button" aria-label="{% if is_arabic_page %}فتح مساعد الذكاء الاصطناعي{% else %}Open Skillifly AI{% endif %}" title="{% if is_arabic_page %}Skillifly AI{% else %}Skillifly AI{% endif %}">
+    <span class="agent-trigger-glow"></span>
+    <span class="agent-trigger-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+    </span>
+    <span class="agent-trigger-label">
+      {% if is_arabic_page %}مساعد الذكاء الاصطناعي{% else %}Skillifly AI{% endif %}
+    </span>
+    <span class="agent-trigger-badge">PRO</span>
+  </button>
+
+  <!-- Skillifly AI Slide-Over Drawer -->
+  <aside id="agent-copilot-drawer" class="agent-drawer" aria-hidden="true" role="dialog" aria-labelledby="agent-drawer-title">
+    <div class="agent-drawer-backdrop" id="agent-drawer-backdrop"></div>
+    <div class="agent-drawer-panel">
+      
+      <!-- Drawer Header -->
+      <header class="agent-header">
+        <div class="agent-header-info">
+          <div class="agent-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10a10 10 0 0 1-10-10A10 10 0 0 1 12 2z"/>
+              <path d="M12 8v4M12 16h.01"/>
+            </svg>
+            <span class="agent-status-dot" title="Online"></span>
+          </div>
+          <div>
+            <h2 id="agent-drawer-title" class="agent-title">
+              {% if is_arabic_page %}Skillifly AI{% else %}Skillifly AI{% endif %}
+            </h2>
+            <p class="agent-subtitle">
+              {% if is_arabic_page %}مساعدك لتعديل وتطوير معرض أعمالك فوراً{% else %}AI Portfolio Assistant &amp; Editor{% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="agent-header-actions">
+          <button id="agent-btn-sound" class="agent-icon-btn is-active" type="button" aria-label="{% if is_arabic_page %}تشغيل/كتم الصوت{% else %}Toggle sound{% endif %}" title="{% if is_arabic_page %}الصوت مفعّل (اضغط للكتم){% else %}Sound On (Click to mute){% endif %}">
+            <svg id="agent-sound-icon-on" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.215-1.614.622-2.316.234-.847 1.058-1.354 1.938-1.354h2.24z" />
+            </svg>
+            <svg id="agent-sound-icon-off" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-7.5l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.215-1.614.622-2.316.234-.847 1.058-1.354 1.938-1.354h2.24z" />
+            </svg>
+          </button>
+          <button id="agent-btn-reset" class="agent-icon-btn" type="button" title="{% if is_arabic_page %}بدء محادثة جديدة{% else %}New conversation{% endif %}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+          <button id="agent-btn-close" class="agent-icon-btn" type="button" aria-label="{% if is_arabic_page %}إغلاق{% else %}Close{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Message History Container -->
+      <div id="agent-messages-container" class="agent-messages" role="log" aria-live="polite">
+        <!-- Starter Suggestions (shown when history is empty) -->
+        <div id="agent-welcome-card" class="agent-welcome-card">
+          <div class="agent-welcome-icon">✨</div>
+          <h3>{% if is_arabic_page %}مرحباً! كيف يمكنني تطوير بورتفوليو أعمالك اليوم؟{% else %}Hi! How can I elevate your portfolio today?{% endif %}</h3>
+          <p>
+            {% if is_arabic_page %}
+            أنا مساعدك الإبداعي في سكيليفلاي. يمكنك الكتابة أو التحدث بالصوت لتنفيذ أي تعديل فوراً:
+            {% else %}
+            I'm your Skillifly Creative Director. Type or speak into your mic to execute any update instantly:
+            {% endif %}
+          </p>
+          <div class="agent-starter-pills">
+            {% if is_arabic_page %}
+            <button type="button" class="agent-pill-btn" data-prompt="اكتب لي نبذة احترافية لملفي الشخصي">
+              <span class="agent-pill-icon">✍️</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">كتابة نبذة شخصية</span>
+                <span class="agent-pill-desc">صياغة نبذة احترافية تبرز خبرتك وأسلوبك وتلائم مجالك</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="أريد إضافة مهارات إلى معرض أعمالي">
+              <span class="agent-pill-icon">⚡</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">إضافة مهارات</span>
+                <span class="agent-pill-desc">إدراج مهاراتك الفنية وأدواتك المفضلة في معرض أعمالك</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="أريد إضافة مشروع جديد إلى معرض أعمالي">
+              <span class="agent-pill-icon">🎬</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">إضافة مشروع جديد</span>
+                <span class="agent-pill-desc">إدراج فيديو طويل 16:9 أو ريلز رأسي 9:16</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="أريد إضافة تقييم أو رأي عميل إلى معرض أعمالي">
+              <span class="agent-pill-icon">⭐</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">إضافة تقييم عميل</span>
+                <span class="agent-pill-desc">إدراج آراء وشهادات العملاء لإبراز مصداقيتك</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="أريد تغيير ترتيب أقسام معرض أعمالي">
+              <span class="agent-pill-icon">↕️</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">ترتيب أقسام المعرض</span>
+                <span class="agent-pill-desc">إعادة ترتيب أقسام المشاريع، المهارات، التقييمات، والخبرات</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="فحص معرض أعمالي واقتراح تحسينات">
+              <span class="agent-pill-icon">🔍</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">فحص معرض الأعمال</span>
+                <span class="agent-pill-desc">مراجعة شاملة لملفك واقتراح أهم خطوات التطوير</span>
+              </span>
+            </button>
+            {% else %}
+            <button type="button" class="agent-pill-btn" data-prompt="Write a professional bio for my portfolio">
+              <span class="agent-pill-icon">✍️</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">Write a Bio</span>
+                <span class="agent-pill-desc">Craft a compelling summary of your experience and style</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="I want to add skills to my portfolio">
+              <span class="agent-pill-icon">⚡</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">Add Skills</span>
+                <span class="agent-pill-desc">Add your technical and creative skills to your portfolio</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="Add a new project">
+              <span class="agent-pill-icon">🎬</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">Add a Project</span>
+                <span class="agent-pill-desc">Add a new video or reel to your showcase</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="Add a client review">
+              <span class="agent-pill-icon">⭐</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">Add a Review</span>
+                <span class="agent-pill-desc">Add testimonials from clients and directors to build trust</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="Change portfolio sections order">
+              <span class="agent-pill-icon">↕️</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">Change Sections Order</span>
+                <span class="agent-pill-desc">Reorder showcase, skills, reviews, and experience sections</span>
+              </span>
+            </button>
+            <button type="button" class="agent-pill-btn" data-prompt="Audit my portfolio and suggest improvements">
+              <span class="agent-pill-icon">🔍</span>
+              <span class="agent-pill-content">
+                <span class="agent-pill-title">Audit Portfolio</span>
+                <span class="agent-pill-desc">Review your portfolio and get smart improvement suggestions</span>
+              </span>
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Reply Pills (Rendered dynamically when clarification is requested) -->
+      <div id="agent-quick-replies" class="agent-quick-replies" style="display: none;"></div>
+
+      <!-- Typing / Processing Indicator -->
+      <div id="agent-typing-indicator" class="agent-typing" style="display: none;">
+        <span class="agent-typing-dot"></span>
+        <span class="agent-typing-dot"></span>
+        <span class="agent-typing-dot"></span>
+        <span class="agent-typing-text">
+          {% if is_arabic_page %}جاري المعالجة والتنفيذ...{% else %}Skillifly AI is thinking...{% endif %}
+        </span>
+      </div>
+
+      <!-- Live Voice Listening Waveform Bar -->
+      <div id="agent-listening-bar" class="agent-listening-bar" style="display: none;">
+        <div class="agent-wave-bars">
+          <span class="agent-wave-bar"></span>
+          <span class="agent-wave-bar"></span>
+          <span class="agent-wave-bar"></span>
+          <span class="agent-wave-bar"></span>
+          <span class="agent-wave-bar"></span>
+        </div>
+        <span class="agent-listening-text">
+          {% if is_arabic_page %}أنا أستمع إليك الآن... تحدث بحرية{% else %}Listening... Speak into your mic{% endif %}
+        </span>
+      </div>
+
+      <!-- Mic Status / Error Message -->
+      <div id="agent-mic-status" class="agent-mic-status" role="status" aria-live="polite" style="display: none;">
+        <span id="agent-mic-status-text">...</span>
+      </div>
+
+      <!-- Drawer Footer & Input -->
+      <footer class="agent-footer">
+        <form id="agent-chat-form" class="agent-input-form" onsubmit="return false;">
+          <textarea
+            id="agent-chat-input"
+            class="agent-input"
+            rows="1"
+            placeholder="{% if is_arabic_page %}اكتب أو تحدث بصوتك...{% else %}Type or speak your request...{% endif %}"
+            aria-label="Agent prompt input"
+          ></textarea>
+          
+          <!-- Voice Input Mic Button -->
+          <button id="agent-mic-btn" class="agent-mic-btn" type="button" aria-label="{% if is_arabic_page %}التحدث بالصوت{% else %}Voice input{% endif %}" title="{% if is_arabic_page %}اضغط للتحدث بالصوت{% else %}Click to speak{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15a3 3 0 01-3-3V4.5a3 3 0 016 0V12a3 3 0 01-3 3z"/>
+            </svg>
+          </button>
+
+          <!-- Send Button -->
+          <button id="agent-send-btn" class="agent-send-btn" type="submit" aria-label="Send">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              {% if is_arabic_page %}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+              {% else %}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+              {% endif %}
+            </svg>
+          </button>
+        </form>
+        <p class="agent-disclaimer">
+          {% if is_arabic_page %}
+          يدعم الأوامر الصوتية باللغتين العربية والإنجليزية مع تطبيق فوري وإمكانية التراجع (Undo).
+          {% else %}
+          Supports English &amp; Arabic voice commands with instant Undo.
+          {% endif %}
+        </p>
+      </footer>
+
+    </div>
+  </aside>
+
+  <!-- Custom Confirmation Modal (New Conversation) -->
+  <div id="agent-confirm-overlay" class="agent-confirm-overlay" aria-hidden="true">
+    <div class="agent-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="agent-confirm-title" aria-describedby="agent-confirm-text">
+      <div class="agent-confirm-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+      </div>
+      <h4 id="agent-confirm-title" class="agent-confirm-title">
+        {% if is_arabic_page %}محادثة جديدة؟{% else %}Start a new conversation?{% endif %}
+      </h4>
+      <p id="agent-confirm-text" class="agent-confirm-text">
+        {% if is_arabic_page %}
+        هل أنت متأكد من بدء محادثة جديدة؟ سيتم مسح سجل المحادثة الحالية وتُفقد أي تغييرات لم يتم حفظها.
+        {% else %}
+        Are you sure you want to start a fresh conversation? Your current chat history will be cleared and unsaved changes will be lost.
+        {% endif %}
+      </p>
+      <div class="agent-confirm-actions">
+        <button id="agent-confirm-cancel" class="agent-confirm-btn agent-confirm-cancel" type="button">
+          {% if is_arabic_page %}إلغاء{% else %}Cancel{% endif %}
+        </button>
+        <button id="agent-confirm-ok" class="agent-confirm-btn agent-confirm-ok" type="button">
+          {% if is_arabic_page %}نعم، ابدأ جديدة{% else %}Yes, start fresh{% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
