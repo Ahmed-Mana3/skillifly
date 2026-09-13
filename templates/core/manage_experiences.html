@@ -1,0 +1,241 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Experience Order Manager | Skillifly{% endblock %}
+
+{% block extra_head %}
+<style>
+    .gradient-text{background:linear-gradient(135deg,#8b5cf6 0%,#3b82f6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .animate-fadeInUp{animation:fadeInUp .5s ease-out forwards;opacity:0;}
+    @keyframes fadeInUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    .exp-row{transition:background .15s,box-shadow .15s,transform .12s;cursor:grab;user-select:none;}
+    .exp-row:active{cursor:grabbing;}
+    .exp-row.dragging{opacity:.45;transform:scale(.98);}
+    .exp-row.drag-over{background:#f0f7ff;box-shadow:0 0 0 2px #3b82f6;}
+    .badge-order{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;flex-shrink:0;}
+    .drag-handle{color:#cbd5e1;font-size:1.25rem;line-height:1;font-weight:900;cursor:grab;padding:0 4px;flex-shrink:0;}
+    #saveBtn.saving{opacity:.6;pointer-events:none;}
+    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);padding:.75rem 2rem;border-radius:999px;font-size:.875rem;font-weight:700;z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.14);}
+    #toast.success{background:#10b981;color:#fff;}
+    #toast.error{background:#ef4444;color:#fff;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="toast"></div>
+<div class="max-w-5xl mx-auto px-4 md:px-6 py-12 md:py-16">
+
+    <!-- Header -->
+    <div class="mb-12 animate-fadeInUp">
+        <a href="{% url 'manage_dashboard' %}" class="inline-flex items-center text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors mb-6">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Dashboard
+        </a>
+        <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black leading-tight" style="font-family:'Syne',sans-serif;">
+            Experience <span class="gradient-text">Order Manager</span>
+        </h1>
+        <p class="text-slate-500 text-base max-w-xl">Select a user then drag their experiences into the display order you want, or use the arrow buttons. Changes are saved instantly with the Save button.</p>
+    </div>
+
+    <!-- User Selector -->
+    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm mb-10 animate-fadeInUp" style="animation-delay:.1s">
+        <h2 class="text-xl font-bold text-black mb-6" style="font-family:'Syne',sans-serif;">Select a User</h2>
+        <form method="GET" action="{% url 'manage_experience_order' %}" class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+            <select name="username" class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 h-[52px] text-sm font-medium text-black focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500">
+                <option value="">-- choose a user --</option>
+                {% for u in users_with_exp %}
+                <option value="{{ u.username }}" {% if selected_user and selected_user.username == u.username %}selected{% endif %}>
+                    @{{ u.username }}{% if u.first_name or u.last_name %} -- {{ u.first_name }} {{ u.last_name }}{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-8 py-3 bg-violet-600 text-white rounded-2xl font-bold text-sm hover:bg-violet-700 transition-all whitespace-nowrap">
+                Load Experiences
+            </button>
+        </form>
+    </div>
+
+    {% if selected_user %}
+    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm animate-fadeInUp" style="animation-delay:.2s">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-black" style="font-family:'Syne',sans-serif;">
+                    @{{ selected_user.username }}
+                    {% if selected_user.first_name or selected_user.last_name %}
+                    <span class="text-slate-400 font-medium text-lg">-- {{ selected_user.first_name }} {{ selected_user.last_name }}</span>
+                    {% endif %}
+                </h2>
+                <p class="text-slate-500 text-sm mt-1">{{ experiences|length }} experience{{ experiences|length|pluralize }}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{% url 'preview' selected_user.username %}" target="_blank"
+                   class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Preview Portfolio
+                </a>
+                <button id="saveBtn" type="button"
+                    class="px-7 py-2.5 bg-black text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Save Order
+                </button>
+            </div>
+        </div>
+
+        {% if experiences %}
+        <ul id="expList" class="space-y-3" data-username="{{ selected_user.username }}">
+            {% for exp in experiences %}
+            <li class="exp-row flex items-center gap-4 bg-slate-50 rounded-2xl px-5 py-4 border border-transparent"
+                data-id="{{ exp.id }}" draggable="true">
+                <span class="drag-handle select-none" title="Drag to reorder">&#8942;&#8942;</span>
+                <span class="badge-order">{{ forloop.counter }}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-black text-sm leading-tight truncate">{{ exp.title }}</div>
+                    <div class="text-slate-500 text-xs mt-0.5">
+                        {{ exp.company }}
+                        &middot; {{ exp.start_date|date:"M Y" }} &mdash;
+                        {% if exp.still_working %}Present{% else %}{{ exp.end_date|date:"M Y"|default:"?" }}{% endif %}
+                    </div>
+                    {% if exp.details %}
+                    <div class="text-slate-400 text-xs mt-1 truncate max-w-lg">{{ exp.details|truncatechars:100 }}</div>
+                    {% endif %}
+                </div>
+                <div class="flex flex-col gap-1 flex-shrink-0">
+                    <button type="button" data-action="up"
+                        class="p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 text-slate-400 hover:text-black transition-all" title="Move up">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+                    </button>
+                    <button type="button" data-action="down"
+                        class="p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 text-slate-400 hover:text-black transition-all" title="Move down">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="py-16 text-center text-slate-400 text-sm italic">This user has no experience entries yet.</div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-[2.5rem] p-16 border border-slate-100 shadow-sm text-center animate-fadeInUp" style="animation-delay:.2s">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-violet-50 flex items-center justify-center mb-6">
+            <svg class="w-8 h-8 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </div>
+        <p class="text-slate-500 font-medium">Choose a user above to load and reorder their experiences.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    var list    = document.getElementById("expList");
+    var saveBtn = document.getElementById("saveBtn");
+    var toast   = document.getElementById("toast");
+    if (!list) return;
+
+    var username = list.dataset.username;
+    var saveUrl  = "{% url 'manage_experience_order_save' %}";
+    var csrf     = "{{ csrf_token }}";
+
+    function showToast(msg, type) {
+        toast.textContent = msg;
+        toast.className = type;
+        toast.style.display = "block";
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { toast.style.display = "none"; }, 3200);
+    }
+
+    function refreshBadges() {
+        list.querySelectorAll("li.exp-row").forEach(function (li, idx) {
+            var badge = li.querySelector(".badge-order");
+            if (badge) badge.textContent = idx + 1;
+        });
+    }
+
+    // Arrow buttons
+    list.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-action]");
+        if (!btn) return;
+        var li = btn.closest("li.exp-row");
+        if (btn.dataset.action === "up" && li.previousElementSibling) {
+            list.insertBefore(li, li.previousElementSibling);
+        } else if (btn.dataset.action === "down" && li.nextElementSibling) {
+            list.insertBefore(li.nextElementSibling, li);
+        }
+        refreshBadges();
+    });
+
+    // Drag-and-drop
+    var dragged = null;
+    list.addEventListener("dragstart", function (e) {
+        dragged = e.target.closest("li.exp-row");
+        if (!dragged) return;
+        setTimeout(function () { dragged.classList.add("dragging"); }, 0);
+        e.dataTransfer.effectAllowed = "move";
+    });
+    list.addEventListener("dragend", function () {
+        if (dragged) dragged.classList.remove("dragging");
+        list.querySelectorAll("li.exp-row").forEach(function (li) { li.classList.remove("drag-over"); });
+        dragged = null;
+    });
+    list.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        var target = e.target.closest("li.exp-row");
+        if (!target || target === dragged) return;
+        list.querySelectorAll("li.exp-row").forEach(function (li) { li.classList.remove("drag-over"); });
+        target.classList.add("drag-over");
+    });
+    list.addEventListener("dragleave", function (e) {
+        var target = e.target.closest("li.exp-row");
+        if (target) target.classList.remove("drag-over");
+    });
+    list.addEventListener("drop", function (e) {
+        e.preventDefault();
+        var target = e.target.closest("li.exp-row");
+        if (!target || !dragged || target === dragged) return;
+        target.classList.remove("drag-over");
+        var items = Array.from(list.querySelectorAll("li.exp-row"));
+        var fromIdx = items.indexOf(dragged);
+        var toIdx   = items.indexOf(target);
+        if (fromIdx < toIdx) {
+            list.insertBefore(dragged, target.nextElementSibling);
+        } else {
+            list.insertBefore(dragged, target);
+        }
+        refreshBadges();
+    });
+
+    // Save via AJAX
+    saveBtn.addEventListener("click", function () {
+        saveBtn.classList.add("saving");
+        saveBtn.textContent = "Saving\u2026";
+        var orderedIds = Array.from(list.querySelectorAll("li.exp-row"))
+            .map(function (li) { return parseInt(li.dataset.id, 10); });
+        fetch(saveUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+            body: JSON.stringify({ username: username, order: orderedIds })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                showToast("\u2713 Experience order saved!", "success");
+            } else {
+                showToast("Error: " + (data.error || "Unknown"), "error");
+            }
+        })
+        .catch(function () { showToast("Network error. Please retry.", "error"); })
+        .finally(function () {
+            saveBtn.classList.remove("saving");
+            saveBtn.innerHTML = "<svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M5 13l4 4L19 7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg> Save Order";
+        });
+    });
+})();
+</script>
+{% endblock %}

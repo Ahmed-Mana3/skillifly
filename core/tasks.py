@@ -32,7 +32,7 @@ def generate_portfolio_pdf(self, job_id: int) -> str:
         user: CustomUser = job.user
         profile, _ = Profile.objects.get_or_create(user=user)
         personal_info = PersonalInfo.objects.filter(user=user).first()
-        experiences = Experience.objects.filter(user=user)
+        experiences = Experience.objects.filter(user=user).order_by('order', '-start_date', '-id')
         education = Education.objects.filter(user=user)
         skills = Skill.objects.filter(user=user)
         projects = Project.objects.filter(user=user)

@@ -71,6 +71,8 @@ urlpatterns = [
     path('manage/showcase/entry/move/<int:pk>/<str:direction>/', views.manage_showcase_entry_move, name='manage_showcase_entry_move'),
     path('manage/showcase/entry/delete/<int:pk>/', views.manage_showcase_entry_delete, name='manage_showcase_entry_delete'),
     path('manage/blog/', include('blog.dashboard_urls')),
+    path('manage/experiences/', views.manage_experience_order, name='manage_experience_order'),
+    path('manage/experiences/save/', views.manage_experience_order_save, name='manage_experience_order_save'),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
     path('affiliate/', views.affiliate_view, name='affiliate'),
     path('affiliate/join/', views.join_affiliate, name='join_affiliate'),

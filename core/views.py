@@ -8,7 +8,7 @@ from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.db import transaction
 from django.db.models import Sum, Count, Avg, Q
 from datetime import timedelta
 from django.contrib.auth import login, logout
@@ -2643,6 +2643,89 @@ def manage_showcase_entry_delete(request, pk):
     messages.success(request, f"Removed {username} from Made with Skillifly.")
     return redirect('manage_dashboard')
 
+
+# ---------------------------------------------------------------------------
+# Admin Experience Ordering
+# ---------------------------------------------------------------------------
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_experience_order(request):
+    """Exclusive admin page: select a user and reorder their portfolio experiences."""
+    # Build a list of all users who have at least one experience entry.
+    users_with_exp = (
+        CustomUser.objects.filter(experiences__isnull=False)
+        .distinct()
+        .order_by('username')
+        .only('id', 'username', 'first_name', 'last_name', 'email')
+    )
+
+    selected_user = None
+    experiences = []
+    username_param = request.GET.get('username', '').strip()
+
+    if username_param:
+        selected_user = CustomUser.objects.filter(username=username_param).first()
+        if selected_user:
+            experiences = list(
+                Experience.objects.filter(user=selected_user)
+                .order_by('order', '-start_date', '-id')
+            )
+
+    context = {
+        'users_with_exp': users_with_exp,
+        'selected_user': selected_user,
+        'experiences': experiences,
+    }
+    return render(request, 'core/manage_experiences.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_experience_order_save(request):
+    """AJAX / form POST: save a new experience order for a given user.
+
+    Expects JSON body: {"username": "...", "order": [exp_id, exp_id, ...]}
+    """
+    import json as _json
+
+    try:
+        data = _json.loads(request.body)
+    except (ValueError, AttributeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    username = data.get('username', '').strip()
+    ordered_ids = data.get('order', [])
+
+    if not username or not isinstance(ordered_ids, list):
+        return JsonResponse({'success': False, 'error': 'Missing username or order'}, status=400)
+
+    target_user = CustomUser.objects.filter(username=username).first()
+    if not target_user:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+
+    # Security: ensure all submitted IDs belong to the target user
+    valid_ids = set(
+        Experience.objects.filter(user=target_user).values_list('id', flat=True)
+    )
+    submitted_ids = []
+    for raw_id in ordered_ids:
+        try:
+            submitted_ids.append(int(raw_id))
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': f'Invalid id: {raw_id}'}, status=400)
+
+    foreign_ids = [i for i in submitted_ids if i not in valid_ids]
+    if foreign_ids:
+        return JsonResponse(
+            {'success': False, 'error': 'Some IDs do not belong to this user'},
+            status=403,
+        )
+
+    with transaction.atomic():
+        for position, exp_id in enumerate(submitted_ids):
+            Experience.objects.filter(pk=exp_id, user=target_user).update(order=position)
+
+    return JsonResponse({'success': True, 'saved': len(submitted_ids)})
 
 
 @login_required

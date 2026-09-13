@@ -13,7 +13,15 @@ admin.site.register(Category)
 admin.site.register(Theme)
 admin.site.register(Profile)
 admin.site.register(PersonalInfo)
-admin.site.register(Experience)
+
+@admin.register(Experience)
+class ExperienceAdmin(admin.ModelAdmin):
+    list_display = ('title', 'company', 'user', 'order', 'start_date', 'still_working')
+    list_editable = ('order',)
+    list_filter = ('still_working', 'user')
+    search_fields = ('title', 'company', 'user__username', 'user__email')
+    ordering = ('user', 'order', '-start_date')
+
 admin.site.register(Education)
 admin.site.register(Skill)
 admin.site.register(Project)

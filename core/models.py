@@ -117,6 +117,10 @@ class Experience(models.Model):
     end_date = models.DateField(blank=True, null=True)
     duration = models.DecimalField(max_digits=3 ,decimal_places=1)
     details = models.TextField(null=True, blank=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ['order', '-start_date', '-id']
 
     def __str__(self):
         return f"{self.title} at {self.company}"

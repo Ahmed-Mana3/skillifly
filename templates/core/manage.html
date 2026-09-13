@@ -193,6 +193,21 @@
             </div>
         </a>
 
+        <!-- Experience Order Manager -->
+        <a href="{% url 'manage_experience_order' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.9s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-violet-50 flex items-center justify-center mb-8 group-hover:bg-violet-600 transition-colors">
+                <svg class="w-8 h-8 text-violet-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10M15 14l3 3 3-3M18 17V11"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Experience Order</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Curate and reorder work experiences shown on any user's public portfolio. Drag-and-drop or use arrow controls.</p>
+            <div class="flex items-center text-violet-600 text-xs font-bold uppercase tracking-wider">
+                Reorder Experiences
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
     </div>
 
     <!-- Quick Actions Footer -->
@@ -583,6 +598,7 @@
         <a href="{% url 'index' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Back to Home</a>
         <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">User Dashboard</a>
         <a href="/admin/core/showcase/" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Showcase Manager</a>
+        <a href="{% url 'manage_experience_order' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">Experience Ordering</a>
     </div>
 </div>
 {% endblock %}

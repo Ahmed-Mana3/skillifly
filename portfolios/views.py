@@ -285,7 +285,7 @@ def preview_view(request, username):
         preview_theme_id = None
 
     personal_info = PersonalInfo.objects.filter(user=user).select_related('user').first()
-    experiences = Experience.objects.filter(user=user).select_related('user')
+    experiences = Experience.objects.filter(user=user).select_related('user').order_by('order', '-start_date', '-id')
     education = Education.objects.filter(user=user).select_related('user')
     skills = Skill.objects.filter(user=user).select_related('user')
     projects = Project.objects.filter(user=user).select_related('user', 'category')
