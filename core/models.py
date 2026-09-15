@@ -751,6 +751,13 @@ class AgentMessage(models.Model):
     tool_results = models.JSONField(blank=True, null=True)
     actions_applied = models.JSONField(blank=True, null=True)
     quick_replies = models.JSONField(blank=True, null=True)
+    user_rating = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        choices=[('up', 'Thumbs up'), ('down', 'Thumbs down')],
+        help_text="User feedback on this agent response (feedback loop for quality tuning)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

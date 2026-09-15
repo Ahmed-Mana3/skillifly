@@ -222,6 +222,7 @@ body:has(#builder-root) .agent-trigger-btn,
   gap: 16px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scroll-behavior: smooth;
 }
 
 .agent-messages::-webkit-scrollbar {
@@ -323,6 +324,18 @@ body:has(#builder-root) .agent-trigger-btn,
   flex-direction: column;
   max-width: 88%;
   gap: 4px;
+  animation: agentMsgIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes agentMsgIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .agent-msg.is-user {
@@ -337,8 +350,21 @@ body:has(#builder-root) .agent-trigger-btn,
   padding: 12px 16px;
   border-radius: 16px;
   font-size: 13.5px;
-  line-height: 1.55;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
   word-break: break-word;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.agent-msg-para {
+  display: block;
+  height: 10px;
+}
+
+[dir="rtl"] .agent-msg-bubble {
+  letter-spacing: 0;
+  line-height: 1.8;
 }
 
 .agent-msg.is-user .agent-msg-bubble {
@@ -824,3 +850,52 @@ body:has(#builder-root) .agent-trigger-btn,
 .agent-confirm-modal.is-closing {
   transform: scale(0.94) translateY(6px);
 }
+
+/* ==========================================================================
+   AI Feedback Loop (thumbs up/down)
+   ========================================================================== */
+
+.agent-msg-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 2px;
+  padding-left: 2px;
+}
+
+.agent-msg.is-user .agent-msg-rating { display: none; }
+
+.agent-rate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.08);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.agent-rate-btn:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.45);
+  transform: translateY(-1px);
+}
+
+.agent-rate-btn.is-active[data-rating="up"] {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.55);
+  color: #34d399;
+}
+
+.agent-rate-btn.is-active[data-rating="down"] {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.55);
+  color: #fb7185;
+}
+
+.agent-msg-rating.is-locked .agent-rate-btn:not(.is-active) { opacity: 0.4; }

@@ -1019,5 +1019,482 @@ def set_portfolio_visibility(user, is_public=True):
             "message": f"Portfolio visibility updated to: {status_text}.",
             "is_public": profile.is_public,
             "snapshot_id": snapshot.id,
-        }
+        }# ---------------------------------------------------------------------------
+# Portfolio Audit (goal-based, deterministic intelligence)
+# ---------------------------------------------------------------------------
 
+AUDIT_GOALS = {
+    "client": {
+        "label_en": "Winning new clients",
+        "label_ar": "جذب عملاء جدد",
+        "priorities": ["projects", "reviews", "links", "contact"],
+        # Themes that read as premium when pitching new clients.
+        "theme_fav": ["cinematic", "minimal", "pro", "monochrome", "editorial_studio"],
+        "theme_reason_en": "matches high-ticket commercial work and reads as premium to clients.",
+        "theme_reason_ar": "يناسب الأعمال التجارية الراقية ويعطي انطباعاً متميزاً لدى العملاء.",
+    },
+    "recruiter": {
+        "label_en": "Getting hired",
+        "label_ar": "الحصول على وظيفة",
+        "priorities": ["experience", "education", "skills", "projects"],
+        "theme_fav": ["pro", "minimal", "cinematic"],
+        "theme_reason_en": "reads clean and broadcast-ready for hiring managers.",
+        "theme_reason_ar": "يبدو احترافياً ومنظماً وواضحاً أمام مسؤولي التوظيف.",
+    },
+    "agency": {
+        "label_en": "Partnering with agencies",
+        "label_ar": "التعاون مع الوكالات",
+        "priorities": ["projects", "categories", "reviews", "contact"],
+        "theme_fav": ["cinematic", "editorial_studio", "minimal", "pro"],
+        "theme_reason_en": "matches the curated, editorial finish agencies pitch their clients with.",
+        "theme_reason_ar": "يعطي لمسة إخراجية تحريرية تليق بالوكالات عند عرضها للعملاء.",
+    },
+    "creator": {
+        "label_en": "Growing as a creator",
+        "label_ar": "النمو كصانع محتوى",
+        "priorities": ["reels", "bio", "links", "contact"],
+        "theme_fav": ["yellow", "cyan", "animated_dark", "creative"],
+        "theme_reason_en": "has the high-energy, scroll-stopping feel that creator audiences respond to.",
+        "theme_reason_ar": "يمتلك طاقة بصرية عالية تجذب جمهور السوشيال ميديا.",
+    },
+}
+
+# Placeholder / broken project URLs should be flagged for the user to fix.
+AUDIT_PLACEHOLDER_URLS = ("placeholder", "tobeadded", "to-be-added", "editme", "youtu.be/", "example.com")
+
+
+def _goal_key_for(key, goal):
+    """Whether a gap key directly serves the chosen goal's priorities."""
+    return key in AUDIT_GOALS[goal]["priorities"]
+
+
+def gaps_by_key(gaps, key):
+    """Whether a gap with the given key already exists in the list."""
+    return any(g.get("key") == key for g in gaps)
+
+
+CLICHE_PHRASES = (
+    "passionate", "love editing", "loves editing", "i love editing",
+    "i am a passionate", "مونتير شغوف", "احب المونتاج", "أحب المونتاج",
+)
+
+# Generic skills companies see in every editor — a sign the portfolio shows
+# breadth instead of a focused, marketable signature stack.
+GENERIC_SKILLS = (
+    "video editing", "editing", "post production", "post-production", "color grading",
+    "sound design", "premiere pro", "after effects", "davinci resolve", "photoshop",
+)
+
+SKILLS_GOOD_BAND = (5, 10)
+
+
+def audit_portfolio(user, goal="client"):
+    """
+    Analyzes a user's portfolio against their stated goal ('client', 'recruiter',
+    'agency', or 'creator') and returns a structured, grounded assessment:
+    score, strengths, gaps, prioritized recommendations, copy issues, and a
+    theme suggestion that actually exists in the database.
+
+    Each gap/recommendation is fully bilingual (``why`` / ``action`` +
+    ``ar_why`` / ``ar_action``) so callers can render Arabic without an LLM.
+    """
+    state = get_portfolio_state(user)
+    goal = goal if goal in AUDIT_GOALS else "client"
+    goal_info = AUDIT_GOALS[goal]
+
+    pi = state.get("personal_info", {})
+    account = state.get("account", {})
+    projects = state.get("projects", [])
+    skills = state.get("skills", [])
+    reviews = state.get("reviews", [])
+    experiences = state.get("experiences", [])
+    educations = state.get("educations", [])
+    links = state.get("links", [])
+    creators = state.get("creators", [])
+    theme = state.get("theme") or {}
+    theme_name = (theme.get("name") or "").lower().replace(" ", "_")
+    section_order = state.get("section_order") or []
+    section_visibility = state.get("section_visibility") or {}
+
+    gaps = []
+    strengths = []
+    copy_issues = []
+
+    # ======================= Personal info & bio quality =====================
+    bio = (pi.get("bio") or "").strip()
+    headline = (pi.get("title") or "").strip()
+    has_avatar = bool(account.get("has_profile_picture"))
+
+    if not bio or len(bio) < 40:
+        gaps.append({
+            "key": "bio",
+            "why": "A thin or missing bio makes you look less experienced.",
+            "action": "Write a bio",
+            "ar_why": "النبذة القصيرة أو المفقودة تجعلك تبدو أقل خبرة.",
+            "ar_action": "كتابة نبذة شخصية",
+        })
+    elif len(bio) < 100:
+        gaps.append({
+            "key": "bio_depth",
+            "why": "Your bio works but is on the short side — one concrete proof point would make it land harder.",
+            "action": "Expand your bio",
+            "ar_why": "النبذة جيدة لكنها قصيرة بعض الشيء — إضافة دليل إنجاز واحد يجعلها أقوى.",
+            "ar_action": "توسيع النبذة",
+        })
+    if bio:
+        bio_lower = bio.lower()
+        for phrase in CLICHE_PHRASES:
+            if phrase in bio_lower:
+                copy_issues.append(f"Bio contains the clich\u00e9 \"{phrase}\"")
+                gaps.append({
+                    "key": "bio_cliche",
+                    "why": f"Your bio opens with a clich\u00e9 (\"{phrase}\") that dilutes your authority.",
+                    "action": "Rewrite your bio",
+                    "ar_why": f"النبذة تحتوي على لغة مبتذلة (\"{phrase}\") تضعف مصداقيتك.",
+                    "ar_action": "إعادة كتابة النبذة",
+                })
+                break
+
+    if not headline:
+        gaps.append({
+            "key": "headline",
+            "why": "No professional headline shown — visitors can't tell at a glance what you do.",
+            "action": "Set your headline",
+            "ar_why": "لا يوجد عنوان مهني واضح — الزوار لا يعرفون تخصصك من النظرة الأولى.",
+            "ar_action": "تحديد العنوان المهني",
+        })
+    elif len(headline) < 12:
+        gaps.append({
+            "key": "headline",
+            "why": f"Your headline \"{headline}\" is too generic to stand out.",
+            "action": "Sharpen your headline",
+            "ar_why": f"عنوانك \"{headline}\" عام ولا يميزك عن غيرك.",
+            "ar_action": "تحسين العنوان المهني",
+        })
+
+    if not has_avatar:
+        gaps.append({
+            "key": "avatar",
+            "why": "No profile photo lowers trust and recall with clients.",
+            "action": "Add a photo",
+            "ar_why": "عدم وجود صورة شخصية يقلل الثقة وسرعة التذكر لدى العملاء.",
+            "ar_action": "إضافة صورة شخصية",
+        })
+
+    # =============================== Projects ================================
+    reel_count = sum(1 for p in projects if p.get("video_type") == "reel")
+    long_count = len(projects) - reel_count
+
+    if not projects:
+        gaps.append({
+            "key": "projects",
+            "why": "No video projects: clients and recruiters can't judge your skill.",
+            "action": "Add a project",
+            "ar_why": "لا توجد مشاريع فيديو: لا يستطيع العملاء أو مسؤولو التوظيف تقييم مهارتك.",
+            "ar_action": "إضافة مشروع",
+        })
+    else:
+        strengths.append(f"{len(projects)} project(s): {reel_count} reels, {long_count} long-form")
+
+        empty_details = [p["title"] for p in projects if not (p.get("details") or "").strip()]
+        if empty_details:
+            gaps.append({
+                "key": "project_details",
+                "why": f"{len(empty_details)} project(s) have no description — context sells the craft.",
+                "action": "Write project descriptions",
+                "ar_why": f"{len(empty_details)} مشروع(ات) بدون وصف — السياق يبيع جودة العمل.",
+                "ar_action": "كتابة وصف المشاريع",
+            })
+
+        no_category = [p["title"] for p in projects if not (p.get("category") or "")]
+        if no_category:
+            gaps.append({
+                "key": "project_categories",
+                "why": f"{len(no_category)} project(s) have no category tab — organized work looks more professional.",
+                "action": "Organize projects into categories",
+                "ar_why": f"{len(no_category)} مشروع(ات) بدون تصنيف — تنظيم العمل يبدو أكثر احترافية.",
+                "ar_action": "تنظيم المشاريع في تصنيفات",
+            })
+
+        bad_urls = [
+            p["title"] for p in projects
+            if not (p.get("url") or "").strip() or any(t in (p.get("url") or "").lower() for t in AUDIT_PLACEHOLDER_URLS)
+        ]
+        if bad_urls:
+            gaps.append({
+                "key": "project_urls",
+                "why": f"{len(bad_urls)} project(s) have a missing or placeholder video link.",
+                "action": "Fix project URLs",
+                "ar_why": f"{len(bad_urls)} مشروع(ات) بدون رابط فيديو صالح.",
+                "ar_action": "إصلاح روابط المشاريع",
+            })
+
+        # Duplicate titles clutter the showcase and confuse visitors.
+        seen_titles = {}
+        duplicates = []
+        for p in projects:
+            key = (p.get("title") or "").strip().lower()
+            seen_titles[key] = seen_titles.get(key, 0) + 1
+            if seen_titles[key] == 2:
+                duplicates.append(p.get("title"))
+        if duplicates:
+            gaps.append({
+                "key": "project_duplicates",
+                "why": f"Duplicate project title(s): {', '.join(duplicates[:3])} — your showcase repeats itself.",
+                "action": "Rename or remove duplicates",
+                "ar_why": f"توجد مشاريع بعناوين مكررة: {', '.join(duplicates[:3])} — عرضك يكرر نفسه.",
+                "ar_action": "تعديل أو حذف العناوين المكررة",
+            })
+
+        # Format mix matters differently per goal.
+        if goal == "creator" and reel_count == 0 and not gaps_by_key(gaps, "projects"):
+            gaps.append({
+                "key": "reels",
+                "why": "No vertical reels — for a creator goal, short-form is your main growth channel.",
+                "action": "Add a 9:16 reel",
+                "ar_why": "لا توجد ريلز رأسية — لكي تنمو كصانع محتوى، الشورت فورم هو قناتك الأساسية.",
+                "ar_action": "إضافة ريلز قصير (9:16)",
+            })
+        elif goal in ("recruiter", "agency") and long_count == 0 and not gaps_by_key(gaps, "projects"):
+            gaps.append({
+                "key": "long_form",
+                "why": "No long-form (16:9) sample — agencies/recruiters expect to see narrative pacing.",
+                "action": "Add a long-form project",
+                "ar_why": "لا توجد عينة فيديو طويل (16:9) — الوكالات ومسؤولو التوظيف يتوقعون رؤية إيقاع سردي.",
+                "ar_action": "إضافة مشروع طويل (16:9)",
+            })
+
+    # ================================= Skills ================================
+    if not skills:
+        gaps.append({
+            "key": "skills",
+            "why": "No listed skills/software stack.",
+            "action": "Add skills",
+            "ar_why": "لا توجد مهارات أو برامج مذكورة.",
+            "ar_action": "إضافة مهارات",
+        })
+    else:
+        if SKILLS_GOOD_BAND[0] <= len(skills) <= SKILLS_GOOD_BAND[1]:
+            strengths.append(f"{len(skills)} skills listed")
+        elif len(skills) > SKILLS_GOOD_BAND[1]:
+            gaps.append({
+                "key": "skills_focus",
+                "why": f"{len(skills)} skills is overload — a giant list reads unfocused. Keep your strongest 5-8 signature tools.",
+                "action": "Focus your skills",
+                "ar_why": f"{len(skills)} مهارة كثير جداً — القائمة الطويلة توحي بالتشتت. اجعلها 5-8 أدوات أساسية فقط.",
+                "ar_action": "تركيز المهارات",
+            })
+        else:
+            strengths.append(f"{len(skills)} skills listed")
+
+        # If every skill is generic, the stack doesn't tell a hiring story.
+        generic_count = sum(1 for s in skills if s.strip().lower() in GENERIC_SKILLS)
+        if len(skills) >= 4 and generic_count >= max(2, len(skills) // 2):
+            copy_issues.append(
+                "Skills advertise only generic tools — add a specialty or creative craft (sound design for narrative, motion GFX, etc.)."
+            )
+
+    # =============================== Reviews ================================
+    if not reviews:
+        gaps.append({
+            "key": "reviews",
+            "why": "No client testimonials: social proof = faster decisions.",
+            "action": "Add a client review",
+            "ar_why": "لا توجد آراء عملاء: الإثبات الاجتماعي يسّرع اتخاذ القرار.",
+            "ar_action": "إضافة تقييم عميل",
+        })
+    elif len(reviews) == 1:
+        strengths.append("1 client review")
+        gaps.append({
+            "key": "reviews_more",
+            "why": "Only one testimonial — a second opinion from a different kind of client adds credibility.",
+            "action": "Add another client review",
+            "ar_why": "يوجد تقييم واحد فقط — إضافة رأي ثانٍ من نوع مختلف من العملاء يزيد المصداقية.",
+            "ar_action": "إضافة تقييم عميل آخر",
+        })
+    else:
+        strengths.append(f"{len(reviews)} client review(s)")
+
+    # ========================= Experience / Education ========================
+    if not experiences:
+        gaps.append({
+            "key": "experience",
+            "why": "No work history shown.",
+            "action": "Add experience",
+            "ar_why": "لا توجد خبرات عمل معروضة.",
+            "ar_action": "إضافة خبرة",
+        })
+    else:
+        strengths.append(f"{len(experiences)} experience entry(ies)")
+        undetailed_exp = [e.get("title") for e in experiences if not (e.get("details") or "").strip()]
+        if undetailed_exp:
+            gaps.append({
+                "key": "experience_details",
+                "why": f"{len(undetailed_exp)} experience entry(ies) have no description of your impact.",
+                "action": "Describe your responsibilities",
+                "ar_why": f"{len(undetailed_exp)} خب(ر)رة بدون وصف لدورك وأثرك.",
+                "ar_action": "وصف مسؤولياتك",
+            })
+
+    if not educations:
+        gaps.append({
+            "key": "education",
+            "why": "No education or certifications listed.",
+            "action": "Add education",
+            "ar_why": "لا توجد مؤهلات دراسية أو شهادات مذكورة.",
+            "ar_action": "إضافة تعليم",
+        })
+
+    # =============================== Links & contact =========================
+    if not links:
+        gaps.append({
+            "key": "links",
+            "why": "No social/professional links.",
+            "action": "Add links",
+            "ar_why": "لا توجد روابط سوشيال أو روابط مهنية.",
+            "ar_action": "إضافة روابط",
+        })
+
+    if not (pi.get("phone") or pi.get("email") or pi.get("booking_url")):
+        gaps.append({
+            "key": "contact",
+            "why": "No visible contact method or booking link.",
+            "action": "Add contact info",
+            "ar_why": "لا توجد وسيلة تواصل أو رابط حجز ظاهر.",
+            "ar_action": "إضافة معلومات التواصل",
+        })
+
+    # ============================== Visibility ==============================
+    if not account.get("is_public"):
+        gaps.append({
+            "key": "visibility",
+            "why": "Portfolio is private — no one can visit your link.",
+            "action": "Publish portfolio",
+            "ar_why": "المعرض خاص — لا يمكن لأحد زيارة رابطك.",
+            "ar_action": "نشر المعرض",
+        })
+
+    # ===================== Hidden sections that have content =================
+    section_map = {
+        "projects": projects, "skills": skills, "experience": experiences,
+        "education": educations, "reviews": reviews, "links": links,
+        "creators": creators, "contact": [1] if (pi.get("phone") or pi.get("email") or pi.get("booking_url")) else [],
+    }
+    hidden_with_content = []
+    for key, content in section_map.items():
+        if content and section_visibility.get(key) is False:
+            hidden_with_content.append(key)
+    if hidden_with_content:
+        gaps.append({
+            "key": "hidden_sections",
+            "why": f"You have content in {', '.join(hidden_with_content)} but the section is hidden from visitors.",
+            "action": "Show hidden sections",
+            "ar_why": f"لديك محتوى في {', '.join(hidden_with_content)} لكن القسم مخفي عن الزوار.",
+            "ar_action": "إظهار الأقسام المخفية",
+        })
+
+    # ============================== Score ===================================
+    # Graduated, goal-aware deduction model.
+    deductions = {
+        "bio": 12, "bio_depth": 2, "bio_cliche": 4, "headline": 4, "avatar": 3,
+        "projects": 22, "project_details": 6, "project_categories": 2, "project_urls": 3,
+        "project_duplicates": 3, "reels": 4, "long_form": 4,
+        "skills": 10, "skills_focus": 2,
+        "reviews": 10, "reviews_more": 2, "experience": 8, "experience_details": 2,
+        "education": 2,
+        "links": 5, "contact": 7, "visibility": 8, "hidden_sections": 3,
+    }
+    # Goal-critical sections cost extra — a strong portfolio for the wrong goal
+    # is weaker than one that fills its target funnel first.
+    goal_priority_keys = set(goal_info["priorities"])
+
+    score = 100
+    seen = set()
+    for gap in gaps:
+        key = gap["key"]
+        base = deductions.get(key, 0)
+        if key in goal_priority_keys:
+            base = min(base + 2, 22)
+        if key not in seen:
+            score -= base
+            seen.add(key)
+    # Copy issues (graphical polish) cost a small flat amount once.
+    if copy_issues:
+        score -= 3
+    score = max(0, min(100, score))
+
+    # ========================= Goal fit assessment ==========================
+    # Extra insight: how well does the portfolio fill the goal's funnel?
+    goal_filled = [k for k in goal_info["priorities"] if k not in seen]
+    if goal_filled:
+        strengths.append(f"Goal fit ({goal}): {', '.join(goal_filled)} covered")
+
+    # ====================== Theme suggestion (grounded) =====================
+    suggestion = None
+    for cand in goal_info["theme_fav"]:
+        match = Theme.objects.filter(name__iexact=cand).first()
+        if match:
+            suggestion = {
+                "name": match.name,
+                "preview": f"/preview/{match.name.lower().replace(' ', '_')}",
+                "reason_en": goal_info["theme_reason_en"],
+                "reason_ar": goal_info["theme_reason_ar"],
+            }
+            break
+    if suggestion:
+        suggestion["is_active"] = (suggestion["name"].lower().replace(" ", "_") == theme_name)
+
+    # =================== Goal-specific prioritized actions ==================
+    recommendations = []
+    for gap in gaps:
+        key = gap["key"]
+        if key in goal_priority_keys or key == "visibility":
+            priority = "high" if key in goal_info["priorities"][:2] else "medium"
+            recommendations.append({
+                "priority": priority, "key": key,
+                "why": gap["why"], "action": gap["action"],
+                "ar_why": gap.get("ar_why", gap["why"]), "ar_action": gap.get("ar_action", gap["action"]),
+            })
+    recommendations.sort(key=lambda r: (0 if r["priority"] == "high" else 1, r["key"]))
+
+    # Quick wins: anything non-goal-critical but cheap to fix (extra polish).
+    quick_wins = [
+        {"key": g["key"], "action": g["action"], "ar_action": g.get("ar_action", g["action"])}
+        for g in gaps if g["key"] not in goal_priority_keys and g["key"] != "visibility"
+    ]
+
+    if score >= 85:
+        summary = "Excellent portfolio — strong professional foundation."
+        ar_summary = "معرض أعمال ممتاز — أساس احترافي قوي."
+    elif score >= 65:
+        summary = "Solid portfolio with a few quick wins left."
+        ar_summary = "معرض جيد مع بعض التحسينات السريعة المتبقية."
+    else:
+        summary = "Getting there — this portfolio needs its foundation filled in."
+        ar_summary = "في الطريق — يحتاج المعرض لملء الأساسيات."
+
+    audit = {
+        "goal": goal,
+        "score": score,
+        "summary": summary,
+        "ar_summary": ar_summary,
+        "strengths": strengths,
+        "gaps": gaps,
+        "copy_issues": copy_issues,
+        "recommendations": recommendations,
+        "quick_wins": quick_wins,
+        "theme_suggestion": suggestion,
+        "counts": {
+            "projects": len(projects), "reels": reel_count, "long": long_count,
+            "skills": len(skills), "reviews": len(reviews), "skills_focus": len(skills) > SKILLS_GOOD_BAND[1],
+            "experience": len(experiences), "education": len(educations),
+            "links": len(links), "hidden_sections": hidden_with_content,
+        },
+    }
+    return {
+        "success": True,
+        "action_type": "audit_portfolio",
+        "message": summary,
+        "audit": audit,
+        "snapshot_id": None,
+    }

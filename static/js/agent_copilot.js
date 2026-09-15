@@ -138,6 +138,8 @@
     } catch (e) {}
   }
 
+  let speechGen = 0;
+
   function updateSoundUI() {
     if (!soundBtn) return;
     if (soundEnabled) {
@@ -152,7 +154,7 @@
       if (soundIconOn) soundIconOn.style.display = 'none';
       if (soundIconOff) soundIconOff.style.display = 'block';
       soundBtn.title = (lang === 'ar') ? 'الصوت مكتوم (اضغط للتفعيل)' : 'Sound Muted (Click to unmute)';
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (window.speechSynthesis) { speechGen++; window.speechSynthesis.cancel(); }
     }
   }
 
@@ -174,32 +176,47 @@
     if (!soundEnabled || !window.speechSynthesis) return;
     try {
       window.speechSynthesis.cancel();
+      const gen = ++speechGen;
       let clean = text
-        .replace(/\*\*|__|[*_`#]/g, '')
+        .replace(/[#*_`]/g, '')
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
         .replace(/https?:\/\/\S+/g, '')
         .replace(/\(\*.*?\*\)/g, '')
-        .replace(/[\n\r]+/g, ' ')
+        .replace(/[•●◦]/g, ', ')
+        .replace(/[ \t]+/g, ' ')
         .trim();
 
       if (!clean) return;
 
-      const utterance = new SpeechSynthesisUtterance(clean);
-      utterance.lang = (lang === 'ar') ? 'ar-SA' : 'en-US';
-      utterance.rate = (lang === 'ar') ? 0.95 : 1.05;
+      const chunks = clean
+        .split(/\n{2,}/)
+        .map(part => part.replace(/\n+/g, ', ').replace(/, ,/g, ',').trim())
+        .filter(Boolean);
 
-      const voices = window.speechSynthesis.getVoices();
-      if (voices && voices.length > 0) {
-        if (lang === 'ar') {
-          const arVoice = voices.find(v => v.lang.startsWith('ar'));
-          if (arVoice) utterance.voice = arVoice;
-        } else {
-          const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
-          if (enVoice) utterance.voice = enVoice;
+      let idx = 0;
+
+      const speakNext = () => {
+        if (gen !== speechGen || idx >= chunks.length) return;
+        const utterance = new SpeechSynthesisUtterance(chunks[idx++]);
+        utterance.lang = (lang === 'ar') ? 'ar-SA' : 'en-US';
+        utterance.rate = (lang === 'ar') ? 0.95 : 1.05;
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length > 0) {
+          if (lang === 'ar') {
+            const arVoice = voices.find(v => v.lang.startsWith('ar'));
+            if (arVoice) utterance.voice = arVoice;
+          } else {
+            const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+            if (enVoice) utterance.voice = enVoice;
+          }
         }
-      }
 
-      window.speechSynthesis.speak(utterance);
+        utterance.onend = speakNext;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      speakNext();
     } catch (e) {
       console.warn('SpeechSynthesis error:', e);
     }
@@ -439,12 +456,23 @@
     let parsed = escapeHtml(text);
     // Bold **text**
     parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Italic *text*
-    parsed = parsed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Italic *text* (but not inside words or already-processed bold)
+    parsed = parsed.replace(/(?<!\w)\*([^*]+?)\*(?!\w)/g, '<em>$1</em>');
     // Code `code`
     parsed = parsed.replace(/`(.*?)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 4px;border-radius:4px;">$1</code>');
     // Markdown links [text](url)
     parsed = parsed.replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#a5b4fc;text-decoration:underline;">$1</a>');
+    // Headings ### Header or ## Header (within messages)
+    parsed = parsed.replace(/^#{3,4}\s+(.+)$/gm, '<h4 class="agent-msg-heading">$1</h4>');
+    parsed = parsed.replace(/^#{2}\s+(.+)$/gm, '<h4 class="agent-msg-heading">$1</h4>');
+    // Horizontal dividers ---
+    parsed = parsed.replace(/^\s*[-]{3,}\s*$/gm, '<hr class="agent-msg-divider">');
+    // Numbered lists: "1. item" -> styled numbered item
+    parsed = parsed.replace(/^\s*(\d+)\.\s+(.+)$/gm, '<div class="agent-msg-list-item"><span class="agent-msg-list-num">$1.</span> $2</div>');
+    // Bullet lists: "- item" / "* item" / "• item" -> styled bullet item
+    parsed = parsed.replace(/^[\s]*(?:[-*•])\s+(.+)$/gm, '<div class="agent-msg-list-item"><span class="agent-msg-list-bullet">•</span> $1</div>');
+    // Blank line between paragraphs -> breathing room
+    parsed = parsed.replace(/\n{2,}/g, '<span class="agent-msg-para"></span>');
     // Line breaks
     parsed = parsed.replace(/\n/g, '<br>');
     return parsed;
@@ -470,6 +498,7 @@
   function closeDrawer() {
     drawer.classList.remove('is-open');
     drawer.setAttribute('aria-hidden', 'true');
+    speechGen++;
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -501,7 +530,7 @@
       if (data.messages && data.messages.length > 0) {
         if (welcomeCard) welcomeCard.style.display = 'none';
         data.messages.forEach(msg => {
-          appendMessageBubble(msg.sender, msg.text, msg.actions, msg.created_at);
+          appendMessageBubble(msg.sender, msg.text, msg.actions, msg.created_at, msg.id, msg.user_rating);
           if (msg.quick_replies && msg.quick_replies.length > 0) {
             renderQuickReplies(msg.quick_replies);
           }
@@ -588,7 +617,7 @@
   // -------------------------------------------------------------------------
   // Render Messages & Action Cards
   // -------------------------------------------------------------------------
-  function appendMessageBubble(sender, text, actions = [], time = '') {
+  function appendMessageBubble(sender, text, actions = [], time = '', msgId = null, userRating = null) {
     const isUser = sender === 'user';
     const msgDiv = document.createElement('div');
     msgDiv.className = `agent-msg ${isUser ? 'is-user' : 'is-agent'}`;
@@ -607,6 +636,12 @@
 
     msgDiv.appendChild(bubble);
 
+    // Feedback (thumbs up/down) row for agent messages
+    if (!isUser && msgId) {
+      const ratingRow = renderFeedbackRow(msgId, userRating);
+      if (ratingRow) msgDiv.appendChild(ratingRow);
+    }
+
     if (time) {
       const timeSpan = document.createElement('span');
       timeSpan.className = 'agent-msg-time';
@@ -617,6 +652,79 @@
     messagesContainer.appendChild(msgDiv);
     scrollToBottom();
   }
+
+  // -------------------------------------------------------------------------
+  // Feedback loop (thumbs up / down per agent response)
+  // -------------------------------------------------------------------------
+  function renderFeedbackRow(msgId, currentRating) {
+    const row = document.createElement('div');
+    row.className = 'agent-msg-rating';
+    row.dataset.msgId = msgId;
+
+    const up = document.createElement('button');
+    up.type = 'button';
+    up.className = 'agent-rate-btn' + (currentRating === 'up' ? ' is-active' : '');
+    up.dataset.rating = 'up';
+    up.title = lang === 'ar' ? 'مفيد' : 'Helpful';
+    up.setAttribute('aria-label', up.title);
+    up.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-7 5 7m-10 0H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2h-2m-10 0v9"/></svg>';
+
+    const down = document.createElement('button');
+    down.type = 'button';
+    down.className = 'agent-rate-btn' + (currentRating === 'down' ? ' is-active' : '');
+    down.dataset.rating = 'down';
+    down.title = lang === 'ar' ? 'غير مفيد' : 'Not helpful';
+    down.setAttribute('aria-label', down.title);
+    down.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 13l-5 7-5-7m10 0h2a2 2 0 002-2V4a2 2 0 00-2-2H5a2 2 0 00-2 2v7a2 2 0 002 2h2m10 0v-9"/></svg>';
+
+    row.appendChild(up);
+    row.appendChild(down);
+    return row;
+  }
+
+  // Handles the rating click, disables both buttons, highlights the chosen one
+  async function rateMessage(btn) {
+    const row = btn.closest('.agent-msg-rating');
+    if (!row || row.classList.contains('is-locked')) return;
+    const msgId = row.dataset.msgId;
+    const rating = btn.dataset.rating;
+
+    try {
+      const res = await fetch('/agent/feedback/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message_id: msgId, rating }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        row.classList.add('is-locked');
+        row.querySelectorAll('.agent-rate-btn').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.rating === rating);
+        });
+      }
+    } catch (err) {
+      console.error('Error saving agent feedback:', err);
+    }
+  }
+
+  messagesContainer.addEventListener('click', function (e) {
+    const rateBtn = e.target.closest('.agent-rate-btn');
+    if (rateBtn) {
+      rateMessage(rateBtn);
+      return;
+    }
+    const btn = e.target.closest('.agent-pill-btn, .agent-quick-chip, [data-prompt]');
+    if (btn) {
+      const prompt = btn.getAttribute('data-prompt') || btn.textContent.trim();
+      if (prompt) {
+        chatInput.value = prompt;
+        sendMessage();
+      }
+    }
+  });
 
   function renderActionCard(action) {
     if (!action || !action.action_type) return null;
@@ -772,7 +880,7 @@
 
       if (json.success && json.data) {
         const data = json.data;
-        appendMessageBubble('agent', data.message, data.actions);
+        appendMessageBubble('agent', data.message, data.actions, '', data.agent_message_id, null);
 
         // Sound Feedback & Voice Reading
         if (data.actions && data.actions.length > 0) {

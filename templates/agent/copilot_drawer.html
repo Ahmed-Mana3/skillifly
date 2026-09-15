@@ -270,4 +270,60 @@
     </div>
   </div>
 
+  <!-- Professional AI Response Styling -->
+  <style>
+    .agent-msg-bubble strong {
+      color: #e0e7ff;
+      font-weight: 600;
+    }
+    .agent-msg-heading {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #c7d2fe;
+      margin: 10px 0 4px 0;
+      padding: 0;
+      letter-spacing: 0.02em;
+    }
+    .agent-msg-heading:first-child {
+      margin-top: 0;
+    }
+    .agent-msg-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 10px 0;
+    }
+    .agent-msg-list-item {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 2px 0 2px 4px;
+      line-height: 1.5;
+    }
+    .agent-msg-list-num {
+      color: #a5b4fc;
+      font-weight: 700;
+      min-width: 18px;
+      flex-shrink: 0;
+    }
+    .agent-msg-list-bullet {
+      color: #a5b4fc;
+      font-weight: 700;
+      min-width: 14px;
+      flex-shrink: 0;
+    }
+    .agent-msg-para {
+      display: block;
+      height: 10px;
+    }
+    /* RTL adjustments for Arabic */
+    [dir="rtl"] .agent-msg-list-item,
+    .agent-msg-bubble[dir="rtl"] .agent-msg-list-item {
+      padding: 2px 4px 2px 0;
+    }
+    /* Ensure emojis render at proper size */
+    .agent-msg-bubble {
+      line-height: 1.6;
+    }
+  </style>
+
 </div>

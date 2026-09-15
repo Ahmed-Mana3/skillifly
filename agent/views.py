@@ -72,6 +72,7 @@ def history_view(request):
             "text": m.text,
             "actions": m.actions_applied or [],
             "quick_replies": m.quick_replies or [],
+            "user_rating": m.user_rating,
             "created_at": m.created_at.strftime("%H:%M"),
         })
 
@@ -114,3 +115,35 @@ def undo_view(request, snapshot_id):
             "success": False,
             "error": str(e),
         }, status=400)
+
+
+@login_required
+@require_POST
+def feedback_view(request):
+    """
+    Records thumbs up/down feedback on an agent response. Only the owner of the
+    active conversation can rate its messages (strict user isolation).
+    """
+    try:
+        data = json.loads(request.body.decode("utf-8")) if request.body else request.POST
+    except Exception:
+        data = request.POST
+
+    message_id = data.get("message_id")
+    rating = data.get("rating", "").strip().lower()
+    if rating not in ("up", "down"):
+        return JsonResponse({"success": False, "error": "Invalid rating."}, status=400)
+
+    msg = AgentMessage.objects.filter(
+        id=message_id or 0,
+        sender="agent",
+        conversation__user=request.user,
+        conversation__is_active=True,
+    ).first()
+    if not msg:
+        return JsonResponse({"success": False, "error": "Message not found."}, status=404)
+
+    msg.user_rating = rating
+    msg.save(update_fields=["user_rating"])
+
+    return JsonResponse({"success": True, "message_id": msg.id, "rating": msg.user_rating})

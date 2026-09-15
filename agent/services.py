@@ -17,6 +17,7 @@ except ImportError:
     Groq = None
 
 from core.models import AgentConversation, AgentMessage, CustomUser, Theme
+from core.ai import write_bio as ai_write_bio, GenerationService, generation_provider
 from agent.tools import (
     get_portfolio_state,
     update_personal_info,
@@ -39,6 +40,7 @@ from agent.tools import (
     add_project_category,
     delete_project_category,
     set_portfolio_visibility,
+    audit_portfolio,
     ask_clarification,
     restore_snapshot,
 )
@@ -67,6 +69,7 @@ TOOL_MAP = {
     "add_project_category": add_project_category,
     "delete_project_category": delete_project_category,
     "set_portfolio_visibility": set_portfolio_visibility,
+    "audit_portfolio": audit_portfolio,
 }
 
 
@@ -436,6 +439,23 @@ GROQ_TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "audit_portfolio",
+            "description": "Run a goal-based audit of the user's portfolio: completeness score, strengths, gaps, prioritized recommendations, copy issues, and a theme suggestion. Call this whenever the user asks to audit, review, or improve their portfolio.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "goal": {
+                        "type": "string",
+                        "enum": ["client", "recruiter", "agency", "creator"],
+                        "description": "What the user wants to achieve with the portfolio. Default 'client'.",
+                    },
+                },
+            },
+        },
+    },
 ]
 
 
@@ -451,26 +471,88 @@ def _build_system_prompt(user, portfolio_state, language="en"):
     design aesthetics, and the user's real-time portfolio data.
     """
     is_ar = language == "ar"
+    smooth_reading_rules = (
+        "- **Smooth reading:** Write in short, complete sentences that flow naturally.\n"
+        "- Never use telegraphic fragments; every line must read as a real sentence.\n"
+        "- When you list things, open with one short lead-in sentence, then one clean bullet per idea.\n"
+        "- Your reply may be read aloud by a voice assistant (TTS): keep the phrasing conversational, avoid symbols, and let each sentence breathe by itself."
+        if is_ar else
+        "- **Smooth reading:** Write in short, complete sentences that flow naturally from one to the next.\n"
+        "- Never use telegraphic fragments; every line must read as a real sentence.\n"
+        "- When you list things, open with one short lead-in sentence, then one clean bullet per idea.\n"
+        "- Your reply may be read aloud by a voice assistant (TTS): keep the phrasing conversational, avoid symbols, and let each sentence stand alone."
+    )
+
     lang_directive = (
         "### Language & Cultural Directive:\n"
         "- The user is interacting in Arabic.\n"
         "- Respond in natural, professional, and direct Arabic (Egyptian dialect mixed with clean Modern Standard Arabic where appropriate).\n"
         "- STRICT BREVITY: Keep all responses SHORT, CLEAR, and DIRECT TO THE POINT (1-2 sentences maximum).\n"
         "- Maintain industry terminology commonly used in the Arabic creative industry (e.g., مونتاج, كلر جريدنج, إعلانات تجارية, ريلز, تريلر, موشن جرافيكس).\n"
-        "- All quick-reply pills, clarifying questions, and action summaries must be written in concise, fluent Arabic."
+        "- All quick-reply pills, clarifying questions, and action summaries must be written in concise, fluent Arabic.\n"
+        + smooth_reading_rules
         if is_ar else
         "### Language Directive:\n"
         "- The user is interacting in English.\n"
         "- Respond in polished, confident, and direct English with industry-savvy creative agency terminology.\n"
-        "- STRICT BREVITY: Keep all responses SHORT, CLEAR, and DIRECT TO THE POINT (1-2 sentences maximum)."
+        "- STRICT BREVITY: Keep all responses SHORT, CLEAR, and DIRECT TO THE POINT (1-2 sentences maximum).\n"
+        + smooth_reading_rules
     )
 
     state_json = json.dumps(portfolio_state, indent=2, ensure_ascii=False)
+
+    # Compute quick portfolio health signals for the LLM to reason about
+    pi = portfolio_state.get("personal_info", {})
+    projects = portfolio_state.get("projects", [])
+    skills = portfolio_state.get("skills", [])
+    reviews = portfolio_state.get("reviews", [])
+    experiences = portfolio_state.get("experiences", [])
+    educations = portfolio_state.get("educations", [])
+    links = portfolio_state.get("links", [])
+    has_bio = bool((pi.get("bio") or "").strip() and len((pi.get("bio") or "").strip()) > 30)
+    has_avatar = bool(portfolio_state.get("account", {}).get("has_profile_picture"))
+    is_public = bool(portfolio_state.get("account", {}).get("is_public"))
+    reel_count = sum(1 for p in projects if p.get("video_type") == "reel")
+
+    gaps_summary = []
+    if not has_bio:
+        gaps_summary.append("bio")
+    if not has_avatar:
+        gaps_summary.append("photo")
+    if not projects:
+        gaps_summary.append("projects")
+    elif any(not p.get("details") for p in projects):
+        gaps_summary.append("project_descriptions")
+    if not skills:
+        gaps_summary.append("skills")
+    if not reviews:
+        gaps_summary.append("reviews")
+    if not experiences:
+        gaps_summary.append("experience")
+    if not educations:
+        gaps_summary.append("education")
+    if not links:
+        gaps_summary.append("links")
+    if not is_public:
+        gaps_summary.append("visibility")
 
     return f"""You are Skillifly AI — an elite Creative Director, Post-Production Producer, and Portfolio Architect built directly into Skillifly.
 Your mission is to help video editors, colorists, motion designers, and filmmakers build a world-class, client-winning portfolio that lands high-ticket brand deals and agency contracts.
 
 {lang_directive}
+
+---
+
+## 🎨 Response Formatting & Presentation (STRICT REQUIREMENT):
+Every response you send MUST look clean, structured, and professionally crafted:
+1. **Status indicators**: Start action confirmations with ✅. Start proactive suggestions with 📌. Use 🎨 for theme recommendations and ⭐ for reviews.
+2. **Bold emphasis**: Always **bold** key values — project titles, theme names, skill names, section names, scores, and anything the user specifically asked about.
+3. **Structured lists**: When listing multiple items or priorities, use clean numbered lists (1., 2., 3.) for ordered priorities, or bullet points (•) for unordered items. Each item on its own line.
+4. **Section headers**: For audit results or multi-part responses, use bold section headers like **Strengths:** or **Priorities:** to separate different parts of the response.
+5. **Action → Impact → Next**: For confirmations, follow: ✅ what changed → brief impact clause → 📌 one next-step suggestion (on new line).
+6. **Quote user content**: When showing generated bios, review text, or project descriptions, wrap them in quotes ("...").
+7. **Confident tone**: Write like an elite Creative Director briefing a client — authoritative, precise, warm but never casual. Never hedge with "maybe", "perhaps", "I think". State facts and recommendations with conviction.
+8. **No filler**: Never open with "Certainly!", "Sure thing!", "Of course!", "Absolutely!", "Great choice!", "I would be happy to". Open directly with the action or answer.
 
 ---
 
@@ -482,6 +564,25 @@ Your mission is to help video editors, colorists, motion designers, and filmmake
    - If providing suggestions, use at most 2-3 brief, punchy bullet points (1 line each). Never output long paragraphs.
 2. **Direct Action Over Discussion**:
    - Execute the relevant tool immediately when requested. Confirm the action in 1 direct sentence.
+
+---
+
+## 🧠 Smart Reasoning Instructions:
+1. **Chain of Thought (silent)**: Before deciding which tool to call, mentally analyze:
+   - What exactly is the user asking? Be precise about intent.
+   - Do I have ALL required information? If yes → execute immediately. If no → what specific detail is missing?
+   - Can I infer reasonable defaults from the portfolio state? (e.g., if they have commercial projects, suggest "Commercials" as a category).
+   - Should I make multiple tool calls in one response? (e.g., adding a project AND a category together).
+2. **Conversational vs Action**: 
+   - If the user is asking a question about their portfolio, the platform, or giving feedback — RESPOND CONVERSATIONALLY. Do NOT call tools when no modification is requested.
+   - If the user wants to change/add/delete/update — CALL THE TOOL IMMEDIATELY.
+   - Examples of conversational (NO tool call): "How does my portfolio look?", "What theme do you recommend?", "Can I add a custom domain?", "Thanks!"
+   - Examples of action (TOOL call needed): "Add a project", "Change my bio", "Delete the review from John", "Switch to dark theme".
+3. **Smart Defaults**: When adding items, use intelligent defaults from context:
+   - If the user has `Commercials` as an existing category, new brand videos should probably go there.
+   - If they use DaVinci Resolve, mention it in copy. If they have reels, suggest reel-optimized themes.
+   - When suggesting quick replies, prefer actions that fill the BIGGEST GAP in their portfolio first.
+4. **Proactive Coaching**: After completing an action, briefly suggest the single most impactful next step based on what's missing. Example: "Added your project. Your portfolio still needs a bio — want me to write one?"
 
 ---
 
@@ -554,6 +655,19 @@ The JSON below reflects the user's exact live database records right now:
 {state_json}
 ```
 
+### Portfolio Health Summary (pre-analyzed for you):
+- **Existing gaps** (sections that need attention): {", ".join(gaps_summary) if gaps_summary else "None — portfolio is well-rounded!"}
+- **Has bio**: {"Yes" if has_bio else "No — high priority gap"}
+- **Has profile photo**: {"Yes" if has_avatar else "No"}
+- **Projects count**: {len(projects)} ({reel_count} reels, {len(projects) - reel_count} long-form)
+- **Skills count**: {len(skills)}
+- **Reviews count**: {len(reviews)}
+- **Experience entries**: {len(experiences)}
+- **Links count**: {len(links)}
+- **Portfolio public**: {"Yes" if is_public else "No — users should publish"}
+
+Use this health summary to decide what to suggest next. ALWAYS prioritize filling the biggest gaps first.
+
 ---
 
 ## 🚨 Non-Negotiable Tool Calling Rules:
@@ -568,11 +682,13 @@ The JSON below reflects the user's exact live database records right now:
    If the user references one of these wizards mid-conversation, simply acknowledge it — do NOT restart the questions.
 3. **Clarification When Missing Required Information**: For all OTHER requests (e.g. adding experience, a link), if crucial details are missing, call `ask_clarification` with a short, direct question and 2 to 4 clickable `quick_replies`.
 4. **Multi-Action Capability**: You can call multiple tools in sequence in a single response (e.g., updating bio AND adding 3 skills).
-5. **Post-Action Conciseness**: After invoking tools, provide a 1-sentence confirmation of what was updated.
+5. **Post-Action Conciseness**: After invoking tools, provide a 1-sentence confirmation of what was updated PLUS one proactive suggestion based on the biggest remaining gap (e.g., "Added your project. Your skills section is empty — want me to add your software stack?").
 6. **Smart & Generic Recommendations**:
-   - When suggesting next actions or quick replies, ALWAYS keep them GENERIC and ACTION-ORIENTED (e.g. "Change the theme", "Add a project", "Write a bio", "Add skills", "Add a client review", "Audit portfolio").
+   - When suggesting next actions or quick replies, prioritize actions that fill the BIGGEST PORTFOLIO GAP first (check the Portfolio Health Summary above).
+   - Keep quick replies GENERIC and ACTION-ORIENTED (e.g. "Change the theme", "Add a project", "Write a bio", "Add skills", "Add a client review", "Audit portfolio").
    - NEVER tell the user to change to a specific theme (e.g. do NOT say "Change theme to Cinematic", say "Change the theme").
-   - Base all portfolio audit recommendations strictly on what is genuinely missing in `portfolio_state`.
+7. **Audit Tool**: When the user asks to audit, review, improve, or get recommendations for their portfolio, CALL `audit_portfolio` FIRST (offer goal: getting clients / getting hired / working with agencies / growing as a creator). Then present its `score`, top `strengths`, and the top 2 `gaps` with their `action` in your short reply — never invent recommendations that the audit did not return.
+8. **Conversational Mode**: When the user asks a QUESTION (not a request to modify), answer directly WITHOUT calling any tool. Only call tools when the user explicitly wants to change, add, delete, or create something.
 """
 
 
@@ -624,7 +740,7 @@ class AgentService:
             except Exception as e:
                 logger.error(f"Failed to create Groq client: {e}")
 
-        self.model_name = getattr(settings, "GROQ_AGENT_MODEL", "qwen/qwen3.8-27b")
+        self.model_name = getattr(settings, "GROQ_AGENT_MODEL", "llama-3.3-70b-versatile")
 
     # -----------------------------------------------------------------------
     # Guided Multi-Step Workflows
@@ -783,6 +899,7 @@ class AgentService:
             "quick_replies": quick_replies,
             "actions": actions or [],
             "snapshot_id": snapshot_id,
+            "agent_message_id": agent_msg.id,
             "portfolio_state": get_portfolio_state(self.user),
         }
 
@@ -877,9 +994,9 @@ class AgentService:
             )
             self._clear_workflow()
             reply = (
-                f"تمت إضافة المشروع «{state.get('title')}» إلى معرض أعمالك بنجاح! 🎉"
+                f"✅ تمت إضافة المشروع **«{state.get('title')}»** إلى معرض أعمالك بنجاح! 🎉"
                 if is_ar else
-                f"Added \"{state.get('title')}\" to your portfolio! 🎉"
+                f"✅ Added **\"{state.get('title')}\"** to your portfolio! 🎉"
             )
             return self._workflow_response(reply, [], [res], res.get("snapshot_id"))
 
@@ -965,9 +1082,9 @@ class AgentService:
             res = update_project(self.user, project_id=state.get("project_id"), url=url)
             self._clear_workflow()
             reply = (
-                f"تم تحديث رابط «{project_title}» بنجاح! ✅"
+                f"✅ تم تحديث رابط **«{project_title}»** بنجاح!"
                 if is_ar else
-                f'Link updated for "{project_title}"! ✅'
+                f"✅ Link updated for **\"{project_title}\"**!"
             )
             quick = (
                 ["إصلاح رابط مشروع آخر", "إضافة مشروع جديد", "فحص معرض الأعمال"]
@@ -1021,9 +1138,9 @@ class AgentService:
         res = change_theme(self.user, theme_name)
         self._clear_workflow()
         reply = (
-            f"تم تغيير الثيم إلى «{theme_name}» بنجاح! 🎨"
+            f"✅ تم تغيير الثيم إلى **«{theme_name}»** بنجاح! 🎨"
             if is_ar else
-            f"Switched your portfolio to the **{theme_name}** theme! 🎨"
+            f"✅ Switched your portfolio to the **{theme_name}** theme! 🎨"
         )
         return self._workflow_response(reply, [], [res], res.get("snapshot_id"))
 
@@ -1048,46 +1165,6 @@ class AgentService:
         if years:
             return f"+{years} سنوات" if is_ar else f"{years}+ years"
         return "سنوات" if is_ar else "years"
-
-    def _generate_bio(self, years, apps, specialty, extra):
-        is_ar = self.language == "ar"
-        years_str = self._years_phrase(years, is_ar)
-        apps_str = (
-            (apps or "").strip().rstrip('.,')
-            if apps
-            else ("برامج المونتاج الاحترافية" if is_ar else "industry-standard editing software")
-        )
-        specialty = (specialty or "").strip().rstrip('.,')
-
-        extra_sentence = ""
-        if extra and not self._is_dismissal(extra):
-            extra_clean = extra.strip()
-            if is_ar:
-                extra_sentence = f" {extra_clean}"
-            else:
-                extra_sentence = " " + extra_clean
-
-        if is_ar:
-            has_arabic = bool(re.search(r'[\u0600-\u06FF]', specialty))
-            headline = f"{specialty} مونتير" if (specialty and has_arabic) else (
-                f"مونتير {specialty}" if specialty else "مونتير محترف"
-            )
-            core = (
-                f"{headline} بخبرة {years_str} في تحويل اللقطات الخام إلى قصص بصرية مؤثرة. "
-                f"أتقن العمل على {apps_str}، وأمزج بين إيقاع مونتاج دقيق، وتلوين سينمائي غامر، "
-                f"وتصميم صوتي احترافي لإنتاج محتوى يحقق نتائج حقيقية — من ريلز عالية التفاعل "
-                f"إلى إعلانات تجارية متقنة."
-            )
-        else:
-            headline = f"{specialty.title()} Video Editor" if specialty else "Video Editor"
-            core = (
-                f"{headline} with {years_str} of hands-on experience turning raw footage into "
-                f"emotionally resonant stories. Proficient in {apps_str}, I blend tight pacing, "
-                f"cinematic color grading, and immersive sound design to create content that "
-                f"performs — from high-retention reels to polished brand commercials."
-            )
-
-        return f"{core}{extra_sentence}"
 
     def _advance_bio(self, state, user_text):
         is_ar = self.language == "ar"
@@ -1172,7 +1249,9 @@ class AgentService:
             extra = text
             if self._is_dismissal(extra):
                 extra = ""
-            bio = self._generate_bio(
+            bio = ai_write_bio(
+                self.user,
+                language=self.language,
                 years=state.get("years"),
                 apps=state.get("apps", ""),
                 specialty=state.get("specialty", ""),
@@ -1181,9 +1260,9 @@ class AgentService:
             res = update_personal_info(self.user, bio=bio)
             self._clear_workflow()
             reply = (
-                f"تم تحديث النبذة بنجاح! ✍️\n\n\"{bio}\""
+                f"✅ تم تحديث النبذة بنجاح! ✍️\n\n\"{bio}\""
                 if is_ar else
-                f"Updated your bio! ✍️\n\n\"{bio}\""
+                f"✅ Updated your bio! ✍️\n\n\"{bio}\""
             )
             return self._workflow_response(reply, [], [res], res.get("snapshot_id"))
 
@@ -1286,9 +1365,9 @@ class AgentService:
             stars_str = "⭐" * rating
             title_part = f" — {client_title}" if client_title else ""
             reply = (
-                f"تمت إضافة التقييم! {stars_str}\n\n**{client_name}**{title_part}\n\"{content}\""
+                f"✅ تمت إضافة التقييم! {stars_str}\n\n**{client_name}**{title_part}\n\"{content}\""
                 if is_ar else
-                f"Review added! {stars_str}\n\n**{client_name}**{title_part}\n\"{content}\""
+                f"✅ Review added! {stars_str}\n\n**{client_name}**{title_part}\n\"{content}\""
             )
             return self._workflow_response(reply, [], [res], res.get("snapshot_id"))
 
@@ -1372,9 +1451,9 @@ class AgentService:
         res = update_section_layout(self.user, section_order=chosen_order)
         self._clear_workflow()
         reply = (
-            f"تم تحديث ترتيب أقسام معرض أعمالك إلى «{preset_name}» بنجاح! ↕️"
+            f"✅ تم تحديث ترتيب أقسام معرض أعمالك إلى **«{preset_name}»** بنجاح! ↕️"
             if is_ar else
-            f"Updated portfolio section order to **{preset_name}**! ↕️"
+            f"✅ Updated portfolio section order to **{preset_name}**! ↕️"
         )
         quick = (
             ["إضافة مشروع جديد", "إضافة تقييم عميل", "فحص معرض الأعمال"]
@@ -1468,7 +1547,7 @@ class AgentService:
                 new_bio = "مونتير ومصمم بصري محترف بخبرة في إخراج ومونتاج الإعلانات التجارية عالية الجودة، وتصميم الصوت والتلوين السينمائي في DaVinci Resolve. أساعد العلامات التجارية وصناع المحتوى على تحويل أفكارهم إلى قصص بصرية ملهمة."
                 new_title = "مونتير إعلانات وأفلام سينمائية"
             else:
-                new_bio = "Passionate Commercial & Narrative Video Editor with extensive experience cutting dynamic brand campaigns, high-impact commercials, and documentary shorts. Expert in DaVinci Resolve color grading, pacing, and immersive sound design."
+                new_bio = "Commercial & Narrative Video Editor with extensive experience cutting dynamic brand campaigns, high-impact commercials, and documentary shorts. Expert in DaVinci Resolve color grading, pacing, and immersive sound design."
                 new_title = "Commercial & Cinematic Video Editor"
 
             res = update_personal_info(self.user, bio=new_bio, title=new_title)
@@ -1479,15 +1558,7 @@ class AgentService:
                 if is_ar else
                 f"Updated your bio and headline!{key_tip}"
             )
-            quick_replies = [
-                "إضافة مهارات",
-                "تغيير الثيم",
-                "إضافة مشروع جديد",
-            ] if is_ar else [
-                "Add skills",
-                "Change the theme",
-                "Add a project",
-            ]
+            quick_replies, _ = self._next_best_actions()
 
         # 2. Skills Requests
         elif any(w in lower for w in ["skill", "مهارة", "مهارات", "davinci", "color grading", "resolve", "sound design", "tools"]):
@@ -1500,15 +1571,7 @@ class AgentService:
                 if is_ar else
                 f"Added skills: {', '.join(skills_to_add)}.{key_tip}"
             )
-            quick_replies = [
-                "كتابة نبذة شخصية",
-                "تغيير الثيم",
-                "إضافة مشروع جديد",
-            ] if is_ar else [
-                "Write a bio",
-                "Change the theme",
-                "Add a project",
-            ]
+            quick_replies, _ = self._next_best_actions()
 
         # 3. Theme Requests
         elif any(w in lower for w in ["theme", "ثيم", "قالب", "cinematic", "minimal", "creative", "monochrome", "yellow", "cyan"]):
@@ -1531,15 +1594,7 @@ class AgentService:
                     if is_ar else
                     f"Switched theme to '{target_theme}'.{key_tip}"
                 )
-                quick_replies = [
-                    "إضافة مشروع جديد",
-                    "كتابة نبذة شخصية",
-                    "فحص معرض الأعمال",
-                ] if is_ar else [
-                    "Add a project",
-                    "Write a bio",
-                    "Audit portfolio",
-                ]
+                quick_replies, _ = self._next_best_actions()
 
         # 4. Project / Reel Requests
         elif any(w in lower for w in ["project", "reel", "video", "مشروع", "فيديو", "ريلز"]):
@@ -1558,15 +1613,7 @@ class AgentService:
                     if is_ar else
                     f"Added project '{title}' to your portfolio!{key_tip}"
                 )
-                quick_replies = [
-                    "إضافة مشروع جديد",
-                    "تغيير الثيم",
-                    "إضافة تقييم عميل",
-                ] if is_ar else [
-                    "Add another project",
-                    "Change the theme",
-                    "Add a client review",
-                ]
+                quick_replies, _ = self._next_best_actions()
             else:
                 reply = (
                     "أرسل رابط الفيديو (YouTube أو Vimeo) وعنوانه:"
@@ -1581,75 +1628,142 @@ class AgentService:
 
         # 5. Audit & Recommendations Requests
         elif any(w in lower for w in ["audit", "review my portfolio", "recommend", "suggest", "improve", "فحص", "راجع", "مراجعة", "تحسين", "نصائح", "اقتراح"]):
-            state = get_portfolio_state(self.user)
-            pi = state.get("personal_info", {})
-            projs = state.get("projects", [])
-            skills = state.get("skills", [])
-            reviews = state.get("reviews", [])
-            theme = state.get("theme", {}).get("name", "Default")
+            goal = "client"
+            if any(w in lower for w in ["recruiter", "hire", "job", "وظيفة", "توظيف", "مقابلة"]):
+                goal = "recruiter"
+            elif any(w in lower for w in ["agency", "وكالة", "وكالات", "استوديو"]):
+                goal = "agency"
+            elif any(w in lower for w in ["creator", "influencer", "social", "youtube", "صانع محتوى", "يوتيوب", "سوشيال"]):
+                goal = "creator"
 
-            missing = []
-            if not pi.get("bio") or len(pi.get("bio", "")) < 30:
-                missing.append("نبذة احترافية" if is_ar else "a detailed bio")
-            if len(projs) == 0:
-                missing.append("مشاريع فيديو" if is_ar else "video projects")
-            if len(skills) == 0:
-                missing.append("مهارات فنية" if is_ar else "skills")
-            if len(reviews) == 0:
-                missing.append("تقييمات عملاء" if is_ar else "client reviews")
+            audit_res = audit_portfolio(self.user, goal=goal)
+            audit = audit_res.get("audit", {})
+            executed_actions.append(audit_res)
+            score = audit.get("score", 0)
+            strengths = audit.get("strengths", [])
+            gaps = audit.get("gaps", [])
+            theme_suggestion = audit.get("theme_suggestion")
 
-            if missing:
-                missing_str = "، و".join(missing[:2]) if is_ar else " and ".join(missing[:2])
+            if is_ar:
+                lines = [f"راجعت معرض أعمالك وفقاً لهدف «{goal}» وتقييمه **{score}/100**."]
+                if strengths:
+                    lines.append("\n**أبرز ما يميزك:**\n" + "\n".join(f"• {s}" for s in strengths[:3]))
+                if gaps:
+                    lines.append("\n**خطوات تحتاج للعناية:**\n" + "\n".join(
+                        f"• **{g.get('ar_action', g['action'])}** — {g.get('ar_why', g['why'])}"
+                        for g in gaps[:4]
+                    ))
+                if theme_suggestion:
+                    reason = theme_suggestion.get("reason_ar", "")
+                    lines.append(f"\nالثيم المقترح: **{theme_suggestion['name']}** — {reason}")
+                reply = "\n".join(lines) + key_tip
+            else:
+                lines = [
+                    f"I audited your portfolio against the **{goal}** goal — score **{score}/100**."
+                ]
+                if strengths:
+                    lines.append("\n**What's working well:**\n" + "\n".join(f"• {s}" for s in strengths[:3]))
+                if gaps:
+                    lines.append("\n**Worth focusing on next:**\n" + "\n".join(
+                        f"• **{g['action']}** — {g['why']}"
+                        for g in gaps[:4]
+                    ))
+                if theme_suggestion:
+                    reason = theme_suggestion.get("reason_en", "")
+                    lines.append(f"\nTheme suggestion: **{theme_suggestion['name']}** — {reason}")
+                reply = "\n".join(lines) + key_tip
+
+            quick_replies, _ = self._next_best_actions()
+
+        # 5.5 Experience / Education / Links / Visibility / Delete Requests
+        elif any(w in lower for w in ["experience", "خبرة", "خبرات", "عمل", "وظيفة", "job", "worked at", "work at"]):
+            if is_ar:
                 reply = (
-                    f"راجعت معرض أعمالك: ينقصه {missing_str}. أنصحك بالبدء بإضافتها لزيادة جاذبية ملفك!{key_tip}"
-                    if is_ar else
-                    f"I reviewed your portfolio: you are currently missing {missing_str}. Adding these will make your portfolio much more credible!{key_tip}"
+                    "ما هي وظيفتك واسم الشركة؟ (مثال: «مونتير أول في شركة XYZ»){key_tip}"
                 )
             else:
                 reply = (
-                    f"معرض أعمالك مكتمل بشكل رائع ويحتوي على {len(projs)} مشاريع و{len(skills)} مهارات بثيم {theme}!{key_tip}"
+                    "What is your job title and the company? (e.g. \"Senior Editor at Studio XYZ\"){key_tip}"
+                )
+            quick_replies, _ = self._next_best_actions()
+
+        elif any(w in lower for w in ["education", "degree", "university", "school", "تعليم", "شهادة", "جامعة", "دراسة"]):
+            if is_ar:
+                reply = (
+                    "ما اسم المؤسسة والدرجة العلمية؟ (مثال: «بكالوريوس إعلام من جامعة القاهرة»){key_tip}"
+                )
+            else:
+                reply = (
+                    "What institution and degree? (e.g. \"BA in Film from NYU\"){key_tip}"
+                )
+            quick_replies, _ = self._next_best_actions()
+
+        elif any(w in lower for w in ["add link", "social", "instagram", "linkedin", "youtube link", "add link", "رابط", "روابط", "لينك", "سوشيال"]):
+            urls = re.findall(r'https?://\S+', user_text)
+            if urls:
+                platform = "Instagram"
+                if "linkedin" in lower:
+                    platform = "LinkedIn"
+                elif "youtube" in lower or "يوتيوب" in lower:
+                    platform = "YouTube"
+                elif "behance" in lower:
+                    platform = "Behance"
+                elif "vimeo" in lower:
+                    platform = "Vimeo"
+                res = add_link(self.user, platform=platform, url=urls[0])
+                executed_actions.append(res)
+                snapshot_id = res.get("snapshot_id")
+                reply = (
+                    f"تمت إضافة رابط {platform}!{key_tip}"
                     if is_ar else
-                    f"Your portfolio looks solid with {len(projs)} projects and {len(skills)} skills on the {theme} theme!{key_tip}"
+                    f"Added your {platform} link!{key_tip}"
+                )
+                quick_replies, _ = self._next_best_actions()
+            else:
+                reply = (
+                    "أرسل الرابط الذي تريد إضافته (Instagram أو LinkedIn أو YouTube...):"
+                    if is_ar else
+                    "Paste the link you want to add (Instagram, LinkedIn, YouTube...):"
+                )
+                quick_replies = (
+                    ["Instagram", "LinkedIn", "YouTube", "Behance"]
+                    if not is_ar else
+                    ["إنستجرام", "لينكد إن", "يوتيوب", "بيهانس"]
                 )
 
-            quick_replies = [
-                "إضافة مشروع جديد",
-                "كتابة نبذة شخصية",
-                "إضافة مهارات",
-                "تغيير الثيم",
-            ] if is_ar else [
-                "Add a project",
-                "Write a bio",
-                "Add skills",
-                "Change the theme",
-            ]
+        elif any(w in lower for w in ["publish", "make public", "go live", "نشر", "انشر", "اجعل عام"]):
+            res = set_portfolio_visibility(self.user, is_public=True)
+            executed_actions.append(res)
+            snapshot_id = res.get("snapshot_id")
+            reply = (
+                f"تم نشر معرض أعمالك! أصبح متاحاً الآن على رابطك.{key_tip}"
+                if is_ar else
+                f"Your portfolio is now public! It's live on your link.{key_tip}"
+            )
+            quick_replies, _ = self._next_best_actions()
+
+        elif any(w in lower for w in ["make private", "hide", "private", "خاص", "إخفاء", "مخفي"]):
+            res = set_portfolio_visibility(self.user, is_public=False)
+            executed_actions.append(res)
+            snapshot_id = res.get("snapshot_id")
+            reply = (
+                f"تم إخفاء معرض أعمالك.{key_tip}"
+                if is_ar else
+                f"Your portfolio is now private.{key_tip}"
+            )
+            quick_replies, _ = self._next_best_actions()
 
         # 6. Default General Guidance
         else:
+            quick_replies, _ = self._next_best_actions()
             if is_ar:
                 reply = (
                     f"مرحباً! أنا مساعد سكيليفلاي الذكي. كيف يمكنني مساعدتك في تطوير بورتفوليو أعمالك اليوم؟{key_tip}"
                 )
-                quick_replies = [
-                    "كتابة نبذة شخصية",
-                    "إضافة مهارات",
-                    "إضافة مشروع جديد",
-                    "إضافة تقييم عميل",
-                    "ترتيب أقسام المعرض",
-                    "فحص معرض الأعمال",
-                ]
             else:
                 reply = (
                     f"Welcome! I am Skillifly AI. What would you like to update on your portfolio today?{key_tip}"
                 )
-                quick_replies = [
-                    "Write a bio",
-                    "Add skills",
-                    "Add a project",
-                    "Add a client review",
-                    "Change sections order",
-                    "Audit portfolio",
-                ]
 
         agent_msg = AgentMessage.objects.create(
             conversation=self.conversation,
@@ -1668,8 +1782,268 @@ class AgentService:
             "quick_replies": quick_replies,
             "actions": executed_actions,
             "snapshot_id": snapshot_id,
+            "agent_message_id": agent_msg.id,
             "portfolio_state": get_portfolio_state(self.user),
         }
+
+    # -----------------------------------------------------------------------
+    # Proactive coaching: gap-aware next-step suggestions
+    # -----------------------------------------------------------------------
+
+    def _next_best_actions(self):
+        """
+        Deterministically suggests the most impactful next actions for the user,
+        based on the portfolio's current health gaps. Returns quick-reply pills
+        (localized) plus a one-line coaching hint the agent can append.
+        """
+        state = get_portfolio_state(self.user)
+        pi = state.get("personal_info", {})
+        projects = state.get("projects", [])
+        skills = state.get("skills", [])
+        reviews = state.get("reviews", [])
+        experiences = state.get("experiences", [])
+        links = state.get("links", [])
+        account = state.get("account", {})
+
+        bio = (pi.get("bio") or "").strip()
+        has_bio = len(bio) > 30
+        has_avatar = bool(account.get("has_profile_picture"))
+        is_public = bool(account.get("is_public"))
+        is_ar = self.language == "ar"
+
+        # Ordered by impact (business->hiring funnel first, completion later).
+        priorities = []
+        if not has_bio:
+            priorities.append(("bio", "Write a bio", "كتابة نبذة شخصية"))
+        if not projects:
+            priorities.append(("projects", "Add a project", "إضافة مشروع جديد"))
+        if not skills:
+            priorities.append(("skills", "Add skills", "إضافة مهارات"))
+        if not reviews and (projects or experiences):
+            priorities.append(("reviews", "Add a client review", "إضافة تقييم عميل"))
+        if not experiences and not projects:
+            priorities.append(("experience", "Add experience", "إضافة خبرة"))
+        if not links:
+            priorities.append(("links", "Add links", "إضافة روابط"))
+        if not is_public:
+            priorities.append(("visibility", "Publish portfolio", "نشر المعرض"))
+        if not has_avatar:
+            priorities.append(("avatar", "Add a photo", "إضافة صورة"))
+        if not experiences and has_bio and projects:
+            priorities.append(("experience", "Add experience", "إضافة خبرة"))
+        if not reviews:
+            priorities.append(("reviews", "Add a client review", "إضافة تقييم عميل"))
+
+        # Keep the top 3 as quick replies; always keep one "audit/check" option.
+        top = priorities[:3]
+        pills = []
+        for _key, en_label, ar_label in top:
+            pills.append(ar_label if is_ar else en_label)
+        pills.append("فحص معرض الأعمال" if is_ar else "Audit portfolio")
+
+        # One-line coaching hint for the agent text.
+        if top:
+            _key, en_label, ar_label = top[0]
+            hint = ar_label if is_ar else en_label
+            hint_text = (
+                f"الخطوة التالية المقترحة: {hint} — هذه أكبر فجوة في معرضك حالياً."
+                if is_ar else
+                f"Next best step: {hint} — it closes your biggest gap."
+            )
+        else:
+            hint_text = (
+                "معرض أعمالك شبه مكتمل! أستطيع فحصه وإعطائك تقييماً شاملاً."
+                if is_ar else
+                "Your portfolio is nearly complete — want me to audit it for a full score?"
+            )
+
+        return pills, hint_text
+
+    # -----------------------------------------------------------------------
+    # Second-pass reply refinement (grounded in actual tool results)
+    # -----------------------------------------------------------------------
+
+    def _refine_agent_reply(self, user_text, executed_actions, raw_content, clarification_question, hint_text=""):
+        """
+        After tool execution, runs one small LLM pass to craft a final, accurate
+        1-2 sentence confirmation that is grounded in the REAL tool results
+        (what actually changed) rather than the model's pre-execution text.
+        Falls back cleanly to the raw content when the LLM is unavailable.
+        """
+        if not (self.client and not self.is_placeholder_key):
+            return None
+        if clarification_question or not executed_actions:
+            return None
+
+        is_ar = self.language == "ar"
+        try:
+            facts = []
+            for a in executed_actions[:6]:
+                msg = a.get("message", "")
+                a_type = a.get("action_type", "")
+                if a_type == "audit_portfolio":
+                    audit = a.get("audit", {})
+                    facts.append(
+                        f"audit score={audit.get('score')} for goal '{audit.get('goal')}': "
+                        f"strengths={audit.get('strengths', [])[:3]}; top actions={[g.get('action') for g in (audit.get('gaps') or [])[:3]]}"
+                    )
+                else:
+                    facts.append(f"{a_type}: {msg}")
+            # Include any 'diff' for more precise confirmations
+            diffs = []
+            for a in executed_actions[:6]:
+                d = a.get("diff") or {}
+                for field, change in d.items():
+                    if isinstance(change, dict) and "old" in change and "new" in change:
+                        diffs.append(f"{field}: '{change.get('old')}' -> '{change.get('new')}'")
+            if diffs:
+                facts.append("actual changes: " + " | ".join(diffs[:6]))
+
+            system_prompt = (
+                "You are Skillifly AI, an elite Creative Director confirming portfolio actions. "
+                "Format your response EXACTLY like this:\n"
+                "1. Start with ✅ followed by a confident, specific confirmation of what changed. "
+                "**Bold** the key values (project titles, theme names, skill names, bio excerpts).\n"
+                "2. If a suggested next step is provided and relevant, add it on a NEW LINE starting with 📌.\n"
+                "3. Never mention tools, JSON, function names, or implementation details.\n"
+                "4. Keep the tone warm but authoritative — like a Creative Director confirming a client brief.\n"
+                "5. Never open with filler ('Certainly!', 'Sure thing!', 'Great!'). Open directly with ✅.\n"
+                "6. Respond in the user's language. If the draft already reads well, improve its formatting only."
+            )
+            user_prompt = (
+                f"User said: \"{user_text}\"\n"
+                f"Confirmed results:\n{json.dumps(facts, ensure_ascii=False, indent=1)}\n"
+                f"Suggested impactful next step (use only if it fits, in the user's language): {hint_text or 'none'}\n"
+                f"My draft confirmation (improve or keep): {raw_content or ''}"
+            )
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.4,
+                max_tokens=220,
+            )
+            refined = (response.choices[0].message.content or "").strip()
+            if len(refined) > 5:
+                return refined[:600]
+        except Exception as e:
+            logger.warning(f"Reply refinement failed: {e}")
+        return None
+
+    def _compose_grounded_reply(self, executed_actions, hint_text=""):
+        """
+        Last-resort fallback when no LLM confirmation is available: builds a
+        clean, language-safe, data-backed reply from the tool results so the
+        user always gets a smart summary even in the worst-case path.
+        """
+        if not executed_actions:
+            return None
+        is_ar = self.language == "ar"
+
+        if is_ar:
+            details = [
+                (a.get("message") or "").strip().rstrip(".!?")
+                for a in executed_actions[:5]
+                if (a.get("message") or "").strip()
+            ]
+            if details:
+                body = "✅ " + "\n• ".join(f"**{d}**" for d in details[:1])
+                if len(details) > 1:
+                    body += "\n" + "\n".join(f"• {d}" for d in details[1:])
+            else:
+                body = "✅ تم تنفيذ طلبك بنجاح — تم تحديث معرض أعمالك وحفظ نسخة احتياطية."
+        else:
+            details = [
+                (a.get("message") or "").strip().rstrip(".!?")
+                for a in executed_actions[:5]
+                if (a.get("message") or "").strip()
+            ]
+            if not details:
+                return None
+            if len(details) == 1:
+                body = f"✅ **{details[0]}.**"
+            else:
+                body = "✅ **Updates applied:**\n" + "\n".join(f"• {d}." for d in details)
+
+        if hint_text and hint_text not in body:
+            body = f"{body}\n\n📌 {hint_text}"
+        return body[:700]
+
+    # -----------------------------------------------------------------------
+    # Dedicated LLM Audit Presentation (high analytical standards)
+    # -----------------------------------------------------------------------
+
+    def _present_audit_with_llm(self, audit_result, user_text):
+        """
+        Makes a dedicated LLM call to present audit findings with exceptional
+        depth and alignment to the user's goal.  Returns the LLM-generated
+        presentation or None when the LLM is unavailable / fails.
+        """
+        if not (self.client and not self.is_placeholder_key):
+            return None
+
+        is_ar = self.language == "ar"
+        audit = audit_result.get("audit", {})
+        goal = audit.get("goal", "client")
+
+        audit_json = json.dumps(audit, ensure_ascii=False, indent=2)
+
+        if is_ar:
+            system_prompt = (
+                "أنت مستشار بورتفوليو عالمي المستوى في Skillifly AI.\n"
+                "لديك نتائج فحص كاملة للمستخدم. قدم تقريراً احترافياً مُنسّقاً.\n\n"
+                f"هدف المستخدم: **{goal}**.\n\n"
+                "معايير التنسيق والعرض (طبّقها حرفياً):\n"
+                "1. ابدأ بسطر التقييم: «📊 **النتيجة: X/100** — جملة واحدة واثقة تربط النتيجة بهدفه».\n"
+                "2. أضف قسم **نقاط القوة:** مع 2-3 نقاط، كل واحدة تبدأ بـ • وتحتوي على **عنوان بولد** ثم شرح موجز.\n"
+                "3. أضف قسم **الأولويات:** مع 3-4 خطوات مرقّمة (1. 2. 3.). كل خطوة: **الإجراء بولد** — لماذا يهم لهدفه.\n"
+                "4. إذا كان هناك اقتراح ثيم، أضفه في سطر مستقل يبدأ بـ 🎨.\n"
+                "5. أنهِ بجملة تحفيزية واحدة.\n"
+                "6. لا تذكر أي أدوات أو JSON أو تفاصيل تقنية.\n"
+                "7. استخدم markdown: **بولد** للعناوين والقيم المهمة.\n"
+                "8. ردّ بالعربية."
+            )
+        else:
+            system_prompt = (
+                "You are a world-class portfolio strategist at Skillifly AI.\n"
+                "You have the user's full audit data. Present it as a professionally formatted briefing.\n\n"
+                f"The user's goal: **{goal}**.\n\n"
+                "Formatting standards (apply ALL of them precisely):\n"
+                "1. Open with: «📊 **Score: X/100** — one confident sentence explaining what this means for their goal».\n"
+                "2. Add a **Strengths:** section with 2-3 bullet points. Each: • **Bold label** followed by brief reasoning.\n"
+                "3. Add a **Priorities:** section with 3-4 numbered items. Each: **Bold action** — why it matters for their goal.\n"
+                "4. If there is a theme suggestion, add it on its own line starting with 🎨.\n"
+                "5. Close with one motivating sentence.\n"
+                "6. Do NOT mention tools, JSON, function names, or implementation details.\n"
+                "7. Use markdown: **bold** for all key terms, section headers, values, and action items.\n"
+                "8. Respond in the user's language."
+            )
+
+        user_prompt = (
+            f"User said: \"{user_text}\"\n\n"
+            f"Full audit data (use ALL of it — do not ignore strengths, gaps, recommendations, quick_wins, or theme_suggestion):\n"
+            f"{audit_json}\n\n"
+            "Present the audit to the user now with exceptional analytical depth and goal alignment."
+        )
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.65,
+                max_tokens=700,
+            )
+            result = (response.choices[0].message.content or "").strip()
+            if len(result) > 30:
+                return result[:1200]
+        except Exception as e:
+            logger.warning(f"Audit LLM presentation failed: {e}")
+        return None
 
     # -----------------------------------------------------------------------
     # Main Entry Point
@@ -1704,8 +2078,8 @@ class AgentService:
         portfolio_state = get_portfolio_state(self.user)
         system_prompt = _build_system_prompt(self.user, portfolio_state, self.language)
 
-        # 4. Build Recent History (last 10 messages, OpenAI format)
-        history_msgs = list(self.conversation.messages.order_by("-created_at")[:10])[::-1]
+        # 4. Build Recent History (last 20 messages, OpenAI format, trimmed to fit context)
+        history_msgs = list(self.conversation.messages.order_by("-created_at")[:20])[::-1]
         messages = [{"role": "system", "content": system_prompt}]
         for m in history_msgs:
             role = "user" if m.sender == "user" else "assistant"
@@ -1729,18 +2103,24 @@ class AgentService:
                 logger.warning("Invalid Groq API key — falling back to local dev mode.")
                 return self._fallback_dev_response(user_text)
 
-            # Try a lighter fallback model
-            try:
-                response = self.client.chat.completions.create(
-                    model="qwen/qwen3.6-27b",
-                    messages=messages,
-                    tools=GROQ_TOOLS,
-                    tool_choice="auto",
-                    temperature=0.7,
-                    max_tokens=2048,
-                )
-            except Exception as e2:
-                logger.error(f"Groq fallback model also failed: {e2}")
+            # Fallback chain: try lighter models before giving up
+            fallback_models = ["qwen/qwen3.6-27b", "llama-3.1-8b-instant"]
+            for fb_model in fallback_models:
+                try:
+                    response = self.client.chat.completions.create(
+                        model=fb_model,
+                        messages=messages,
+                        tools=GROQ_TOOLS,
+                        tool_choice="auto",
+                        temperature=0.7,
+                        max_tokens=2048,
+                    )
+                    logger.info(f"Fallback succeeded on model: {fb_model}")
+                    break
+                except Exception as e2:
+                    logger.warning(f"Fallback model {fb_model} also failed: {e2}")
+                    continue
+            else:
                 return self._fallback_dev_response(user_text)
 
         # 6. Parse response & execute tool calls
@@ -1784,11 +2164,46 @@ class AgentService:
         # 7. Formulate Agent Response Text
         agent_text = msg.content or ""
 
+        # Proactive coaching signals computed ONCE (data-driven next best step).
+        coaching_pills = []
+        coaching_hint = ""
+        last_action_type = executed_actions[-1].get("action_type", "") if executed_actions else ""
+        if executed_actions and not clarification_question:
+            coaching_pills, coaching_hint = self._next_best_actions()
+            if "audit" in last_action_type:
+                coaching_hint = ""
+
+        # 7a. Audit: dedicated deep-analysis LLM presentation (bypasses refinement).
+        skip_refinement = False
+        if not clarification_question:
+            audit_action = next(
+                (a for a in executed_actions if a.get("action_type") == "audit_portfolio"), None
+            )
+            if audit_action:
+                presented = self._present_audit_with_llm(audit_action, user_text)
+                if presented:
+                    agent_text = presented
+                    skip_refinement = True
+
+        # 7b. Non-audit: second-pass refinement grounded in actual tool results.
+        if not skip_refinement:
+            refined = self._refine_agent_reply(
+                user_text, executed_actions, agent_text, clarification_question, coaching_hint
+            )
+            if refined:
+                agent_text = refined
+
         if clarification_question:
             if not agent_text:
                 agent_text = clarification_question
             elif clarification_question not in agent_text:
                 agent_text = f"{agent_text}\n\n{clarification_question}"
+
+        # If the model returned no meaningful confirmation, compose a grounded one.
+        if (not agent_text or len(agent_text.strip()) < 20) and executed_actions:
+            grounded = self._compose_grounded_reply(executed_actions, coaching_hint)
+            if grounded:
+                agent_text = grounded
 
         if not agent_text and executed_actions:
             summaries = [a.get("message", "Done.") for a in executed_actions]
@@ -1801,89 +2216,17 @@ class AgentService:
                 "How can I help you customize your portfolio today?"
             )
 
+        # Proactive coaching: append a short gap-aware hint after real actions.
+        if coaching_hint and agent_text and len(agent_text) < 300 and coaching_hint not in agent_text:
+            agent_text = f"{agent_text.strip()} {coaching_hint}"
+
         # Context-aware starter & follow-up quick reply pills
         if not quick_replies:
-            is_ar = self.language == "ar"
-            if executed_actions:
-                first_type = executed_actions[0].get("action_type", "")
-                if "personal_info" in first_type:
-                    quick_replies = [
-                        "إضافة مهارات",
-                        "تغيير الثيم",
-                        "إضافة مشروع جديد",
-                    ] if is_ar else [
-                        "Add skills",
-                        "Change the theme",
-                        "Add a project",
-                    ]
-                elif "skills" in first_type:
-                    quick_replies = [
-                        "كتابة نبذة شخصية",
-                        "تغيير الثيم",
-                        "إضافة تقييم عميل",
-                    ] if is_ar else [
-                        "Write a bio",
-                        "Change the theme",
-                        "Add a client review",
-                    ]
-                elif "theme" in first_type:
-                    quick_replies = [
-                        "إضافة مشروع جديد",
-                        "كتابة نبذة شخصية",
-                        "فحص معرض الأعمال",
-                    ] if is_ar else [
-                        "Add a project",
-                        "Write a bio",
-                        "Audit portfolio",
-                    ]
-                elif "project" in first_type:
-                    quick_replies = [
-                        "إضافة مشروع جديد",
-                        "تغيير الثيم",
-                        "إضافة تقييم عميل",
-                    ] if is_ar else [
-                        "Add another project",
-                        "Change the theme",
-                        "Add a client review",
-                    ]
-                elif "review" in first_type:
-                    quick_replies = [
-                        "إضافة مشروع جديد",
-                        "تغيير الثيم",
-                        "فحص معرض الأعمال",
-                    ] if is_ar else [
-                        "Add a project",
-                        "Change the theme",
-                        "Audit portfolio",
-                    ]
-                else:
-                    quick_replies = [
-                        "كتابة نبذة شخصية",
-                        "إضافة مهارات",
-                        "تغيير الثيم",
-                        "إضافة مشروع جديد",
-                    ] if is_ar else [
-                        "Write a bio",
-                        "Add skills",
-                        "Change the theme",
-                        "Add a project",
-                    ]
-            elif self.conversation.messages.count() <= 2:
-                quick_replies = [
-                    "كتابة نبذة شخصية",
-                    "إضافة مهارات",
-                    "تغيير الثيم",
-                    "إضافة مشروع جديد",
-                    "إضافة تقييم عميل",
-                    "فحص معرض الأعمال",
-                ] if is_ar else [
-                    "Write a bio",
-                    "Add skills",
-                    "Change the theme",
-                    "Add a project",
-                    "Add a client review",
-                    "Audit portfolio",
-                ]
+            if coaching_pills:
+                quick_replies = coaching_pills
+            else:
+                _pills, _hint = self._next_best_actions()
+                quick_replies = _pills
 
         # 8. Record Agent Message
         agent_msg = AgentMessage.objects.create(
@@ -1910,6 +2253,7 @@ class AgentService:
             "quick_replies": quick_replies,
             "actions": executed_actions,
             "snapshot_id": snapshot_id,
+            "agent_message_id": agent_msg.id,
             "portfolio_state": get_portfolio_state(self.user),
         }
 

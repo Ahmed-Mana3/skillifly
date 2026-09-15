@@ -3,11 +3,12 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from urllib.parse import quote
-from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount, School, CustomDomain
+from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount, School, CustomDomain, PersonalInfo
 from django.utils import timezone
 from datetime import timedelta
 import json
 import re
+from unittest.mock import patch
 
 User = get_user_model()
 
@@ -544,3 +545,69 @@ class CrawlerFilesTests(TestCase):
         xml = sitemap.content.decode()
         self.assertIn('http://mapme.design/</loc>', xml)
         self.assertNotIn('/signup/', xml)
+
+class SkilliflyAIServiceTests(TestCase):
+    """Tests for the grounded AI copy-writing service (core/ai.py)."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="ai_editor",
+            email="ai@example.com",
+            password="securepassword1",
+        )
+        PersonalInfo.objects.create(
+            user=self.user,
+            full_name="AI Editor",
+            title="Commercial Video Editor",
+            email="ai@example.com",
+            phone="",
+            bio="",
+        )
+
+    def _add_project(self):
+        from core.models import Project
+        return Project.objects.create(
+            user=self.user,
+            title="Nike Spot 2026",
+            url="https://youtu.be/abc123",
+            video_type="long",
+            details="Brand commercial cut in Premiere Pro.",
+        )
+
+    def test_write_bio_falls_back_to_template_without_llm(self):
+        from core.ai import write_bio
+        with patch.dict("os.environ", {"GROQ_API_KEY": "your_groq_api_key", "GEMINI_API_KEY": "your_gemini_api_key"}, clear=False):
+            bio = write_bio(self.user, language="en", years=5, apps="Premiere Pro", specialty="Commercials", extra="")
+        self.assertIn("Commercials Video Editor", bio)
+        self.assertIn("5+ years", bio)
+
+    def test_write_bio_uses_llm_when_available_and_grounded(self):
+        from core.ai import write_bio
+        self._add_project()
+        with patch.dict("os.environ",
+                        {"GROQ_API_KEY": "gsk_FakeValidKey12345678901234567890",
+                         "GEMINI_API_KEY": "your_gemini_api_key"}, clear=False):
+            with patch("core.ai.GenerationService._call_groq", return_value="An AI-grounding bio."):
+                bio = write_bio(self.user, language="en", years=5, apps="Premiere Pro", specialty="Commercials", extra="")
+        self.assertEqual(bio, "An AI-grounding bio.")
+
+    def test_write_project_details_fallback(self):
+        from core.models import Project
+        from core.ai import write_project_details
+        project = self._add_project()
+        with patch.dict("os.environ",
+                        {"GROQ_API_KEY": "your_groq_api_key",
+                         "GEMINI_API_KEY": "your_gemini_api_key"}, clear=False):
+            text = write_project_details(self.user, project, language="en")
+        self.assertIn("Nike Spot 2026", text)
+
+    def test_portfolio_payload_is_grounded_in_real_data(self):
+        from core.ai import portfolio_payload
+        from core.models import Skill
+        self._add_project()
+        Skill.objects.create(user=self.user, name="DaVinci Resolve")
+        payload = portfolio_payload(self.user)
+        self.assertEqual(payload["reels"], 0)
+        self.assertEqual(payload["long_videos"], 1)
+        self.assertEqual(payload["skills"], ["DaVinci Resolve"])
+        self.assertEqual(payload["projects"][0]["title"], "Nike Spot 2026")

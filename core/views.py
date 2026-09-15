@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum, Count, Avg, Q
 from datetime import timedelta
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -449,8 +450,6 @@ def toggle_review_featured_view(request, review_id):
 
     next_url = request.POST.get('next', '')
     if not next_url.startswith('/') or next_url.startswith('//'):
-        next_url = reverse('reviews_management')
-    elif not url_has_allowed_host_and_scheme(next_url, allowed_hosts=None):
         next_url = reverse('reviews_management')
     return redirect(next_url)
 

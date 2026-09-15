@@ -234,6 +234,124 @@ class AgentViewsTestCase(TestCase):
             p_info = PersonalInfo.objects.filter(user=self.user).first()
             self.assertEqual(p_info.bio, "Award-winning commercial video editor.")
 
+    @patch("agent.services.Groq", create=True)
+    def test_chat_view_empty_content_gets_grounded_reply(self, mock_groq_cls):
+        # A model that executes a tool but returns EMPTY content must still get
+        # a smart, data-backed confirmation (grounded fallback), not silence.
+        mock_instance = MagicMock()
+        mock_groq_cls.return_value = mock_instance
+
+        mock_func = MagicMock()
+        mock_func.name = "update_personal_info"
+        mock_func.arguments = '{"bio": "Award-winning commercial video editor."}'
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.function = mock_func
+
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+        mock_message.content = None
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_instance.chat.completions.create.return_value = mock_response
+
+        with patch.dict("os.environ", {"GROQ_API_KEY": "gsk_MockKeyForTesting12345678901234567890"}):
+            resp = self.client.post(
+                reverse("agent_chat"),
+                data='{"message": "Polish my personal info section"}',
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, 200)
+            json_res = resp.json()
+            self.assertTrue(json_res["success"])
+            reply = json_res["data"]["message"]
+            self.assertIn("Here's what I just updated", reply)
+
+            p_info = PersonalInfo.objects.filter(user=self.user).first()
+            self.assertEqual(p_info.bio, "Award-winning commercial video editor.")
+
+    @patch("agent.services.Groq", create=True)
+    def test_chat_view_empty_content_grounded_reply_arabic(self, mock_groq_cls):
+        mock_instance = MagicMock()
+        mock_groq_cls.return_value = mock_instance
+
+        mock_func = MagicMock()
+        mock_func.name = "manage_skills"
+        mock_func.arguments = '{"add_skills": ["DaVinci Resolve"]}'
+        mock_tool_call = MagicMock()
+        mock_tool_call.function = mock_func
+
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+        mock_message.content = None
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_instance.chat.completions.create.return_value = mock_response
+
+        with patch.dict("os.environ", {"GROQ_API_KEY": "gsk_MockKeyForTesting12345678901234567890"}):
+            resp = self.client.post(
+                reverse("agent_chat"),
+                data=json.dumps({"message": "أضف مهارة دافينشي ريزولف", "language": "ar"}),
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, 200)
+            json_res = resp.json()
+            self.assertTrue(json_res["success"])
+            self.assertIn("تم تنفيذ طلبك بنجاح", json_res["data"]["message"])
+
+    @patch("agent.services.AgentService._present_audit_with_llm")
+    @patch("agent.services.Groq", create=True)
+    def test_chat_view_audit_uses_dedicated_llm_presentation(self, mock_groq_cls, mock_present):
+        # The audit answer must come from the dedicated LLM analysis pass, not a
+        # shallow summary or the model's pre-execution text.
+        mock_instance = MagicMock()
+        mock_groq_cls.return_value = mock_instance
+
+        mock_func = MagicMock()
+        mock_func.name = "audit_portfolio"
+        mock_func.arguments = '{"goal": "client"}'
+        mock_tool_call = MagicMock()
+        mock_tool_call.function = mock_func
+
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+        mock_message.content = None
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_instance.chat.completions.create.return_value = mock_response
+
+        mock_present.return_value = (
+            "Audit briefing: 84/100 against a client-acquisition goal. Your editing "
+            "range is the real asset — now let's prove it with project write-ups and "
+            "tighter reviews so every click converts."
+        )
+
+        with patch.dict("os.environ", {"GROQ_API_KEY": "gsk_MockKeyForTesting12345678901234567890"}):
+            resp = self.client.post(
+                reverse("agent_chat"),
+                data='{"message": "Audit my portfolio"}',
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, 200)
+            json_res = resp.json()
+            self.assertTrue(json_res["success"])
+            self.assertTrue(mock_present.called)
+            self.assertIn("Audit briefing", json_res["data"]["message"])
+            self.assertEqual(len(json_res["data"]["actions"]), 1)
+            self.assertEqual(json_res["data"]["actions"][0]["action_type"], "audit_portfolio")
+
     def test_chat_view_dev_fallback(self):
         # When key is placeholder, dev simulator should handle it gracefully
         with patch.dict("os.environ", {"GROQ_API_KEY": "your_groq_api_key"}, clear=False):
@@ -309,7 +427,7 @@ class AgentViewsTestCase(TestCase):
         self.assertIsNone(conv.workflow_state)
 
     def test_guided_bio_flow(self):
-        with patch.dict("os.environ", {"GROQ_API_KEY": "your_groq_api_key"}, clear=False):
+        with patch.dict("os.environ", {"GROQ_API_KEY": "your_groq_api_key", "GEMINI_API_KEY": "your_gemini_api_key"}, clear=False):
             # 1. Ask for a new bio -> asks years of experience
             r1 = self._post_chat("Write me a new bio")
             self.assertIn("years", r1["message"].lower())
@@ -427,3 +545,180 @@ class AgentViewsTestCase(TestCase):
         self.assertLess(profile.section_order.index("reviews"), profile.section_order.index("skills"))
         conv = AgentConversation.objects.get(user=self.user, is_active=True)
         self.assertIsNone(conv.workflow_state)
+
+
+class AuditPortfolioTests(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username="audit_editor",
+            email="audit@example.com",
+            password="securepassword1",
+        )
+        self.cat = Category.objects.create(name="Video Editor")
+        self.theme = Theme.objects.create(name="Cinematic", category=self.cat)
+        self.profile = Profile.objects.create(user=self.user, theme=self.theme)
+
+    def test_audit_user_without_profile_theme_does_not_crash(self):
+        # A brand-new user (no Profile / Theme yet) must audit cleanly, not raise
+        # a 'NoneType' error on the missing theme.
+        bare_user = CustomUser.objects.create_user(
+            username="bare_user", email="bare@example.com", password="securepassword1"
+        )
+        res = tools.audit_portfolio(bare_user, goal="client")
+        self.assertTrue(res["success"])
+        audit = res["audit"]
+        keys = {g["key"] for g in audit["gaps"]}
+        self.assertIn("bio", keys)
+        self.assertIn("projects", keys)
+
+    def test_audit_empty_portfolio_scores_low(self):
+        res = tools.audit_portfolio(self.user, goal="client")
+        self.assertTrue(res["success"])
+        self.assertEqual(res["action_type"], "audit_portfolio")
+        audit = res["audit"]
+        self.assertLess(audit["score"], 80)
+        keys = {g["key"] for g in audit["gaps"]}
+        self.assertIn("projects", keys)
+        self.assertIn("skills", keys)
+        self.assertIn("reviews", keys)
+
+    def test_audit_full_portfolio_scores_high(self):
+        PersonalInfo.objects.create(
+            user=self.user,
+            full_name="Alex Mercer",
+            title="Senior Colorist & Editor",
+            email="audit@example.com",
+            phone="+201234567890",
+            bio="Cinematic storyteller with a decade of commercial and documentary editing experience.",
+        )
+        Project.objects.create(user=self.user, title="Red Bull", video_type="reel", details="Dynamic cut.")
+        Project.objects.create(user=self.user, title="Nike", video_type="long", details="Brand commercial.")
+        tools.manage_skills(self.user, add_skills=["Premiere Pro", "DaVinci Resolve"])
+        tools.add_client_review(
+            self.user,
+            client_name="Client A",
+            content="Outstanding editing quality and very fast turnaround!",
+            rating=5,
+        )
+        tools.add_experience(self.user, title="Lead Editor", company="Studio X", start_date="2022-01")
+        tools.add_link(self.user, platform="Instagram", url="https://instagram.com/x")
+        Profile.objects.filter(user=self.user).update(is_public=True)
+
+        res = tools.audit_portfolio(self.user, goal="client")
+        audit = res["audit"]
+        self.assertGreaterEqual(audit["score"], 80)
+        self.assertTrue(audit["strengths"])
+        self.assertNotIn("projects", {g["key"] for g in audit["gaps"]})
+
+    def test_audit_invalid_goal_defaults_to_client(self):
+        res = tools.audit_portfolio(self.user, goal="bogus")
+        self.assertEqual(res["audit"]["goal"], "client")
+
+    def test_audit_theme_suggestion_is_grounded(self):
+        res = tools.audit_portfolio(self.user, goal="recruiter")
+        suggestion = res["audit"]["theme_suggestion"]
+        if suggestion is not None:
+            self.assertTrue(Theme.objects.filter(name__iexact=suggestion["name"]).exists())
+
+    def test_audit_flags_missing_urls_and_details(self):
+        Project.objects.create(user=self.user, title="No Link", url="", video_type="long", details="")
+        Project.objects.create(user=self.user, title="Placeholder", url="https://skillifly.cloud/placeholder", video_type="reel", details="A description.")
+        res = tools.audit_portfolio(self.user, goal="client")
+        keys = {g["key"] for g in res["audit"]["gaps"]}
+        self.assertIn("project_urls", keys)
+        self.assertIn("project_details", keys)
+
+    def test_audit_flags_skill_overload_and_generic_copy(self):
+        tools.manage_skills(
+            self.user,
+            add_skills=["Premiere Pro", "After Effects", "DaVinci Resolve", "Final Cut",
+                        "Photoshop", "Audition", "Blender", "Cinema 4D", "Figma",
+                        "Pro Tools", "CapCut", "Avid", "Resolve Studio", "Camtasia"],
+        )
+        res = tools.audit_portfolio(self.user, goal="client")
+        keys = {g["key"] for g in res["audit"]["gaps"]}
+        self.assertIn("skills_focus", keys)
+
+    def test_audit_gaps_are_bilingual(self):
+        res = tools.audit_portfolio(self.user, goal="client")
+        for gap in res["audit"]["gaps"]:
+            self.assertTrue(gap.get("ar_action"), f"gap {gap['key']} missing ar_action")
+            self.assertTrue(gap.get("ar_why"), f"gap {gap['key']} missing ar_why")
+
+    def test_audit_returns_quick_wins(self):
+        Project.objects.create(user=self.user, title="Reel One", video_type="reel", details="Cut.")
+        Project.objects.create(user=self.user, title="Long One", video_type="long", details="Cut.")
+        res = tools.audit_portfolio(self.user, goal="creator")
+        audit = res["audit"]
+        keys = {g["key"] for g in audit["gaps"]}
+        # creator goal prioritizes reels; with reels present there must be no reels gap
+        self.assertNotIn("reels", keys)
+        self.assertIsInstance(audit.get("quick_wins"), list)
+
+
+class FeedbackLoopTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = CustomUser.objects.create_user(
+            username="fb_user",
+            email="fb@example.com",
+            password="testpass123",
+        )
+        self.other = CustomUser.objects.create_user(
+            username="fb_other",
+            email="other@example.com",
+            password="testpass123",
+        )
+        self.client.login(username="fb_user", password="testpass123")
+
+    def _make_agent_message(self):
+        conv = AgentConversation.objects.create(user=self.user, is_active=True)
+        return AgentMessage.objects.create(
+            conversation=conv,
+            sender="agent",
+            text="Updated your bio!",
+        )
+
+    def test_feedback_rating_stored(self):
+        msg = self._make_agent_message()
+        resp = self.client.post(
+            reverse("agent_feedback"),
+            data=json.dumps({"message_id": msg.id, "rating": "up"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()["success"])
+        msg.refresh_from_db()
+        self.assertEqual(msg.user_rating, "up")
+
+    def test_feedback_rejects_bad_rating(self):
+        msg = self._make_agent_message()
+        resp = self.client.post(
+            reverse("agent_feedback"),
+            data=json.dumps({"message_id": msg.id, "rating": "meh"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    def test_feedback_user_isolation(self):
+        msg = self._make_agent_message()
+        self.client.login(username="fb_other", password="testpass123")
+        resp = self.client.post(
+            reverse("agent_feedback"),
+            data=json.dumps({"message_id": msg.id, "rating": "down"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 404)
+        msg.refresh_from_db()
+        self.assertIsNone(msg.user_rating)
+
+    def test_chat_returns_agent_message_id(self):
+        with patch.dict("os.environ", {"GROQ_API_KEY": "your_groq_api_key"}, clear=False):
+            resp = self.client.post(
+                reverse("agent_chat"),
+                data=json.dumps({"message": "Add the skill DaVinci Resolve"}),
+                content_type="application/json",
+            )
+            data = resp.json()["data"]
+            self.assertIn("agent_message_id", data)
+            self.assertTrue(AgentMessage.objects.filter(id=data["agent_message_id"], sender="agent").exists())
