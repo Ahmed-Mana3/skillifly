@@ -18,6 +18,7 @@ class CustomDomainMiddleware:
     SKIP_PREFIXES = (
         '/static/',
         '/media/',
+        '/image-thumb/',
         '/api/',
         '/admin/',
         '/accounts/',
@@ -163,6 +164,8 @@ class LanguagePreferenceMiddleware:
         '/ar/dashboard/analytics/': '/dashboard/analytics/',
         '/dashboard/seo/': '/ar/dashboard/seo/',
         '/ar/dashboard/seo/': '/dashboard/seo/',
+        '/dashboard/customize/': '/ar/dashboard/customize/',
+        '/ar/dashboard/customize/': '/dashboard/customize/',
         '/dashboard/domain/': '/ar/dashboard/domain/',
         '/ar/dashboard/domain/': '/dashboard/domain/',
         '/payment/': '/ar/payment/',
