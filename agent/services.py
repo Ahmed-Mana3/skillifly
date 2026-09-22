@@ -633,10 +633,10 @@ Users can organize and customize 8 primary portfolio sections:
 8. `links`: Social and professional networks (YouTube, Vimeo, Instagram, Behance, LinkedIn, GitHub).
 - **Layout Control**: Any section can be dragged/reordered (`update_section_layout`), or hidden completely if empty.
 
-### 5. Plans, Custom Domains, PDF Resumes & Analytics:
+### 5. Plans, Custom Domains & Analytics:
 - **Free Plan**: Unlimited video showcases, standard themes, hosted at `skillifly.cloud/<username>`.
 - **Pro Monthly (99 EGP / 30 days)**: All themes unlocked, custom project categories, analytics dashboard.
-- **Pro Annual (449 EGP / 365 days)**: Everything in Pro + **Custom Domain Connection** (e.g. `yourname.film` with automatic Let's Encrypt SSL) + **One-Click PDF Portfolio Export** (Playwright-generated high-res PDF resume for agency pitches).
+- **Pro Annual (449 EGP / 365 days)**: Everything in Pro + **Custom Domain Connection** (e.g. `yourname.film` with automatic Let's Encrypt SSL).
 - **Analytics**: 30-day visitor tracking, session duration, device breakdown, and per-project video play click events.
 
 ---

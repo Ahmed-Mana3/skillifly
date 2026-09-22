@@ -88,6 +88,7 @@ class Profile(models.Model):
     last_seen = models.DateTimeField(null=True, blank=True)
     section_order = models.JSONField(blank=True, default=list, help_text="Ordered list of section keys for portfolio display")
     section_visibility = models.JSONField(blank=True, default=dict, help_text="Map of section key -> bool controlling portfolio section visibility")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -318,21 +319,6 @@ class ManualPayment(models.Model):
     def __str__(self):
         return f"{self.user.username} | {self.payment_method} | {self.status}"
 
-
-class PdfExportJob(models.Model):
-    class Status(models.TextChoices):
-        QUEUED = "queued", "Queued"
-        RUNNING = "running", "Running"
-        SUCCEEDED = "succeeded", "Succeeded"
-        FAILED = "failed", "Failed"
-
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="pdf_exports")
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.QUEUED)
-    source_hash = models.CharField(max_length=64, db_index=True)
-    pdf_file = models.FileField(upload_to="exports/pdfs/", blank=True, null=True)
-    error = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
 class SiteSettings(models.Model):
     banner_discount_percentage = models.PositiveIntegerField(default=25, help_text="Discount percentage to show in the dashboard banner.")

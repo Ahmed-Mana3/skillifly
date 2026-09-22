@@ -145,7 +145,6 @@ def get_portfolio_state(user):
             "plan": plan_name,
             "is_paid": is_paid,
             "has_custom_domain": is_paid,
-            "has_pdf_export": "annual" in plan_name.lower() or is_paid,
         },
         "custom_domain": domain_info,
         "personal_info": {

@@ -175,6 +175,12 @@
   .sf-row .go { margin-inline-start: auto; color: var(--faint); display: inline-flex; flex-shrink: 0; transition: transform .18s ease, color .18s ease; }
   .sf-row:hover .go { transform: translateX(3px); color: var(--brand); }
 
+  /* Narrow screens: wrap so a nowrap status pill never crushes the text column */
+  @media (max-width: 440px) {
+    .sf-row { flex-wrap: wrap; row-gap: 5px; }
+    .sf-row > .min-w-0 { flex-basis: 60%; }
+  }
+
   /* Progress bars */
   .sf-bar { height: 6px; border-radius: 999px; background: #dbe3ee; overflow: hidden; }
   .sf-bar > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2563eb, #7c3aed, #db2777); }
@@ -443,7 +449,19 @@
 
       <!-- Workspace features -->
       <section aria-labelledby="ws-title" class="sf-ws reveal" style="--d:140ms">
-        <div class="grid h-full gap-5 sm:grid-cols-2">
+
+        {% if profile.theme %}
+        <!-- Customize portfolio — compact row above the feature cards -->
+        <a href="{% url 'customize_theme' %}" class="flex items-center gap-3 mb-4 px-4 py-3 group rounded-2xl bg-gradient-to-r from-sky-100/80 to-violet-100/80 border border-violet-200/70 shadow-md shadow-violet-500/12 transition-all hover:border-violet-300 hover:shadow-lg hover:shadow-violet-500/20" id="customize-theme-card">
+          <div class="w-8 h-8 rounded-[10px] bg-white border border-violet-200/60 shadow-sm grid place-items-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <i data-lucide="sliders-horizontal" class="!h-4 !w-4 text-violet-600"></i>
+          </div>
+          <span class="text-[13.5px] font-bold text-slate-800 group-hover:text-slate-900 transition-colors" style="font-family:'Syne',sans-serif;">Customize your portfolio</span>
+          <i data-lucide="chevron-right" class="!h-4 !w-4 text-slate-500 ms-auto group-hover:text-violet-600 transition-all group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"></i>
+        </a>
+        {% endif %}
+
+        <div class="grid gap-5 sm:grid-cols-2">
 
           <a href="{% url 'update_portfolio' %}" class="sf-card sf-hover sf-feature group">
             <div class="sf-chip sf-chip-lg tint-violet"><i data-lucide="pen-line"></i></div>
@@ -547,22 +565,8 @@
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
           </a>
 
-          {% if is_developer and is_annual_subscriber %}
-          <button type="button" id="export-pdf-btn" class="sf-row group">
-            <div class="sf-chip tint-slate"><i data-lucide="file-down"></i></div>
-            <div class="min-w-0 flex-1">
-              <h3 class="text-[14px] font-bold text-black" style="font-family:'Syne',sans-serif;">Export as PDF</h3>
-              <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Download a print-ready snapshot of your portfolio.</p>
-            </div>
-            <span id="export-pdf-btn-text" class="text-[11.5px] font-bold text-slate-700 whitespace-nowrap">Generate PDF</span>
-            <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
-          </button>
-          <div id="export-pdf-meta" class="hidden px-[22px] pb-4 -mt-1 flex items-center gap-3">
-            <span id="export-pdf-status" class="text-[11.5px] font-bold text-violet-600"></span>
-            <a id="export-pdf-download" href="#" class="text-[11.5px] font-bold text-emerald-600 underline underline-offset-2">Download file</a>
+
           </div>
-          {% endif %}
-        </div>
       </section>
     </div>
 
@@ -810,129 +814,6 @@
   {% endif %}
 </script>
 
-{% if is_developer and is_annual_subscriber %}
-<script>
-  (function () {
-    const btn = document.getElementById('export-pdf-btn');
-    const btnText = document.getElementById('export-pdf-btn-text');
-    const statusEl = document.getElementById('export-pdf-status');
-    const downloadEl = document.getElementById('export-pdf-download');
-    if (!btn) return;
-
-    function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return "";
-    }
-
-    const startUrl = "{% url 'export_pdf_start' %}";
-    const statusUrl = (jobId) => "{% url 'export_pdf_status' job_id=12345 %}".replace("12345", String(jobId));
-
-    function setStatus(text) {
-      var meta = document.getElementById('export-pdf-meta');
-      if (meta) meta.classList.remove('hidden');
-      statusEl.textContent = text;
-    }
-
-    let stopped = false;
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') stopped = true;
-    });
-
-    async function poll(jobId) {
-      let delay = 800;
-      for (let i = 0; i < 40; i++) {
-        if (stopped) return;
-        let data = {};
-        try {
-          const res = await fetch(statusUrl(jobId), { credentials: "same-origin" });
-          data = await res.json();
-        } catch (_) {
-          setStatus("Network issue… retrying.");
-          await new Promise(r => setTimeout(r, Math.min(delay, 5000)));
-          delay = Math.min(delay * 1.4, 5000);
-          continue;
-        }
-
-        if (data.status === "succeeded" && data.download_url) {
-          setStatus("Ready.");
-          downloadEl.href = data.download_url;
-          downloadEl.classList.remove('hidden');
-          btn.disabled = false;
-          btnText.textContent = "Generate again";
-          window.location.href = data.download_url;
-          return;
-        }
-
-        if (data.status === "failed") {
-          setStatus("Failed to generate PDF. Please try again.");
-          btn.disabled = false;
-          btnText.textContent = "Try again";
-          return;
-        }
-
-        setStatus(data.status === "running" ? "Generating…" : "Queued…");
-        await new Promise(r => setTimeout(r, delay));
-        delay = Math.min(delay * 1.25, 3500);
-      }
-
-      setStatus("Taking longer than usual. Please try again shortly.");
-      btn.disabled = false;
-      btnText.textContent = "Try again";
-    }
-
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      btnText.textContent = "Starting…";
-      downloadEl.classList.add('hidden');
-      setStatus("Starting…");
-
-      let res;
-      try {
-        res = await fetch(startUrl, {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "X-CSRFToken": getCookie("csrftoken") }
-        });
-      } catch (_) {
-        setStatus("Network issue. Please try again.");
-        btn.disabled = false;
-        btnText.textContent = "Generate PDF";
-        return;
-      }
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.status === 429) {
-        setStatus("Too many exports. Please wait a minute and try again.");
-        btn.disabled = false;
-        btnText.textContent = "Generate PDF";
-        return;
-      }
-
-      if (!res.ok) {
-        setStatus("Could not start export. Please try again.");
-        btn.disabled = false;
-        btnText.textContent = "Generate PDF";
-        return;
-      }
-
-      if (data.download_url) {
-        downloadEl.href = data.download_url;
-        downloadEl.classList.remove('hidden');
-        btn.disabled = false;
-        btnText.textContent = "Generate again";
-        window.location.href = data.download_url;
-        return;
-      }
-
-      btnText.textContent = "Generating…";
-      await poll(data.job_id);
-    });
-  })();
-</script>
-{% endif %}
 {% include "agent/copilot_drawer.html" %}
 <script src="{% static 'js/agent_copilot.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

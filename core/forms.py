@@ -6,7 +6,6 @@ from django.contrib.auth.password_validation import validate_password
 from core.models import Profile, PersonalInfo, Experience, Education, Skill, Project, Link, SEOSettings, CustomDomain, DiscountCode, SiteSettings, School
 from django import forms
 from django.forms import formset_factory, BaseFormSet
-from django.core.validators import RegexValidator
 from datetime import datetime
 
 User = get_user_model()  

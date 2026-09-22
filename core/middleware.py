@@ -18,6 +18,7 @@ class CustomDomainMiddleware:
     SKIP_PREFIXES = (
         '/static/',
         '/media/',
+        '/image-thumb/',
         '/api/',
         '/admin/',
         '/accounts/',
@@ -171,6 +172,8 @@ class LanguagePreferenceMiddleware:
         '/ar/payment/success/': '/payment/success/',
         '/payment/failure/': '/ar/payment/failure/',
         '/ar/payment/failure/': '/payment/failure/',
+        '/dashboard/customize/': '/ar/dashboard/customize/',
+        '/ar/dashboard/customize/': '/dashboard/customize/',
     }
 
     def __init__(self, get_response):
