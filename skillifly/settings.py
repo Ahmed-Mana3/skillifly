@@ -304,7 +304,7 @@ MANUAL_PAYMENT_RECIPIENT = os.environ.get("MANUAL_PAYMENT_RECIPIENT", "+20102096
 
 
 # ---------------------------------------------------------------------------
-# Celery (async PDF export)
+# Celery (async tasks)
 # ---------------------------------------------------------------------------
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")

@@ -164,8 +164,6 @@ class LanguagePreferenceMiddleware:
         '/ar/dashboard/analytics/': '/dashboard/analytics/',
         '/dashboard/seo/': '/ar/dashboard/seo/',
         '/ar/dashboard/seo/': '/dashboard/seo/',
-        '/dashboard/customize/': '/ar/dashboard/customize/',
-        '/ar/dashboard/customize/': '/dashboard/customize/',
         '/dashboard/domain/': '/ar/dashboard/domain/',
         '/ar/dashboard/domain/': '/dashboard/domain/',
         '/payment/': '/ar/payment/',
@@ -174,6 +172,8 @@ class LanguagePreferenceMiddleware:
         '/ar/payment/success/': '/payment/success/',
         '/payment/failure/': '/ar/payment/failure/',
         '/ar/payment/failure/': '/payment/failure/',
+        '/dashboard/customize/': '/ar/dashboard/customize/',
+        '/ar/dashboard/customize/': '/dashboard/customize/',
     }
 
     def __init__(self, get_response):

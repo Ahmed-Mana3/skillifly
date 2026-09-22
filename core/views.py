@@ -295,6 +295,19 @@ def arabic_custom_domain_view(request):
     }
     return render(request, 'dashboard/arabic_custom_domain.html', context)
 
+
+@login_required
+def customize_theme_view(request):
+    """Render the Customize Your Theme page with section-rename, project-order, and experience-order options."""
+    return render(request, 'dashboard/customize_theme.html')
+
+
+@login_required(login_url='arabic_signin')
+def arabic_customize_theme_view(request):
+    """Arabic twin of the Customize Your Theme page."""
+    return render(request, 'dashboard/arabic_customize_theme.html', {'is_arabic_page': True})
+
+
 @login_required
 def submit_review_view(request):
     """Hidden review submission page for authenticated users"""
@@ -1694,9 +1707,6 @@ def _dashboard_context(request):
     review_link = request.build_absolute_uri(f'/review/{request.user.username}/')
     reviews_count = request.user.reviews.count()
     
-    # Context helpers for template visibility
-    is_developer = (profile.theme and profile.theme.category and profile.theme.category.name.lower() == 'developer')
-    is_annual_subscriber = payment and payment.subscription and payment.subscription.days >= 365
     has_active_payment = payment is not None and payment.is_active
 
     # Fetch site settings for the banner
@@ -1760,8 +1770,6 @@ def _dashboard_context(request):
         'portfolio_url': portfolio_url,
         'review_link': review_link,
         'reviews_count': reviews_count,
-        'is_developer': is_developer,
-        'is_annual_subscriber': is_annual_subscriber,
         'site_settings': site_settings,
         'show_category_notification': show_category_notification,
         'projects_count': projects_count,
@@ -1926,7 +1934,6 @@ def custom_403_view(request, exception=None):
     return render(request, 'errors/403.html', status=403)
 
 
-import hashlib
 import hmac
 import json
 import logging
@@ -1937,10 +1944,8 @@ from datetime import timedelta
 import requests as _requests
 from django.conf import settings
 from django.contrib import messages
-from django.http import JsonResponse, FileResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import PdfExportJob
-from .tasks import generate_portfolio_pdf
 
 logger = logging.getLogger('core')
 
@@ -2091,46 +2096,6 @@ def llms_txt_view(request):
 
 
 # ------------------------------------------------------------------
-# PDF Export Views
-# ------------------------------------------------------------------
-
-@login_required
-def export_pdf_start(request):
-    """Initialize a PDF export job and trigger background task"""
-    # Create simple hash of user data to detect changes (optional hardening)
-    source_str = f"{request.user.id}-{timezone.now().timestamp()}"
-    source_hash = hashlib.sha256(source_str.encode()).hexdigest()
-    
-    job = PdfExportJob.objects.create(
-        user=request.user,
-        status=PdfExportJob.Status.QUEUED,
-        source_hash=source_hash
-    )
-    
-    # Trigger Celery task
-    generate_portfolio_pdf.delay(job.id)
-    
-    return JsonResponse({'job_id': job.id, 'status': job.status})
-
-@login_required
-def export_pdf_status(request, job_id):
-    """Return JSON status of a PDF export job"""
-    job = get_object_or_404(PdfExportJob, id=job_id, user=request.user)
-    data = {
-        'status': job.status,
-        'error': job.error if job.status == PdfExportJob.Status.FAILED else None,
-        'download_url': reverse('export_pdf_download', kwargs={'job_id': job.id}) if job.status == PdfExportJob.Status.SUCCEEDED and job.pdf_file else None
-    }
-    return JsonResponse(data)
-
-@login_required
-def export_pdf_download(request, job_id):
-    """Download the generated PDF"""
-    job = get_object_or_404(PdfExportJob, id=job_id, user=request.user)
-    if job.status != PdfExportJob.Status.SUCCEEDED or not job.pdf_file:
-        return redirect('dashboard')
-    
-    return FileResponse(job.pdf_file.open(), as_attachment=True, filename=os.path.basename(job.pdf_file.name))
 
 
 

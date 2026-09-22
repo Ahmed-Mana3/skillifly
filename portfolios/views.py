@@ -611,6 +611,7 @@ def portfolio_video_detail(request, username, slug):
         else:
             other_videos = Project.objects.filter(user=user, video_type='long', category__isnull=True).exclude(id=project.id)
 
+    # Dynamic template selection
     category = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
     theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
 
@@ -679,6 +680,7 @@ def portfolio_category_detail(request, username, category_id):
             profile.save(update_fields=['visits'])
         request.session[cat_key] = True
 
+    # Dynamic template selection
     category_slug = profile.theme.category.name.lower().replace(" ", "_") if profile and profile.theme and profile.theme.category else "video_editor"
     theme_name = profile.theme.name.lower().replace(" ", "_") if profile and profile.theme else "default"
 

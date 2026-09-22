@@ -44,7 +44,6 @@ def pricing_view(request):
             '2 months free',
             'Early access to new themes',
             'Dedicated support channel',
-            'Export portfolio as PDF',
         ],
     }
     return render(request, 'payment/payment_new.html', context)

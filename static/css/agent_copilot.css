@@ -32,7 +32,7 @@ body:has(#builder-root) .agent-trigger-btn,
   bottom: 24px;
   right: 24px;
   z-index: 9990;
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 10px;
   padding: 10px 18px;

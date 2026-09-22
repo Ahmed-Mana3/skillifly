@@ -24,8 +24,6 @@ Bilingual (**English / العربية RTL**) · Free / Pro / Annual plans
   immediately, plus **custom domain** support.
 - **AI-verified manual payments** — users pay via Fawaterk or submit an
   InstaPay / Vodafone Cash receipt that **Google Gemini AI** verifies.
-- **PDF export** — active annual subscribers export their portfolio as a PDF,
-  generated asynchronously with **Celery + Playwright/Chromium** and cached.
 - **Portfolio analytics** — 30-day visitor/event dashboard per portfolio.
 - **Full RTL Arabic** — every page has an English and an Arabic (`/ar/…`) twin.
 - **Blog** — Arabic-aware slugs, CKEditor-5 rich text, sitemaps, and a
@@ -43,7 +41,7 @@ Bilingual (**English / العربية RTL**) · Free / Pro / Annual plans
 | Backend | Django 5.2.8 · Python 3.13 |
 | Database | SQLite (dev) / PostgreSQL (prod, via `DATABASE_URL`) |
 | Auth | django-allauth (email/username + Google OAuth) |
-| Async / PDF | Celery · Redis · django-celery-results · Playwright |
+| Async | Celery · Redis · django-celery-results |
 | Payments | Fawaterk gateway + Gemini Vision receipt verification |
 | Blog | django-ckeditor-5 · python-slugify (Arabic transliteration) |
 | Frontend | Server-rendered Django templates · vanilla CSS/JS · `@splidejs` |
@@ -57,7 +55,7 @@ Bilingual (**English / العربية RTL**) · Free / Pro / Annual plans
 
 - Python **3.13+**
 - pip + virtualenv (or venv)
-- Redis (only needed for the async PDF worker — see below)
+- Redis (only needed if you enable the Celery worker)
 
 ### 1. Clone & install
 
@@ -69,9 +67,6 @@ python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
-
-# Required for PDF export only
-playwright install chromium
 ```
 
 ### 2. Configure environment
@@ -132,8 +127,7 @@ skillifly/
 ├── core/                   # All models live here (zero-migration strategy)
 │   ├── models.py           # User, Profile, Project, Theme, Payments, Analytics…
 │   ├── middleware.py       # Custom domains, language routing, CSRF origins…
-│   ├── views.py            # Landing, auth, dashboard, admin, PDF views
-│   ├── tasks.py            # Celery task: generate_portfolio_pdf
+│   ├── views.py            # Landing, auth, dashboard, admin
 │   └── management/         # e.g. provision_ssl
 ├── portfolios/             # Public portfolio rendering + theme preview
 ├── builder/                # Logged-in portfolio editor (formsets + AJAX)
@@ -152,7 +146,7 @@ skillifly/
 
 | App | Responsibility |
 |---|---|
-| `core` | Models, landing pages, auth views, dashboard, themes, SEO, custom domains, admin dashboard, affiliate system, PDF export |
+| `core` | Models, landing pages, auth views, dashboard, themes, SEO, custom domains, admin dashboard, affiliate system |
 | `portfolios` | Public portfolio rendering, reels/long-video/category pages, examples gallery, `/preview/<theme>/` |
 | `builder` | Formset-based portfolio editor + AJAX category save/delete |
 | `payments` | Pricing page, Fawaterk checkout/webhook, manual payments + Gemini verification, coupons, banner |
@@ -191,37 +185,13 @@ serves its owner's portfolio (routing works even before verification; `is_active
 only gates SSL/canonical display). Verified domains are injected into
 `CSRF_TRUSTED_ORIGINS` dynamically. See `python manage.py provision_ssl`.
 
-### Payments & the PDF export flow
+### Payments flow
 
 - Plans are defined in `payments/views.py` (`PLAN_CATALOGUE`): Monthly 99 EGP/30d,
   Annual 449 EGP/365d. (The old 6-Month plan was removed; legacy `pro_monthly`
   payments may still exist in the DB.)
 - `UserPayment.is_active` == `status='paid'` and still within the plan's day window.
 - Portfolio visibility auto-flips to private when the last payment expires.
-- PDF export is restricted to active **annual** subscribers and runs as a Celery
-  task (`core/tasks.py`), cached by a `source_hash` so unchanged portfolios reuse
-  the generated file.
-
----
-
-## 📦 PDF Export (Celery + Redis)
-
-Export runs as a background job so requests stay fast.
-
-```bash
-# 1. Start Redis (example with Docker)
-docker run -p 6379:6379 redis
-
-# 2. Start the Celery worker
-celery -A skillifly worker -l info
-
-# 3. Run the server
-python manage.py runserver
-```
-
-In development, `CELERY_TASK_ALWAYS_EAGER` defaults to `True`, so tasks run
-synchronously without a worker. Set it to `False` in production and run a real
-worker (see `README_PROD.md`).
 
 ---
 
