@@ -276,7 +276,7 @@
   <div class="cust-grid">
 
     <!-- Option 1: Rename sections -->
-    <div class="cust-option cust-reveal" style="--d:120ms" role="button" tabindex="0" aria-label="Change section names — coming soon">
+    <a href="{% url 'customize_section_names' %}" class="cust-option cust-reveal" style="--d:120ms" aria-label="Change section names">
       <div class="cust-glow glow-blue"></div>
       <div class="cust-chip chip-blue"><i data-lucide="type"></i></div>
       <h3>Change section names</h3>
@@ -286,10 +286,10 @@
         <div class="cust-preview-bar bar-blue"><span></span></div>
       </div>
       <span class="cust-pill">
-        <i data-lucide="sparkles" class="!h-3 !w-3"></i>
-        Coming soon
+        <i data-lucide="arrow-right" class="!h-3 !w-3"></i>
+        Rename now
       </span>
-    </div>
+    </a>
 
     <!-- Option 2: Reorder projects -->
     <a href="{% url 'customize_project_order' %}" class="cust-option cust-reveal" style="--d:200ms" aria-label="Change projects order">

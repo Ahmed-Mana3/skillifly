@@ -374,6 +374,9 @@ def preview_view(request, username):
         'is_noindex': False,
         'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
         'section_layout': section_layout,
+        # ONLY the sections the user actually renamed — themes fall back to
+        # their hard-coded headings via |default when a key is absent.
+        'section_names': section_layout.get('saved_names', {}),
     }
 
     # Dynamic template selection based on theme

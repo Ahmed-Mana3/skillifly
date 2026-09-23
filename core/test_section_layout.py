@@ -1,14 +1,19 @@
 """Tests for the portfolio section-layout feature (order + visibility)."""
 import json
+import re
+from urllib.parse import quote
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from core.models import Category, Profile, Theme
+from core.models import Category, Creator, Experience, Profile, Project, Skill, Theme
 from core.section_order import (
+    custom_section_names,
+    normalize_section_names,
     normalize_section_order,
     normalize_section_visibility,
+    profile_saved_names,
     resolve_section_layout,
     supported_keys,
 )
@@ -81,6 +86,64 @@ class SectionVisibilityNormalizationTests(TestCase):
         self.assertEqual(normalize_section_visibility('not-json{', 'video_editor'), {})
 
 
+class SectionNamesNormalizationTests(TestCase):
+    """Sanitization for the section-rename feature (Profile.section_names)."""
+
+    def test_plain_string_becomes_label(self):
+        result = normalize_section_names({'projects': 'My Shows'}, 'video_editor', 'categories')
+        self.assertEqual(result, {'projects': {'label': 'My Shows'}})
+
+    def test_dict_with_label_and_label_ar(self):
+        result = normalize_section_names(
+            {'skills': {'label': 'Stack', 'label_ar': 'الأدوات'}}, 'video_editor', 'categories')
+        self.assertEqual(result['skills'], {'label': 'Stack', 'label_ar': 'الأدوات'})
+
+    def test_en_ar_aliases(self):
+        result = normalize_section_names(
+            {'skills': {'en': 'Stack', 'ar': 'الأدوات'}}, 'video_editor', 'categories')
+        self.assertEqual(result['skills'], {'label': 'Stack', 'label_ar': 'الأدوات'})
+
+    def test_json_string_input(self):
+        result = normalize_section_names(json.dumps({'projects': 'My Films'}), 'video_editor', 'categories')
+        self.assertEqual(result, {'projects': {'label': 'My Films'}})
+
+    def test_unknown_keys_dropped(self):
+        # 'links' is unsupported by the categories theme
+        result = normalize_section_names(
+            {'links': {'label': 'X'}, 'projects': {'label': 'Y'}}, 'video_editor', 'categories')
+        self.assertNotIn('links', result)
+        self.assertIn('projects', result)
+
+    def test_blank_values_dropped(self):
+        result = normalize_section_names(
+            {'projects': {'label': '   '}, 'skills': ''}, 'video_editor', 'categories')
+        self.assertEqual(result, {})
+
+    def test_garbage_returns_empty(self):
+        self.assertEqual(normalize_section_names('not-json{', 'video_editor', 'categories'), {})
+        self.assertEqual(normalize_section_names([1, 2], 'video_editor', 'categories'), {})
+
+    def test_profile_helpers_agree(self):
+        user = User.objects.create_user(username='namesnormal', email='nn@example.com', password='x')
+        profile = Profile.objects.create(user=user, section_names={
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': 'Editing Stack',
+            'links': {'label': 'Socials'},
+        })
+        self.assertEqual(
+            profile_saved_names(profile, 'video_editor', 'categories'),
+            {
+                'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+                'skills': {'label': 'Editing Stack'},
+            },
+        )
+        self.assertEqual(
+            custom_section_names(profile, 'video_editor', 'categories'),
+            {'projects': 'My Films', 'skills': 'Editing Stack'},
+        )
+        self.assertEqual(custom_section_names(None, 'video_editor'), {})
+
+
 class ResolveSectionLayoutTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='layouter', email='l@example.com', password='x')
@@ -135,6 +198,24 @@ class ResolveSectionLayoutTests(TestCase):
             self.assertTrue(layout['custom'], label)
             self.assertEqual(layout['order_keys'][0], 'reviews', label)
             self.assertEqual(len(layout['order_keys']), len(supported_keys('video_editor')), label)
+
+    def test_custom_names_override_labels(self):
+        self.profile.section_names = {
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': 'Editing Stack',
+        }
+        self.profile.save()
+        layout = resolve_section_layout(self.profile, 'video_editor')
+        by_key = {s['key']: s for s in layout['sections']}
+        self.assertEqual(by_key['projects']['label'], 'My Films')
+        self.assertEqual(by_key['projects']['label_ar'], 'أفلامي')
+        self.assertEqual(by_key['skills']['label'], 'Editing Stack')
+        # untouched sections keep their canonical labels
+        self.assertEqual(by_key['education']['label'], 'Education')
+        # renaming alone does NOT count as a custom layout (no reorder/hide CSS)
+        self.assertFalse(layout['custom'])
+        # saved_names exposes only the user's overrides for theme fallbacks
+        self.assertEqual(layout['saved_names'], {'projects': 'My Films', 'skills': 'Editing Stack'})
 
 
 class AjaxSaveSectionLayoutTests(TestCase):
@@ -214,6 +295,150 @@ class AjaxSaveSectionLayoutTests(TestCase):
     def test_get_not_allowed(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 405)
+
+
+class AjaxSaveSectionNamesTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='named', email='named@example.com', password='x')
+        self.client.login(username='named', password='x')
+        category = Category.objects.create(name='Video Editor')
+        theme = Theme.objects.create(name='Categories', category=category)
+        self.profile = Profile.objects.create(user=self.user, theme=theme)
+        self.url = reverse('ajax_save_section_names')
+
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.post(self.url, {'section_names': '{}'})
+        self.assertEqual(response.status_code, 302)
+
+    def test_save_persists_normalized_names(self):
+        response = self.client.post(self.url, {'section_names': json.dumps({
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': 'Editing Stack',
+            'hax': {'label': 'x'},
+            'links': {'label': 'Socials'},  # unsupported for categories
+        })})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.section_names, {
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': {'label': 'Editing Stack'},
+        })
+
+    def test_empty_names_clears(self):
+        self.profile.section_names = {'projects': {'label': 'Old'}}
+        self.profile.save()
+        response = self.client.post(self.url, {'section_names': json.dumps({'projects': {'label': ''}})})
+        self.assertEqual(response.status_code, 200)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.section_names, {})
+
+    def test_reset_clears_names(self):
+        self.profile.section_names = {'projects': {'label': 'Old'}}
+        self.profile.save()
+        response = self.client.post(self.url, {'reset': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['reset'])
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.section_names, {})
+
+    def test_get_not_allowed(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+
+    def test_real_browser_save_flow_with_csrf(self):
+        from django.test import Client
+
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.user)
+
+        page = csrf_client.get(reverse('customize_section_names'))
+        self.assertEqual(page.status_code, 200)
+        match = re.search(r'var csrf = "([^"]+)"', page.content.decode())
+        self.assertIsNotNone(match)
+        token = match.group(1)
+
+        payload = json.dumps({'projects': {'label': 'My Films'}})
+        response = csrf_client.post(
+            self.url,
+            data='section_names=' + quote(payload),
+            content_type='application/x-www-form-urlencoded; charset=UTF-8',
+            HTTP_X_CSRFTOKEN=token,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.section_names, {
+            'projects': {'label': 'My Films'},
+        })
+
+    def test_get_not_allowed(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+
+
+class CustomizeSectionNamesViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='custn', email='custn@example.com', password='x')
+        self.client.login(username='custn', password='x')
+        category = Category.objects.create(name='Video Editor')
+        theme = Theme.objects.create(name='Categories', category=category)
+        Profile.objects.create(
+            user=self.user,
+            theme=theme,
+            section_names={'projects': {'label': 'My Films', 'label_ar': 'أفلامي'}},
+        )
+
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.get(reverse('customize_section_names'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_page_lists_theme_sections_with_current_values(self):
+        response = self.client.get(reverse('customize_section_names'))
+        self.assertEqual(response.status_code, 200)
+        rows = response.context['section_rows']
+        self.assertEqual(
+            [row['key'] for row in rows],
+            ['projects', 'creators', 'skills', 'experience', 'education', 'reviews', 'contact'],
+        )
+        project = next(row for row in rows if row['key'] == 'projects')
+        self.assertEqual(project['value'], 'My Films')
+        self.assertEqual(project['value_ar'], 'أفلامي')
+        # label/label_ar are the theme defaults, not the custom overrides
+        self.assertEqual(project['label'], 'Work Showcase')
+        self.assertEqual(project['label_ar'], 'معرض الأعمال')
+
+    def test_arabic_twin_renders(self):
+        response = self.client.get(reverse('arabic_customize_section_names'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_arabic_page'])
+        rows = response.context['section_rows']
+        project = next(row for row in rows if row['key'] == 'projects')
+        self.assertEqual(project['value_ar'], 'أفلامي')
+
+    def test_language_cookie_redirects_between_twins(self):
+        self.client.cookies['skillifly_lang'] = 'ar'
+        response = self.client.get(reverse('customize_section_names'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/ar/dashboard/customize/sections-names/')
+
+        self.client.cookies['skillifly_lang'] = 'en'
+        response = self.client.get(reverse('arabic_customize_section_names'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/dashboard/customize/sections-names/')
+
+    def test_lang_route_map_has_both_directions(self):
+        from core.middleware import LanguagePreferenceMiddleware
+        self.assertEqual(
+            LanguagePreferenceMiddleware.ROUTE_MAP['/dashboard/customize/sections-names/'],
+            '/ar/dashboard/customize/sections-names/',
+        )
+        self.assertEqual(
+            LanguagePreferenceMiddleware.ROUTE_MAP['/ar/dashboard/customize/sections-names/'],
+            '/dashboard/customize/sections-names/',
+        )
 
 
 class BuilderSectionPanelContextTests(TestCase):
@@ -359,6 +584,76 @@ class CategoriesThemeLayoutTests(TestCase):
         # no links rules — the theme has no #connect section
         self.assertNotIn('#connect', content)
 
+    def test_preview_renders_custom_section_names(self):
+        profile = self._login_with_theme(is_public=True)
+        Skill.objects.create(user=self.user, name='Premiere Pro')
+        Experience.objects.create(
+            user=self.user,
+            title='Freelance Editor',
+            company='Studio X',
+            start_date='2022-01-01',
+            still_working=True,
+            duration=3.5,
+        )
+        profile.section_names = {
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': 'Editing Stack',
+        }
+        profile.save()
+
+        response = self.client.get(reverse('preview', kwargs={'username': self.user.username}))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('My Films', content)
+        self.assertIn('Editing Stack', content)
+        # untouched headings keep the theme's hard-coded default
+        self.assertIn('Professional Experience', content)
+        # no layout CSS — renaming alone must not flip the theme to flex mode
+        self.assertNotIn('.portfolio-body { display: flex', content)
+
+
+class CategoriesWhiteThemeLayoutTests(TestCase):
+    """The categories_white variant shares the categories DOM order/section set
+    and ships the same layout CSS + rename hooks as the dark sibling.
+    """
+
+    CATEGORIES_WHITE_ORDER = ['projects', 'creators', 'skills', 'experience', 'education', 'reviews', 'contact']
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='catwhite', email='catw@example.com', password='x')
+        category = Category.objects.create(name='Video Editor')
+        self.theme = Theme.objects.create(name='Categories White', category=category)
+
+    def _login_with_theme(self, **profile_kwargs):
+        profile = Profile.objects.create(user=self.user, theme=self.theme, **profile_kwargs)
+        self.client.login(username='catwhite', password='x')
+        return profile
+
+    def test_supported_keys_match_theme_dom_order(self):
+        self.assertEqual(supported_keys('video_editor', 'categories_white'), self.CATEGORIES_WHITE_ORDER)
+
+    def test_resolve_uses_theme_default(self):
+        profile = Profile.objects.create(user=self.user, theme=self.theme)
+        layout = resolve_section_layout(profile, 'video_editor')
+        self.assertFalse(layout['custom'])
+        self.assertEqual(layout['order_keys'], self.CATEGORIES_WHITE_ORDER)
+
+    def test_preview_renders_custom_names_and_layout_css(self):
+        profile = self._login_with_theme(is_public=True)
+        Skill.objects.create(user=self.user, name='Premiere Pro')
+        profile.section_names = {'skills': {'label': 'Editing Stack', 'label_ar': 'أدوات المونتاج'}}
+        profile.section_order = ['skills', 'projects', 'creators', 'education', 'experience', 'reviews', 'contact']
+        profile.save()
+
+        response = self.client.get(reverse('preview', kwargs={'username': self.user.username}))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('Editing Stack', content)
+        self.assertNotIn('Software &amp; Arsenal', content)
+        # white variant now ships the section-layout CSS like the dark one
+        self.assertIn('.portfolio-body { display: flex', content)
+        self.assertLess(content.index('#skills { order: 1;'), content.index('#work { order: 2;'))
+
 
 class CreativeWhiteThemeLayoutTests(TestCase):
     """The creative_white theme has its own DOM order and section set.
@@ -436,6 +731,36 @@ class CreativeWhiteThemeLayoutTests(TestCase):
         # the hero's decorative .marquee-strip ticker is NOT part of creators
         self.assertNotIn('.marquee-strip { display: none', content)
 
+    def test_preview_renders_custom_section_names(self):
+        profile = self._login_with_theme(is_public=True)
+        Project.objects.create(user=self.user, title='Showreel 2026', video_type='long')
+        Skill.objects.create(user=self.user, name='Premiere Pro')
+        Experience.objects.create(
+            user=self.user,
+            title='Freelance Editor',
+            company='Studio X',
+            start_date='2022-01-01',
+            still_working=True,
+            duration=3.5,
+        )
+        profile.section_names = {
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': 'Editing Stack',
+        }
+        profile.save()
+
+        response = self.client.get(reverse('preview', kwargs={'username': self.user.username}))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('My Films', content)
+        self.assertIn('Editing Stack', content)
+        # replaced headings drop the hard-coded default entirely
+        self.assertNotIn('PRODUCTIONS', content)
+        # untouched headings keep their styled default
+        self.assertIn('WORK<br>EXPERIENCE', content)
+        # renaming alone must not flip the theme to flex layout mode
+        self.assertNotIn('.portfolio-body { display: flex', content)
+
 
 class CreativeThemeLayoutTests(TestCase):
     """The creative theme follows the family's canonical sequence minus the
@@ -508,6 +833,36 @@ class CreativeThemeLayoutTests(TestCase):
         self.assertLess(content.index('#creators { order: 1;'), content.index('#projects { order: 2;'))
         # no links rules — the theme has no #connect section
         self.assertNotIn('#connect', content)
+
+    def test_preview_renders_custom_section_names(self):
+        profile = self._login_with_theme(is_public=True)
+        Project.objects.create(user=self.user, title='Showreel 2026', video_type='long')
+        Skill.objects.create(user=self.user, name='Premiere Pro')
+        Experience.objects.create(
+            user=self.user,
+            title='Freelance Editor',
+            company='Studio X',
+            start_date='2022-01-01',
+            still_working=True,
+            duration=3.5,
+        )
+        profile.section_names = {
+            'projects': {'label': 'My Films', 'label_ar': 'أفلامي'},
+            'skills': 'Editing Stack',
+        }
+        profile.save()
+
+        response = self.client.get(reverse('preview', kwargs={'username': self.user.username}))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('My Films', content)
+        self.assertIn('Editing Stack', content)
+        # replaced headings drop the hard-coded default entirely
+        self.assertNotIn('PRODUCTIONS', content)
+        # untouched headings keep their styled default
+        self.assertIn('WORK<br>EXPERIENCE', content)
+        # renaming alone must not flip the theme to flex layout mode
+        self.assertNotIn('.portfolio-body { display: flex', content)
 
 
 class AnimatedDarkThemeLayoutTests(TestCase):
@@ -773,3 +1128,29 @@ class RemainingVideoEditorThemeLayoutTests(TestCase):
                     content.index(f'{demoted_sel} {{ order: 2;'))
                 # none of these themes renders a dedicated links section
                 self.assertNotIn('#connect', content)
+
+    def test_preview_renders_custom_section_names_every_theme(self):
+        themes = ['minimal', 'animated', 'animated_dark', 'monochrome', 'yellow', 'cyan',
+                  'cinematic', 'pro', 'editorial_studio']
+        for theme in themes:
+            with self.subTest(theme=theme):
+                profile = self._user_and_profile(theme, is_public=True)
+                supported = supported_keys('video_editor', theme)
+                rename_keys = [k for k in ('projects', 'skills', 'creators') if k in supported]
+                if 'projects' in rename_keys:
+                    Project.objects.create(user=profile.user, title='My Project', video_type='long')
+                if 'skills' in rename_keys:
+                    Skill.objects.create(user=profile.user, name='Premiere Pro')
+                if 'creators' in rename_keys:
+                    Creator.objects.create(user=profile.user, name='Inspiration Person')
+                profile.section_names = {key: {'label': f'Custom {key}'} for key in rename_keys}
+                profile.save()
+
+                response = self.client.get(
+                    reverse('preview', kwargs={'username': profile.user.username}))
+                self.assertEqual(response.status_code, 200)
+                content = response.content.decode()
+                for key in rename_keys:
+                    self.assertIn(f'Custom {key}', content)
+                # renaming alone must not flip any theme into flex layout mode
+                self.assertNotIn('.portfolio-body { display: flex', content)

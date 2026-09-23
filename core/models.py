@@ -88,6 +88,7 @@ class Profile(models.Model):
     last_seen = models.DateTimeField(null=True, blank=True)
     section_order = models.JSONField(blank=True, default=list, help_text="Ordered list of section keys for portfolio display")
     section_visibility = models.JSONField(blank=True, default=dict, help_text="Map of section key -> bool controlling portfolio section visibility")
+    section_names = models.JSONField(blank=True, default=dict, help_text="Map of section key -> custom display name(s) shown on the portfolio")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

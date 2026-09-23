@@ -713,7 +713,7 @@
 
     {% if creators %}
     <div class="creators-section" id="creators">
-        <div class="creators-label">Worked With</div>
+        <div class="creators-label">{{ section_names.creators|default:"Worked With" }}</div>
         <div class="creators-marquee">
             <div class="creators-track">
                 {% for i in "1234" %}
@@ -741,7 +741,7 @@
         <div class="reviews-container">
             <div class="reviews-head">
                 <div class="reviews-label">Testimonials</div>
-                <h2 class="reviews-title">CLIENT REVIEWS</h2>
+                <h2 class="reviews-title">{{ section_names.reviews|default:"CLIENT REVIEWS" }}</h2>
             </div>
 
             <div class="reviews-grid">
@@ -777,7 +777,7 @@
 
     <section class="contact-section" id="contact">
         <div class="contact-container">
-            <h2 class="contact-title">GET IN TOUCH</h2>
+            <h2 class="contact-title">{{ section_names.contact|default:"GET IN TOUCH" }}</h2>
             
             <div class="contact-details">
                 <div class="contact-item">

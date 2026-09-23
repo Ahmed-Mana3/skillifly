@@ -1338,7 +1338,7 @@
       <section class="section projects-section" id="projects" aria-labelledby="projects-title">
         <div class="section-heading">
           <div>
-            <div class="section-kicker">Projects</div>
+            <div class="section-kicker">{{ section_names.projects|default:"Projects" }}</div>
             <h2 id="projects-title">Proof chapters from the kind of edits clients actually buy.</h2>
           </div>
           <a class="text-link" href="#contact">Request full reel</a>
@@ -1379,7 +1379,7 @@
 
       {% if experiences %}
       <section class="section split-section" id="experience" aria-labelledby="experience-title">
-        <div class="section-kicker">Experience</div>
+        <div class="section-kicker">{{ section_names.experience|default:"Experience" }}</div>
         <div class="split-grid">
           <div>
             <h2 id="experience-title">A workflow clients can rely on under real deadlines.</h2>
@@ -1407,7 +1407,7 @@
       <section class="section education-section" id="education" aria-labelledby="education-title">
         <div class="section-heading">
           <div>
-            <div class="section-kicker">Education</div>
+            <div class="section-kicker">{{ section_names.education|default:"Education" }}</div>
             <h2 id="education-title">Training that supports creative judgment.</h2>
           </div>
         </div>
@@ -1427,7 +1427,7 @@
       <section class="section creators-section" id="creators" aria-labelledby="creators-title">
         <div class="section-heading">
           <div>
-            <div class="section-kicker">Creators I Worked With</div>
+            <div class="section-kicker">{{ section_names.creators|default:"Creators I Worked With" }}</div>
             <h2 id="creators-title">Creators who trusted the cut.</h2>
           </div>
         </div>
@@ -1479,7 +1479,7 @@
     <section class="section reviews-section" id="reviews" aria-labelledby="reviews-title">
       <div class="section-heading">
         <div>
-          <div class="section-kicker">Testimonials</div>
+          <div class="section-kicker">{{ section_names.reviews|default:"Testimonials" }}</div>
           <h2 id="reviews-title">Clients who trusted the cut.</h2>
         </div>
       </div>
@@ -1516,7 +1516,7 @@
     <section class="contact-section" id="contact">
       <div class="contact-inner">
         <div>
-          <div class="section-kicker" style="margin-bottom:20px">Let's Collaborate</div>
+          <div class="section-kicker" style="margin-bottom:20px">{{ section_names.contact|default:"Let's Collaborate" }}</div>
           <div class="contact-big-text">
             LET'S<br>MAKE IT<br><span class="accent-word">CINEMATIC.</span>
           </div>

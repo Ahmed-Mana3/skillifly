@@ -108,7 +108,7 @@
     <section class="section" id="work">
         <div class="section-header reveal">
             <span class="section-tag">Portfolio</span>
-            <h2 class="section-title">Selected Collections</h2>
+            <h2 class="section-title">{{ section_names.projects|default:"Selected Collections" }}</h2>
         </div>
 
         <div class="category-grid">
@@ -232,7 +232,7 @@
     <section class="section" id="creators">
         <div class="section-header reveal">
             <span class="section-tag">Network</span>
-            <h2 class="section-title">Creators I Worked With</h2>
+            <h2 class="section-title">{{ section_names.creators|default:"Creators I Worked With" }}</h2>
         </div>
         <div class="creators-marquee-container reveal-scale">
             <div class="creators-track">
@@ -260,7 +260,7 @@
     <section class="section" id="skills">
         <div class="section-header reveal">
             <span class="section-tag">Toolkit</span>
-            <h2 class="section-title">Software & Arsenal</h2>
+            <h2 class="section-title">{{ section_names.skills|default:"Software & Arsenal" }}</h2>
         </div>
         <div class="skills-grid">
             {% for skill in skills %}
@@ -275,7 +275,7 @@
     <section class="section" id="experience">
         <div class="section-header reveal">
             <span class="section-tag">Career</span>
-            <h2 class="section-title">Professional Experience</h2>
+            <h2 class="section-title">{{ section_names.experience|default:"Professional Experience" }}</h2>
         </div>
         <div class="timeline">
             {% for exp in experiences %}
@@ -304,7 +304,7 @@
     <section class="section" id="education">
         <div class="section-header reveal">
             <span class="section-tag">Credentials</span>
-            <h2 class="section-title">Academic History</h2>
+            <h2 class="section-title">{{ section_names.education|default:"Academic History" }}</h2>
         </div>
         <div class="edu-grid">
             {% for edu in education %}
@@ -326,7 +326,7 @@
     <section class="section" id="reviews">
         <div class="section-header reveal">
             <span class="section-tag">Testimonials</span>
-            <h2 class="section-title">Client Reviews</h2>
+            <h2 class="section-title">{{ section_names.reviews|default:"Client Reviews" }}</h2>
         </div>
         <div class="reviews-grid{% if reviews|length <= 2 %} reviews-grid--sparse{% endif %}">
             {% for review in reviews %}
@@ -362,7 +362,7 @@
     <section class="contact-section" id="contact">
         <div class="contact-inner">
             <div>
-                <span class="section-tag reveal">Get In Touch</span>
+                <span class="section-tag reveal">{{ section_names.contact|default:"Get In Touch" }}</span>
                 <h2 class="contact-big-text reveal">
                     LET'S CREATE SOMETHING <br><span class="gradient-word">EXTRAORDINARY.</span>
                 </h2>

@@ -302,6 +302,72 @@ def customize_theme_view(request):
     return render(request, 'dashboard/customize_theme.html')
 
 
+@login_required
+def customize_section_names_view(request):
+    """Render the section-names editor for a logged-in user's portfolio."""
+    from core.section_order import (
+        get_section_meta,
+        normalize_category,
+        profile_saved_names,
+        profile_theme_slug,
+    )
+    profile = getattr(request.user, 'profile', None)
+    category = (normalize_category(profile.theme.category.name)
+                if profile and profile.theme and profile.theme.category else None)
+    theme = profile_theme_slug(profile) if profile else None
+    saved = profile_saved_names(profile, category)
+
+    section_rows = []
+    for row in get_section_meta(category, theme):
+        custom = saved.get(row['key'], {})
+        section_rows.append({
+            'key': row['key'],
+            'icon': row['icon'],
+            'label': row['label'],
+            'label_ar': row['label_ar'],
+            'value': custom.get('label', ''),
+            'value_ar': custom.get('label_ar', ''),
+        })
+
+    return render(request, 'dashboard/customize_section_names.html', {
+        'section_rows': section_rows,
+        'section_count': len(section_rows),
+    })
+
+
+@login_required(login_url='arabic_signin')
+def arabic_customize_section_names_view(request):
+    """Arabic twin of the section-names editor."""
+    from core.section_order import (
+        get_section_meta,
+        normalize_category,
+        profile_saved_names,
+        profile_theme_slug,
+    )
+    profile = getattr(request.user, 'profile', None)
+    category = (normalize_category(profile.theme.category.name)
+                if profile and profile.theme and profile.theme.category else None)
+    theme = profile_theme_slug(profile) if profile else None
+    saved = profile_saved_names(profile, category)
+
+    section_rows = []
+    for row in get_section_meta(category, theme):
+        custom = saved.get(row['key'], {})
+        section_rows.append({
+            'key': row['key'],
+            'icon': row['icon'],
+            'label': row['label'],
+            'label_ar': row['label_ar'],
+            'value': custom.get('label', ''),
+            'value_ar': custom.get('label_ar', ''),
+        })
+
+    return render(request, 'dashboard/arabic_customize_section_names.html', {
+        'section_rows': section_rows,
+        'is_arabic_page': True,
+    })
+
+
 @login_required(login_url='arabic_signin')
 def arabic_customize_theme_view(request):
     """Arabic twin of the Customize Your Theme page."""

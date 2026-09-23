@@ -111,6 +111,36 @@ def ajax_save_section_layout(request):
 
 @login_required
 @require_POST
+def ajax_save_section_names(request):
+    """AJAX endpoint to save/reset custom portfolio section names."""
+    from core.section_order import (
+        normalize_section_names,
+        profile_theme_slug,
+    )
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    category = (
+        profile.theme.category.name.lower().replace(' ', '_')
+        if profile.theme and profile.theme.category
+        else 'video_editor'
+    )
+    theme = profile_theme_slug(profile)
+
+    if request.POST.get('reset') == '1':
+        profile.section_names = {}
+        profile.save(update_fields=['section_names'])
+        return JsonResponse({'success': True, 'reset': True})
+
+    raw_names = request.POST.get('section_names', '')
+    names_map = normalize_section_names(raw_names, category, theme)
+
+    profile.section_names = names_map
+    profile.save(update_fields=['section_names'])
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
 def ajax_save_category(request):
     """AJAX endpoint to instantly save or update a ProjectCategory."""
     from core.models import ProjectCategory
