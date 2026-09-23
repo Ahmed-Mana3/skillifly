@@ -216,3 +216,8 @@ venv/
 
 *.swp
 test_gemini.py
+
+# Local database dumps/backups
+datadump.json
+sqlite_data.json
+db.sqlite3.backup-*

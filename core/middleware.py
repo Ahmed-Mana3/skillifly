@@ -18,7 +18,7 @@ class CustomDomainMiddleware:
     SKIP_PREFIXES = (
         '/static/',
         '/media/',
-        '/image-thumb/',
+        '/image-thumb/', 
         '/api/',
         '/admin/',
         '/accounts/',
