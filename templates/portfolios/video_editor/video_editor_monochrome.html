@@ -94,7 +94,7 @@
     <section class="section" id="creators">
         <div class="section-header reveal">
             <div class="creators-stamp">✦ Trusted By {{ creators|length }} Creator{% if creators|length != 1 %}s{% endif %}</div>
-            <h2 class="section-title">Creators I Worked With</h2>
+            <h2 class="section-title">{{ section_names.creators|default:"Creators I Worked With" }}</h2>
         </div>
 
         <!-- Card Grid -->
@@ -129,7 +129,7 @@
     <section class="section" id="projects">
         <div class="section-header reveal">
             <div class="section-tag">Portfolio</div>
-            <h2 class="section-title">Selected Works</h2>
+            <h2 class="section-title">{{ section_names.projects|default:"Selected Works" }}</h2>
         </div>
         <div class="projects-grid">
             {% for project in projects %}
@@ -167,7 +167,7 @@
     <section class="section" id="skills">
         <div class="section-header reveal">
             <div class="section-tag">Toolkit</div>
-            <h2 class="section-title">Software & Skills</h2>
+            <h2 class="section-title">{{ section_names.skills|default:"Software & Skills" }}</h2>
         </div>
         <div class="skills-container">
             {% for skill in skills %}
@@ -185,7 +185,7 @@
     <section class="section" id="experience">
         <div class="section-header reveal">
             <div class="section-tag">Career</div>
-            <h2 class="section-title">Experience</h2>
+            <h2 class="section-title">{{ section_names.experience|default:"Experience" }}</h2>
         </div>
         <div class="timeline-wrapper">
             {% for exp in experiences %}
@@ -214,7 +214,7 @@
     <section class="section" id="education">
         <div class="section-header reveal">
             <div class="section-tag">Academy</div>
-            <h2 class="section-title">Education</h2>
+            <h2 class="section-title">{{ section_names.education|default:"Education" }}</h2>
         </div>
         <div class="timeline-wrapper">
             {% for edu in education %}
@@ -238,7 +238,7 @@
     <section class="section" id="reviews">
         <div class="section-header reveal">
             <div class="section-tag">Testimonials</div>
-            <h2 class="section-title">Client Reviews</h2>
+            <h2 class="section-title">{{ section_names.reviews|default:"Client Reviews" }}</h2>
         </div>
         <div class="reviews-grid">
             {% for review in reviews %}
@@ -273,7 +273,7 @@
     <!-- CONTACT -->
     <section class="section" id="contact">
         <div class="contact-box reveal">
-            <div class="contact-text">LET'S MAKE SOMETHING <br> <span>EXTRAORDINARY</span></div>
+            <div class="contact-text">{% if section_names.contact %}{{ section_names.contact }}{% else %}LET'S MAKE SOMETHING <br> <span>EXTRAORDINARY</span>{% endif %}</div>
             
             <div class="contact-links">
                 {% if personal_info.email %}

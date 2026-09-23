@@ -95,6 +95,9 @@ THEME_SECTION_DEFAULTS = {
     ('video_editor', 'categories'): [
         'projects', 'creators', 'skills', 'experience', 'education', 'reviews', 'contact',
     ],
+    ('video_editor', 'categories_white'): [
+        'projects', 'creators', 'skills', 'experience', 'education', 'reviews', 'contact',
+    ],
     ('video_editor', 'creative_white'): [
         'creators', 'projects', 'skills', 'experience', 'education', 'reviews', 'contact',
     ],
@@ -130,6 +133,7 @@ LAYOUT_ENABLED_THEMES = {
     ('video_editor', 'minimal'),
     ('video_editor', 'creative'),
     ('video_editor', 'categories'),
+    ('video_editor', 'categories_white'),
     ('video_editor', 'creative_white'),
     ('video_editor', 'animated_dark'),
     ('video_editor', 'monochrome'),
@@ -309,6 +313,81 @@ def normalize_section_visibility(raw, category=None, theme=None):
     return result
 
 
+def normalize_section_names(raw, category=None, theme=None):
+    """Sanitize a section-names map (JSON string or dict) into {key: {..}}.
+
+    Accepts two value shapes per key:
+      - a plain string, treated as the English display label;
+      - a dict with ``label`` / ``label_ar`` (or ``en`` / ``ar``) keys.
+
+    Unknown keys and blank names are dropped. Returns {} when nothing usable
+    is supplied, so a profile that never renamed anything stores nothing.
+    """
+    category = normalize_category(category)
+    if isinstance(raw, str):
+        raw = raw.strip()
+        if not raw:
+            return {}
+        import json
+        try:
+            raw = json.loads(raw)
+        except (ValueError, TypeError):
+            return {}
+
+    supported = set(supported_keys(category, theme))
+    result = {}
+    if not isinstance(raw, dict):
+        return {}
+    for key, value in raw.items():
+        key = str(key).strip().lower()
+        if key not in supported:
+            continue
+        label = ''
+        label_ar = ''
+        if isinstance(value, dict):
+            label = str(value.get('label') or value.get('en') or '').strip()
+            label_ar = str(value.get('label_ar') or value.get('ar') or '').strip()
+        elif isinstance(value, str):
+            label = value.strip()
+        if label or label_ar:
+            entry = {}
+            if label:
+                entry['label'] = label
+            if label_ar:
+                entry['label_ar'] = label_ar
+            result[key] = entry
+    return result
+
+
+def profile_saved_names(profile, category=None, theme=None):
+    """Sanitized copy of ``Profile.section_names`` for a profile (may be None).
+
+    The stored map is validated against the theme's supported keys so themes
+    with a narrower section set never leak unsupported renames.
+    """
+    if profile is None:
+        return {}
+    return normalize_section_names(
+        getattr(profile, 'section_names', None) or {}, category, theme
+    )
+
+
+def custom_section_names(profile, category=None, theme=None):
+    """Return ``{key: display label}`` of the profile's saved section names.
+
+    Built straight from ``Profile.section_names`` (NOT the resolved defaults),
+    so portfolio templates can keep their own hard-coded headings and only
+    swap them when the user actually provided a custom name.
+    """
+    if theme is None:
+        theme = profile_theme_slug(profile)
+    return {
+        key: entry['label']
+        for key, entry in profile_saved_names(profile, category, theme).items()
+        if entry.get('label')
+    }
+
+
 def resolve_section_layout(profile, category=None, theme=None):
     """Resolve the full layout to render for a profile.
 
@@ -333,6 +412,7 @@ def resolve_section_layout(profile, category=None, theme=None):
     default_order = supported_keys(category, theme)
     saved_order = getattr(profile, 'section_order', None) or []
     saved_visibility = getattr(profile, 'section_visibility', None) or {}
+    saved_names = profile_saved_names(profile, category, theme)
 
     order_keys = normalize_section_order(saved_order, category, theme)
     hidden = {key for key, value in normalize_section_visibility(saved_visibility, category, theme).items() if value is False}
@@ -342,10 +422,13 @@ def resolve_section_layout(profile, category=None, theme=None):
     for key in order_keys:
         meta = SECTION_META[key]
         selectors = list(meta['selectors'])
+        name = saved_names.get(key, {})
+        label = name.get('label') or meta['label']
+        label_ar = name.get('label_ar') or meta['label_ar']
         sections.append({
             'key': key,
-            'label': meta['label'],
-            'label_ar': meta['label_ar'],
+            'label': label,
+            'label_ar': label_ar,
             'icon': meta['icon'],
             'visible': key not in hidden,
             'selectors': selectors,
@@ -358,6 +441,7 @@ def resolve_section_layout(profile, category=None, theme=None):
         'order_keys': order_keys,
         'hidden_keys': [key for key in order_keys if key in hidden],
         'default_order': list(default_order),
+        'saved_names': custom_section_names(profile, category, theme),
     }
 
 

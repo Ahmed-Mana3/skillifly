@@ -1348,7 +1348,7 @@
   <!-- Portfolio Section -->
   {% if projects %}
   <section id="portfolio">
-    <h2 class="section-title">Featured Work</h2>
+    <h2 class="section-title">{{ section_names.projects|default:"Featured Work" }}</h2>
     <p class="section-subtitle">A showcase of projects spanning various genres and formats.</p>
 
     <div class="portfolio-grid">
@@ -1392,7 +1392,7 @@
   <!-- Skills Section -->
   {% if skills %}
   <section id="skills">
-    <h2 class="section-title">Skills & Expertise</h2>
+    <h2 class="section-title">{{ section_names.skills|default:"Skills & Expertise" }}</h2>
     <p class="section-subtitle">Tools, techniques, and technologies I bring to every project.</p>
 
     <div class="skills-grid">
@@ -1406,7 +1406,7 @@
   <!-- Experience Section -->
   {% if experiences %}
   <section id="experience">
-    <h2 class="section-title">Professional Journey</h2>
+    <h2 class="section-title">{{ section_names.experience|default:"Professional Journey" }}</h2>
     <p class="section-subtitle">A track record of delivering exceptional work across diverse projects.</p>
 
     <div class="timeline">
@@ -1434,7 +1434,7 @@
   <!-- Education Section -->
   {% if education %}
   <section id="education">
-    <h2 class="section-title">Education</h2>
+    <h2 class="section-title">{{ section_names.education|default:"Education" }}</h2>
     <p class="section-subtitle">Academic foundations that shaped my creative journey.</p>
 
     <div class="education-grid">
@@ -1451,7 +1451,7 @@
 
   {% if creators %}
   <section id="creators" style="padding-bottom: 0;">
-    <h2 class="section-title">CREATORS</h2>
+    <h2 class="section-title">{{ section_names.creators|default:"CREATORS" }}</h2>
     <p class="section-subtitle">Collaborating with the industry's most influential voices to create high-impact visual
       stories.</p>
   </section>
@@ -1481,7 +1481,7 @@
   <!-- Client Reviews Section -->
   {% if reviews %}
   <section id="reviews">
-    <h2 class="section-title">Client Reviews</h2>
+    <h2 class="section-title">{{ section_names.reviews|default:"Client Reviews" }}</h2>
     <p class="section-subtitle">What clients say about working with me.</p>
 
     <div class="reviews-grid">
@@ -1517,7 +1517,7 @@
   <!-- Links Section -->
   {% if links %}
   <section id="connect">
-    <h2 class="section-title">Connect</h2>
+    <h2 class="section-title">{{ section_names.links|default:"Connect" }}</h2>
     <p class="section-subtitle">Find me on these platforms.</p>
 
     <div class="connect-links">
@@ -1541,7 +1541,7 @@
   <!-- Final CTA -->
   <section id="contact">
     <div class="cta-final">
-      <h2>Ready to Bring Your Vision to Life?</h2>
+      <h2>{{ section_names.contact|default:"Ready to Bring Your Vision to Life?" }}</h2>
       <p>Let's create something extraordinary together. Whether you have a concept or raw footage, I'll transform it
         into a visual masterpiece.</p>
       {% if personal_info.booking_url %}

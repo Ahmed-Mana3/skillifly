@@ -360,7 +360,7 @@
     <section class="creators-section" id="creators">
         <div class="section-inner" style="padding-bottom: 0;">
             <div class="section-label reveal">Collaborations</div>
-            <h2 class="section-heading reveal">CREATORS I<br>WORKED WITH</h2>
+            <h2 class="section-heading reveal">{% if section_names.creators %}{{ section_names.creators }}{% else %}CREATORS I<br>WORKED WITH{% endif %}</h2>
         </div>
         <div class="creators-marquee-container">
             <div class="creators-track">
@@ -390,7 +390,7 @@
     <section class="projects-section" id="projects">
         <div class="section-inner">
             <div class="section-label reveal">Selected Work</div>
-            <h2 class="section-heading reveal">PROJECTS &<br>PRODUCTIONS</h2>
+            <h2 class="section-heading reveal">{% if section_names.projects %}{{ section_names.projects }}{% else %}PROJECTS &amp;<br>PRODUCTIONS{% endif %}</h2>
 
             <div class="projects-grid">
                 {% for project in projects %}
@@ -446,7 +446,7 @@
             <div class="skills-split">
                 <div class="reveal-left">
                     <div class="section-label">Arsenal</div>
-                    <h2 class="section-heading">MY<br>TOOLKIT</h2>
+                    <h2 class="section-heading">{% if section_names.skills %}{{ section_names.skills }}{% else %}MY<br>TOOLKIT{% endif %}</h2>
                     <p style="color:var(--dim);font-size:.95rem;line-height:1.8;max-width:380px;">
                         Every frame, every cut, every color — crafted with industry-leading tools and obsessive
                         attention to detail.
@@ -467,7 +467,7 @@
     <section class="exp-section" id="experience">
         <div class="section-inner">
             <div class="section-label reveal">Career</div>
-            <h2 class="section-heading reveal">WORK<br>EXPERIENCE</h2>
+            <h2 class="section-heading reveal">{% if section_names.experience %}{{ section_names.experience }}{% else %}WORK<br>EXPERIENCE{% endif %}</h2>
 
             <div class="timeline">
                 {% for exp in experiences %}
@@ -500,7 +500,7 @@
     <section class="edu-section" id="education">
         <div class="section-inner">
             <div class="section-label reveal">Education</div>
-            <h2 class="section-heading reveal">WHERE IT<br>ALL STARTED</h2>
+            <h2 class="section-heading reveal">{% if section_names.education %}{{ section_names.education }}{% else %}WHERE IT<br>ALL STARTED{% endif %}</h2>
 
             <div class="edu-grid">
                 {% for edu in education %}
@@ -523,7 +523,7 @@
     <section class="reviews-section" id="reviews">
         <div class="section-inner">
             <div class="section-label reveal">Testimonials</div>
-            <h2 class="section-heading reveal">CLIENT<br>REVIEWS</h2>
+            <h2 class="section-heading reveal">{% if section_names.reviews %}{{ section_names.reviews }}{% else %}CLIENT<br>REVIEWS{% endif %}</h2>
 
             <div class="reviews-grid">
                 {% for review in reviews %}
@@ -560,7 +560,7 @@
     <section class="contact-section" id="contact">
         <div class="contact-inner">
             <div>
-                <div class="section-label reveal" style="margin-bottom:20px">Let's Collaborate</div>
+                <div class="section-label reveal" style="margin-bottom:20px">{% if section_names.contact %}{{ section_names.contact }}{% else %}Let's Collaborate{% endif %}</div>
                 <div class="contact-big-text reveal">
                     LET'S<br>CREATE<br><span class="gradient-word">MAGIC.</span>
                 </div>

@@ -268,7 +268,7 @@
   <div class="cust-grid">
 
     <!-- الخيار ١: تغيير أسماء الأقسام -->
-    <div class="cust-option cust-reveal" style="--d:120ms" role="button" tabindex="0" aria-label="تغيير أسماء الأقسام — قريبًا">
+    <a href="{% url 'arabic_customize_section_names' %}" class="cust-option cust-reveal" style="--d:120ms" aria-label="تغيير أسماء الأقسام">
       <div class="cust-glow glow-blue"></div>
       <div class="cust-chip chip-blue"><i data-lucide="type"></i></div>
       <h3>تغيير أسماء الأقسام</h3>
@@ -278,10 +278,10 @@
         <div class="cust-preview-bar bar-blue"><span></span></div>
       </div>
       <span class="cust-pill">
-        <i data-lucide="sparkles" class="!h-3 !w-3"></i>
-        قريبًا
+        <i data-lucide="arrow-left" class="!h-3 !w-3"></i>
+        أعد التسمية الآن
       </span>
-    </div>
+    </a>
 
     <!-- الخيار ٢: ترتيب المشاريع -->
     <a href="{% url 'arabic_customize_project_order' %}" class="cust-option cust-reveal" style="--d:200ms" aria-label="ترتيب المشاريع">

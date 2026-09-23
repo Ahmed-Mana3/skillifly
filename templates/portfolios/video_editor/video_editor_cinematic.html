@@ -902,7 +902,7 @@
     <section class="section" id="work">
         <div class="section-header reveal">
             <span class="section-tag">Collections</span>
-            <h2 class="section-title">Selected Works</h2>
+            <h2 class="section-title">{{ section_names.projects|default:"Selected Works" }}</h2>
         </div>
 
         <div class="category-grid">
@@ -962,7 +962,7 @@
     <section class="section" id="skills">
         <div class="section-header reveal">
             <span class="section-tag">Arsenal</span>
-            <h2 class="section-title">Software &amp; Tools</h2>
+            <h2 class="section-title">{{ section_names.skills|default:"Software & Tools" }}</h2>
         </div>
         <div class="skills-grid">
             {% for skill in skills %}
@@ -980,7 +980,7 @@
     <section class="section" id="experience">
         <div class="section-header reveal">
             <span class="section-tag">Career</span>
-            <h2 class="section-title">Experience</h2>
+            <h2 class="section-title">{{ section_names.experience|default:"Experience" }}</h2>
         </div>
         <div class="timeline">
             {% for exp in experiences %}
@@ -1003,7 +1003,7 @@
     <section class="section" id="education">
         <div class="section-header reveal">
             <span class="section-tag">Credentials</span>
-            <h2 class="section-title">Academic History</h2>
+            <h2 class="section-title">{{ section_names.education|default:"Academic History" }}</h2>
         </div>
         <div class="timeline">
             {% for edu in education %}
@@ -1028,7 +1028,7 @@
     <section class="section" id="creators">
         <div class="section-header reveal">
             <span class="section-tag">Network</span>
-            <h2 class="section-title">Creators I Worked With</h2>
+            <h2 class="section-title">{{ section_names.creators|default:"Creators I Worked With" }}</h2>
         </div>
         <div class="creators-marquee-container">
             <div class="creators-track">
@@ -1055,7 +1055,7 @@
     <!-- Contact -->
     <section class="contact-section" id="contact">
         <div class="contact-wrap reveal">
-            <span class="section-tag">Let's Talk</span>
+            <span class="section-tag">{{ section_names.contact|default:"Let's Talk" }}</span>
             <h2>Ready to create<br>something cinematic?</h2>
             <p class="contact-tagline">Looking for a video editor who can bring your vision to life? Let's make something extraordinary together.</p>
 
