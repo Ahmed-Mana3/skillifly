@@ -162,7 +162,7 @@ SECTION_META = {
                   'selectors': ['#education']},
     'reviews': {'label': 'Client Reviews', 'label_ar': 'آراء العملاء', 'icon': '⭐',
                 'selectors': ['#reviews', '#dispatches']},
-    'creators': {'label': 'Creators & Inspiration', 'label_ar': 'المبدعون والإلهام', 'icon': '✨',
+    'creators': {'label': 'Creators I Worked With', 'label_ar': 'المبدعون والإلهام', 'icon': '✨',
                  'selectors': ['#creators', '.creators-marquee-container']},
     'links': {'label': 'Social Links', 'label_ar': 'روابط التواصل', 'icon': '🔗',
               'selectors': ['#connect', '#links']},
