@@ -174,6 +174,8 @@ class LanguagePreferenceMiddleware:
         '/ar/payment/failure/': '/payment/failure/',
         '/dashboard/customize/': '/ar/dashboard/customize/',
         '/ar/dashboard/customize/': '/dashboard/customize/',
+        '/dashboard/customize/experiences/': '/ar/dashboard/customize/experiences/',
+        '/ar/dashboard/customize/experiences/': '/dashboard/customize/experiences/',
     }
 
     def __init__(self, get_response):

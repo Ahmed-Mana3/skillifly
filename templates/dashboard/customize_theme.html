@@ -292,7 +292,7 @@
     </div>
 
     <!-- Option 2: Reorder projects -->
-    <div class="cust-option cust-reveal" style="--d:200ms" role="button" tabindex="0" aria-label="Change projects order — coming soon">
+    <a href="{% url 'customize_project_order' %}" class="cust-option cust-reveal" style="--d:200ms" aria-label="Change projects order">
       <div class="cust-glow glow-amber"></div>
       <div class="cust-chip chip-amber"><i data-lucide="arrow-up-down"></i></div>
       <h3>Change projects order</h3>
@@ -302,13 +302,13 @@
         <div class="cust-preview-bar bar-amber"><span></span></div>
       </div>
       <span class="cust-pill">
-        <i data-lucide="sparkles" class="!h-3 !w-3"></i>
-        Coming soon
+        <i data-lucide="arrow-right" class="!h-3 !w-3"></i>
+        Reorder now
       </span>
-    </div>
+    </a>
 
     <!-- Option 3: Reorder experiences -->
-    <div class="cust-option cust-reveal" style="--d:280ms" role="button" tabindex="0" aria-label="Change experiences order — coming soon">
+    <a href="{% url 'customize_experience_order' %}" class="cust-option cust-reveal" style="--d:280ms" aria-label="Change experiences order">
       <div class="cust-glow glow-emerald"></div>
       <div class="cust-chip chip-emerald"><i data-lucide="list-ordered"></i></div>
       <h3>Change experiences order</h3>
@@ -318,10 +318,10 @@
         <div class="cust-preview-bar bar-emerald"><span></span></div>
       </div>
       <span class="cust-pill">
-        <i data-lucide="sparkles" class="!h-3 !w-3"></i>
-        Coming soon
+        <i data-lucide="arrow-right" class="!h-3 !w-3"></i>
+        Reorder now
       </span>
-    </div>
+    </a>
 
   </div>
 </div>

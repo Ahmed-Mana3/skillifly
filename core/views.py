@@ -309,6 +309,160 @@ def arabic_customize_theme_view(request):
 
 
 @login_required
+def customize_experience_order_view(request):
+    """Let a logged-in user reorder the experiences shown on their own portfolio.
+
+    The page renders the user's experiences in the live display order
+    (``order``, then date recency as tiebreak) and lets them drag cards or use
+    arrow buttons before saving via :view:`customize_experience_order_save`.
+    """
+    experiences = (
+        Experience.objects.filter(user=request.user)
+        .order_by('order', '-start_date', '-id')
+    )
+    return render(request, 'dashboard/customize_experiences.html', {
+        'experiences': experiences,
+    })
+
+
+@login_required(login_url='arabic_signin')
+def arabic_customize_experience_order_view(request):
+    """Arabic twin of the experience-order page."""
+    experiences = (
+        Experience.objects.filter(user=request.user)
+        .order_by('order', '-start_date', '-id')
+    )
+    return render(request, 'dashboard/arabic_customize_experiences.html', {
+        'experiences': experiences,
+        'is_arabic_page': True,
+    })
+
+
+@login_required
+@require_POST
+def customize_experience_order_save(request):
+    """AJAX save of a logged-in user's own experience order.
+
+    Expects a JSON body: {"order": [exp_id, exp_id, ...]}. Every submitted id
+    is validated to belong to the requesting user before the order is written,
+    so a user can only ever reorder their own experiences.
+    """
+    import json as _json
+
+    try:
+        data = _json.loads(request.body)
+    except (ValueError, AttributeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    ordered_ids = data.get('order', [])
+    if not isinstance(ordered_ids, list):
+        return JsonResponse({'success': False, 'error': 'Missing order list'}, status=400)
+
+    user = request.user
+
+    valid_ids = set(
+        Experience.objects.filter(user=user).values_list('id', flat=True)
+    )
+    submitted_ids = []
+    for raw_id in ordered_ids:
+        try:
+            submitted_ids.append(int(raw_id))
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': f'Invalid id: {raw_id}'}, status=400)
+
+    foreign_ids = [i for i in submitted_ids if i not in valid_ids]
+    if foreign_ids:
+        return JsonResponse(
+            {'success': False, 'error': 'Some IDs do not belong to this user'},
+            status=403,
+        )
+
+    with transaction.atomic():
+        for position, exp_id in enumerate(submitted_ids):
+            Experience.objects.filter(pk=exp_id, user=user).update(order=position)
+
+    return JsonResponse({'success': True, 'saved': len(submitted_ids)})
+
+
+@login_required
+def customize_project_order_view(request):
+    """Let a logged-in user reorder the projects shown on their own portfolio.
+
+    The page renders the user's projects in the live display order and lets
+    them drag cards or use arrow buttons before saving via
+    :view:`customize_project_order_save`. The order applies to every theme.
+    """
+    projects = (
+        Project.objects.filter(user=request.user)
+        .select_related('category')
+        .order_by('order', 'id')
+    )
+    return render(request, 'dashboard/customize_projects.html', {
+        'projects': projects,
+    })
+
+
+@login_required(login_url='arabic_signin')
+def arabic_customize_project_order_view(request):
+    """Arabic twin of the project-order page."""
+    projects = (
+        Project.objects.filter(user=request.user)
+        .select_related('category')
+        .order_by('order', 'id')
+    )
+    return render(request, 'dashboard/arabic_customize_projects.html', {
+        'projects': projects,
+        'is_arabic_page': True,
+    })
+
+
+@login_required
+@require_POST
+def customize_project_order_save(request):
+    """AJAX save of a logged-in user's own project order.
+
+    Expects a JSON body: {"order": [project_id, project_id, ...]}. Every
+    submitted id is validated to belong to the requesting user before the
+    order is written, so a user can only ever reorder their own projects.
+    """
+    import json as _json
+
+    try:
+        data = _json.loads(request.body)
+    except (ValueError, AttributeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    ordered_ids = data.get('order', [])
+    if not isinstance(ordered_ids, list):
+        return JsonResponse({'success': False, 'error': 'Missing order list'}, status=400)
+
+    user = request.user
+
+    valid_ids = set(
+        Project.objects.filter(user=user).values_list('id', flat=True)
+    )
+    submitted_ids = []
+    for raw_id in ordered_ids:
+        try:
+            submitted_ids.append(int(raw_id))
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': f'Invalid id: {raw_id}'}, status=400)
+
+    foreign_ids = [i for i in submitted_ids if i not in valid_ids]
+    if foreign_ids:
+        return JsonResponse(
+            {'success': False, 'error': 'Some IDs do not belong to this user'},
+            status=403,
+        )
+
+    with transaction.atomic():
+        for position, proj_id in enumerate(submitted_ids):
+            Project.objects.filter(pk=proj_id, user=user).update(order=position)
+
+    return JsonResponse({'success': True, 'saved': len(submitted_ids)})
+
+
+@login_required
 def submit_review_view(request):
     """Hidden review submission page for authenticated users"""
     if request.method == "POST":

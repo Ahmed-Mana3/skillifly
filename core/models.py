@@ -176,6 +176,10 @@ class Project(models.Model):
     slug = models.SlugField(max_length=550, blank=True, null=True)
     media_width = models.PositiveIntegerField(null=True, blank=True, help_text="True video width in px (probed, used to size the player box)")
     media_height = models.PositiveIntegerField(null=True, blank=True, help_text="True video height in px (probed, used to size the player box)")
+    order = models.PositiveIntegerField(default=0, db_index=True, help_text="Order of appearance on the portfolio")
+
+    class Meta:
+        ordering = ['order', 'id']
 
     def save(self, *args, **kwargs):
         if not self.slug:
