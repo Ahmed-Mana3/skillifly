@@ -284,7 +284,7 @@
     </div>
 
     <!-- الخيار ٢: ترتيب المشاريع -->
-    <div class="cust-option cust-reveal" style="--d:200ms" role="button" tabindex="0" aria-label="ترتيب المشاريع — قريبًا">
+    <a href="{% url 'arabic_customize_project_order' %}" class="cust-option cust-reveal" style="--d:200ms" aria-label="ترتيب المشاريع">
       <div class="cust-glow glow-amber"></div>
       <div class="cust-chip chip-amber"><i data-lucide="arrow-up-down"></i></div>
       <h3>ترتيب المشاريع</h3>
@@ -294,13 +294,13 @@
         <div class="cust-preview-bar bar-amber"><span></span></div>
       </div>
       <span class="cust-pill">
-        <i data-lucide="sparkles" class="!h-3 !w-3"></i>
-        قريبًا
+        <i data-lucide="arrow-left" class="!h-3 !w-3"></i>
+        رتّب الآن
       </span>
-    </div>
+    </a>
 
     <!-- الخيار ٣: ترتيب الخبرات -->
-    <div class="cust-option cust-reveal" style="--d:280ms" role="button" tabindex="0" aria-label="ترتيب الخبرات — قريبًا">
+    <a href="{% url 'arabic_customize_experience_order' %}" class="cust-option cust-reveal" style="--d:280ms" aria-label="ترتيب الخبرات">
       <div class="cust-glow glow-emerald"></div>
       <div class="cust-chip chip-emerald"><i data-lucide="list-ordered"></i></div>
       <h3>ترتيب الخبرات</h3>
@@ -310,10 +310,10 @@
         <div class="cust-preview-bar bar-emerald"><span></span></div>
       </div>
       <span class="cust-pill">
-        <i data-lucide="sparkles" class="!h-3 !w-3"></i>
-        قريبًا
+        <i data-lucide="arrow-left" class="!h-3 !w-3"></i>
+        رتّب الآن
       </span>
-    </div>
+    </a>
 
   </div>
 </div>

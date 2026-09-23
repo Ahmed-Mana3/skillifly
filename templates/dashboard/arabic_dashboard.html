@@ -161,6 +161,22 @@
 
   .sf-feature { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 24px; height: 100%; text-decoration: none; }
 
+  /* معاينة إدارة المشاريع للشاشات اللوحية وسطح المكتب */
+  .sf-projects { overflow: hidden; padding: 24px; }
+  .sf-project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .sf-project-option { position: relative; overflow: hidden; min-height: 190px; padding: 18px; display: flex; flex-direction: column; align-items: flex-start; background: #fff; border: 1px solid rgba(15, 23, 42, .10); border-radius: 16px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .sf-project-option:hover { transform: translateY(-2px); border-color: rgba(124, 58, 237, .28); box-shadow: 0 14px 28px -20px rgba(79, 70, 229, .45); }
+  .sf-project-option h3 { font-size: 15px; font-weight: 800; color: var(--ink); line-height: 1.25; margin: 14px 0 8px; }
+  .sf-project-option p { font-size: 12.5px; font-weight: 500; color: #64748b; line-height: 1.5; margin: 0 0 14px; flex: 1 1 auto; }
+  .sf-project-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: linear-gradient(135deg, #ede9fe, #f3e8ff); color: #7c3aed; border: 1px solid #ddd6fe; font-size: 10px; font-weight: 800; white-space: nowrap; }
+  .sf-project-glow { position: absolute; top: -42px; left: -42px; width: 120px; height: 120px; border-radius: 50%; filter: blur(40px); opacity: 0; pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+  .sf-project-option:hover .sf-project-glow { opacity: 1; transform: scale(1.2); }
+  .sf-project-preview { display: flex; align-items: center; gap: 7px; width: 100%; padding: 9px 11px; margin-bottom: 14px; border: 1px solid rgba(15, 23, 42, .06); border-radius: 11px; background: #f8fafc; }
+  .sf-project-preview span { display: block; height: 5px; flex: 1; border-radius: 999px; background: var(--project-color); opacity: .8; }
+  .sf-project-preview i { width: 7px; height: 7px; border-radius: 50%; background: var(--project-color); }
+  .sf-project-upload { --project-color: #3b82f6; } .sf-project-deliver { --project-color: #f59e0b; } .sf-project-paid { --project-color: #10b981; }
+  .sf-project-upload .sf-project-glow { background: rgba(59, 130, 246, .18); } .sf-project-deliver .sf-project-glow { background: rgba(245, 158, 11, .18); } .sf-project-paid .sf-project-glow { background: rgba(16, 185, 129, .18); }
+
   /* Equal-height tools & side cards */
   .sf-tools-card { display: flex; flex-direction: column; }
   .sf-tools-card > .sf-row { flex: 1 1 auto; }
@@ -178,10 +194,19 @@
   .sf-row .go { margin-inline-start: auto; color: var(--faint); display: inline-flex; flex-shrink: 0; transform: scaleX(-1); transition: transform .18s ease, color .18s ease; }
   .sf-row:hover .go { transform: scaleX(-1) translateX(3px); color: var(--brand); }
 
-  /* Narrow screens: wrap so a nowrap status pill never crushes the text column */
-  @media (max-width: 440px) {
-    .sf-row { flex-wrap: wrap; row-gap: 5px; }
-    .sf-row > .min-w-0 { flex-basis: 60%; }
+  /* على الهاتف: صف واحد واضح وسهل اللمس؛ نُخفي الوصف الثانوي ليبقى اسم الوجهة وحالتها ظاهرين. */
+  @media (max-width: 520px) {
+    .sf-tools .sf-row { gap: 12px; padding: 13px 14px; min-height: 66px; flex-wrap: nowrap; }
+    .sf-tools .sf-chip { width: 38px; height: 38px; border-radius: 12px; }
+    .sf-tools .sf-chip svg { width: 18px; height: 18px; }
+    .sf-tools .sf-row > .min-w-0 { min-width: 0; }
+    .sf-tools .sf-row p { display: none; }
+    .sf-tools .sf-row h3 { font-size: 13.5px; line-height: 1.3; }
+    .sf-tools .sf-tool-status { max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+  /* في الشاشات الضيقة جدًا تكون تسمية الوجهة أهم من الحالة المختصرة. */
+  @media (max-width: 360px) {
+    .sf-tools .sf-tool-status { display: none; }
   }
 
   .sf-bar { height: 6px; border-radius: 999px; background: #dbe3ee; overflow: hidden; }
@@ -456,6 +481,7 @@
             <i data-lucide="sliders-horizontal" class="!h-4 !w-4 text-violet-600"></i>
           </div>
           <span class="text-[13.5px] font-bold text-slate-800 group-hover:text-slate-900 transition-colors">خصّص معرض أعمالك</span>
+          <span class="inline-flex shrink-0 items-center rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-extrabold text-white shadow-sm shadow-violet-500/30">جديد</span>
           <i data-lucide="chevron-left" class="!h-4 !w-4 text-slate-500 ms-auto group-hover:text-violet-600 transition-all group-hover:-translate-x-0.5"></i>
         </a>
         {% endif %}
@@ -527,7 +553,7 @@
               <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">اطّلع على آراء عملائك وأدرها من مكان واحد.</p>
             </div>
             {% if reviews_count %}
-            <span class="sf-pill pill-warn">{% if reviews_count == 1 %}تقييم واحد{% elif reviews_count == 2 %}تقييمان{% elif reviews_count <= 10 %}{{ reviews_count }} تقييمات{% else %}{{ reviews_count }} تقييم{% endif %}</span>
+            <span class="sf-pill pill-warn sf-tool-status">{% if reviews_count == 1 %}تقييم واحد{% elif reviews_count == 2 %}تقييمان{% elif reviews_count <= 10 %}{{ reviews_count }} تقييمات{% else %}{{ reviews_count }} تقييم{% endif %}</span>
             {% endif %}
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
           </a>
@@ -547,7 +573,7 @@
               <h3 class="text-[14px] font-bold text-black">تحسين محركات البحث</h3>
               <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">تحكّم في ظهورك بنتائج البحث وفي معاينات المشاركة.</p>
             </div>
-            <span class="text-[11.5px] font-bold {% if seo_configured %}text-emerald-600{% else %}text-slate-500{% endif %} whitespace-nowrap">
+            <span class="sf-tool-status text-[11.5px] font-bold {% if seo_configured %}text-emerald-600{% else %}text-slate-500{% endif %} whitespace-nowrap">
               {{ seo_configured|yesno:"مكتمل,غير مكتمل" }}
             </span>
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
@@ -559,7 +585,7 @@
               <h3 class="text-[14px] font-bold text-black">نطاق مخصص</h3>
               <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">اربط معرضك بنطاقك الخاص مثل <span dir="ltr">yourname.com</span>.</p>
             </div>
-            <span class="text-[11.5px] font-bold {% if has_custom_domain %}text-emerald-600{% else %}text-slate-500{% endif %} whitespace-nowrap max-w-[160px] truncate" dir="ltr">
+            <span class="sf-tool-status text-[11.5px] font-bold {% if has_custom_domain %}text-emerald-600{% else %}text-slate-500{% endif %} whitespace-nowrap max-w-[160px] truncate" dir="ltr">
               {% if has_custom_domain %}{{ request.user.custom_domain.domain }}{% else %}غير مرتبط{% endif %}
             </span>
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
@@ -685,6 +711,37 @@
 
     </aside>
   </div>
+
+  <!-- معاينة واجهة فقط، وتظهر من مقاس الجهاز اللوحي فما فوق. -->
+  <section class="hidden md:block mt-8 reveal" style="--d:280ms" aria-labelledby="manage-projects-title">
+    <p id="manage-projects-title" class="sf-cap mb-3">إدارة مشاريعك</p>
+    <div class="sf-card sf-projects">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="sf-chip tint-violet"><i data-lucide="clapperboard"></i></div>
+        <div>
+          <h2 class="text-[18px] font-bold text-slate-900 leading-tight">إدارة فيديوهاتك</h2>
+          <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">كل ما تحتاجه لنقل الفيديو من الرفع حتى استلام الدفع.</p>
+        </div>
+      </div>
+      <div class="sf-project-grid">
+        <div class="sf-project-option sf-project-upload" aria-label="ارفع فيديو — قريبًا">
+          <div class="sf-project-glow"></div><div class="sf-chip tint-blue"><i data-lucide="upload"></i></div>
+          <h3>ارفع فيديو</h3><p>أضف أعمالك الجديدة إلى مساحة مشروع منظمة.</p>
+          <div class="sf-project-preview"><i></i><span></span></div><span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> قريبًا</span>
+        </div>
+        <div class="sf-project-option sf-project-deliver" aria-label="سلِّم فيديو لعميلك — قريبًا">
+          <div class="sf-project-glow"></div><div class="sf-chip tint-amber"><i data-lucide="send"></i></div>
+          <h3>سلِّم فيديو</h3><p>شارك العمل المكتمل مع عميلك بطريقة احترافية.</p>
+          <div class="sf-project-preview"><i></i><span></span></div><span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> قريبًا</span>
+        </div>
+        <div class="sf-project-option sf-project-paid" aria-label="استلم أموالك — قريبًا">
+          <div class="sf-project-glow"></div><div class="sf-chip tint-emerald"><i data-lucide="wallet-cards"></i></div>
+          <h3>استلم أموالك</h3><p>تابع الدفع بجوار المشروع الذي يخصه.</p>
+          <div class="sf-project-preview"><i></i><span></span></div><span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> قريبًا</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
   {% if show_category_notification %}
   <!-- تنبيه تصنيف الفيديوهات -->

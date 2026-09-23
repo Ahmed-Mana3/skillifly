@@ -45,6 +45,12 @@ urlpatterns = [
     path('ar/dashboard/domain/', views.arabic_custom_domain_view, name='arabic_custom_domain'),
     path('dashboard/customize/', views.customize_theme_view, name='customize_theme'),
     path('ar/dashboard/customize/', views.arabic_customize_theme_view, name='arabic_customize_theme'),
+    path('dashboard/customize/experiences/', views.customize_experience_order_view, name='customize_experience_order'),
+    path('ar/dashboard/customize/experiences/', views.arabic_customize_experience_order_view, name='arabic_customize_experience_order'),
+    path('dashboard/customize/experiences/save/', views.customize_experience_order_save, name='customize_experience_order_save'),
+    path('dashboard/customize/projects/', views.customize_project_order_view, name='customize_project_order'),
+    path('ar/dashboard/customize/projects/', views.arabic_customize_project_order_view, name='arabic_customize_project_order'),
+    path('dashboard/customize/projects/save/', views.customize_project_order_save, name='customize_project_order_save'),
 
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),

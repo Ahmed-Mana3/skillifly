@@ -142,6 +142,34 @@
   /* Feature cards */
   .sf-feature { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 24px; height: 100%; text-decoration: none; }
 
+  /* Desktop/tablet project-management preview */
+  .sf-projects { overflow: hidden; padding: 24px; }
+  .sf-project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .sf-project-option {
+    position: relative; overflow: hidden; min-height: 190px; padding: 18px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    background: #fff; border: 1px solid rgba(15, 23, 42, .10); border-radius: 16px;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .sf-project-option:hover {
+    transform: translateY(-2px); border-color: rgba(124, 58, 237, .28);
+    box-shadow: 0 14px 28px -20px rgba(79, 70, 229, .45);
+  }
+  .sf-project-option h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.25; margin: 14px 0 8px; }
+  .sf-project-option p { font-size: 12.5px; font-weight: 500; color: #64748b; line-height: 1.5; margin: 0 0 14px; flex: 1 1 auto; }
+  .sf-project-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: linear-gradient(135deg, #ede9fe, #f3e8ff); color: #7c3aed; border: 1px solid #ddd6fe; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+  .sf-project-glow { position: absolute; top: -42px; right: -42px; width: 120px; height: 120px; border-radius: 50%; filter: blur(40px); opacity: 0; pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+  .sf-project-option:hover .sf-project-glow { opacity: 1; transform: scale(1.2); }
+  .sf-project-preview { display: flex; align-items: center; gap: 7px; width: 100%; padding: 9px 11px; margin-bottom: 14px; border: 1px solid rgba(15, 23, 42, .06); border-radius: 11px; background: #f8fafc; }
+  .sf-project-preview span { display: block; height: 5px; flex: 1; border-radius: 999px; background: var(--project-color); opacity: .8; }
+  .sf-project-preview i { width: 7px; height: 7px; border-radius: 50%; background: var(--project-color); }
+  .sf-project-upload { --project-color: #3b82f6; }
+  .sf-project-deliver { --project-color: #f59e0b; }
+  .sf-project-paid { --project-color: #10b981; }
+  .sf-project-upload .sf-project-glow { background: rgba(59, 130, 246, .18); }
+  .sf-project-deliver .sf-project-glow { background: rgba(245, 158, 11, .18); }
+  .sf-project-paid .sf-project-glow { background: rgba(16, 185, 129, .18); }
+
   /* Equal-height tools & side cards */
   .sf-tools-card { display: flex; flex-direction: column; }
   .sf-tools-card > .sf-row { flex: 1 1 auto; }
@@ -175,10 +203,20 @@
   .sf-row .go { margin-inline-start: auto; color: var(--faint); display: inline-flex; flex-shrink: 0; transition: transform .18s ease, color .18s ease; }
   .sf-row:hover .go { transform: translateX(3px); color: var(--brand); }
 
-  /* Narrow screens: wrap so a nowrap status pill never crushes the text column */
-  @media (max-width: 440px) {
-    .sf-row { flex-wrap: wrap; row-gap: 5px; }
-    .sf-row > .min-w-0 { flex-basis: 60%; }
+  /* Phone tools: keep each destination scannable in one calm, tap-friendly row.
+     The supporting sentence adds noise at this size, so the title and state lead. */
+  @media (max-width: 520px) {
+    .sf-tools .sf-row { gap: 12px; padding: 13px 14px; min-height: 66px; flex-wrap: nowrap; }
+    .sf-tools .sf-chip { width: 38px; height: 38px; border-radius: 12px; }
+    .sf-tools .sf-chip svg { width: 18px; height: 18px; }
+    .sf-tools .sf-row > .min-w-0 { min-width: 0; }
+    .sf-tools .sf-row p { display: none; }
+    .sf-tools .sf-row h3 { font-size: 13.5px; line-height: 1.3; }
+    .sf-tools .sf-tool-status { max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+  /* On exceptionally narrow phones, the destination name is more useful than its state. */
+  @media (max-width: 360px) {
+    .sf-tools .sf-tool-status { display: none; }
   }
 
   /* Progress bars */
@@ -452,11 +490,12 @@
 
         {% if profile.theme %}
         <!-- Customize portfolio — compact row above the feature cards -->
-        <a href="{% url 'customize_theme' %}" class="flex items-center gap-3 mb-4 px-4 py-3 group rounded-2xl bg-gradient-to-r from-sky-100/80 to-violet-100/80 border border-violet-200/70 shadow-md shadow-violet-500/12 transition-all hover:border-violet-300 hover:shadow-lg hover:shadow-violet-500/20" id="customize-theme-card">
+        <a href="{% url 'customize_theme' %}" class="flex items-center gap-3 mb-4 px-4 py-3 group rounded-2xl bg-white border border-violet-200/70 shadow-sm shadow-violet-500/10 transition-all hover:bg-violet-50/70 hover:border-violet-300 hover:shadow-md hover:shadow-violet-500/15" id="customize-theme-card">
           <div class="w-8 h-8 rounded-[10px] bg-white border border-violet-200/60 shadow-sm grid place-items-center flex-shrink-0 transition-transform group-hover:scale-105">
             <i data-lucide="sliders-horizontal" class="!h-4 !w-4 text-violet-600"></i>
           </div>
           <span class="text-[13.5px] font-bold text-slate-800 group-hover:text-slate-900 transition-colors" style="font-family:'Syne',sans-serif;">Customize your portfolio</span>
+          <span class="inline-flex shrink-0 items-center rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white shadow-sm shadow-violet-500/30">New</span>
           <i data-lucide="chevron-right" class="!h-4 !w-4 text-slate-500 ms-auto group-hover:text-violet-600 transition-all group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"></i>
         </a>
         {% endif %}
@@ -527,7 +566,7 @@
               <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">See what clients say and manage your reviews.</p>
             </div>
             {% if reviews_count %}
-            <span class="sf-pill pill-warn">{{ reviews_count }} received</span>
+            <span class="sf-pill pill-warn sf-tool-status">{{ reviews_count }} received</span>
             {% endif %}
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
           </a>
@@ -547,7 +586,7 @@
               <h3 class="text-[14px] font-bold text-black" style="font-family:'Syne',sans-serif;">SEO metadata</h3>
               <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Control how you appear in search results and social previews.</p>
             </div>
-            <span class="text-[11.5px] font-bold {% if seo_configured %}text-emerald-600{% else %}text-slate-700{% endif %} whitespace-nowrap">
+            <span class="sf-tool-status text-[11.5px] font-bold {% if seo_configured %}text-emerald-600{% else %}text-slate-700{% endif %} whitespace-nowrap">
               {{ seo_configured|yesno:"Configured,Not set" }}
             </span>
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
@@ -559,7 +598,7 @@
               <h3 class="text-[14px] font-bold text-black" style="font-family:'Syne',sans-serif;">Custom domain</h3>
               <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Connect your own domain, like yourname.com.</p>
             </div>
-            <span class="text-[11.5px] font-bold {% if has_custom_domain %}text-emerald-600{% else %}text-slate-700{% endif %} whitespace-nowrap max-w-[160px] truncate">
+            <span class="sf-tool-status text-[11.5px] font-bold {% if has_custom_domain %}text-emerald-600{% else %}text-slate-700{% endif %} whitespace-nowrap max-w-[160px] truncate">
               {% if has_custom_domain %}{{ request.user.custom_domain.domain }}{% else %}Not set{% endif %}
             </span>
             <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
@@ -685,6 +724,46 @@
 
     </aside>
   </div>
+
+  <!-- Project management is intentionally a desktop/tablet preview only. -->
+  <section class="hidden md:block mt-8 reveal" style="--d:280ms" aria-labelledby="manage-projects-title">
+    <p id="manage-projects-title" class="sf-cap mb-3">Manage your projects</p>
+    <div class="sf-card sf-projects">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="sf-chip tint-violet"><i data-lucide="clapperboard"></i></div>
+        <div>
+          <h2 class="text-[18px] font-bold text-slate-900 leading-tight" style="font-family:'Syne',sans-serif;">Manage your videos</h2>
+          <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Everything you need to take a video from upload to payment.</p>
+        </div>
+      </div>
+      <div class="sf-project-grid">
+        <div class="sf-project-option sf-project-upload" aria-label="Upload a video — coming soon">
+          <div class="sf-project-glow"></div>
+          <div class="sf-chip tint-blue"><i data-lucide="upload"></i></div>
+          <h3>Upload a video</h3>
+          <p>Bring new work into one organized project space.</p>
+          <div class="sf-project-preview"><i></i><span></span></div>
+          <span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> Coming soon</span>
+        </div>
+        <div class="sf-project-option sf-project-deliver" aria-label="Deliver a video to your client — coming soon">
+          <div class="sf-project-glow"></div>
+          <div class="sf-chip tint-amber"><i data-lucide="send"></i></div>
+          <h3>Deliver a video</h3>
+          <p>Share completed work with your client in a polished flow.</p>
+          <div class="sf-project-preview"><i></i><span></span></div>
+          <span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> Coming soon</span>
+        </div>
+        <div class="sf-project-option sf-project-paid" aria-label="Get paid — coming soon">
+          <div class="sf-project-glow"></div>
+          <div class="sf-chip tint-emerald"><i data-lucide="wallet-cards"></i></div>
+          <h3>Get paid</h3>
+          <p>Keep the payment step close to the project it belongs to.</p>
+          <div class="sf-project-preview"><i></i><span></span></div>
+          <span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> Coming soon</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
   {% if show_category_notification %}
   <!-- Category notification toast -->

@@ -172,6 +172,12 @@ class LanguagePreferenceMiddleware:
         '/ar/payment/success/': '/payment/success/',
         '/payment/failure/': '/ar/payment/failure/',
         '/ar/payment/failure/': '/payment/failure/',
+        '/dashboard/customize/': '/ar/dashboard/customize/',
+        '/ar/dashboard/customize/': '/dashboard/customize/',
+        '/dashboard/customize/experiences/': '/ar/dashboard/customize/experiences/',
+        '/ar/dashboard/customize/experiences/': '/dashboard/customize/experiences/',
+        '/dashboard/customize/projects/': '/ar/dashboard/customize/projects/',
+        '/ar/dashboard/customize/projects/': '/dashboard/customize/projects/',
     }
 
     def __init__(self, get_response):

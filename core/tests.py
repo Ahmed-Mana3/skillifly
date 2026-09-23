@@ -478,6 +478,110 @@ class ReviewsManagementAvatarTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+class ProjectOrderTests(TestCase):
+    """Project order: reorder page renders and the AJAX save endpoint works."""
+
+    def setUp(self):
+        from core.models import Project
+        self.user = User.objects.create_user(
+            username='punkeditor',
+            email='punk@example.com',
+            password='pass12345',
+        )
+        self.other = User.objects.create_user(
+            username='othereditor',
+            email='other@example.com',
+            password='pass12345',
+        )
+        self.p1 = Project.objects.create(user=self.user, title="Project Alpha", video_type="long")
+        self.p2 = Project.objects.create(user=self.user, title="Project Beta", video_type="reel")
+        self.p3 = Project.objects.create(user=self.user, title="Project Gamma", video_type="long")
+        self.foreign = Project.objects.create(user=self.other, title="Their Project")
+
+    def test_page_requires_login(self):
+        response = self.client.get(reverse('customize_project_order'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_arabic_page_requires_login(self):
+        response = self.client.get(reverse('arabic_customize_project_order'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_page_renders_projects_in_display_order(self):
+        self.client.login(username='punkeditor', password='pass12345')
+        response = self.client.get(reverse('customize_project_order'))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn(reverse('customize_project_order_save'), html)
+        self.assertIn('id="projList"', html)
+        self.assertLess(html.index('Project Alpha'), html.index('Project Beta'))
+
+    def test_arabic_page_renders(self):
+        self.client.login(username='punkeditor', password='pass12345')
+        response = self.client.get(reverse('arabic_customize_project_order'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'dir="rtl"')
+        self.assertContains(response, 'id="projList"')
+        self.assertContains(response, 'المشاريع')
+
+    def test_save_persists_order(self):
+        self.client.login(username='punkeditor', password='pass12345')
+        response = self.client.post(
+            reverse('customize_project_order_save'),
+            data=json.dumps({"order": [self.p3.id, self.p1.id, self.p2.id]}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['success'], True)
+
+        from core.models import Project
+        ordered = list(Project.objects.filter(user=self.user).order_by('order', 'id').values_list('id', flat=True))
+        self.assertEqual(ordered, [self.p3.id, self.p1.id, self.p2.id])
+
+    def test_save_rejects_foreign_ids(self):
+        self.client.login(username='punkeditor', password='pass12345')
+        response = self.client.post(
+            reverse('customize_project_order_save'),
+            data=json.dumps({"order": [self.p1.id, self.foreign.id]}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+
+        from core.models import Project
+        self.p1.refresh_from_db()
+        self.assertEqual(self.p1.order, 0)
+
+    def test_save_rejects_invalid_json(self):
+        self.client.login(username='punkeditor', password='pass12345')
+        response = self.client.post(
+            reverse('customize_project_order_save'),
+            data='not-json',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_save_rejects_missing_order_list(self):
+        self.client.login(username='punkeditor', password='pass12345')
+        response = self.client.post(
+            reverse('customize_project_order_save'),
+            data=json.dumps({"order": "nope"}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_save_requires_login(self):
+        response = self.client.post(
+            reverse('customize_project_order_save'),
+            data=json.dumps({"order": []}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_default_display_order_is_oldest_first(self):
+        from core.models import Project
+        ordered = list(Project.objects.filter(user=self.user).values_list('id', flat=True))
+        self.assertEqual(ordered, [self.p1.id, self.p2.id, self.p3.id])
+
+
 class CrawlerFilesTests(TestCase):
     """Crawler-facing files: sitemap.xml, robots.txt and llms.txt."""
 
