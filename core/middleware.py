@@ -176,6 +176,8 @@ class LanguagePreferenceMiddleware:
         '/ar/dashboard/customize/': '/dashboard/customize/',
         '/dashboard/customize/experiences/': '/ar/dashboard/customize/experiences/',
         '/ar/dashboard/customize/experiences/': '/dashboard/customize/experiences/',
+        '/dashboard/customize/projects/': '/ar/dashboard/customize/projects/',
+        '/ar/dashboard/customize/projects/': '/dashboard/customize/projects/',
     }
 
     def __init__(self, get_response):
