@@ -105,7 +105,7 @@
   </div>
 
   <div class="text-center mt-8 animate-fadeInUp" style="animation-delay: 0.2s">
-    <a href="{% url 'arabic_payment' %}" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
+    <a href="{% url 'arabic_payment' %}" data-pf-action="back_to_plans" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
       → إلغاء والعودة إلى الخطط
     </a>
   </div>
@@ -122,4 +122,5 @@
     });
   });
 </script>
+{% include 'payment/_funnel_tracker.html' with funnel_page='fawaterk_checkout' funnel_plan='' %}
 {% endblock %}

@@ -100,9 +100,13 @@
       سيتم تفعيل اشتراكك تلقائيًا بمجرد تأكيد الدفع.
     </p>
 
-    <a href="{% url 'arabic_dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors w-full">
+    <a href="{% url 'arabic_dashboard' %}" data-pf-action="go_dashboard" class="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors w-full">
       العودة إلى لوحة التحكم
     </a>
   </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'payment/_funnel_tracker.html' with funnel_page='fawaterk_pending' funnel_plan='' %}
 {% endblock %}

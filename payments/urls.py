@@ -2,6 +2,7 @@ from django.urls import path
 from payments import views
 
 urlpatterns = [
+    path('api/payment-funnel/', views.payment_funnel_track, name='payment_funnel_track'),
     path('payment/', views.pricing_view, name='payment'),
     path('ar/payment/', views.arabic_pricing_view, name='arabic_payment'),
     path('manual-pay/<str:plan_type>/', views.manual_payment_view, name='manual_payment'),

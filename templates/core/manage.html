@@ -133,6 +133,21 @@
             </div>
         </a>
 
+        <!-- Payment Tracking -->
+        <a href="{% url 'manage_payment_tracking' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.55s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mb-8 group-hover:bg-teal-500 transition-colors">
+                <svg class="w-8 h-8 text-teal-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Payment Tracking</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">See how often the payment page opens, who opens it, and which buttons they click in the payment flow.</p>
+            <div class="flex items-center text-teal-600 text-xs font-bold uppercase tracking-wider">
+                View Funnel Stats
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
         <!-- User Reviews -->
         <a href="/admin/core/review/" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.5s">
             <div class="icon-box w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-8 group-hover:bg-rose-500 transition-colors">

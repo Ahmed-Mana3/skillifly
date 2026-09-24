@@ -45,9 +45,13 @@
       Your subscription will activate automatically once payment is confirmed.
     </p>
     
-    <a href="{% url 'dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors w-full">
+    <a href="{% url 'dashboard' %}" data-pf-action="go_dashboard" class="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors w-full">
       Return to Dashboard
     </a>
   </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'payment/_funnel_tracker.html' with funnel_page='fawaterk_pending' funnel_plan='' %}
 {% endblock %}

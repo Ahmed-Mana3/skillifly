@@ -114,7 +114,7 @@
             <input type="text" name="coupon" id="manualCouponInput" value="{{ coupon_code }}" placeholder="Enter Coupon Code"
               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white transition-all uppercase tracking-wider font-bold" />
           </div>
-          <button type="submit" name="apply_coupon" value="1"
+          <button type="submit" name="apply_coupon" value="1" data-pf-action="apply_coupon"
             class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
             Apply Code
           </button>
@@ -123,10 +123,10 @@
 
       <!-- Navigation Tabs -->
       <div class="flex items-center justify-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-        <button type="button" onclick="goToStep1()" id="tab-step-1" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-purple-600 text-white shadow-md">
+        <button type="button" onclick="goToStep1()" id="tab-step-1" data-pf-action="back_to_step1" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-purple-600 text-white shadow-md">
           Step 1: Method
         </button>
-        <button type="button" onclick="goToStep2()" id="tab-step-2" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200">
+        <button type="button" onclick="goToStep2()" id="tab-step-2" data-pf-action="go_to_step2" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200">
           Step 2: Receipt
         </button>
       </div>
@@ -186,7 +186,7 @@
           </div>
         </div>
 
-        <button type="button" onclick="handleContinue('{{ plan_type }}', '{{ coupon_code }}')" class="btn-primary w-full justify-center py-4 text-lg">
+        <button type="button" onclick="handleContinue('{{ plan_type }}', '{{ coupon_code }}')" data-pf-action="continue" class="btn-primary w-full justify-center py-4 text-lg">
           Continue
           <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </button>
@@ -194,7 +194,7 @@
 
       <!-- Back link to plans -->
       <div class="text-center mt-8">
-        <a href="{% url 'payment' %}" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
+        <a href="{% url 'payment' %}" data-pf-action="back_to_plans" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
           ← Back to plans
         </a>
       </div>
@@ -206,7 +206,7 @@
     <!-- ============================================== -->
     <div id="step-2" class="hidden animate-fadeInUp">
       
-      <button type="button" onclick="goToStep1()" class="mb-6 text-sm text-slate-500 hover:text-purple-600 flex items-center gap-2 transition-colors font-bold">
+      <button type="button" onclick="goToStep1()" data-pf-action="back_to_step1" class="mb-6 text-sm text-slate-500 hover:text-purple-600 flex items-center gap-2 transition-colors font-bold">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         Back to payment method
       </button>
@@ -228,7 +228,7 @@
               <p class="text-xl md:text-2xl font-bold text-black tracking-wider" id="recipient-number">{{ recipient_number }}</p>
               <p id="recipient-handle" class="text-sm text-slate-500 mt-1 hidden">or InstaPay Handle: <span class="text-black font-bold">ahmed_medhat_06@instapay</span></p>
             </div>
-            <button type="button" onclick="copyRecipient()" id="copy-recipient-btn"
+            <button type="button" onclick="copyRecipient()" id="copy-recipient-btn" data-pf-action="copy_recipient"
               class="text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors font-bold px-4 py-2 rounded-lg whitespace-nowrap">
               Copy Number
             </button>
@@ -294,7 +294,7 @@
         </div>
 
         <!-- Submit button -->
-        <button type="submit" id="submit-btn" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4 shadow-lg shadow-purple-500/20">
+        <button type="submit" id="submit-btn" data-pf-action="verify_payment" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4 shadow-lg shadow-purple-500/20">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
@@ -475,4 +475,5 @@
     });
   }
 </script>
+{% include 'payment/_funnel_tracker.html' with funnel_page='manual_payment' funnel_plan=plan_type %}
 {% endblock %}

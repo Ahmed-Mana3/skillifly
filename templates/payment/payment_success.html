@@ -54,7 +54,7 @@
             </p>
 
             <!-- Actions -->
-            <a href="{% url 'dashboard' %}" class="btn-primary w-full justify-center py-4 text-lg">
+            <a href="{% url 'dashboard' %}" data-pf-action="go_dashboard" class="btn-primary w-full justify-center py-4 text-lg">
                 Go to Dashboard
                 <svg class="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
@@ -68,4 +68,8 @@
         </p>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'payment/_funnel_tracker.html' with funnel_page='payment_success' funnel_plan='' %}
 {% endblock %}

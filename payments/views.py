@@ -21,8 +21,120 @@ from core.views import process_affiliate_earning
 
 logger = logging.getLogger('payments')
 
+# --- Payment Funnel Tracking ----------------------------------------------
+# Records every payment-page open and button click so admins can see how the
+# payment flow is used. Cheap & best-effort: never raises, bot traffic ignored.
+
+PAYMENT_PAGE_LABELS = {
+    'payment': 'Pricing page',
+    'manual_payment': 'Manual payment',
+    'fawaterk_checkout': 'Fawaterk checkout',
+    'payment_success': 'Payment success',
+    'payment_failure': 'Payment failure',
+    'fawaterk_pending': 'Payment pending',
+}
+
+PAYMENT_ACTION_LABELS = {
+    'plan_monthly': 'Get monthly plan',
+    'plan_annual': 'Get annual plan',
+    'apply_coupon': 'Apply coupon code',
+    'method_vodafone': 'Selected Vodafone Cash',
+    'method_instapay': 'Selected InstaPay',
+    'method_card': 'Selected Card',
+    'continue': 'Continue (step 1 →)',
+    'go_to_step2': 'Open step 2 (Receipt)',
+    'back_to_step1': 'Back to step 1',
+    'card_checkout': 'Proceeded to Fawaterk (card)',
+    'copy_recipient': 'Copy recipient number',
+    'verify_payment': 'Submit receipt / verify',
+    'back_to_plans': 'Back to plans',
+    'go_dashboard': 'Go to dashboard',
+    'retry_payment': 'Retry payment',
+}
+
+
+def _payment_visitor_id(request):
+    """Stable visitor id for the current request: cookie > session > 'anon'."""
+    vid = request.COOKIES.get('sf_payment_vid') or ''
+    if vid:
+        return vid
+    if request.session.session_key:
+        return request.session.session_key
+    return 'anon'
+
+
+def _track_payment_event(request, event_type, page, action='', plan_type=''):
+    """Best-effort record of a payment-funnel event. Swallows all errors."""
+    try:
+        from analytics.views import get_client_ip, _is_bot_ua
+        from core.models import PaymentTrackingEvent
+
+        user_agent = request.META.get('HTTP_USER_AGENT') or ''
+        if _is_bot_ua(user_agent):
+            return
+
+        user = None
+        if getattr(request, 'user', None) and request.user.is_authenticated:
+            if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
+                return  # don't let admins pollute their own funnel stats
+            user = request.user
+        elif not request.session.session_key:
+            # Give anonymous visitors a stable id so repeated page opens merge
+            request.session.create()
+
+        PaymentTrackingEvent.objects.create(
+            user=user,
+            session_id=_payment_visitor_id(request),
+            event_type=event_type,
+            page=page[:60],
+            action=(action or '')[:100],
+            plan_type=(plan_type or '')[:20],
+            ip_address=get_client_ip(request),
+            user_agent=user_agent or None,
+        )
+    except Exception:
+        logger.debug('Failed to record payment tracking event', exc_info=True)
+
+
+@csrf_exempt
+def payment_funnel_track(request):
+    """POST endpoint for client-side payment-flow button-click tracking."""
+    if request.method == 'OPTIONS':
+        response = HttpResponse()
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Only POST allowed'}, status=405)
+
+    try:
+        if request.content_type == 'application/json' or not request.content_type:
+            data = json.loads(request.body)
+        else:
+            data = json.loads(request.body.decode('utf-8'))
+    except (ValueError, TypeError):
+        return JsonResponse({'status': 'error', 'message': 'Bad JSON'}, status=400)
+
+    page = (data.get('page') or '').strip()[:60]
+    action = (data.get('action') or '').strip()[:100]
+    plan_type = (data.get('plan_type') or '').strip()[:20]
+    if not page:
+        return JsonResponse({'status': 'error', 'message': 'Missing page'}, status=400)
+
+    _track_payment_event(request, 'click', page, action, plan_type)
+
+    response = JsonResponse({'status': 'success'})
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
+
 def pricing_view(request):
     """Render the payment page"""
+    _track_payment_event(request, 'page_view', 'payment')
     context = {
         'free_features': [
             '1 portfolio theme',
@@ -50,6 +162,7 @@ def pricing_view(request):
 
 def arabic_pricing_view(request):
     """Render the payment page (Arabic RTL version)"""
+    _track_payment_event(request, 'page_view', 'payment')
     context = {
         'is_arabic_page': True,
     }
@@ -103,6 +216,8 @@ def manual_payment_view(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'Invalid plan selected.')
         return redirect('payment')
+
+    _track_payment_event(request, 'page_view', 'manual_payment', plan_type=plan_type)
 
     amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
     recipient_number = getattr(settings, 'MANUAL_PAYMENT_RECIPIENT', '+201020966071')
@@ -316,6 +431,8 @@ def arabic_manual_payment_view(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'الخطة المحددة غير صالحة.')
         return redirect('arabic_payment')
+
+    _track_payment_event(request, 'page_view', 'manual_payment', plan_type=plan_type)
 
     amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
     recipient_number = getattr(settings, 'MANUAL_PAYMENT_RECIPIENT', '+201020966071')
@@ -575,19 +692,23 @@ def manage_banner_update(request):
 
 @login_required
 def payment_success(request):
+    _track_payment_event(request, 'page_view', 'payment_success')
     return render(request, 'payment/payment_success.html')
 
 @login_required
 def payment_failure(request):
+    _track_payment_event(request, 'page_view', 'payment_failure')
     error_message = request.session.pop('payment_error', "We couldn't process your payment. Please ensure your details are correct and try again.")
     return render(request, 'payment/payment_failure.html', {'error_message': error_message})
 
 @login_required(login_url='arabic_signin')
 def arabic_payment_success(request):
+    _track_payment_event(request, 'page_view', 'payment_success')
     return render(request, 'payment/arabic_payment_success.html', {'is_arabic_page': True})
 
 @login_required(login_url='arabic_signin')
 def arabic_payment_failure(request):
+    _track_payment_event(request, 'page_view', 'payment_failure')
     error_message = request.session.pop('payment_error', "تعذّرت معالجة الدفع. يرجى التأكد من صحة بياناتك والمحاولة مرة أخرى.")
     return render(request, 'payment/arabic_payment_failure.html', {'error_message': error_message, 'is_arabic_page': True})
 
@@ -600,6 +721,8 @@ def fawaterk_checkout(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'Invalid plan selected.')
         return redirect('payment')
+
+    _track_payment_event(request, 'page_view', 'fawaterk_checkout', plan_type=plan_type)
 
     amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
     user = request.user
@@ -666,6 +789,7 @@ def fawaterk_checkout(request, plan_type):
 
 @login_required
 def fawaterk_success(request):
+    _track_payment_event(request, 'page_view', 'payment_success')
     intent_key = request.session.get('fawaterk_intent_key')
     if intent_key:
         try:
@@ -678,6 +802,7 @@ def fawaterk_success(request):
 
 @login_required
 def fawaterk_pending(request):
+    _track_payment_event(request, 'page_view', 'fawaterk_pending')
     return render(request, 'payment/fawaterk_pending.html')
 
 @login_required(login_url='arabic_signin')
@@ -685,6 +810,8 @@ def arabic_fawaterk_checkout(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'الخطة المحددة غير صالحة.')
         return redirect('arabic_payment')
+
+    _track_payment_event(request, 'page_view', 'fawaterk_checkout', plan_type=plan_type)
 
     amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
     user = request.user
@@ -752,6 +879,7 @@ def arabic_fawaterk_checkout(request, plan_type):
 
 @login_required(login_url='arabic_signin')
 def arabic_fawaterk_success(request):
+    _track_payment_event(request, 'page_view', 'payment_success')
     intent_key = request.session.get('fawaterk_intent_key')
     if intent_key:
         try:
@@ -764,6 +892,7 @@ def arabic_fawaterk_success(request):
 
 @login_required(login_url='arabic_signin')
 def arabic_fawaterk_pending(request):
+    _track_payment_event(request, 'page_view', 'fawaterk_pending')
     return render(request, 'payment/arabic_fawaterk_pending.html', {'is_arabic_page': True})
 
 @csrf_exempt

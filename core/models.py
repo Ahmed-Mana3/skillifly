@@ -544,6 +544,35 @@ class AnalyticsEvent(models.Model):
     def __str__(self):
         return f"{self.event_type} on {self.visit.user.username}'s portfolio"
 
+class PaymentTrackingEvent(models.Model):
+    """Payment-funnel tracking — every pricing-page open, payment page visit, and button click."""
+    EVENT_TYPES = (
+        ('page_view', 'Page View'),
+        ('click', 'Click'),
+    )
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='payment_tracking_events')
+    session_id = models.CharField(max_length=255, db_index=True)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default='page_view')
+    page = models.CharField(max_length=60, db_index=True)  # payment | manual_payment | fawaterk_checkout | payment_success | payment_failure | fawaterk_pending
+    action = models.CharField(max_length=100, blank=True, default='')  # e.g. plan_monthly, plan_annual, continue, apply_coupon...
+    plan_type = models.CharField(max_length=20, blank=True, default='')  # monthly | pro_annual
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Payment tracking event"
+        verbose_name_plural = "Payment tracking events"
+
+    def __str__(self):
+        label = f"{self.event_type}:{self.page}"
+        if self.action:
+            label += f":{self.action}"
+        if self.plan_type:
+            label += f" ({self.plan_type})"
+        return label
+
 class Creator(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="creators")
     name = models.CharField(max_length=255)

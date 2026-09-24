@@ -1,0 +1,255 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Payment Tracking | Skillifly Manage{% endblock %}
+
+{% block extra_head %}
+<style>
+    .manage-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(0, 0, 0, 0.05); }
+    .manage-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(0, 0, 0, 0.07); }
+    .gradient-text {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+    @keyframes fadeInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-16">
+
+    <!-- Header -->
+    <div class="mb-12 text-center animate-fadeInUp">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Payment Funnel
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-black" style="font-family: 'Syne', sans-serif;">
+            Payment Page <span class="gradient-text">Tracking</span>
+        </h1>
+        <p class="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
+            How often the payment page opens, who opens it, how many times, and what they click along the way.
+        </p>
+
+        <!-- Period filter -->
+        <div class="inline-flex items-center gap-2 mt-6 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm">
+            <a href="?days=7" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all {% if days == '7' %}bg-slate-900 text-white{% else %}text-slate-500 hover:text-black{% endif %}">7 Days</a>
+            <a href="?days=30" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all {% if days == '30' %}bg-slate-900 text-white{% else %}text-slate-500 hover:text-black{% endif %}">30 Days</a>
+            <a href="?days=all" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all {% if days == 'all' %}bg-slate-900 text-white{% else %}text-slate-500 hover:text-black{% endif %}">All Time</a>
+        </div>
+        <p class="text-xs text-slate-400 mt-3 font-mono">{{ days_label }} · refreshed live from PaymentTrackingEvent</p>
+    </div>
+
+    {% if not has_data %}
+    <div class="max-w-xl mx-auto text-center bg-white rounded-[2rem] p-12 border border-slate-100">
+        <p class="text-slate-400 text-sm italic mb-4">No payment-flow events recorded yet.</p>
+        <p class="text-slate-400 text-sm leading-relaxed">Events appear the first time someone opens the pricing page
+            (<code class="font-mono bg-slate-50 px-2 py-0.5 rounded">/payment/</code>) or clicks a button in the payment flow.</p>
+    </div>
+    {% else %}
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.05s">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Payment page opened</div>
+            <div class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">{{ total_views }}</div>
+            <div class="text-sm text-slate-400 mt-2">across all payment pages</div>
+        </div>
+        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.1s">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Button clicks</div>
+            <div class="text-4xl font-bold text-purple-600" style="font-family: 'Syne', sans-serif;">{{ total_clicks }}</div>
+            <div class="text-sm text-slate-400 mt-2">in the payment flow</div>
+        </div>
+        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.15s">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Logged-in users</div>
+            <div class="text-4xl font-bold text-blue-600" style="font-family: 'Syne', sans-serif;">{{ unique_users }}</div>
+            <div class="text-sm text-slate-400 mt-2">distinct accounts</div>
+        </div>
+        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.2s">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Visitors</div>
+            <div class="text-4xl font-bold text-emerald-600" style="font-family: 'Syne', sans-serif;">{{ unique_visitors }}</div>
+            <div class="text-sm text-slate-400 mt-2">logged-in + guests</div>
+        </div>
+    </div>
+
+    <!-- Per-page breakdown -->
+    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.25s">
+        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Opens by page</h2>
+        <p class="text-slate-500 text-sm mb-8">Every step of the flow that was rendered.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-50">
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Page</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Views</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Clicks</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Drop-off after</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for row in page_rows %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-4">
+                            <div class="font-bold text-black">{{ row.label }}</div>
+                            <div class="text-xs font-mono text-slate-400">{{ row.page }}</div>
+                        </td>
+                        <td class="py-4 font-bold text-black">{{ row.views }}</td>
+                        <td class="py-4 text-slate-500">{{ row.clicks }}</td>
+                        <td class="py-4 text-sm text-slate-400">
+                            {% if row.dropoff_pct is not None %}
+                                {{ row.dropoff_pct }}% → {{ row.next_label }}
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="py-8 text-center text-slate-400 text-sm italic">No page opens in this period.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Button clicks -->
+    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.3s">
+        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Buttons clicked in the flow</h2>
+        <p class="text-slate-500 text-sm mb-8">What users press on the pricing &amp; manual payment pages.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-50">
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Action</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">On page</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plan</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Clicks</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for row in action_rows %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-4 font-bold text-black">{{ row.action_label }}</td>
+                        <td class="py-4 text-slate-500 text-sm">{{ row.page_label }}</td>
+                        <td class="py-4">
+                            {% if row.plan_type %}
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-900 font-mono text-xs font-bold">{{ row.plan_type }}</span>
+                            {% else %}<span class="text-slate-300">—</span>{% endif %}
+                        </td>
+                        <td class="py-4 text-right">
+                            <div class="inline-flex items-center gap-3 justify-end">
+                                <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: {% widthratio row.count action_rows.0.count 100 %}%"></div>
+                                </div>
+                                <span class="font-bold text-black w-10 text-right">{{ row.count }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="py-8 text-center text-slate-400 text-sm italic">No clicks recorded in this period.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Per user -->
+    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.35s">
+        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Users who opened payment</h2>
+        <p class="text-slate-500 text-sm mb-8">Log-in identities plus anonymous guest sessions. Sorted by most opens.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-50">
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Identity</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Opens</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Clicks</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Last activity</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for row in user_rows %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl {% if row.kind == 'user' %}bg-gradient-to-br from-blue-600 to-purple-600{% else %}bg-slate-200{% endif %} flex items-center justify-center text-white font-black text-xs">
+                                    {% if row.kind == 'user' %}{{ row.display|slice:":1"|upper }}{% else %}<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>{% endif %}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-black text-sm">{{ row.display }}</div>
+                                    {% if row.email %}<div class="text-xs text-slate-400">{{ row.email }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4"><span class="text-xs font-mono text-slate-400">{{ row.identity }}</span></td>
+                        <td class="py-4 font-bold text-black">{{ row.views }}</td>
+                        <td class="py-4 text-slate-500">{{ row.clicks }}</td>
+                        <td class="py-4 text-right text-xs text-slate-400">{{ row.last_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm italic">No visitors in this period.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent events -->
+    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 animate-fadeInUp" style="animation-delay: 0.4s">
+        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Recent events</h2>
+        <p class="text-slate-500 text-sm mb-8">The last 100 recorded openings and clicks.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-50">
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">When</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Type</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Page</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Action</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plan</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Who</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for row in recent_rows %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3 text-xs text-slate-500 whitespace-nowrap">{{ row.created|date:"Y-m-d H:i:s" }}</td>
+                        <td class="py-3">
+                            {% if row.type == 'page_view' %}
+                            <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider">Open</span>
+                            {% else %}
+                            <span class="px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 text-[10px] font-bold uppercase tracking-wider">Click</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 text-sm text-slate-600">{{ row.page_label }}</td>
+                        <td class="py-3 text-sm text-slate-600">
+                            {% if row.action %}{{ row.action_label }}{% else %}<span class="text-slate-300">—</span>{% endif %}
+                        </td>
+                        <td class="py-3 text-xs">
+                            {% if row.plan_type %}<span class="font-mono bg-slate-100 px-2 py-0.5 rounded font-bold">{{ row.plan_type }}</span>{% else %}<span class="text-slate-300">—</span>{% endif %}
+                        </td>
+                        <td class="py-3 text-right text-xs text-slate-500">
+                            {% if row.user %}@{{ row.user }}{% else %}<span class="font-mono">{{ row.session }}</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="py-8 text-center text-slate-400 text-sm italic">No events yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% endif %}
+
+    <div class="mt-16 text-center">
+        <a href="{% url 'manage_dashboard' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">← Back to Manage</a>
+    </div>
+</div>
+{% endblock %}

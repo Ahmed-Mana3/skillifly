@@ -4,6 +4,7 @@ from core.models import (
     Experience, Education, Skill, Project, Link, 
     Subscription, UserPayment, DiscountCode, SiteSettings, 
     Review, ClientReview, Showcase, SEOSettings, CustomDomain, ManualPayment,
+    PaymentTrackingEvent,
 )
 
 # Register your models here.
@@ -85,4 +86,13 @@ class ManualPaymentAdmin(admin.ModelAdmin):
     list_filter = ('status', 'payment_method', 'plan_type')
     search_fields = ('user__username', 'sender_identifier')
     readonly_fields = ('created_at',)
+
+
+@admin.register(PaymentTrackingEvent)
+class PaymentTrackingEventAdmin(admin.ModelAdmin):
+    list_display = ('event_type', 'page', 'action', 'plan_type', 'user', 'session_id', 'created_at')
+    list_filter = ('event_type', 'page', 'plan_type')
+    search_fields = ('user__username', 'user__email', 'session_id', 'action', 'ip_address')
+    readonly_fields = ('created_at', 'session_id', 'ip_address', 'user_agent')
+    ordering = ('-created_at',)
 

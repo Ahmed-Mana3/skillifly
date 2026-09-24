@@ -2700,6 +2700,168 @@ def manage_dashboard(request):
 
 
 @user_passes_test(lambda u: u.is_superuser)
+def manage_payment_tracking(request):
+    """Payment-funnel analytics: how often each payment page opens + which buttons were clicked."""
+    from core.models import PaymentTrackingEvent  # noqa: F401
+    from payments.views import PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS
+    from django.db.models import Count, Max, Q as _Q
+
+    days_param = request.GET.get('days', '30')
+    if days_param == 'all':
+        base_qs = PaymentTrackingEvent.objects.all()
+        days_label = 'All time'
+    else:
+        try:
+            days = int(days_param)
+        except (TypeError, ValueError):
+            days = 30
+        if days not in (7, 30):
+            days = 30
+        base_qs = PaymentTrackingEvent.objects.filter(
+            created_at__gte=timezone.now() - timedelta(days=days))
+        days_label = f'Last {days} days'
+
+    clicks_qs = base_qs.filter(event_type='click')
+
+    total_views = base_qs.filter(event_type='page_view').count()
+    total_clicks = clicks_qs.count()
+    unique_users = base_qs.exclude(user__isnull=True).values('user').distinct().count()
+    unique_visitors = base_qs.values('session_id').distinct().count()
+
+    # Per-page breakdown (drop-off = % of previous page that kept going)
+    page_raw = (
+        base_qs.values('page')
+        .annotate(
+            views=Count('id', filter=_Q(event_type='page_view')),
+            clicks=Count('id', filter=_Q(event_type='click')),
+        )
+        .order_by('-views')
+    )
+    page_rows = []
+    for i, r in enumerate(page_raw):
+        prev_views = page_raw[i - 1]['views'] if i > 0 else None
+        next_label = (
+            PAYMENT_PAGE_LABELS.get(page_raw[i + 1]['page'], page_raw[i + 1]['page'].replace('_', ' ').title())
+            if i + 1 < len(page_raw) else None
+        )
+        dropoff_pct = (round(r['views'] / prev_views * 100) if (prev_views and r['views']) else None) if i > 0 else None
+        page_rows.append({
+            'page': r['page'],
+            'label': PAYMENT_PAGE_LABELS.get(r['page'], r['page'].replace('_', ' ').title()),
+            'views': r['views'],
+            'clicks': r['clicks'],
+            'next_label': next_label,
+            'dropoff_pct': dropoff_pct,
+        })
+
+    # Button-click breakdown
+    action_raw = (
+        clicks_qs.values('page', 'action', 'plan_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:40]
+    )
+    action_rows = [
+        {
+            'page': r['page'],
+            'page_label': PAYMENT_PAGE_LABELS.get(r['page'], r['page'].replace('_', ' ').title()),
+            'action': r['action'],
+            'action_label': PAYMENT_ACTION_LABELS.get(r['action'], r['action'].replace('_', ' ').title()),
+            'count': r['count'],
+            'plan_type': r['plan_type'],
+        }
+        for r in action_raw
+    ]
+
+    # Per-user / per-visitor totals
+    user_raw = (
+        base_qs.exclude(user__isnull=True)
+        .values('user')
+        .annotate(
+            views=Count('id', filter=_Q(event_type='page_view')),
+            clicks=Count('id', filter=_Q(event_type='click')),
+            last_at=Max('created_at'),
+        )
+        .order_by('-views')
+    )
+    user_ids = [r['user'] for r in user_raw]
+    user_map = {}
+    from .models import CustomUser as _CustomUser
+    if user_ids:
+        for u in _CustomUser.objects.filter(id__in=user_ids).select_related('profile'):
+            user_map[u.id] = u
+
+    guest_raw = (
+        base_qs.filter(user__isnull=True)
+        .values('session_id')
+        .annotate(
+            views=Count('id', filter=_Q(event_type='page_view')),
+            clicks=Count('id', filter=_Q(event_type='click')),
+            last_at=Max('created_at'),
+        )
+        .order_by('-views')
+    )
+
+    rows = []
+    for r in user_raw:
+        u = user_map.get(r['user'])
+        rows.append({
+            'display': (u.get_full_name().strip() or u.username) if u else 'Unknown',
+            'identity': (u.username if u else ''),
+            'email': (u.email if u else ''),
+            'kind': 'user',
+            'views': r['views'],
+            'clicks': r['clicks'],
+            'last_at': r['last_at'],
+        })
+    for r in guest_raw[:50]:
+        rows.append({
+            'display': 'Guest',
+            'identity': r['session_id'][:16] + ('…' if len(r['session_id']) > 16 else ''),
+            'email': '',
+            'kind': 'guest',
+            'views': r['views'],
+            'clicks': r['clicks'],
+            'last_at': r['last_at'],
+        })
+    # Sort combined: by views desc, names resolved already
+    rows.sort(key=lambda x: (-x['views'], -x['clicks']))
+    user_rows = rows[:100]
+
+    recent = list(
+        base_qs.select_related('user').order_by('-created_at')[:100]
+    )
+    recent_rows = [
+        {
+            'id': e.id,
+            'created': e.created_at,
+            'type': e.event_type,
+            'page_label': PAYMENT_PAGE_LABELS.get(e.page, e.page.replace('_', ' ').title()),
+            'action_label': PAYMENT_ACTION_LABELS.get(e.action, e.action.replace('_', ' ').title()),
+            'action': e.action,
+            'plan_type': e.plan_type,
+            'user': e.user.username if e.user else None,
+            'session': e.session_id,
+        }
+        for e in recent
+    ]
+
+    context = {
+        'days': days_param,
+        'days_label': days_label,
+        'total_views': total_views,
+        'total_clicks': total_clicks,
+        'unique_users': unique_users,
+        'unique_visitors': unique_visitors,
+        'page_rows': page_rows,
+        'action_rows': action_rows,
+        'user_rows': user_rows,
+        'recent_rows': recent_rows,
+        'has_data': base_qs.exists(),
+    }
+    return render(request, 'core/manage_payment_tracking.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
 @require_POST
 def manage_showcase_update(request):
     """Save the homepage hero-showcase settings (tabs, zoom, rotate, overrides)."""
