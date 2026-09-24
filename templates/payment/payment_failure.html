@@ -3,6 +3,29 @@
 
 {% block title %}Payment Failed — Skillifly{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* ── Match the landing page brand system ──────────────── */
+  body { background-color: white !important; color: #0F172A !important; }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08), 0 5px 15px -5px rgba(0,0,0,0.04) !important;
+  }
+  .btn-primary {
+    background: #7C3AED !important;
+    background-image: none !important;
+    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+  }
+  .btn-primary:hover { background: #6D28D9 !important; background-image: none !important; }
+  .btn-primary:active { background: #5B21B6 !important; }
+  .nav-link { color: #334155 !important; font-weight: 600 !important; }
+  .nav-link:hover { color: #7C3AED !important; }
+  footer { border-top: 1px solid rgba(0,0,0,0.1) !important; background: #F8FAFC; }
+  .orb, .orb-blue, .orb-purple { display: none !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-[80vh] flex items-center justify-center px-6 py-12">
     <div class="max-w-xl w-full">
@@ -63,7 +86,7 @@
 
         <!-- Footer Help -->
         <p class="mt-8 text-center text-slate-500 text-sm font-medium">
-            Still having trouble? <a href="{% url 'contact' %}" class="text-blue-600 hover:underline font-bold">Contact our support team</a>
+            Still having trouble? <a href="{% url 'contact' %}" class="text-purple-600 hover:underline font-bold">Contact our support team</a>
         </p>
     </div>
 </div>

@@ -22,13 +22,38 @@
 <meta name="robots" content="noindex, follow" />
 
 <style>
-    /* Arabic Payment — keep English palette, only apply RTL typography and layout tweaks */
+    /* Match the landing-page brand system: solid purple buttons & accents */
     body {
         background-color: white !important;
-        color: var(--text-primary) !important;
+        color: #0F172A !important;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
+
+    .btn-primary {
+        background: #7C3AED !important;
+        background-image: none !important;
+        box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+    }
+
+    .btn-primary:hover {
+        background: #6D28D9 !important;
+        background-image: none !important;
+        box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+    }
+
+    .btn-primary:active { background: #5B21B6 !important; }
+
+    .btn-ghost { border: 1px solid rgba(0, 0, 0, 0.15) !important; color: #0F172A !important; }
+    .btn-ghost:hover { background: rgba(0, 0, 0, 0.04) !important; border-color: rgba(0, 0, 0, 0.3) !important; }
+
+    .gradient-text {
+        background: none !important;
+        -webkit-background-clip: initial !important; background-clip: initial !important;
+        -webkit-text-fill-color: #7C3AED !important; color: #7C3AED !important;
+    }
+
+    .orb, .orb-blue, .orb-purple { display: none !important; }
 
     .arabic-rtl h1,
     .arabic-rtl h2,
@@ -55,18 +80,18 @@
         text-transform: none !important;
     }
 
-    /* Do not override gradient-text, btn-primary, btn-ghost or other color tokens here — inherit from core/base for exact parity */
+    /* Buttons & gradient-text are overridden above to match the landing-page brand */
 
-    /* Annual card: match English payment page visual treatment exactly (colors & shadow) */
+    /* Annual card: match landing-page brand (purple tint) */
     .annual-card {
-        background: linear-gradient(160deg, #EFF6FF, #F5F3FF) !important;
-        border: 1px solid #BFDBFE !important;
-        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.05) !important;
+        background: linear-gradient(160deg, #F5F3FF, #EAE4FE) !important;
+        border: 1px solid #DDD6FE !important;
+        box-shadow: 0 20px 40px rgba(124, 58, 237, 0.06) !important;
     }
 
     /* Annual badge (localized position is left for RTL) */
     .annual-badge {
-        background: linear-gradient(135deg, #3B82F6, #8B5CF6) !important;
+        background: #7C3AED !important;
         color: white !important;
     }
 
@@ -93,8 +118,8 @@
     .coupon-input:focus {
         outline: none;
         background: #FFFFFF !important;
-        border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        border-color: #7C3AED !important;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
     }
 
     .arabic-rtl .coupon-icon {
@@ -145,7 +170,7 @@
   <!-- Header -->
   <div class="text-center mb-16 animate-fadeInUp">
     <div
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-rose-500/20 text-sm mb-6">
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-6">
       <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
       <span class="text-slate-600 font-bold">أسعار بسيطة وشفافة</span>
     </div>
@@ -203,7 +228,7 @@
       </div>
 
       <div class="mb-6">
-        <p class="text-sm font-bold text-blue-600 tracking-widest mb-2">سنويًا</p>
+        <p class="text-sm font-bold text-purple-600 tracking-widest mb-2">سنويًا</p>
         <div class="flex items-end gap-1 mb-1">
           <span class="text-4xl font-bold" style="font-family: 'Cairo', sans-serif;">449</span>
           <span class="text-gray-400 mb-1.5">جنيه/سنة</span>
@@ -227,7 +252,7 @@
     <div class="relative max-w-xs mx-auto">
       <input type="text" id="couponCode" placeholder="أدخل كود الخصم" class="coupon-input" />
       <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none coupon-icon">
-        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
       </div>
     </div>
     <p class="text-xs text-gray-500 mt-3">يتم تطبيق أكواد الخصم تلقائيًا أثناء الدفع.</p>

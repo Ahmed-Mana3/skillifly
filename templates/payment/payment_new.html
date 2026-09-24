@@ -3,6 +3,54 @@
 
 {% block title %}Upgrade to Pro — Skillifly{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* ── Match the landing page brand system ──────────────── */
+  :root {
+    --bg-dark: #FFFFFF; --bg-card: #FFFFFF;
+    --text-primary: #0F172A; --text-muted: #64748B;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+  }
+  body { background-color: white !important; color: #0F172A !important; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08), 0 5px 15px -5px rgba(0,0,0,0.04) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  .btn-ghost { border: 1px solid rgba(0,0,0,0.15) !important; color: #0F172A !important; }
+  .btn-ghost:hover { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.3) !important; }
+  .nav-link { color: #334155 !important; font-weight: 600 !important; }
+  .nav-link:hover { color: #7C3AED !important; }
+  footer { border-top: 1px solid rgba(0,0,0,0.1) !important; background: #F8FAFC; }
+
+  /* ── Clean white canvas: hide blue/purple background glows ── */
+  .orb, .orb-blue, .orb-purple { display: none !important; }
+
+  /* ── Solid brand-purple buttons ─────────────────────── */
+  .btn-primary {
+    background: #7C3AED !important;
+    background-image: none !important;
+    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+  }
+  .btn-primary:hover {
+    background: #6D28D9 !important;
+    background-image: none !important;
+    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+  }
+  .btn-primary:active { background: #5B21B6 !important; }
+
+  /* ── Purple brand accents (matches landing page) ─────── */
+  .gradient-text {
+    background: none !important;
+    -webkit-background-clip: initial !important; background-clip: initial !important;
+    -webkit-text-fill-color: #7C3AED !important; color: #7C3AED !important;
+  }
+  .gradient-border { border: 1px solid rgba(124, 58, 237, 0.14) !important; }
+  .gradient-border::before { background: rgba(124, 58, 237, 0.14) !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-6xl mx-auto px-6 py-16">
 
@@ -25,7 +73,7 @@
   <!-- Header -->
   <div class="text-center mb-16 animate-fadeInUp">
     <div
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/20 text-sm mb-6">
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-6">
       <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
       <span class="text-slate-600 font-bold">Simple, transparent pricing</span>
     </div>
@@ -77,15 +125,15 @@
 
     <!-- Annual (highlighted) -->
     <div class="rounded-3xl p-7 relative overflow-hidden animate-fadeInUp bg-white"
-      style="animation-delay: 0.2s; background: linear-gradient(160deg, #EFF6FF, #F5F3FF); border: 1px solid #BFDBFE; box-shadow: 0 20px 40px rgba(59, 130, 246, 0.05);">
+      style="animation-delay: 0.2s; background: linear-gradient(160deg, #F5F3FF, #EAE4FE); border: 1px solid #DDD6FE; box-shadow: 0 20px 40px rgba(124, 58, 237, 0.06);">
 
       <div class="absolute top-4 right-4">
         <span class="px-3 py-1 rounded-full text-xs font-bold"
-          style="background: linear-gradient(135deg, #3B82F6, #8B5CF6); color: white;">Most popular</span>
+          style="background: #7C3AED; color: white;">Most popular</span>
       </div>
 
       <div class="mb-6">
-        <p class="text-sm font-bold text-blue-600 uppercase tracking-widest mb-2">Annual</p>
+        <p class="text-sm font-bold text-purple-600 uppercase tracking-widest mb-2">Annual</p>
         <div class="flex items-end gap-1 mb-1">
           <span class="text-4xl font-bold" style="font-family: 'Syne', sans-serif;">449</span>
           <span class="text-gray-400 mb-1.5">EGP/year</span>
@@ -107,9 +155,9 @@
   <!-- Coupon Code -->
   <div class="max-w-md mx-auto mb-16 text-center animate-fadeInUp" style="animation-delay: 0.35s">
     <div class="relative max-w-xs mx-auto">
-      <input type="text" id="couponCode" placeholder="Enter Coupon Code" class="w-full bg-slate-50 border border-slate-300 rounded-full px-6 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all uppercase tracking-widest text-center text-sm font-bold shadow-sm" />
+      <input type="text" id="couponCode" placeholder="Enter Coupon Code" class="w-full bg-slate-50 border border-slate-300 rounded-full px-6 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/20 transition-all uppercase tracking-widest text-center text-sm font-bold shadow-sm" />
       <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
       </div>
     </div>
     <p class="text-xs text-slate-500 mt-3 font-medium">Promo codes and discounts are automatically applied during checkout.</p>

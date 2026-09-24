@@ -37,12 +37,28 @@
     }
 
     .gradient-text {
-        background: linear-gradient(135deg, #DB2777 0%, #7C3AED 55%, #D97706 100%) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-        background-clip: text !important;
-        color: transparent;
+        background: none !important;
+        -webkit-background-clip: initial !important; background-clip: initial !important;
+        -webkit-text-fill-color: #7C3AED !important; color: #7C3AED !important;
     }
+
+    .btn-primary {
+        background: #7C3AED !important;
+        background-image: none !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+        border: none !important;
+    }
+
+    .btn-primary:hover {
+        background: #6D28D9 !important;
+        background-image: none !important;
+        box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+    }
+
+    .btn-primary:active { background: #5B21B6 !important; }
+
+    .orb, .orb-blue, .orb-purple { display: none !important; }
 
     .nav-link {
         color: #334155 !important;
@@ -50,14 +66,14 @@
     }
 
     .nav-link:hover {
-        color: #3B82F6 !important;
+        color: #7C3AED !important;
     }
 
     .logo-mark img {
         filter: none;
     }
 
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
+    .arabic-rtl .text-blue-600 { color: #7C3AED !important; }
     .arabic-rtl .text-slate-400 { color: #64748B !important; }
     .arabic-rtl .text-slate-500 { color: #475569 !important; }
     .arabic-rtl .text-slate-600 { color: #334155 !important; }
@@ -89,7 +105,7 @@
   </div>
 
   <div class="text-center mt-8 animate-fadeInUp" style="animation-delay: 0.2s">
-    <a href="{% url 'arabic_payment' %}" class="text-sm text-slate-500 hover:text-blue-600 transition-colors font-bold">
+    <a href="{% url 'arabic_payment' %}" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
       → إلغاء والعودة إلى الخطط
     </a>
   </div>

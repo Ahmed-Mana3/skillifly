@@ -3,6 +3,54 @@
 
 {% block title %}Complete Payment — Skillifly{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* ── Match the landing page brand system ──────────────── */
+  :root {
+    --bg-dark: #FFFFFF; --bg-card: #FFFFFF;
+    --text-primary: #0F172A; --text-muted: #64748B;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+  }
+  body { background-color: white !important; color: #0F172A !important; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08), 0 5px 15px -5px rgba(0,0,0,0.04) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  .btn-ghost { border: 1px solid rgba(0,0,0,0.15) !important; color: #0F172A !important; }
+  .btn-ghost:hover { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.3) !important; }
+  .nav-link { color: #334155 !important; font-weight: 600 !important; }
+  .nav-link:hover { color: #7C3AED !important; }
+  footer { border-top: 1px solid rgba(0,0,0,0.1) !important; background: #F8FAFC; }
+
+  /* ── Clean white canvas: hide blue/purple background glows ── */
+  .orb, .orb-blue, .orb-purple { display: none !important; }
+
+  /* ── Solid brand-purple buttons ─────────────────────── */
+  .btn-primary {
+    background: #7C3AED !important;
+    background-image: none !important;
+    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+  }
+  .btn-primary:hover {
+    background: #6D28D9 !important;
+    background-image: none !important;
+    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
+  }
+  .btn-primary:active { background: #5B21B6 !important; }
+
+  /* ── Purple brand accents (matches landing page) ─────── */
+  .gradient-text {
+    background: none !important;
+    -webkit-background-clip: initial !important; background-clip: initial !important;
+    -webkit-text-fill-color: #7C3AED !important; color: #7C3AED !important;
+  }
+  .gradient-border { border: 1px solid rgba(124, 58, 237, 0.14) !important; }
+  .gradient-border::before { background: rgba(124, 58, 237, 0.14) !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-2xl mx-auto px-6 py-16">
 
@@ -22,7 +70,7 @@
     </div>
   {% endif %}  <!-- Header -->
   <div class="text-center mb-10 animate-fadeInUp">
-    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/20 text-sm mb-6">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-6">
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
       <span class="text-slate-600 font-bold">Secure Manual Payment</span>
     </div>
@@ -64,7 +112,7 @@
         <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
           <div class="relative flex-1">
             <input type="text" name="coupon" id="manualCouponInput" value="{{ coupon_code }}" placeholder="Enter Coupon Code"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all uppercase tracking-wider font-bold" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white transition-all uppercase tracking-wider font-bold" />
           </div>
           <button type="submit" name="apply_coupon" value="1"
             class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
@@ -75,7 +123,7 @@
 
       <!-- Navigation Tabs -->
       <div class="flex items-center justify-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-        <button type="button" onclick="goToStep1()" id="tab-step-1" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-blue-600 text-white shadow-md">
+        <button type="button" onclick="goToStep1()" id="tab-step-1" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-purple-600 text-white shadow-md">
           Step 1: Method
         </button>
         <button type="button" onclick="goToStep2()" id="tab-step-2" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200">
@@ -146,7 +194,7 @@
 
       <!-- Back link to plans -->
       <div class="text-center mt-8">
-        <a href="{% url 'payment' %}" class="text-sm text-slate-500 hover:text-blue-600 transition-colors font-bold">
+        <a href="{% url 'payment' %}" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
           ← Back to plans
         </a>
       </div>
@@ -158,7 +206,7 @@
     <!-- ============================================== -->
     <div id="step-2" class="hidden animate-fadeInUp">
       
-      <button type="button" onclick="goToStep1()" class="mb-6 text-sm text-slate-500 hover:text-blue-600 flex items-center gap-2 transition-colors font-bold">
+      <button type="button" onclick="goToStep1()" class="mb-6 text-sm text-slate-500 hover:text-purple-600 flex items-center gap-2 transition-colors font-bold">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         Back to payment method
       </button>
@@ -167,21 +215,21 @@
         <h2 class="text-xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Pay to this account</h2>
         
         <!-- Recipient Information Box -->
-        <div class="rounded-xl p-5" style="background: #F0F9FF; border: 1px solid #BAE6FD;">
+        <div class="rounded-xl p-5" style="background: #F5F3FF; border: 1px solid #DDD6FE;">
           <div class="flex items-center gap-3 mb-3">
             <div id="method-icon-container" class="w-8 h-8 rounded-lg flex items-center justify-center bg-white overflow-hidden shadow-sm">
               <img id="method-icon" src="{% static 'img/vodafone_logo.png' %}" class="w-full h-full object-contain p-0.5">
             </div>
-            <p class="text-xs text-blue-600 uppercase tracking-widest font-bold" id="recipient-title">Send to this number</p>
+            <p class="text-xs text-purple-600 uppercase tracking-widest font-bold" id="recipient-title">Send to this number</p>
           </div>
           
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-blue-200">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-purple-200">
             <div>
               <p class="text-xl md:text-2xl font-bold text-black tracking-wider" id="recipient-number">{{ recipient_number }}</p>
               <p id="recipient-handle" class="text-sm text-slate-500 mt-1 hidden">or InstaPay Handle: <span class="text-black font-bold">ahmed_medhat_06@instapay</span></p>
             </div>
             <button type="button" onclick="copyRecipient()" id="copy-recipient-btn"
-              class="text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+              class="text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors font-bold px-4 py-2 rounded-lg whitespace-nowrap">
               Copy Number
             </button>
           </div>
@@ -217,7 +265,7 @@
           <p id="identifier_help" class="text-xs text-slate-500 mb-2 font-medium">The number you sent the money FROM.</p>
           <input type="text" id="sender_identifier" name="sender_identifier"
             placeholder="e.g. 01012345678"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black font-medium placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors text-sm" />
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black font-medium placeholder-slate-400 focus:outline-none focus:border-purple-500 transition-colors text-sm" />
         </div>
 
         <!-- Receipt upload -->
@@ -226,11 +274,11 @@
             Payment receipt screenshot
           </label>
           <div id="upload-area"
-            class="relative rounded-xl border-2 border-dashed border-slate-200 hover:border-blue-500/60 transition-colors cursor-pointer overflow-hidden bg-slate-50/50"
+            class="relative rounded-xl border-2 border-dashed border-slate-200 hover:border-purple-500/60 transition-colors cursor-pointer overflow-hidden bg-slate-50/50"
             onclick="document.getElementById('receipt_image').click()">
 
             <div id="upload-placeholder" class="flex flex-col items-center justify-center py-12 px-6 text-center">
-              <div class="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-600">
+              <div class="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center bg-purple-50 border border-purple-100 text-purple-600">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -246,7 +294,7 @@
         </div>
 
         <!-- Submit button -->
-        <button type="submit" id="submit-btn" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4 shadow-lg shadow-blue-500/20">
+        <button type="submit" id="submit-btn" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4 shadow-lg shadow-purple-500/20">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
@@ -296,7 +344,7 @@
     
     // Update Tab UI
     document.getElementById('tab-step-1').className = "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200";
-    document.getElementById('tab-step-2').className = "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-blue-600 text-white shadow-md";
+    document.getElementById('tab-step-2').className = "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-purple-600 text-white shadow-md";
 
     updateStep2UI();
     // Scroll to top of step 2 smoothly
@@ -313,7 +361,7 @@
     
     // Update Tab UI
     document.getElementById('tab-step-2').className = "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200";
-    document.getElementById('tab-step-1').className = "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-blue-600 text-white shadow-md";
+    document.getElementById('tab-step-1').className = "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all bg-purple-600 text-white shadow-md";
 
     // Remove required attributes so back button works without validation errors
     document.getElementById('sender_identifier').required = false;

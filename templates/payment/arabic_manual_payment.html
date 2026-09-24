@@ -56,11 +56,9 @@
     }
 
     .gradient-text {
-        background: linear-gradient(135deg, #DB2777 0%, #7C3AED 55%, #D97706 100%) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-        background-clip: text !important;
-        color: transparent;
+        background: none !important;
+        -webkit-background-clip: initial !important; background-clip: initial !important;
+        -webkit-text-fill-color: #7C3AED !important; color: #7C3AED !important;
     }
 
     .glass-card {
@@ -73,24 +71,29 @@
 
     .gradient-border {
         background: #ffffff !important;
+        border: 1px solid rgba(124, 58, 237, 0.14) !important;
         box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
     }
 
     .gradient-border::before {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
+        background: rgba(124, 58, 237, 0.14) !important;
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
+        background: #7C3AED !important;
+        background-image: none !important;
         color: #ffffff !important;
-        box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
+        box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
         border: none !important;
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
-        box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
+        background: #6D28D9 !important;
+        background-image: none !important;
+        box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
     }
+
+    .btn-primary:active { background: #5B21B6 !important; }
 
     .nav-link {
         color: #334155 !important;
@@ -98,26 +101,25 @@
     }
 
     .nav-link:hover {
-        color: #3B82F6 !important;
+        color: #7C3AED !important;
     }
 
     .logo-mark img {
         filter: none;
     }
 
-    /* Warm accent overrides */
-    .arabic-rtl .text-blue-600 { color: #DB2777 !important; }
-    .arabic-rtl a.text-blue-600:hover { color: #2563EB !important; }
-    .arabic-rtl .text-blue-700 { color: #2563EB !important; }
-    .arabic-rtl .bg-blue-50 { background-color: #FFF1F7 !important; }
-    .arabic-rtl .border-blue-100 { border-color: #FBCFE8 !important; }
-    .arabic-rtl .border-blue-200 { border-color: #FBCFE8 !important; }
-    .arabic-rtl .hover\:border-blue-500\/60:hover { border-color: #F472B6 !important; }
-    .arabic-rtl .hover\:bg-blue-100:hover { background-color: #FCE7F3 !important; }
-    .arabic-rtl .bg-blue-600 { background-color: #DB2777 !important; }
-    .arabic-rtl .peer-checked\:border-blue-600:checked ~ * { border-color: #DB2777 !important; }
-    .arabic-rtl .peer-checked\:bg-blue-50:checked ~ * { background-color: #FFF1F7 !important; }
-    .arabic-rtl .peer-checked\:text-blue-700:checked ~ * { color: #2563EB !important; }
+    /* Purple brand accents (matches landing page) */
+    .arabic-rtl .text-blue-600 { color: #7C3AED !important; }
+    .arabic-rtl a.text-blue-600:hover { color: #6D28D9 !important; }
+    .arabic-rtl .text-blue-700 { color: #7C3AED !important; }
+    .arabic-rtl .bg-blue-50 { background-color: #F5F3FF !important; }
+    .arabic-rtl .border-blue-100 { border-color: #EDE9FE !important; }
+    .arabic-rtl .border-blue-200 { border-color: #DDD6FE !important; }
+    .arabic-rtl .hover\:border-blue-500\/60:hover { border-color: #A78BFA !important; }
+    .arabic-rtl .hover\:bg-blue-100:hover { background-color: #EDE9FE !important; }
+    .arabic-rtl .bg-blue-600 { background-color: #7C3AED !important; }
+    /* Keep InstaPay's semantic blue checkmark (matches English page, not remapped) */
+    .arabic-rtl .instapay-check { color: #2563EB !important; }
 
     /* Contrast boost */
     .arabic-rtl .text-slate-400 { color: #64748B !important; }
@@ -152,7 +154,7 @@
     a:focus-visible,
     button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.35);
         border-radius: 12px;
     }
 </style>
@@ -178,7 +180,7 @@
   {% endif %}
   <!-- Header -->
   <div class="text-center mb-10 animate-fadeInUp">
-    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-rose-500/20 text-sm mb-6">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-6">
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
       <span class="text-slate-600 font-bold">دفع يدوي آمن</span>
     </div>
@@ -220,7 +222,7 @@
         <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
           <div class="relative flex-1">
             <input type="text" name="coupon" id="manualCouponInput" value="{{ coupon_code }}" placeholder="أدخل كود الخصم"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:bg-white transition-all uppercase tracking-wider font-bold" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white transition-all uppercase tracking-wider font-bold" />
           </div>
           <button type="submit" name="apply_coupon" value="1"
             class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
@@ -231,7 +233,7 @@
 
       <!-- Navigation Tabs -->
       <div class="flex items-center justify-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-        <button type="button" onclick="goToStep1()" id="tab-step-1" class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-rose-600 text-white shadow-md">
+        <button type="button" onclick="goToStep1()" id="tab-step-1" class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-purple-600 text-white shadow-md">
           الخطوة 1: طريقة الدفع
         </button>
         <button type="button" onclick="goToStep2()" id="tab-step-2" class="px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200">
@@ -267,7 +269,7 @@
                 </div>
                 <span class="text-sm font-bold text-slate-700 block peer-checked:text-blue-700">إنستا باي</span>
               </div>
-              <div class="absolute top-3 right-3 hidden peer-checked:block text-blue-600">
+              <div class="absolute top-3 right-3 hidden peer-checked:block text-blue-600 instapay-check">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
               </div>
             </label>
@@ -299,7 +301,7 @@
 
       <!-- Back link to plans -->
       <div class="text-center mt-8">
-        <a href="{% url 'arabic_payment' %}" class="text-sm text-slate-500 hover:text-blue-600 transition-colors font-bold">
+        <a href="{% url 'arabic_payment' %}" class="text-sm text-slate-500 hover:text-purple-600 transition-colors font-bold">
           → العودة إلى الخطط
         </a>
       </div>
@@ -311,7 +313,7 @@
     <!-- ============================================== -->
     <div id="step-2" class="hidden animate-fadeInUp">
 
-      <button type="button" onclick="goToStep1()" class="mb-6 text-sm text-slate-500 hover:text-blue-600 flex items-center gap-2 transition-colors font-bold">
+      <button type="button" onclick="goToStep1()" class="mb-6 text-sm text-slate-500 hover:text-purple-600 flex items-center gap-2 transition-colors font-bold">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         العودة لاختيار طريقة الدفع
       </button>
@@ -320,7 +322,7 @@
         <h2 class="text-xl font-bold text-black mb-2">حوّل إلى هذا الحساب</h2>
 
         <!-- Recipient Information Box -->
-        <div class="rounded-xl p-5" style="background: #F0F9FF; border: 1px solid #BAE6FD;">
+        <div class="rounded-xl p-5" style="background: #F5F3FF; border: 1px solid #DDD6FE;">
           <div class="flex items-center gap-3 mb-3">
             <div id="method-icon-container" class="w-8 h-8 rounded-lg flex items-center justify-center bg-white overflow-hidden shadow-sm">
               <img id="method-icon" src="{% static 'img/vodafone_logo.png' %}" class="w-full h-full object-contain p-0.5">
@@ -370,7 +372,7 @@
           <p id="identifier_help" class="text-xs text-slate-500 mb-2 font-medium">الرقم الذي أرسلت منه المبلغ.</p>
           <input type="text" id="sender_identifier" name="sender_identifier"
             placeholder="مثال: 01012345678"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black font-medium placeholder-slate-400 focus:outline-none focus:border-rose-500 transition-colors text-sm" />
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black font-medium placeholder-slate-400 focus:outline-none focus:border-purple-500 transition-colors text-sm" />
         </div>
 
         <!-- Receipt upload -->
@@ -399,7 +401,7 @@
         </div>
 
         <!-- Submit button -->
-        <button type="submit" id="submit-btn" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4 shadow-lg shadow-rose-500/20">
+        <button type="submit" id="submit-btn" class="btn-primary w-full justify-center py-4 gap-2 relative overflow-hidden text-lg mt-4 shadow-lg shadow-purple-500/20">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
@@ -449,7 +451,7 @@
 
     // Update Tab UI
     document.getElementById('tab-step-1').className = "px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200";
-    document.getElementById('tab-step-2').className = "px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-rose-600 text-white shadow-md";
+    document.getElementById('tab-step-2').className = "px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-purple-600 text-white shadow-md";
 
     updateStep2UI();
     // Scroll to top of step 2 smoothly
@@ -466,7 +468,7 @@
 
     // Update Tab UI
     document.getElementById('tab-step-2').className = "px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-slate-100 text-slate-500 border border-slate-200";
-    document.getElementById('tab-step-1').className = "px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-rose-600 text-white shadow-md";
+    document.getElementById('tab-step-1').className = "px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all bg-purple-600 text-white shadow-md";
 
     // Remove required attributes so back button works without validation errors
     document.getElementById('sender_identifier').required = false;
@@ -538,8 +540,8 @@
   const uploadArea = document.getElementById('upload-area');
   uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
-    uploadArea.style.borderColor = 'rgba(225,29,72,0.8)';
-    uploadArea.style.background = 'rgba(225,29,72,0.06)';
+    uploadArea.style.borderColor = 'rgba(124,58,237,0.8)';
+    uploadArea.style.background = 'rgba(124,58,237,0.1)';
   });
   uploadArea.addEventListener('dragleave', () => {
     uploadArea.style.borderColor = '';
@@ -575,7 +577,7 @@
       setTimeout(() => {
         btn.textContent = 'نسخ الرقم';
         btn.style.color = '';
-        btn.style.background = 'rgba(37, 99, 235, 0.12)';
+        btn.style.background = 'rgba(124, 58, 237, 0.12)';
       }, 2000);
     });
   }
