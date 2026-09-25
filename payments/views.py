@@ -34,14 +34,18 @@ PAYMENT_PAGE_LABELS = {
     'fawaterk_pending': 'Payment pending',
 }
 
-# Canonical order of the funnel. The admin report walks pages in this order so
-# "drop-off after" is a real step-to-step number instead of a by-volume guess.
+# The happy path, in order. Steps a visitor walks through one after another.
 PAYMENT_FUNNEL_ORDER = [
     'payment',
     'manual_payment',
     'fawaterk_checkout',
-    'fawaterk_pending',
     'payment_success',
+]
+
+# States visitors leave the happy path for. Not "the next step" — drawing them
+# in the chain would claim people failed *after* succeeding.
+PAYMENT_FUNNEL_EXITS = [
+    'fawaterk_pending',
     'payment_failure',
 ]
 

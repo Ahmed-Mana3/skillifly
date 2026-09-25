@@ -2703,7 +2703,10 @@ def manage_dashboard(request):
 def manage_payment_tracking(request):
     """Payment-funnel analytics: how often each payment page opens + which buttons were clicked."""
     from core.models import PaymentTrackingEvent  # noqa: F401
-    from payments.views import PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS, PAYMENT_FUNNEL_ORDER
+    from payments.views import (
+        PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS,
+        PAYMENT_FUNNEL_ORDER, PAYMENT_FUNNEL_EXITS,
+    )
     from django.db.models import Count, Max, Q as _Q
 
     days_param = request.GET.get('days', '30')
@@ -2741,32 +2744,52 @@ def manage_payment_tracking(request):
         )
     }
 
-    ordered_pages = [p for p in PAYMENT_FUNNEL_ORDER if p in page_by_key]
-    ordered_pages += sorted(
-        (p for p in page_by_key if p not in PAYMENT_FUNNEL_ORDER),
+    # The happy path is a chain; failures and pending states are exits off it,
+    # so they must not be drawn as "the next step" or the funnel reads nonsense.
+    chain = [p for p in PAYMENT_FUNNEL_ORDER if p in page_by_key]
+    exits = [p for p in PAYMENT_FUNNEL_EXITS if p in page_by_key]
+    exits += sorted(
+        (p for p in page_by_key if p not in PAYMENT_FUNNEL_ORDER and p not in PAYMENT_FUNNEL_EXITS),
         key=lambda p: -page_by_key[p]['views'],
+    )
+
+    # Bars are drawn against the busiest step, not the entry step: visitors can
+    # deep-link straight to a later page, which would push a bar past 100%.
+    max_views = max((s['views'] for s in page_by_key.values()), default=0)
+
+    # The one number the page is really for: of everyone who opened the pricing
+    # page, how many walked out of a confirmed payment?
+    entry_views = page_by_key.get('payment', {}).get('views', 0)
+    success_views = page_by_key.get('payment_success', {}).get('views', 0)
+    conversion_pct = (
+        round(success_views / entry_views * 100, 1) if entry_views else None
     )
 
     def _page_label(key):
         return PAYMENT_PAGE_LABELS.get(key, key.replace('_', ' ').title())
 
-    page_rows = []
-    for i, key in enumerate(ordered_pages):
+    def _page_row(key, next_key):
         stats = page_by_key[key]
-        next_key = ordered_pages[i + 1] if i + 1 < len(ordered_pages) else None
         next_views = page_by_key[next_key]['views'] if next_key else 0
-        page_rows.append({
+        return {
             'page': key,
             'label': _page_label(key),
             'views': stats['views'],
             'clicks': stats['clicks'],
             'next_label': _page_label(next_key) if next_key else None,
-            # % of this page's opens that reached the next step
+            # % of this page's opens that reached the next step. Can exceed 100
+            # when people land on a later page directly - the template marks it.
             'continue_pct': (
                 round(next_views / stats['views'] * 100)
                 if stats['views'] and next_views else None
             ),
-        })
+        }
+
+    page_rows = [
+        _page_row(key, chain[i + 1] if i + 1 < len(chain) else None)
+        for i, key in enumerate(chain)
+    ]
+    exit_rows = [_page_row(key, None) for key in exits]
 
     # Button-click breakdown
     action_raw = (
@@ -2881,7 +2904,12 @@ def manage_payment_tracking(request):
         'unique_users': unique_users,
         'unique_visitors': unique_visitors,
         'paying_users': len(paying_ids),
+        'entry_views': entry_views,
+        'success_views': success_views,
+        'conversion_pct': conversion_pct,
+        'max_views': max_views,
         'page_rows': page_rows,
+        'exit_rows': exit_rows,
         'action_rows': action_rows,
         'user_rows': user_rows,
         'recent_rows': recent_rows,

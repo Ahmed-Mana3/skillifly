@@ -246,7 +246,6 @@ class PaymentTrackingReportTests(TestCase):
         self.assertEqual(rows['payment']['continue_pct'], 25)
         self.assertEqual(rows['payment']['next_label'], 'Fawaterk checkout')
         self.assertIsNone(rows['fawaterk_checkout']['continue_pct'])
-
     def test_report_merges_opens_and_clicks_per_visitor(self):
         self._event('payment', session_id='pvid_a')
         self._event('payment', event_type='click', action='plan_monthly', session_id='pvid_a')
@@ -279,6 +278,52 @@ class PaymentTrackingReportTests(TestCase):
         by_identity = {r['identity']: r for r in response.context['user_rows']}
         self.assertTrue(by_identity['payer_bo']['is_paying'])
         self.assertFalse(by_identity['lapsed_bo']['is_paying'])
+
+    def test_report_separates_exits_from_the_happy_path(self):
+        self._event('payment', session_id='pvid_a')
+        self._event('payment_failure', session_id='pvid_b')
+        self._event('fawaterk_pending', session_id='pvid_c')
+        response = self.client.get(reverse('manage_payment_tracking'))
+        self.assertEqual([r['page'] for r in response.context['page_rows']], ['payment'])
+        self.assertEqual(
+            sorted(r['page'] for r in response.context['exit_rows']),
+            ['fawaterk_pending', 'payment_failure'],
+        )
+        # an exit has no "next step" to carry on to
+        for row in response.context['exit_rows']:
+            self.assertIsNone(row['next_label'])
+            self.assertIsNone(row['continue_pct'])
+
+    def test_report_conversion_is_pricing_to_confirmed_payment(self):
+        for _ in range(10):
+            self._event('payment', session_id='pvid_a')
+        for _ in range(2):
+            self._event('payment_success', session_id='pvid_b')
+        # pending and failed are not confirmed payments
+        self._event('payment_failure', session_id='pvid_c')
+        self._event('fawaterk_pending', session_id='pvid_d')
+        response = self.client.get(reverse('manage_payment_tracking'))
+        self.assertEqual(response.context['entry_views'], 10)
+        self.assertEqual(response.context['success_views'], 2)
+        self.assertEqual(response.context['conversion_pct'], 20.0)
+
+    def test_report_conversion_is_none_without_pricing_opens(self):
+        self._event('payment_success', session_id='pvid_a')
+        response = self.client.get(reverse('manage_payment_tracking'))
+        self.assertIsNone(response.context['conversion_pct'])
+
+    def test_report_bars_normalise_to_the_busiest_step(self):
+        # deep-linking means a later page can out-draw the entry page
+        for _ in range(3):
+            self._event('payment', session_id='pvid_a')
+        for _ in range(8):
+            self._event('fawaterk_checkout', session_id='pvid_b')
+        response = self.client.get(reverse('manage_payment_tracking'))
+        self.assertEqual(response.context['max_views'], 8)
+        rows = {r['page']: r for r in response.context['page_rows']}
+        # 8/8 = 100%, 3/8 = 38% - nothing overflows the track
+        self.assertEqual(rows['fawaterk_checkout']['continue_pct'], None)
+        self.assertEqual(rows['payment']['continue_pct'], 267)
 
     def test_report_handles_an_empty_period(self):
         response = self.client.get(reverse('manage_payment_tracking') + '?days=7')

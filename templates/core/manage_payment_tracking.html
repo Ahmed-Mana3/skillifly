@@ -1,275 +1,565 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Payment Tracking | Skillifly Manage{% endblock %}
+{% block title %}Payment Page Tracking | Skillifly{% endblock %}
+
+{# base.html renders three blurred gradient orbs behind every page. The landing
+   page kills them (via a CSS override that, as it happens, misses .orb-pink).
+   This is a dense data view, so it takes the cleaner route: drop the nodes. #}
+{% block ambient_orbs %}{% endblock %}
 
 {% block extra_head %}
 <style>
-    .manage-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(0, 0, 0, 0.05); }
-    .manage-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(0, 0, 0, 0.07); }
-    .gradient-text {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    /* ── Payment Page Tracking ──────────────────────────────
+       Same type system as every other page in the app: Syne for
+       display type, DM Sans for everything else - matching the
+       dashboard, which sets font-family: 'Syne' on its headings
+       inline. base.html already does this for h1-h6, so the only
+       reason to restate it is for the big numerals, which are
+       divs rather than headings.
+
+       Palette is the landing page's: brand purple #7C3AED, slate
+       ink, white cards on a #F8FAFC canvas. Every text pair
+       clears WCAG AA for its size and every meaningful non-text
+       element clears the 3:1 floor - the values below were picked
+       from measured contrast ratios, not by eye. Classes are pt-
+       prefixed so they can't collide with base.html or the
+       Tailwind CDN.                                              */
+
+    /* White cards need something to sit on - a flat white canvas
+       washes them out. #F8FAFC is the landing page's own section
+       band, and this block loads after base.html's white body. */
+    body { background-color: #F8FAFC !important; }
+
+    .pt-wrap, .pt-wrap dt, .pt-wrap dd {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
-    @keyframes fadeInUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+
+    /* Display numerals get the dashboard's heading face. */
+    .pt-h1, .pt-card-h h2, .pt-empty h2,
+    .pt-stage-n, .pt-rail dd, .pt-exit-n, .pt-meter-n, .pt-avatar {
+      font-family: 'Syne', 'DM Sans', sans-serif;
+    }
+
+    /* Machine keys and timestamps: a real monospace, not Syne. */
+    .pt-mono, .pt-when, .pt-stage-key, .pt-mail, .pt-empty code {
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    .pt-wrap { padding: 3.5rem 0 5rem; }
+    .pt-shell { max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
+    .pt-split { display: grid; gap: 1.5rem; }
+
+    /* Eyebrow — the landing page pairs this with every section head */
+    .pt-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: #1e40af; margin-bottom: 1rem;
+    }
+    .pt-eyebrow::before {
+      content: ''; width: 1.5rem; height: 1px; background: currentColor; opacity: 0.4;
+    }
+
+    .pt-h1 {
+      font-weight: 800;
+      font-size: clamp(1.875rem, 1.25rem + 2.6vw, 3rem);
+      line-height: 1.15; letter-spacing: -0.025em; color: #0f172a;
+      margin: 0 0 1rem;
+    }
+    .pt-h1 em { font-style: normal; color: #7C3AED; }
+    .pt-lede {
+      max-width: 34rem; color: #475569; font-size: 1.0625rem;
+      line-height: 1.65; font-weight: 400; margin: 0;
+    }
+
+    /* Period switch — mirrors the landing page's billing toggle */
+    .pt-switch {
+      display: inline-flex; gap: 0.25rem; padding: 0.3125rem;
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .pt-switch a {
+      padding: 0.4375rem 1rem; border-radius: 999px;
+      font-size: 0.8125rem; font-weight: 600;
+      color: #64748b; text-decoration: none;
+      transition: background .2s ease, color .2s ease;
+    }
+    .pt-switch a:hover { color: #0f172a; background: #f1f5f9; }
+    .pt-switch a.is-on { background: #0f172a; color: #fff; }
+    .pt-switch a:focus-visible { outline: 2px solid #7C3AED; outline-offset: 2px; }
+
+    /* Cards — glass-card, the landing page's primary surface */
+    .pt-card {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+      backdrop-filter: blur(20px);
+    }
+    .pt-card-h {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+    }
+    .pt-card-h h2 {
+      font-weight: 700; font-size: 1.125rem;
+      color: #0f172a; margin: 0; letter-spacing: -0.01em;
+    }
+    .pt-card-h p { margin: 0.375rem 0 0; font-size: 0.875rem; color: #64748b; }
+
+    /* ── The funnel — the page's one expressive moment ───────
+       Bar length is the share of visitors still in the flow at
+       that step, so the gap between two bars *is* the drop-off. */
+    .pt-stage { padding: 1.125rem 0; }
+    .pt-stage + .pt-stage { border-top: 1px solid #e2e8f0; }
+    .pt-stage-top {
+      display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
+      margin-bottom: 0.625rem;
+    }
+    .pt-stage-name {
+      font-weight: 700; font-size: 0.9375rem;
+      color: #0f172a;
+    }
+    .pt-stage-key { font-size: 0.75rem; color: #475569; }
+    .pt-stage-n {
+      margin-left: auto; font-weight: 700;
+      font-size: 1.375rem; color: #0f172a; letter-spacing: -0.02em; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .pt-stage-track {
+      height: 0.5rem; border-radius: 999px; background: #e2e8f0; overflow: hidden;
+    }
+    .pt-stage-fill {
+      height: 100%; border-radius: 999px; background: #7C3AED;
+      width: 0; transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+      min-width: 0.5rem;
+    }
+    /* 4.45:1 on the track, not 2.06:1 - the old emerald-500 was the
+       single worst pair on the page. */
+    .pt-stage.is-done .pt-stage-fill { background: #047857; }
+
+
+    /* Exits sit off the chain, so they read as a footnote, not a step */
+    .pt-exits { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #e2e8f0; }
+    .pt-exits-h {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #64748b; margin: 0 0 0.75rem;
+    }
+    .pt-exit {
+      display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
+      padding: 0.5rem 0;
+    }
+    .pt-exit-name { font-size: 0.875rem; font-weight: 600; color: #475569; }
+    .pt-exit-n {
+      margin-left: auto; font-weight: 700;
+      font-size: 0.9375rem; color: #BE185D; font-variant-numeric: tabular-nums;
+    }
+
+    .pt-carry {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0 0 0.25rem;
+      font-size: 0.8125rem; color: #64748b;
+    }
+    .pt-carry b { color: #0f172a; font-weight: 700; }
+    .pt-carry-arrow { color: #64748b; }
+
+    /* Stat rail under the funnel — hairlines, not boxes */
+    .pt-rail {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem 1rem; margin-top: 1.75rem; padding-top: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .pt-rail dt {
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #64748b; margin-bottom: 0.375rem;
+    }
+    .pt-rail dd {
+      margin: 0; font-weight: 700;
+      font-size: 1.5rem; color: #0f172a; letter-spacing: -0.02em; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .pt-rail dd small {
+      display: block; margin-top: 0.375rem;
+      font-size: 0.8125rem; font-weight: 400; color: #64748b; letter-spacing: 0;
+    }
+    .pt-rail dd.is-brand { color: #7C3AED; }
+    .pt-rail dd.is-amber { color: #b45309; }
+
+    /* Pills */
+    .pt-pill {
+      display: inline-flex; align-items: center; gap: 0.3125rem;
+      padding: 0.25rem 0.625rem; border-radius: 999px;
+      font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .pt-pill-slate { background: #f1f5f9; color: #475569; }
+    .pt-pill-amber { background: #fbbf24; color: #000000; }
+    .pt-pill-live { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); color: #334155; border: 1px solid rgba(15, 23, 42, 0.08); }
+    .pt-pill-key {
+      background: #f8fafc; color: #475569; letter-spacing: 0; text-transform: none;
+      border: 1px solid #e2e8f0; font-weight: 500; font-size: 0.75rem;
+    }
+
+    /* Tables */
+    .pt-tbl { width: 100%; border-collapse: collapse; }
+    .pt-tbl th {
+      text-align: left; padding: 0 0.875rem 0.75rem;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #64748b;
+      border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+    }
+    .pt-tbl td {
+      padding: 0.875rem; font-size: 0.875rem; color: #334155;
+      border-bottom: 1px solid #e2e8f0; vertical-align: middle;
+    }
+    .pt-tbl tbody tr:last-child td { border-bottom: 0; }
+    .pt-tbl tbody tr { transition: background .15s ease; }
+    .pt-tbl tbody tr:hover { background: #f8fafc; }
+    .pt-tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .pt-scroll { overflow-x: auto; margin: 0 -0.25rem; padding: 0 0.25rem; }
+
+    .pt-who { display: flex; align-items: center; gap: 0.75rem; }
+    .pt-avatar {
+      width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 0.75rem;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 0.8125rem;
+      color: #ffffff;
+    }
+    .pt-avatar-user { background: linear-gradient(135deg, #7C3AED, #4F46E5); }
+    .pt-avatar-guest { background: #cbd5e1; color: #0f172a; }
+    .pt-name { font-weight: 600; color: #0f172a; font-size: 0.875rem; }
+    .pt-mail { font-size: 0.8125rem; color: #475569; }
+
+    /* Meter for the button breakdown */
+    .pt-meter { display: flex; align-items: center; gap: 0.75rem; }
+    .pt-meter-track { flex: 1; min-width: 3rem; height: 0.375rem; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .pt-meter-fill { height: 100%; background: #7C3AED; border-radius: 999px; }
+    .pt-meter-n { font-weight: 600; font-size: 0.9375rem; color: #0f172a; min-width: 1.75rem; text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Event log — deliberately the quietest thing on the page */
+    .pt-log { max-height: 27rem; overflow-y: auto; }
+    .pt-log .pt-tbl td { padding: 0.625rem 0.875rem; font-size: 0.8125rem; }
+    .pt-log .pt-tbl tbody tr:hover { background: transparent; }
+    .pt-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; flex-shrink: 0; }
+    .pt-dot-open { background: #7C3AED; }
+    .pt-dot-click { background: #64748b; }
+    .pt-when { font-size: 0.8125rem; color: #475569; white-space: nowrap; }
+
+    .pt-empty { text-align: center; padding: 4rem 2rem; }
+    .pt-empty h2 { font-weight: 700; font-size: 1.25rem; color: #0f172a; margin: 0 0 0.75rem; }
+    .pt-empty p { max-width: 30rem; margin: 0 auto 1.5rem; color: #64748b; font-size: 0.9375rem; line-height: 1.7; }
+    .pt-empty code {
+      font-size: 0.8125rem;
+      background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.125rem 0.375rem; border-radius: 0.375rem; color: #0f172a;
+    }
+
+    .pt-back {
+      display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #64748b; transition: color .2s ease;
+    }
+    .pt-back:hover { color: #7C3AED; }
+    .pt-back:focus-visible { outline: 2px solid #7C3AED; outline-offset: 3px; border-radius: 4px; }
+
+    /* Reveal, on the landing page's timing */
+    .pt-in { animation: ptRise .6s ease-out backwards; }
+    @keyframes ptRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+    @media (min-width: 640px) {
+      .pt-rail { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .pt-rail { grid-template-columns: repeat(5, 1fr); }
+      .pt-split { grid-template-columns: 1fr 1fr; align-items: start; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pt-in { animation: none; }
+      .pt-stage-fill { transition: none; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-16">
+<div class="pt-wrap">
+<div class="pt-shell">
 
     <!-- Header -->
-    <div class="mb-12 text-center animate-fadeInUp">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
-            <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            Payment Funnel
+    <header class="pt-in" style="animation-delay:.05s">
+        <div class="flex flex-wrap items-end justify-between gap-6 mb-8">
+            <div>
+                <p class="pt-eyebrow">Payment funnel</p>
+                <h1 class="pt-h1">Payment page <em>tracking</em></h1>
+                <p class="pt-lede">
+                    Who reaches the pricing page, how far they get through it, and what they press along the way.
+                </p>
+            </div>
+            <div class="flex flex-col items-start gap-2">
+                <nav class="pt-switch" aria-label="Reporting period">
+                    <a href="?days=7"  class="{% if days == '7' %}is-on{% endif %}"  {% if days == '7' %}aria-current="true"{% endif %}>7 days</a>
+                    <a href="?days=30" class="{% if days == '30' %}is-on{% endif %}" {% if days == '30' %}aria-current="true"{% endif %}>30 days</a>
+                    <a href="?days=all" class="{% if days == 'all' %}is-on{% endif %}" {% if days == 'all' %}aria-current="true"{% endif %}>All time</a>
+                </nav>
+                <p class="text-xs font-mono text-slate-400">{{ days_label }}</p>
+            </div>
         </div>
-        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-black" style="font-family: 'Syne', sans-serif;">
-            Payment Page <span class="gradient-text">Tracking</span>
-        </h1>
-        <p class="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
-            How often the payment page opens, who opens it, how many times, and what they click along the way.
-        </p>
-
-        <!-- Period filter -->
-        <div class="inline-flex items-center gap-2 mt-6 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm">
-            <a href="?days=7" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all {% if days == '7' %}bg-slate-900 text-white{% else %}text-slate-500 hover:text-black{% endif %}">7 Days</a>
-            <a href="?days=30" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all {% if days == '30' %}bg-slate-900 text-white{% else %}text-slate-500 hover:text-black{% endif %}">30 Days</a>
-            <a href="?days=all" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all {% if days == 'all' %}bg-slate-900 text-white{% else %}text-slate-500 hover:text-black{% endif %}">All Time</a>
-        </div>
-        <p class="text-xs text-slate-400 mt-3 font-mono">{{ days_label }} · refreshed live from PaymentTrackingEvent</p>
-    </div>
+    </header>
 
     {% if not has_data %}
-    <div class="max-w-xl mx-auto text-center bg-white rounded-[2rem] p-12 border border-slate-100">
-        <p class="text-slate-400 text-sm italic mb-4">No payment-flow events recorded yet.</p>
-        <p class="text-slate-400 text-sm leading-relaxed">Events appear the first time someone opens the pricing page
-            (<code class="font-mono bg-slate-50 px-2 py-0.5 rounded">/payment/</code>) or clicks a button in the payment flow.</p>
-    </div>
+        <!-- Empty state: say what to do, not just that there's nothing -->
+        <section class="pt-card pt-empty pt-in" style="animation-delay:.15s">
+            <h2>Nothing has come through yet</h2>
+            <p>
+                This page fills itself the moment anyone opens the pricing page or
+                clicks through the payment flow. Open <code>/payment/</code> in a
+                private window, then come back — the visit will be on the funnel
+                straight away.
+            </p>
+            <a href="?days=all" class="pt-back">Check all-time history</a>
+        </section>
     {% else %}
 
-    <!-- Summary cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
-        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.05s">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Payment page opened</div>
-            <div class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">{{ total_views }}</div>
-            <div class="text-sm text-slate-400 mt-2">across all payment pages</div>
+    <!-- The funnel -->
+    <section class="pt-card pt-in" style="animation-delay:.15s">
+        <div class="pt-card-h">
+            <div>
+                <h2>Where visitors stop</h2>
+                <p>Bar length is the share of visitors still in the flow at that step.</p>
+            </div>
+            {% if conversion_pct is not None %}
+            <span class="pt-pill pt-pill-live">
+                {{ conversion_pct }}% reach a confirmed payment
+            </span>
+            {% endif %}
         </div>
-        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.1s">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Button clicks</div>
-            <div class="text-4xl font-bold text-purple-600" style="font-family: 'Syne', sans-serif;">{{ total_clicks }}</div>
-            <div class="text-sm text-slate-400 mt-2">in the payment flow</div>
-        </div>
-        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.15s">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Logged-in users</div>
-            <div class="text-4xl font-bold text-blue-600" style="font-family: 'Syne', sans-serif;">{{ unique_users }}</div>
-            <div class="text-sm text-slate-400 mt-2">distinct accounts</div>
-        </div>
-        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.2s">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Visitors</div>
-            <div class="text-4xl font-bold text-emerald-600" style="font-family: 'Syne', sans-serif;">{{ unique_visitors }}</div>
-            <div class="text-sm text-slate-400 mt-2">logged-in + guests</div>
-        </div>
-        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.25s">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Already paying</div>
-            <div class="text-4xl font-bold text-amber-500" style="font-family: 'Syne', sans-serif;">{{ paying_users }}</div>
-            <div class="text-sm text-slate-400 mt-2">active plan, came back to pay</div>
-        </div>
-    </div>
 
-    <!-- Per-page breakdown -->
-    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.25s">
-            <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Opens by page</h2>
-            <p class="text-slate-500 text-sm mb-8">Every step of the flow, in the order visitors hit it.</p>
+        {% for row in page_rows %}
+        <div class="pt-stage {% if row.page == 'payment_success' %}is-done{% endif %}">
+            <div class="pt-stage-top">
+                <span class="pt-stage-name">{{ row.label }}</span>
+                <span class="pt-stage-key">{{ row.page }}</span>
+                <span class="pt-stage-n">{{ row.views }}</span>
+            </div>
+            <div class="pt-stage-track">
+                <div class="pt-stage-fill" data-w="{% widthratio row.views max_views 100 %}"></div>
+            </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-slate-50">
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Page</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Views</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Clicks</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Carried on to</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for row in page_rows %}
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4">
-                            <div class="font-bold text-black">{{ row.label }}</div>
-                            <div class="text-xs font-mono text-slate-400">{{ row.page }}</div>
-                        </td>
-                        <td class="py-4 font-bold text-black">{{ row.views }}</td>
-                        <td class="py-4 text-slate-500">{{ row.clicks }}</td>
-                        <td class="py-4 text-sm text-slate-400">
-                            {% if row.continue_pct is not None %}
-                                {{ row.continue_pct }}% → {{ row.next_label }}
-                            {% elif row.next_label %}
-                                0% → {{ row.next_label }}
-                            {% else %}—{% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" class="py-8 text-center text-slate-400 text-sm italic">No page opens in this period.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% if row.next_label %}
+            <div class="pt-carry">
+                <span class="pt-carry-arrow" aria-hidden="true">&darr;</span>
+                <span>
+                    {% if row.continue_pct %}
+                        <b>{% if row.continue_pct > 100 %}{{ row.continue_pct }}%+{% else %}{{ row.continue_pct }}%{% endif %}</b>
+                        carried on to {{ row.next_label }}
+                    {% else %}
+                        <b>Nobody</b> carried on to {{ row.next_label }}
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
         </div>
-    </div>
+        {% empty %}
+        <p class="py-6 text-center text-slate-400 text-sm">No page opens recorded in this period.</p>
+        {% endfor %}
 
-    <!-- Button clicks -->
-    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.3s">
-        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Buttons clicked in the flow</h2>
-        <p class="text-slate-500 text-sm mb-8">What users press on the pricing &amp; manual payment pages.</p>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-slate-50">
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Action</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">On page</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plan</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Clicks</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for row in action_rows %}
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 font-bold text-black">{{ row.action_label }}</td>
-                        <td class="py-4 text-slate-500 text-sm">{{ row.page_label }}</td>
-                        <td class="py-4">
-                            {% if row.plan_type %}
-                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-900 font-mono text-xs font-bold">{{ row.plan_type }}</span>
-                            {% else %}<span class="text-slate-300">—</span>{% endif %}
-                        </td>
-                        <td class="py-4 text-right">
-                            <div class="inline-flex items-center gap-3 justify-end">
-                                <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-purple-500 rounded-full" style="width: {% widthratio row.count action_rows.0.count 100 %}%"></div>
+        {% if exit_rows %}
+        <div class="pt-exits">
+            <p class="pt-exits-h">Left the flow here</p>
+            {% for row in exit_rows %}
+            <div class="pt-exit">
+                <span class="pt-exit-name">{{ row.label }}</span>
+                <span class="pt-stage-key">{{ row.page }}</span>
+                <span class="pt-exit-n">{{ row.views }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Summary rail -->
+        <dl class="pt-rail">
+            <div>
+                <dt>Pricing page opens</dt>
+                <dd>{{ entry_views }}<small>{{ total_clicks }} clicks across the flow</small></dd>
+            </div>
+            <div>
+                <dt>Paid</dt>
+                <dd class="is-brand">{{ success_views }}<small>confirmed payments</small></dd>
+            </div>
+            <div>
+                <dt>Conversion</dt>
+                <dd>{% if conversion_pct is not None %}{{ conversion_pct }}%{% else %}&mdash;{% endif %}<small>pricing to confirmed payment</small></dd>
+            </div>
+            <div>
+                <dt>Visitors</dt>
+                <dd>{{ unique_visitors }}<small>{{ unique_users }} signed in</small></dd>
+            </div>
+            <div>
+                <dt>Already paying</dt>
+                <dd class="is-amber">{{ paying_users }}<small>renewal visits</small></dd>
+            </div>
+        </dl>
+    </section>
+
+    <!-- Breakdown -->
+    <div class="pt-split mt-6">
+
+        <!-- What people press -->
+        <section class="pt-card pt-in" style="animation-delay:.25s">
+            <div class="pt-card-h">
+                <div>
+                    <h2>What they press</h2>
+                    <p>Buttons and links clicked across the flow.</p>
+                </div>
+            </div>
+            <div class="pt-scroll">
+                <table class="pt-tbl">
+                    <thead>
+                        <tr>
+                            <th scope="col">Action</th>
+                            <th scope="col">Where</th>
+                            <th scope="col" class="num">Clicks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in action_rows %}
+                        <tr>
+                            <td>
+                                <div style="font-weight:700;color:#0f172a;">{{ row.action_label }}</div>
+                                <div style="margin-top:.375rem;display:flex;gap:.375rem;flex-wrap:wrap;">
+                                    <span class="pt-pill pt-pill-key">{{ row.action }}</span>
+                                    {% if row.plan_type %}<span class="pt-pill pt-pill-slate">{{ row.plan_type }}</span>{% endif %}
                                 </div>
-                                <span class="font-bold text-black w-10 text-right">{{ row.count }}</span>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" class="py-8 text-center text-slate-400 text-sm italic">No clicks recorded in this period.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Per user -->
-    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.35s">
-            <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Users who opened payment</h2>
-            <p class="text-slate-500 text-sm mb-8">Log-in identities plus anonymous guest sessions. Sorted by most opens. <span class="font-semibold text-amber-600">Active</span> means they already have a running plan.</p>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-slate-50">
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Identity</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plan</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Opens</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Clicks</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Last activity</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for row in user_rows %}
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl {% if row.kind == 'user' %}bg-gradient-to-br from-blue-600 to-purple-600{% else %}bg-slate-200{% endif %} flex items-center justify-center text-white font-black text-xs">
-                                    {% if row.kind == 'user' %}{{ row.display|slice:":1"|upper }}{% else %}<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>{% endif %}
-                                </div>
-                                        <div>
-                                            <div class="font-bold text-black text-sm">{{ row.display }}</div>
-                                            {% if row.email %}<div class="text-xs text-slate-400">{{ row.email }}</div>{% endif %}
-                                        </div>
+                            </td>
+                            <td style="color:#64748b;font-size:.8125rem;">{{ row.page_label }}</td>
+                            <td class="num">
+                                <div class="pt-meter">
+                                    <div class="pt-meter-track">
+                                        <div class="pt-meter-fill" style="width:{% widthratio row.count action_rows.0.count 100 %}%"></div>
                                     </div>
+                                    <span class="pt-meter-n">{{ row.count }}</span>
                                 </div>
                             </td>
-                            <td class="py-4"><span class="text-xs font-mono text-slate-400">{{ row.identity }}</span></td>
-                            <td class="py-4">
-                                {% if row.is_paying %}
-                                <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider">Active</span>
-                                {% else %}
-                                <span class="text-xs text-slate-300">—</span>
-                                {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="py-8 text-center text-slate-400 text-sm">No clicks in this period.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Who came -->
+        <section class="pt-card pt-in" style="animation-delay:.3s">
+            <div class="pt-card-h">
+                <div>
+                    <h2>Who opened it</h2>
+                    <p>The most active visitors, signed-in and guest.</p>
+                </div>
+            </div>
+            <div class="pt-scroll" style="max-height:31rem;overflow-y:auto;">
+                <table class="pt-tbl">
+                    <thead>
+                        <tr>
+                            <th scope="col">Visitor</th>
+                            <th scope="col" class="num">Opens</th>
+                            <th scope="col" class="num">Clicks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in user_rows %}
+                        <tr>
+                            <td>
+                                <div class="pt-who">
+                                    <span class="pt-avatar {% if row.kind == 'user' %}pt-avatar-user{% else %}pt-avatar-guest{% endif %}">
+                                        {% if row.kind == 'user' %}{{ row.display|slice:":1"|upper }}{% else %}&middot;{% endif %}
+                                    </span>
+                                    <span>
+                                        <span class="pt-name" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                                            {{ row.display }}
+                                            {% if row.is_paying %}<span class="pt-pill pt-pill-amber">Active plan</span>{% endif %}
+                                        </span>
+                                        <span class="pt-mail" style="display:block;">{% if row.email %}{{ row.email }}{% else %}{{ row.identity }}{% endif %}</span>
+                                    </span>
+                                </div>
                             </td>
-
-                        <td class="py-4 font-bold text-black">{{ row.views }}</td>
-                        <td class="py-4 text-slate-500">{{ row.clicks }}</td>
-                        <td class="py-4 text-right text-xs text-slate-400">{{ row.last_at|date:"Y-m-d H:i" }}</td>
-                    </tr>
-                    {% empty %}
-                        <tr><td colspan="6" class="py-8 text-center text-slate-400 text-sm italic">No visitors in this period.</td></tr>
-
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <td class="num" style="font-weight:700;color:#0f172a;">{{ row.views }}</td>
+                            <td class="num" style="color:#64748b;">{{ row.clicks }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="py-8 text-center text-slate-400 text-sm">No visitors in this period.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
-    <!-- Recent events -->
-    <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 animate-fadeInUp" style="animation-delay: 0.4s">
-        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Recent events</h2>
-        <p class="text-slate-500 text-sm mb-8">The last 100 recorded openings and clicks.</p>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
+    <!-- Raw log: diagnostic, so kept visually quiet -->
+    <section class="pt-card mt-6 pt-in" style="animation-delay:.35s">
+        <div class="pt-card-h">
+            <div>
+                <h2>Recent activity</h2>
+                <p>The last 100 opens and clicks, newest first.</p>
+            </div>
+        </div>
+        <div class="pt-scroll pt-log">
+            <table class="pt-tbl">
                 <thead>
-                    <tr class="border-b border-slate-50">
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">When</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Type</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Page</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Action</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plan</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Who</th>
+                    <tr>
+                        <th scope="col">When</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Page</th>
+                        <th scope="col">Action</th>
+                        <th scope="col">Who</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody>
                     {% for row in recent_rows %}
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-3 text-xs text-slate-500 whitespace-nowrap">{{ row.created|date:"Y-m-d H:i:s" }}</td>
-                        <td class="py-3">
-                            {% if row.type == 'page_view' %}
-                            <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider">Open</span>
-                            {% else %}
-                            <span class="px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 text-[10px] font-bold uppercase tracking-wider">Click</span>
-                            {% endif %}
+                    <tr>
+                        <td class="pt-when">{{ row.created|date:"Y-m-d H:i:s" }}</td>
+                        <td>
+                            <span style="display:inline-flex;align-items:center;gap:.5rem;">
+                                <span class="pt-dot {% if row.type == 'page_view' %}pt-dot-open{% else %}pt-dot-click{% endif %}"></span>
+                                <span style="font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#64748b;">{% if row.type == 'page_view' %}Open{% else %}Click{% endif %}</span>
+                            </span>
                         </td>
-                        <td class="py-3 text-sm text-slate-600">{{ row.page_label }}</td>
-                        <td class="py-3 text-sm text-slate-600">
-                            {% if row.action %}{{ row.action_label }}{% else %}<span class="text-slate-300">—</span>{% endif %}
-                        </td>
-                        <td class="py-3 text-xs">
-                            {% if row.plan_type %}<span class="font-mono bg-slate-100 px-2 py-0.5 rounded font-bold">{{ row.plan_type }}</span>{% else %}<span class="text-slate-300">—</span>{% endif %}
-                        </td>
-                        <td class="py-3 text-right text-xs text-slate-500">
-                            {% if row.user %}@{{ row.user }}{% else %}<span class="font-mono">{{ row.session }}</span>{% endif %}
-                        </td>
+                        <td>{{ row.page_label }}</td>
+                        <td style="color:#64748b;">{% if row.action %}{{ row.action_label }}{% else %}<span style="color:#cbd5e1;">&mdash;</span>{% endif %}</td>
+                        <td style="color:#64748b;font-size:.8125rem;">{% if row.user %}@{{ row.user }}{% else %}<span class="pt-when">{{ row.session }}</span>{% endif %}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="py-8 text-center text-slate-400 text-sm italic">No events yet.</td></tr>
+                    <tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">Nothing recorded yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
     {% endif %}
 
-    <div class="mt-16 text-center">
-        <a href="{% url 'manage_dashboard' %}" class="text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors">← Back to Manage</a>
+    <div class="mt-14">
+        <a href="{% url 'manage_dashboard' %}" class="pt-back">&larr; Back to manage</a>
     </div>
+
 </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Grow the funnel bars once the browser has painted them at 0, so the
+    // width transition actually runs. Percentages, so no resize handling.
+    (function () {
+        var bars = document.querySelectorAll('.pt-stage-fill[data-w]');
+        if (!bars.length) return;
+        var paint = function () {
+            for (var i = 0; i < bars.length; i++) {
+                bars[i].style.width = bars[i].getAttribute('data-w') + '%';
+            }
+        };
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            paint();
+        } else {
+            requestAnimationFrame(function () { requestAnimationFrame(paint); });
+        }
+    })();
+</script>
 {% endblock %}
