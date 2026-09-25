@@ -88,13 +88,15 @@
     .pt-switch a.is-on { background: #0f172a; color: #fff; }
     .pt-switch a:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
 
-    /* Cards — glass-card, the landing page's primary surface */
+    
+    /* Cards — updated to match dashboard sf-card but slightly enhanced */
     .pt-card {
       position: relative;
       background: #fff;
       border: 1px solid rgba(15, 23, 42, 0.10);
       border-radius: 20px;
       box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 16px 36px -20px rgba(15, 23, 42, 0.28);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
     .pt-card::after {
       content: '';
@@ -108,7 +110,111 @@
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask-composite: exclude;
       pointer-events: none;
+      transition: background .18s ease;
     }
+    .pt-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(15, 23, 42, 0.16);
+      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.08), 0 24px 48px -20px rgba(79, 70, 229, 0.35), 0 0 26px -6px rgba(124, 58, 237, 0.22);
+    }
+    .pt-card:hover::after {
+      background: linear-gradient(170deg, #ffffff 0%, rgba(255, 255, 255, 0.25) 42%, rgba(124, 58, 237, 0.45) 100%);
+    }
+
+    /* Horizontal Pipeline */
+    .pt-pipeline {
+      display: flex;
+      align-items: center;
+      padding: 2.5rem 1rem 3rem 1rem;
+      margin: 0 -1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .pt-pipeline::-webkit-scrollbar { display: none; }
+    
+    .pt-pipe-node {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .pt-pipe-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 11rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      position: relative;
+      z-index: 2;
+      transition: transform .2s ease, border-color .2s ease;
+    }
+    .pt-pipe-content:hover {
+      transform: translateY(-4px);
+      border-color: #a78bfa;
+    }
+    .pt-pipe-node.is-done .pt-pipe-content {
+      border-color: #34d399;
+      box-shadow: 0 4px 15px rgba(52, 211, 153, 0.2);
+    }
+    .pt-pipe-name {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #0f172a;
+      text-align: center;
+      margin-bottom: 0.25rem;
+      line-height: 1.2;
+    }
+    .pt-pipe-key { font-size: 0.6875rem; color: #64748b; margin-bottom: 0.75rem; font-family: ui-monospace, monospace; }
+    .pt-pipe-n {
+      font-weight: 800;
+      font-size: 2.25rem;
+      color: #6d28d9;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      font-family: 'Syne', sans-serif;
+    }
+    .pt-pipe-node.is-done .pt-pipe-n { color: #047857; }
+
+    .pt-pipe-connector {
+      width: 5rem;
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      margin: 0 0.5rem;
+    }
+    .pt-pipe-line {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: linear-gradient(90deg, #a78bfa, #6d28d9);
+      border-radius: 3px;
+      width: 0;
+      transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 10px rgba(109, 40, 217, 0.5);
+    }
+    .pt-pipe-pct {
+      position: absolute;
+      top: -2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #6d28d9;
+      background: #f5f3ff;
+      padding: 0.25rem 0.625rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      border: 1px solid #ede9fe;
+      box-shadow: 0 2px 4px rgba(109, 40, 217, 0.1);
+    }
+
     .pt-card-h {
       display: flex; align-items: baseline; justify-content: space-between;
       gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
@@ -119,36 +225,7 @@
     }
     .pt-card-h p { margin: 0.375rem 0 0; font-size: 0.875rem; color: #64748b; }
 
-    /* ── The funnel — the page's one expressive moment ───────
-       Bar length is the share of visitors still in the flow at
-       that step, so the gap between two bars *is* the drop-off. */
-    .pt-stage { padding: 1.125rem 0; }
-    .pt-stage + .pt-stage { border-top: 1px solid #e2e8f0; }
-    .pt-stage-top {
-      display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
-      margin-bottom: 0.625rem;
-    }
-    .pt-stage-name {
-      font-weight: 700; font-size: 0.9375rem;
-      color: #0f172a;
-    }
-    .pt-stage-key { font-size: 0.75rem; color: #475569; }
-    .pt-stage-n {
-      margin-left: auto; font-weight: 700;
-      font-size: 1.375rem; color: #0f172a; letter-spacing: -0.02em; line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .pt-stage-track {
-      height: 0.5rem; border-radius: 999px; background: #e2e8f0; overflow: hidden;
-    }
-    .pt-stage-fill {
-      height: 100%; border-radius: 999px; background: #6d28d9;
-      width: 0; transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
-      min-width: 0.5rem;
-    }
-    /* 4.45:1 on the track, not 2.06:1 - the old emerald-500 was the
-       single worst pair on the page. */
-    .pt-stage.is-done .pt-stage-fill { background: #047857; }
+    
 
 
     /* Exits sit off the chain, so they read as a footnote, not a step */
@@ -344,34 +421,29 @@
             {% endif %}
         </div>
 
-        {% for row in page_rows %}
-        <div class="pt-stage {% if row.page == 'payment_success' %}is-done{% endif %}">
-            <div class="pt-stage-top">
-                <span class="pt-stage-name">{{ row.label }}</span>
-                <span class="pt-stage-key">{{ row.page }}</span>
-                <span class="pt-stage-n">{{ row.views }}</span>
-            </div>
-            <div class="pt-stage-track">
-                <div class="pt-stage-fill" data-w="{% widthratio row.views max_views 100 %}"></div>
-            </div>
-
-            {% if row.next_label %}
-            <div class="pt-carry">
-                <span class="pt-carry-arrow" aria-hidden="true">&darr;</span>
-                <span>
+        
+        <div class="pt-pipeline">
+            {% for row in page_rows %}
+            <div class="pt-pipe-node {% if row.page == 'payment_success' %}is-done{% endif %}">
+                <div class="pt-pipe-content">
+                    <span class="pt-pipe-name">{{ row.label }}</span>
+                    <span class="pt-pipe-key">{{ row.page }}</span>
+                    <span class="pt-pipe-n">{{ row.views }}</span>
+                </div>
+                {% if not forloop.last %}
+                <div class="pt-pipe-connector">
+                    <div class="pt-pipe-line" data-w="{% if row.continue_pct > 100 %}100{% else %}{{ row.continue_pct|default:0 }}{% endif %}"></div>
                     {% if row.continue_pct %}
-                        <b>{% if row.continue_pct > 100 %}{{ row.continue_pct }}%+{% else %}{{ row.continue_pct }}%{% endif %}</b>
-                        carried on to {{ row.next_label }}
-                    {% else %}
-                        <b>Nobody</b> carried on to {{ row.next_label }}
+                    <span class="pt-pipe-pct">{% if row.continue_pct > 100 %}{{ row.continue_pct }}%+{% else %}{{ row.continue_pct }}%{% endif %}</span>
                     {% endif %}
-                </span>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+            {% empty %}
+            <p class="py-6 text-center text-slate-400 text-sm">No page opens recorded in this period.</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="py-6 text-center text-slate-400 text-sm">No page opens recorded in this period.</p>
-        {% endfor %}
+
 
         {% if exit_rows %}
         <div class="pt-exits">
@@ -558,14 +630,14 @@
 
 {% block extra_scripts %}
 <script>
-    // Grow the funnel bars once the browser has painted them at 0, so the
-    // width transition actually runs. Percentages, so no resize handling.
+    
+    // Grow the funnel lines once the browser has painted them at 0
     (function () {
-        var bars = document.querySelectorAll('.pt-stage-fill[data-w]');
-        if (!bars.length) return;
+        var lines = document.querySelectorAll('.pt-pipe-line[data-w]');
+        if (!lines.length) return;
         var paint = function () {
-            for (var i = 0; i < bars.length; i++) {
-                bars[i].style.width = bars[i].getAttribute('data-w') + '%';
+            for (var i = 0; i < lines.length; i++) {
+                lines[i].style.width = lines[i].getAttribute('data-w') + '%';
             }
         };
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -574,5 +646,6 @@
             requestAnimationFrame(function () { requestAnimationFrame(paint); });
         }
     })();
+
 </script>
 {% endblock %}
