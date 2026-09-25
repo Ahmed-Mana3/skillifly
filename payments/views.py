@@ -34,6 +34,17 @@ PAYMENT_PAGE_LABELS = {
     'fawaterk_pending': 'Payment pending',
 }
 
+# Canonical order of the funnel. The admin report walks pages in this order so
+# "drop-off after" is a real step-to-step number instead of a by-volume guess.
+PAYMENT_FUNNEL_ORDER = [
+    'payment',
+    'manual_payment',
+    'fawaterk_checkout',
+    'fawaterk_pending',
+    'payment_success',
+    'payment_failure',
+]
+
 PAYMENT_ACTION_LABELS = {
     'plan_monthly': 'Get monthly plan',
     'plan_annual': 'Get annual plan',
@@ -53,14 +64,29 @@ PAYMENT_ACTION_LABELS = {
 }
 
 
+SF_FUNNEL_COOKIE = 'sf_payment_vid'
+SF_FUNNEL_SESSION_KEY = 'sf_payment_vid'
+
+
 def _payment_visitor_id(request):
-    """Stable visitor id for the current request: cookie > session > 'anon'."""
-    vid = request.COOKIES.get('sf_payment_vid') or ''
+    """Stable visitor id for the current request.
+
+    Both the server-rendered page views and the JS click beacon must resolve to
+    the *same* id, otherwise one real visitor shows up as two identities in the
+    report (opens under the Django session key, clicks under the JS id).
+
+    Resolution order: first-party cookie -> id stored in the session -> freshly
+    minted id (also persisted in the session so it survives the response).
+    """
+    vid = (request.COOKIES.get(SF_FUNNEL_COOKIE) or '').strip()
     if vid:
-        return vid
-    if request.session.session_key:
-        return request.session.session_key
-    return 'anon'
+        return vid[:64]
+
+    vid = (request.session.get(SF_FUNNEL_SESSION_KEY) or '').strip()
+    if not vid:
+        vid = f'pvid_{uuid.uuid4().hex[:12]}'
+        request.session[SF_FUNNEL_SESSION_KEY] = vid
+    return vid[:64]
 
 
 def _track_payment_event(request, event_type, page, action='', plan_type=''):
@@ -78,13 +104,15 @@ def _track_payment_event(request, event_type, page, action='', plan_type=''):
             if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
                 return  # don't let admins pollute their own funnel stats
             user = request.user
-        elif not request.session.session_key:
-            # Give anonymous visitors a stable id so repeated page opens merge
-            request.session.create()
+
+        # Resolve (and memoise on the request) the visitor id so the tracker
+        # partial can hand the very same value to payment_funnel.js.
+        vid = _payment_visitor_id(request)
+        request._sf_funnel_vid = vid
 
         PaymentTrackingEvent.objects.create(
             user=user,
-            session_id=_payment_visitor_id(request),
+            session_id=vid,
             event_type=event_type,
             page=page[:60],
             action=(action or '')[:100],
@@ -110,18 +138,23 @@ def payment_funnel_track(request):
         return JsonResponse({'status': 'error', 'message': 'Only POST allowed'}, status=405)
 
     try:
-        if request.content_type == 'application/json' or not request.content_type:
-            data = json.loads(request.body)
-        else:
-            data = json.loads(request.body.decode('utf-8'))
-    except (ValueError, TypeError):
+        # sendBeacon posts text/plain (CORS-safelisted, so no preflight) while
+        # the fetch fallback posts JSON - parse the raw body either way.
+        data = json.loads(request.body.decode('utf-8') or '{}')
+    except (ValueError, TypeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'message': 'Bad JSON'}, status=400)
+
+    if not isinstance(data, dict):
         return JsonResponse({'status': 'error', 'message': 'Bad JSON'}, status=400)
 
     page = (data.get('page') or '').strip()[:60]
     action = (data.get('action') or '').strip()[:100]
     plan_type = (data.get('plan_type') or '').strip()[:20]
-    if not page:
-        return JsonResponse({'status': 'error', 'message': 'Missing page'}, status=400)
+    if page not in PAYMENT_PAGE_LABELS:
+        # Unknown page = junk or a client bug; never let it into the report.
+        return JsonResponse({'status': 'error', 'message': 'Unknown page'}, status=400)
+    if plan_type and plan_type not in PLAN_CATALOGUE:
+        plan_type = ''
 
     _track_payment_event(request, 'click', page, action, plan_type)
 

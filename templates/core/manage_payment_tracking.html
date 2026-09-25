@@ -82,8 +82,9 @@
 
     <!-- Per-page breakdown -->
     <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.25s">
-        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Opens by page</h2>
-        <p class="text-slate-500 text-sm mb-8">Every step of the flow that was rendered.</p>
+            <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Opens by page</h2>
+            <p class="text-slate-500 text-sm mb-8">Every step of the flow, in the order visitors hit it.</p>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
@@ -91,7 +92,7 @@
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Page</th>
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Views</th>
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Clicks</th>
-                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Drop-off after</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Carried on to</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -104,8 +105,10 @@
                         <td class="py-4 font-bold text-black">{{ row.views }}</td>
                         <td class="py-4 text-slate-500">{{ row.clicks }}</td>
                         <td class="py-4 text-sm text-slate-400">
-                            {% if row.dropoff_pct is not None %}
-                                {{ row.dropoff_pct }}% → {{ row.next_label }}
+                            {% if row.continue_pct is not None %}
+                                {{ row.continue_pct }}% → {{ row.next_label }}
+                            {% elif row.next_label %}
+                                0% → {{ row.next_label }}
                             {% else %}—{% endif %}
                         </td>
                     </tr>

@@ -2703,7 +2703,7 @@ def manage_dashboard(request):
 def manage_payment_tracking(request):
     """Payment-funnel analytics: how often each payment page opens + which buttons were clicked."""
     from core.models import PaymentTrackingEvent  # noqa: F401
-    from payments.views import PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS
+    from payments.views import PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS, PAYMENT_FUNNEL_ORDER
     from django.db.models import Count, Max, Q as _Q
 
     days_param = request.GET.get('days', '30')
@@ -2726,32 +2726,46 @@ def manage_payment_tracking(request):
     total_views = base_qs.filter(event_type='page_view').count()
     total_clicks = clicks_qs.count()
     unique_users = base_qs.exclude(user__isnull=True).values('user').distinct().count()
-    unique_visitors = base_qs.values('session_id').distinct().count()
+    unique_visitors = base_qs.exclude(session_id='anon').values('session_id').distinct().count()
 
-    # Per-page breakdown (drop-off = % of previous page that kept going)
-    page_raw = (
-        base_qs.values('page')
-        .annotate(
+    # Per-page breakdown, walked in the real funnel order so "carried on to ..."
+    # is a genuine step-to-step number (ordering by volume made it nonsense).
+    page_by_key = {
+        r['page']: {
+            'views': r['views'],
+            'clicks': r['clicks'],
+        }
+        for r in base_qs.values('page').annotate(
             views=Count('id', filter=_Q(event_type='page_view')),
             clicks=Count('id', filter=_Q(event_type='click')),
         )
-        .order_by('-views')
+    }
+
+    ordered_pages = [p for p in PAYMENT_FUNNEL_ORDER if p in page_by_key]
+    ordered_pages += sorted(
+        (p for p in page_by_key if p not in PAYMENT_FUNNEL_ORDER),
+        key=lambda p: -page_by_key[p]['views'],
     )
+
+    def _page_label(key):
+        return PAYMENT_PAGE_LABELS.get(key, key.replace('_', ' ').title())
+
     page_rows = []
-    for i, r in enumerate(page_raw):
-        prev_views = page_raw[i - 1]['views'] if i > 0 else None
-        next_label = (
-            PAYMENT_PAGE_LABELS.get(page_raw[i + 1]['page'], page_raw[i + 1]['page'].replace('_', ' ').title())
-            if i + 1 < len(page_raw) else None
-        )
-        dropoff_pct = (round(r['views'] / prev_views * 100) if (prev_views and r['views']) else None) if i > 0 else None
+    for i, key in enumerate(ordered_pages):
+        stats = page_by_key[key]
+        next_key = ordered_pages[i + 1] if i + 1 < len(ordered_pages) else None
+        next_views = page_by_key[next_key]['views'] if next_key else 0
         page_rows.append({
-            'page': r['page'],
-            'label': PAYMENT_PAGE_LABELS.get(r['page'], r['page'].replace('_', ' ').title()),
-            'views': r['views'],
-            'clicks': r['clicks'],
-            'next_label': next_label,
-            'dropoff_pct': dropoff_pct,
+            'page': key,
+            'label': _page_label(key),
+            'views': stats['views'],
+            'clicks': stats['clicks'],
+            'next_label': _page_label(next_key) if next_key else None,
+            # % of this page's opens that reached the next step
+            'continue_pct': (
+                round(next_views / stats['views'] * 100)
+                if stats['views'] and next_views else None
+            ),
         })
 
     # Button-click breakdown
@@ -2792,6 +2806,7 @@ def manage_payment_tracking(request):
 
     guest_raw = (
         base_qs.filter(user__isnull=True)
+        .exclude(session_id='anon')
         .values('session_id')
         .annotate(
             views=Count('id', filter=_Q(event_type='page_view')),

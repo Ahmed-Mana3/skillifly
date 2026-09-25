@@ -120,7 +120,7 @@
         </div>
         <p class="text-sm text-slate-400 font-medium">Billed monthly.</p>
       </div>
-      <button class="btn-ghost w-full justify-center" data-pf-action="plan_monthly" onclick="goToPayment('monthly')">Get monthly plan</button>
+      <button class="btn-ghost w-full justify-center" data-pf-action="plan_monthly" data-pf-plan="monthly" onclick="goToPayment('monthly')">Get monthly plan</button>
     </div>
 
     <!-- Annual (highlighted) -->
@@ -141,7 +141,7 @@
         <p class="text-sm text-emerald-400 font-medium">Save 739 EGP vs monthly</p>
       </div>
 
-      <button class="btn-primary w-full justify-center py-3.5" data-pf-action="plan_annual" onclick="goToPayment('pro_annual')">
+      <button class="btn-primary w-full justify-center py-3.5" data-pf-action="plan_annual" data-pf-plan="pro_annual" onclick="goToPayment('pro_annual')">
         Get annual plan
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

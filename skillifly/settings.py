@@ -137,6 +137,7 @@ TEMPLATES = [
                 'core.context_processors.auth_providers',
                 'core.context_processors.navbar_profile',
                 'core.context_processors.site_globals',
+                'core.context_processors.payment_funnel',
             ],
         },
     },

@@ -70,6 +70,15 @@ def navbar_profile(request):
         'nav_is_school_admin': nav_account_type == 'school_admin',
     }
 
+def payment_funnel(request):
+    """Hand the server-resolved payment-funnel visitor id to the tracker partial.
+
+    `_track_payment_event` stashes it on the request before the view renders, so
+    this is free on every other page (no session access, no cookie write).
+    """
+    return {'funnel_vid': getattr(request, '_sf_funnel_vid', '')}
+
+
 def site_globals(request):
     """Provide the main site URL for cross-subdomain linking."""
     host = request.get_host()
