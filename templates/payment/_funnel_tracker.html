@@ -1,5 +1,4 @@
 {% load static %}
-{% if not user.is_staff %}
 <script>
   window.SF_PAYMENT_FUNNEL = {
     page: '{{ funnel_page|escapejs }}',
@@ -8,4 +7,3 @@
   };
 </script>
 <script src="{% static 'js/payment_funnel.js' %}"></script>
-{% endif %}

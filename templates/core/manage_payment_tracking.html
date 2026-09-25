@@ -57,7 +57,7 @@
     {% else %}
 
     <!-- Summary cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
         <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.05s">
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Payment page opened</div>
             <div class="text-4xl font-bold text-black" style="font-family: 'Syne', sans-serif;">{{ total_views }}</div>
@@ -77,6 +77,11 @@
             <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Visitors</div>
             <div class="text-4xl font-bold text-emerald-600" style="font-family: 'Syne', sans-serif;">{{ unique_visitors }}</div>
             <div class="text-sm text-slate-400 mt-2">logged-in + guests</div>
+        </div>
+        <div class="manage-card bg-white rounded-[2rem] p-8 animate-fadeInUp" style="animation-delay: 0.25s">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Already paying</div>
+            <div class="text-4xl font-bold text-amber-500" style="font-family: 'Syne', sans-serif;">{{ paying_users }}</div>
+            <div class="text-sm text-slate-400 mt-2">active plan, came back to pay</div>
         </div>
     </div>
 
@@ -163,14 +168,16 @@
 
     <!-- Per user -->
     <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 mb-10 animate-fadeInUp" style="animation-delay: 0.35s">
-        <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Users who opened payment</h2>
-        <p class="text-slate-500 text-sm mb-8">Log-in identities plus anonymous guest sessions. Sorted by most opens.</p>
+            <h2 class="text-3xl font-bold text-black mb-2" style="font-family: 'Syne', sans-serif;">Users who opened payment</h2>
+            <p class="text-slate-500 text-sm mb-8">Log-in identities plus anonymous guest sessions. Sorted by most opens. <span class="font-semibold text-amber-600">Active</span> means they already have a running plan.</p>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
                     <tr class="border-b border-slate-50">
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User</th>
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Identity</th>
+                        <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plan</th>
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Opens</th>
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Clicks</th>
                         <th class="pb-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Last activity</th>
@@ -184,19 +191,29 @@
                                 <div class="w-9 h-9 rounded-xl {% if row.kind == 'user' %}bg-gradient-to-br from-blue-600 to-purple-600{% else %}bg-slate-200{% endif %} flex items-center justify-center text-white font-black text-xs">
                                     {% if row.kind == 'user' %}{{ row.display|slice:":1"|upper }}{% else %}<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>{% endif %}
                                 </div>
-                                <div>
-                                    <div class="font-bold text-black text-sm">{{ row.display }}</div>
-                                    {% if row.email %}<div class="text-xs text-slate-400">{{ row.email }}</div>{% endif %}
+                                        <div>
+                                            <div class="font-bold text-black text-sm">{{ row.display }}</div>
+                                            {% if row.email %}<div class="text-xs text-slate-400">{{ row.email }}</div>{% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="py-4"><span class="text-xs font-mono text-slate-400">{{ row.identity }}</span></td>
+                            </td>
+                            <td class="py-4"><span class="text-xs font-mono text-slate-400">{{ row.identity }}</span></td>
+                            <td class="py-4">
+                                {% if row.is_paying %}
+                                <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider">Active</span>
+                                {% else %}
+                                <span class="text-xs text-slate-300">—</span>
+                                {% endif %}
+                            </td>
+
                         <td class="py-4 font-bold text-black">{{ row.views }}</td>
                         <td class="py-4 text-slate-500">{{ row.clicks }}</td>
                         <td class="py-4 text-right text-xs text-slate-400">{{ row.last_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm italic">No visitors in this period.</td></tr>
+                        <tr><td colspan="6" class="py-8 text-center text-slate-400 text-sm italic">No visitors in this period.</td></tr>
+
                     {% endfor %}
                 </tbody>
             </table>

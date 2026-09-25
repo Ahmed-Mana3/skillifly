@@ -99,10 +99,11 @@ def _track_payment_event(request, event_type, page, action='', plan_type=''):
         if _is_bot_ua(user_agent):
             return
 
+        # Everyone is tracked: signed-in or not, already paid or not, admin or
+        # not. Someone with an active plan opening /payment/ is a renewal signal,
+        # which is exactly what this report exists to surface.
         user = None
         if getattr(request, 'user', None) and request.user.is_authenticated:
-            if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
-                return  # don't let admins pollute their own funnel stats
             user = request.user
 
         # Resolve (and memoise on the request) the visitor id so the tracker

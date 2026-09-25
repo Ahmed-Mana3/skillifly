@@ -2804,6 +2804,17 @@ def manage_payment_tracking(request):
         for u in _CustomUser.objects.filter(id__in=user_ids).select_related('profile'):
             user_map[u.id] = u
 
+    # Who among them is already paying? Same check the portfolio visibility uses
+    # (last paid payment, still inside its window) so renewal intent is visible.
+    from .models import UserPayment as _UserPayment
+    paying_ids = set()
+    if user_ids:
+        for p in _UserPayment.objects.filter(
+            user_id__in=user_ids, status='paid'
+        ).select_related('subscription'):
+            if p.is_active:
+                paying_ids.add(p.user_id)
+
     guest_raw = (
         base_qs.filter(user__isnull=True)
         .exclude(session_id='anon')
@@ -2824,6 +2835,7 @@ def manage_payment_tracking(request):
             'identity': (u.username if u else ''),
             'email': (u.email if u else ''),
             'kind': 'user',
+            'is_paying': r['user'] in paying_ids,
             'views': r['views'],
             'clicks': r['clicks'],
             'last_at': r['last_at'],
@@ -2834,6 +2846,7 @@ def manage_payment_tracking(request):
             'identity': r['session_id'][:16] + ('…' if len(r['session_id']) > 16 else ''),
             'email': '',
             'kind': 'guest',
+            'is_paying': False,
             'views': r['views'],
             'clicks': r['clicks'],
             'last_at': r['last_at'],
@@ -2867,6 +2880,7 @@ def manage_payment_tracking(request):
         'total_clicks': total_clicks,
         'unique_users': unique_users,
         'unique_visitors': unique_visitors,
+        'paying_users': len(paying_ids),
         'page_rows': page_rows,
         'action_rows': action_rows,
         'user_rows': user_rows,

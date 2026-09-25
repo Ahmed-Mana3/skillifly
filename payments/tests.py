@@ -1,10 +1,12 @@
 import json
 import re
+from datetime import timedelta
 
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.utils import timezone
 
-from core.models import CustomUser, PaymentTrackingEvent
+from core.models import CustomUser, PaymentTrackingEvent, Subscription, UserPayment
 
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36'
 BOT_UA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
@@ -108,6 +110,16 @@ class PaymentFunnelIdentityTests(TestCase):
             PaymentTrackingEvent.objects.values('session_id').distinct().count(), 2
         )
 
+    def test_tracker_script_loads_for_staff_too(self):
+        admin = CustomUser.objects.create_user(
+            username='admin_ui', email='admin_ui@example.com',
+            password='Password123!', is_staff=True, is_superuser=True,
+        )
+        self.client.force_login(admin)
+        response = self.client.get(reverse('payment'))
+        self.assertContains(response, 'payment_funnel.js')
+        self.assertTrue(_rendered_vid(response))
+
 
 class PaymentFunnelEndpointTests(TestCase):
     def setUp(self):
@@ -160,14 +172,34 @@ class PaymentFunnelEndpointTests(TestCase):
         self._post({'page': 'payment', 'action': 'plan_monthly'})
         self.assertEqual(PaymentTrackingEvent.objects.count(), 0)
 
-    def test_staff_clicks_are_ignored(self):
+    def test_staff_clicks_are_tracked(self):
+        """Admins are real visitors too - their opens must show up."""
         admin = CustomUser.objects.create_user(
             username='admin_bo', email='admin@example.com',
-            password='Password123!', is_staff=True,
+            password='Password123!', is_staff=True, is_superuser=True,
         )
         self.client.force_login(admin)
+        self.client.get(reverse('payment'))
         self._post({'page': 'payment', 'action': 'plan_monthly'})
-        self.assertEqual(PaymentTrackingEvent.objects.count(), 0)
+        events = PaymentTrackingEvent.objects.all()
+        self.assertEqual(events.count(), 2)
+        self.assertEqual({e.user for e in events}, {admin})
+
+    def test_paid_user_opens_and_clicks_are_tracked(self):
+        user = CustomUser.objects.create_user(
+            username='paid_bo', email='paid@example.com', password='Password123!'
+        )
+        Subscription.objects.create(name='Pro', duration=30, days=30)
+        UserPayment.objects.create(
+            user=user, subscription=Subscription.objects.get(name='Pro'), status='paid'
+        )
+        self.client.force_login(user)
+        self.client.get(reverse('payment'))
+        self._post({'page': 'payment', 'action': 'plan_annual', 'plan_type': 'pro_annual'})
+        self.assertEqual(PaymentTrackingEvent.objects.count(), 2)
+        self.assertEqual(
+            {e.user for e in PaymentTrackingEvent.objects.all()}, {user}
+        )
 
     def test_clicks_are_attributed_to_a_logged_in_user(self):
         user = CustomUser.objects.create_user(
@@ -223,6 +255,30 @@ class PaymentTrackingReportTests(TestCase):
         guest = [r for r in response.context['user_rows'] if r['kind'] == 'guest']
         self.assertEqual(len(guest), 1)
         self.assertEqual((guest[0]['views'], guest[0]['clicks']), (1, 1))
+
+    def test_report_flags_users_who_already_pay(self):
+        payer = CustomUser.objects.create_user(
+            username='payer_bo', email='payer@example.com', password='Password123!'
+        )
+        lapsed = CustomUser.objects.create_user(
+            username='lapsed_bo', email='lapsed@example.com', password='Password123!'
+        )
+        sub = Subscription.objects.create(name='Pro', duration=30, days=30)
+        UserPayment.objects.create(user=payer, subscription=sub, status='paid')
+        old = Subscription.objects.create(name='Old', duration=30, days=30)
+        stale = UserPayment.objects.create(user=lapsed, subscription=old, status='paid')
+        UserPayment.objects.filter(pk=stale.pk).update(
+            date=timezone.now() - timedelta(days=90)
+        )
+
+        self._event('payment', user=payer, session_id='pvid_p')
+        self._event('payment', user=lapsed, session_id='pvid_l')
+
+        response = self.client.get(reverse('manage_payment_tracking'))
+        self.assertEqual(response.context['paying_users'], 1)
+        by_identity = {r['identity']: r for r in response.context['user_rows']}
+        self.assertTrue(by_identity['payer_bo']['is_paying'])
+        self.assertFalse(by_identity['lapsed_bo']['is_paying'])
 
     def test_report_handles_an_empty_period(self):
         response = self.client.get(reverse('manage_payment_tracking') + '?days=7')
