@@ -3482,9 +3482,19 @@ def create_video_upload(request):
             'code': 'quota_exceeded',
         }, status=402)
 
+    is_ar = (
+        request.COOKIES.get('skillifly_lang') == 'ar'
+        or '/ar/' in request.headers.get('Referer', '')
+    )
+    under_development_msg = (
+        'هذه الميزة ما زالت قيد التطوير حالياً.'
+        if is_ar
+        else 'This feature is currently under development.'
+    )
+
     if not cloudflare_stream.is_configured():
         return JsonResponse({
-            'error': 'Video uploads are not available right now. Please try again later.',
+            'error': under_development_msg,
         }, status=503)
 
     # Only ever attach to a project the caller actually owns.
@@ -3503,7 +3513,7 @@ def create_video_upload(request):
         )
     except cloudflare_stream.CloudflareStreamError:
         return JsonResponse({
-            'error': 'We could not start the upload. Please try again in a moment.',
+            'error': under_development_msg,
         }, status=502)
 
     video = Video.objects.create(
