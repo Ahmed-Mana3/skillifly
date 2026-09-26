@@ -180,6 +180,8 @@ class LanguagePreferenceMiddleware:
         '/ar/dashboard/customize/projects/': '/dashboard/customize/projects/',
         '/dashboard/customize/sections-names/': '/ar/dashboard/customize/sections-names/',
         '/ar/dashboard/customize/sections-names/': '/dashboard/customize/sections-names/',
+        '/dashboard/videos/upload/': '/ar/dashboard/videos/upload/',
+        '/ar/dashboard/videos/upload/': '/dashboard/videos/upload/',
     }
 
     def __init__(self, get_response):

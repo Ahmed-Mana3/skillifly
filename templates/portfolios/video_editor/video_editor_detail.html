@@ -288,6 +288,18 @@
     </main>
 
     <script>
+        /* skillifly:cloudflare-player: videos uploaded straight to Cloudflare Stream */
+        function getCloudflareSrc(url) {
+            if (!url || url.indexOf('cloudflarestream.com') === -1) return null;
+            return url.replace(/\/watch(\?.*)?$/, '/iframe');
+        }
+
+        function getDriveId(url) {
+            const regExp = /drive\.google\.com\/(?:file\/d\/|open\?id=)([-\w]+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
         function getYouTubeId(url) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
             const match = url.match(regExp);
@@ -320,6 +332,8 @@
             player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
         } else if (igId) {
             player.src = `https://www.instagram.com/reels/${igId}/embed/`;
+        } else if (getCloudflareSrc(videoUrl)) {
+            player.src = getCloudflareSrc(videoUrl);
         } else if (driveId) {
             player.src = `https://drive.google.com/file/d/${driveId}/preview`;
         } else {

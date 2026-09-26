@@ -305,6 +305,38 @@ MANUAL_PAYMENT_RECIPIENT = os.environ.get("MANUAL_PAYMENT_RECIPIENT", "+20102096
 
 
 # ---------------------------------------------------------------------------
+# Cloudflare Stream (video hosting / transcoding)
+# ---------------------------------------------------------------------------
+# Video bytes never touch this server: the browser uploads straight to
+# Cloudflare with the tus protocol using a one-time URL that Django requests
+# on the user's behalf. The API token stays server-side and is never sent
+# to the browser.
+CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "2f1db5c9cd66cff1901c30b702473c73")
+CLOUDFLARE_STREAM_CUSTOMER_SUBDOMAIN = os.environ.get(
+    "CLOUDFLARE_STREAM_CUSTOMER_SUBDOMAIN",
+    "customer-77q2hblzjugdia3y.cloudflarestream.com",
+)
+# "Stream" template API token with Edit permission (My Profile -> API Tokens).
+# NEVER commit this value — it is env-only.
+CLOUDFLARE_STREAM_API_TOKEN = os.environ.get("CLOUDFLARE_STREAM_API_TOKEN", "")
+# Returned once when the webhook is registered. See the
+# `register_cloudflare_stream_webhook` management command. Env-only.
+CLOUDFLARE_STREAM_WEBHOOK_SECRET = os.environ.get("CLOUDFLARE_STREAM_WEBHOOK_SECRET", "")
+
+# Per-file ceiling enforced in the browser *and* re-checked server-side, so a
+# hand-crafted request cannot bypass it.
+VIDEO_MAX_UPLOAD_BYTES = int(os.environ.get("VIDEO_MAX_UPLOAD_BYTES", str(2 * 1024 * 1024 * 1024)))
+# Longest clip Cloudflare will keep for an upload, in seconds.
+VIDEO_MAX_DURATION_SECONDS = int(os.environ.get("VIDEO_MAX_DURATION_SECONDS", "3600"))
+
+# Storage allowance in bytes, keyed off the existing UserPayment.is_active
+# entitlement. Users can buy more via the storage add-on, which writes
+# Profile.storage_addon_bytes. See CustomUser.storage_quota_bytes.
+VIDEO_STORAGE_FREE_BYTES = int(os.environ.get("VIDEO_STORAGE_FREE_BYTES", str(256 * 1024 * 1024)))
+VIDEO_STORAGE_PRO_BYTES = int(os.environ.get("VIDEO_STORAGE_PRO_BYTES", str(5 * 1024 * 1024 * 1024)))
+
+
+# ---------------------------------------------------------------------------
 # Celery (async tasks)
 # ---------------------------------------------------------------------------
 

@@ -417,6 +417,12 @@
             // API Loaded
         }
 
+        /* skillifly:cloudflare-player: videos uploaded straight to Cloudflare Stream */
+        function getCloudflareSrc(url) {
+            if (!url || url.indexOf('cloudflarestream.com') === -1) return null;
+            return url.replace(/\/watch(\?.*)?$/, '/iframe');
+        }
+
         function getYouTubeId(url) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
             const match = url.match(regExp);
@@ -463,7 +469,10 @@
                 const driveId = getDriveId(url);
 
                 if (entry.isIntersecting) {
-                    if (ytId) {
+                    if (getCloudflareSrc(url)) {
+                        playerContainer.innerHTML = `<iframe src="${getCloudflareSrc(url)}" style="width:100%;height:100%;border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+                        if (shimmer) shimmer.style.display = 'none';
+                    } else if (ytId) {
                         if (glow) glow.style.backgroundImage = `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)`;
                         if (!players[id]) {
                             players[id] = new YT.Player(`player-${id}`, {

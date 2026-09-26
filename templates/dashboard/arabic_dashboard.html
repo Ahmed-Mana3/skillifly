@@ -545,6 +545,14 @@
         <h2 id="tools-title" class="sf-cap mb-3">الأدوات والإعدادات</h2>
         <div class="sf-card overflow-hidden">
 
+          <a href="{% url 'arabic_upload_video' %}" class="sf-row group">
+            <div class="sf-chip tint-blue"><i data-lucide="upload-cloud"></i></div>
+            <div class="min-w-0 flex-1">
+              <h3 class="text-[14px] font-bold text-black">رفع فيديو</h3>
+              <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">أضف فيديو جديدًا إلى حسابك مباشرةً.</p>
+            </div>
+            <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
+          </a>
 
           <a href="{% url 'arabic_reviews_management' %}" class="sf-row group">
             <div class="sf-chip tint-amber"><i data-lucide="star"></i></div>
@@ -724,11 +732,11 @@
         </div>
       </div>
       <div class="sf-project-grid">
-        <div class="sf-project-option sf-project-upload" aria-label="ارفع فيديو — قريبًا">
+        <a href="{% url 'arabic_upload_video' %}" class="sf-project-option sf-project-upload group" aria-label="ارفع فيديو">
           <div class="sf-project-glow"></div><div class="sf-chip tint-blue"><i data-lucide="upload"></i></div>
           <h3>ارفع فيديو</h3><p>أضف أعمالك الجديدة إلى مساحة مشروع منظمة.</p>
-          <div class="sf-project-preview"><i></i><span></span></div><span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> قريبًا</span>
-        </div>
+          <div class="sf-project-preview"><i></i><span></span></div><span class="sf-project-pill"><i data-lucide="arrow-left" class="!h-3 !w-3"></i> ابدأ الرفع</span>
+        </a>
         <div class="sf-project-option sf-project-deliver" aria-label="سلِّم فيديو لعميلك — قريبًا">
           <div class="sf-project-glow"></div><div class="sf-chip tint-amber"><i data-lucide="send"></i></div>
           <h3>سلِّم فيديو</h3><p>شارك العمل المكتمل مع عميلك بطريقة احترافية.</p>

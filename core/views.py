@@ -17,9 +17,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
-from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP, School, SchoolStudent, SchoolVideoRating, SchoolVideoComment, SchoolStudentRating, SiteSettings
+from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP, School, SchoolStudent, SchoolVideoRating, SchoolVideoComment, SchoolStudentRating, SiteSettings, Video
 from .forms import RegisterForm, LoginForm, ReviewForm, ClientReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm, SchoolAdminRegisterForm, ChooseSchoolForm
 import random
 from django.core.mail import send_mail
@@ -3355,3 +3355,288 @@ def image_thumb(request, name, size):
         logger.exception("image_thumb failed for %s (size=%s), serving original", rel, size)
         from django.http import HttpResponseRedirect
         return HttpResponseRedirect(settings.MEDIA_URL + rel)
+
+# ===========================================================================
+# Video uploads (Cloudflare Stream, direct-to-provider via tus)
+# ===========================================================================
+# The browser POSTs the file metadata here, Django asks Cloudflare for a
+# one-time tus upload URL, and the browser then streams the bytes straight to
+# Cloudflare. Neither the video nor the API token ever passes through Django.
+
+# Containers/codecs Cloudflare Stream accepts. Kept server-side as the source
+# of truth and mirrored into the upload page for client-side pre-checking.
+VIDEO_ALLOWED_MIME_TYPES = [
+    'video/mp4',
+    'video/quicktime',
+    'video/x-matroska',
+    'video/webm',
+    'video/x-msvideo',
+    'video/mpeg',
+    'video/x-ms-wmv',
+    'video/3gpp',
+    'video/x-flv',
+    'video/ogg',
+]
+
+
+def _format_bytes(num_bytes):
+    """Human-readable byte size for quota copy."""
+    if not num_bytes:
+        return '0 B'
+    step = 1024.0
+    value = float(num_bytes)
+    for unit in ('B', 'KB', 'MB', 'GB', 'TB'):
+        if value < step:
+            return f'{value:.0f} {unit}' if unit == 'B' else f'{value:.1f} {unit}'
+        value /= step
+    return f'{value:.1f} PB'
+
+
+def _upload_video_context(request):
+    """Shared context for the English and Arabic upload pages."""
+    from . import cloudflare_stream
+
+    quota = request.user.storage_quota_bytes
+    used = request.user.storage_used_bytes
+
+    return {
+        'max_upload_bytes': settings.VIDEO_MAX_UPLOAD_BYTES,
+        'max_upload_mb': max(1, round(settings.VIDEO_MAX_UPLOAD_BYTES / (1024 * 1024))),
+        'max_duration_seconds': settings.VIDEO_MAX_DURATION_SECONDS,
+        'allowed_mime_types': ','.join(VIDEO_ALLOWED_MIME_TYPES),
+        'max_upload_label': _format_bytes(settings.VIDEO_MAX_UPLOAD_BYTES),
+        'storage_quota': quota,
+        'storage_used': used,
+        'storage_free': max(0, quota - used),
+        'storage_quota_label': _format_bytes(quota),
+        'storage_used_label': _format_bytes(used),
+        'storage_free_label': _format_bytes(max(0, quota - used)),
+        'storage_used_pct': min(100, int(round(100.0 * used / quota))) if quota else 0,
+        'cloudflare_configured': cloudflare_stream.is_configured(),
+        'webhook_configured': bool(settings.CLOUDFLARE_STREAM_WEBHOOK_SECRET),
+        'projects': request.user.projects.all(),
+        'recent_videos': request.user.videos.all()[:8],
+    }
+
+
+@login_required
+def upload_video_view(request):
+    """Render the video upload page."""
+    if _is_client_account(request.user):
+        return redirect('client_dashboard')
+    if _is_school_admin_account(request.user):
+        return redirect('school_admin_dashboard')
+    return render(request, 'dashboard/upload_video.html', _upload_video_context(request))
+
+
+@login_required(login_url='arabic_signin')
+def arabic_upload_video_view(request):
+    """Render the Arabic video upload page variant for the language toggle."""
+    if _is_client_account(request.user):
+        return redirect('arabic_client_dashboard')
+    if _is_school_admin_account(request.user):
+        return redirect('arabic_school_admin_dashboard')
+    context = _upload_video_context(request)
+    context['is_arabic_page'] = True
+    return render(request, 'dashboard/arabic_upload_video.html', context)
+
+
+@login_required
+@require_POST
+def create_video_upload(request):
+    """Reserve a Cloudflare Stream upload and hand the browser a one-time URL.
+
+    Returns ``{uploadURL, videoId}``. The quota check runs *before* we call
+    Cloudflare so a user over their limit never causes an upload slot to be
+    created.
+    """
+    from . import cloudflare_stream
+
+    try:
+        data = json.loads(request.body or b'{}')
+    except ValueError:
+        return JsonResponse({'error': 'Could not read the upload request.'}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({'error': 'Could not read the upload request.'}, status=400)
+
+    filename = (data.get('filename') or '').strip()[:255]
+    filesize = data.get('filesize')
+    project_id = data.get('project_id')
+
+    try:
+        filesize = int(filesize)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Could not read the file size.'}, status=400)
+    if filesize <= 0:
+        return JsonResponse({'error': 'That file looks empty.'}, status=400)
+
+    if filesize > settings.VIDEO_MAX_UPLOAD_BYTES:
+        return JsonResponse({
+            'error': f'Videos can be up to {_format_bytes(settings.VIDEO_MAX_UPLOAD_BYTES)}.'
+        }, status=400)
+
+    # Storage quota — checked before Cloudflare is contacted.
+    if not request.user.has_storage_room_for(filesize):
+        return JsonResponse({
+            'error': 'You are out of video storage. Upgrade your storage add-on to upload more.',
+            'code': 'quota_exceeded',
+        }, status=402)
+
+    if not cloudflare_stream.is_configured():
+        return JsonResponse({
+            'error': 'Video uploads are not available right now. Please try again later.',
+        }, status=503)
+
+    # Only ever attach to a project the caller actually owns.
+    project = None
+    if project_id:
+        project = Project.objects.filter(pk=project_id, user=request.user).first()
+        if project is None:
+            return JsonResponse({'error': 'That project could not be found.'}, status=400)
+
+    try:
+        upload_url, stream_uid = cloudflare_stream.create_tus_upload_url(
+            user_id=request.user.id,
+            filesize=filesize,
+            filename=filename or None,
+            max_duration_seconds=settings.VIDEO_MAX_DURATION_SECONDS,
+        )
+    except cloudflare_stream.CloudflareStreamError:
+        return JsonResponse({
+            'error': 'We could not start the upload. Please try again in a moment.',
+        }, status=502)
+
+    video = Video.objects.create(
+        user=request.user,
+        project=project,
+        cloudflare_uid=stream_uid,
+        status='pending',
+        title=filename,
+        size_bytes=filesize,
+    )
+    return JsonResponse({'uploadURL': upload_url, 'videoId': video.id})
+
+
+@login_required
+@require_POST
+def cancel_video_upload(request, video_id):
+    """Abandon an upload and give the space back.
+
+    A 'pending' row holds a reservation against the user's storage allowance, so
+    if a user cancels in the browser (or simply closes the tab) and nothing
+    releases it, their quota shrinks permanently. Deleting the row frees the
+    space; deleting the Cloudflare video stops the bytes being transcoded and
+    billed for.
+    """
+    from . import cloudflare_stream
+
+    video = get_object_or_404(Video, pk=video_id, user=request.user)
+
+    # Once Cloudflare has finished processing, the video is real content the
+    # user may have published, so cancelling must not silently destroy it.
+    if video.status in ('ready', 'error'):
+        return JsonResponse({
+            'error': 'This video has already finished processing and cannot be cancelled.',
+        }, status=409)
+
+    uid = video.cloudflare_uid
+    video.delete()
+
+    # Best effort: the local row is already gone, so a provider hiccup here must
+    # not fail the request. The reaper command cleans up any leftovers.
+    deleted = False
+    if uid:
+        try:
+            deleted = cloudflare_stream.delete_video(uid)
+        except cloudflare_stream.CloudflareStreamError:
+            deleted = False
+
+    return JsonResponse({'cancelled': True, 'cloudflareDeleted': deleted})
+
+
+@login_required
+def video_status(request, video_id):
+    """Report a video's processing state.
+
+    The webhook is the primary path; this is the fallback for when it is
+    delayed or not configured yet. Scoped to the owner, so guessing an id
+    returns 404 rather than someone else's video.
+    """
+    from . import cloudflare_stream
+
+    video = get_object_or_404(Video, pk=video_id, user=request.user)
+
+    # Only still-unfinished uploads need a Cloudflare round trip. The refresh is
+    # best effort: if Cloudflare is unreachable or unconfigured we keep the
+    # status we already have rather than failing the user's page.
+    if video.status in ('pending', 'processing'):
+        try:
+            result = cloudflare_stream.get_video(video.cloudflare_uid)
+        except cloudflare_stream.CloudflareStreamError:
+            result = None
+        if result and cloudflare_stream.apply_stream_result(video, result):
+            video.save(update_fields=[
+                'status', 'duration_seconds', 'thumbnail_url',
+                'playback_hls_url', 'playback_dash_url',
+                'error_message', 'title', 'updated_at',
+            ])
+
+    return JsonResponse({
+        'status': video.status,
+        'title': video.title,
+        'thumbnail': video.thumbnail_url,
+        'hls': video.playback_hls_url,
+        'dash': video.playback_dash_url,
+        'duration': video.duration_seconds,
+        'error_message': video.error_message,
+        # Player URLs are built server-side so the browser never needs to know
+        # Cloudflare's URL scheme.
+        'embed': video.embed_url if video.is_ready else '',
+        'watch': video.watch_url if video.is_ready else '',
+    })
+
+
+@csrf_exempt
+@require_POST
+def cloudflare_stream_webhook(request):
+    """Receive Cloudflare's video state callbacks.
+
+    CSRF-exempt because Cloudflare, not a browser session, calls this — but
+    every request must carry a valid HMAC signature or it is rejected with
+    403. Verification fails closed when no secret is configured.
+    """
+    from . import cloudflare_stream
+
+    if not cloudflare_stream.verify_webhook_signature(
+        request.headers.get('Webhook-Signature', ''), request.body
+    ):
+        return HttpResponseForbidden()
+
+    try:
+        payload = json.loads(request.body or b'{}')
+    except ValueError:
+        return HttpResponse(status=400)
+    if not isinstance(payload, dict):
+        return HttpResponse(status=400)
+
+    uid = payload.get('uid')
+    if not uid:
+        return HttpResponse(status=400)
+
+    # A callback for a video we do not know about is not an error — Cloudflare
+    # retries on non-2xx, so acknowledge it.
+    video = Video.objects.filter(cloudflare_uid=uid).first()
+    if video is None:
+        return HttpResponse(status=200)
+
+    cloudflare_stream.apply_stream_result(video, payload)
+    video.save()
+
+    # Once a video is ready and attached to a project, point the project at the
+    # Cloudflare player so every portfolio theme can render it via
+    # Project.embed_url without needing theme-specific changes.
+    if video.status == 'ready' and video.project and not video.project.url:
+        video.project.url = video.embed_url
+        video.project.save(update_fields=['url'])
+
+    return HttpResponse(status=200)

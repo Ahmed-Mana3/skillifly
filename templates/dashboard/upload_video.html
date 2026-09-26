@@ -1,0 +1,278 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Upload a video — Skillifly{% endblock %}
+{% block meta_description %}Upload a portfolio video directly to Cloudflare Stream. Resumable, private, and never routed through our servers.{% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
+
+{% block extra_head %}
+<script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
+{% if cloudflare_configured %}
+<!-- Pinned to an exact version (not @latest) so a CDN release cannot break the uploader. -->
+<script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
+{% endif %}
+<style>
+{% include "dashboard/_dash_base.css" %}
+{% include "dashboard/_upload.css" %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash vu-page mx-auto w-full max-w-4xl px-4 sm:px-6 pt-8 sm:pt-10 pb-20"
+     data-vu
+     data-create-url="{% url 'create_video_upload' %}"
+     data-status-url-template="{% url 'video_status' video_id=0 %}"
+     data-cancel-url-template="{% url 'cancel_video_upload' video_id=0 %}"
+     data-csrf="{{ csrf_token }}"
+     data-allowed-types="{{ allowed_mime_types }}"
+     data-max-bytes="{{ max_upload_bytes }}"
+     data-uploaded="{{ t_uploaded|default:'Uploaded' }}"
+     data-preparing="{{ t_preparing|default:'Preparing your upload…' }}"
+     data-uploading="{{ t_uploading|default:'Uploading' }}"
+     data-of="{{ t_of|default:'of' }}"
+     data-cancel="{{ t_cancel|default:'Cancel' }}"
+     data-cancelled="{{ t_cancelled|default:'Upload cancelled.' }}"
+     data-processing="{{ t_processing|default:'Processing your video…' }}"
+     data-processing-hint="{{ t_processing_hint|default:'This usually takes a minute or two. You can keep this page open.' }}"
+     data-ready-title="{{ t_ready_title|default:'Your video is ready' }}"
+     data-ready-hint="{{ t_ready_hint|default:'It has been added to your account and is ready to publish.' }}"
+     data-upload-another="{{ t_upload_another|default:'Upload another' }}"
+     data-add-to-portfolio="{{ t_add_to_portfolio|default:'Add to your portfolio' }}"
+     data-open-project="{{ t_open_project|default:'Open project' }}"
+     data-err-type="{{ t_err_type|default:'That does not look like a video file. Please choose a video.' }}"
+     data-err-size="{{ t_err_size|default:'That file is too large.' }}"
+     data-err-empty="{{ t_err_empty|default:'That file looks empty.' }}"
+     data-err-network="{{ t_err_network|default:'We lost the connection. Your upload can be retried from where it stopped.' }}"
+     data-err-quota="{{ t_err_quota|default:'You are out of video storage. Upgrade your storage add-on to upload more.' }}"
+     data-err-generic="{{ t_err_generic|default:'Something went wrong on our side. Please try again.' }}">
+
+  <span id="sr-live" class="sr-only" aria-live="polite"></span>
+
+  <!-- Header -->
+  <header class="mb-7 reveal" style="--d:0ms">
+    <a href="{% url 'dashboard' %}" class="sf-cap inline-flex items-center gap-1.5 !text-violet-600 hover:!text-violet-700 transition-colors mb-3">
+      <i data-lucide="arrow-left" class="!h-3.5 !w-3.5"></i> Back to dashboard
+    </a>
+    <h1 class="flex items-center gap-2.5 text-[28px] sm:text-[32px] font-bold text-black leading-tight" style="font-family:'Syne',sans-serif;">
+      <span>Upload a video</span>
+    </h1>
+    <p class="text-slate-700 font-medium mt-1.5 text-[15px] max-w-2xl">
+      Your file uploads straight to our video host, so even large reels transfer quickly and never slow down here.
+    </p>
+  </header>
+
+  <div class="space-y-6">
+
+    <!-- Storage meter -->
+    <section class="sf-card vu-storage reveal" style="--d:70ms" aria-labelledby="storage-title">
+      <div class="vu-storage__top">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="sf-chip tint-violet"><i data-lucide="hard-drive"></i></div>
+          <div class="min-w-0">
+            <h2 id="storage-title" class="text-[15px] font-bold text-slate-900 leading-tight" style="font-family:'Syne',sans-serif;">Video storage</h2>
+            <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Up to {{ max_upload_label }} per file.</p>
+          </div>
+        </div>
+        <div class="vu-storage__figures">
+          <div>
+            <p class="vu-figure__label">Used</p>
+            <p class="vu-figure__value">{{ storage_used_label }}</p>
+          </div>
+          <div>
+            <p class="vu-figure__label">Remaining</p>
+            <p class="vu-figure__value" style="color: #047857;">{{ storage_free_label }}</p>
+          </div>
+          <div>
+            <p class="vu-figure__label">Total</p>
+            <p class="vu-figure__value">{{ storage_quota_label }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="sf-bar"><span style="width: {{ storage_used_pct }}%;"></span></div>
+    </section>
+
+    {% if not cloudflare_configured %}
+    <!-- Misconfiguration guard: never show a uploader that cannot work. -->
+    <div class="vu-alert vu-alert--error" role="alert">
+      <i data-lucide="alert-triangle"></i>
+      <span>Video uploads are not available right now. Please try again later.</span>
+    </div>
+    {% else %}
+
+    <!-- Uploader -->
+    <section class="sf-card reveal overflow-hidden" style="--d:140ms" aria-labelledby="upload-title">
+      <div class="p-6 sm:p-7">
+
+        <div class="flex items-center gap-3 mb-6">
+          <div class="sf-chip sf-chip-lg tint-blue"><i data-lucide="upload-cloud"></i></div>
+          <div class="min-w-0">
+            <h2 id="upload-title" class="text-[18px] font-bold text-slate-900 leading-tight" style="font-family:'Syne',sans-serif;">New upload</h2>
+            <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">MP4, MOV, WebM or MKV. Uploads resume automatically if your connection drops.</p>
+          </div>
+        </div>
+
+        <!-- Inline error surface. No alert() anywhere. -->
+        <div id="vu-error" class="vu-alert vu-alert--error mb-5" role="alert" hidden>
+          <i data-lucide="alert-triangle"></i>
+          <span id="vu-error-text"></span>
+        </div>
+
+        <!-- State: idle / error — pick a file -->
+        <div data-vu-state="idle">
+          <label class="vu-dropzone" id="vu-dropzone">
+            <input type="file" id="vu-file-input" class="vu-input"
+                   accept="{{ allowed_mime_types }},video/*"
+                   aria-describedby="vu-drop-hint">
+            <div class="vu-dropzone__body flex flex-col items-center gap-2.5">
+              <i data-lucide="film" class="vu-dropzone__icon !h-11 !w-11"></i>
+              <span class="vu-dropzone__title">Drop your video here</span>
+              <span class="vu-dropzone__hint" id="vu-drop-hint">
+                or <span class="vu-dropzone__browse">browse your files</span> — up to {{ max_upload_label }}
+              </span>
+            </div>
+          </label>
+        </div>
+
+        <!-- State: selected — confirm and choose an optional project -->
+        <div data-vu-state="selected" hidden>
+          <div class="vu-file mb-5">
+            <div class="sf-chip tint-blue"><i data-lucide="file-video"></i></div>
+            <div class="vu-file__body">
+              <p class="vu-file__name" id="vu-file-name" dir="auto">—</p>
+              <p class="vu-file__meta" id="vu-file-meta" dir="auto">—</p>
+            </div>
+            <button type="button" class="btn-icon" id="vu-clear" aria-label="Remove this file">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+
+          {% if projects %}
+          <div class="vu-field mb-5">
+            <label class="vu-label" for="vu-project">Add to a project <span class="font-medium text-slate-500">(optional)</span></label>
+            <select id="vu-project" class="vu-select">
+              <option value="">Just add it to my videos</option>
+              {% for project in projects %}
+              <option value="{{ project.id }}">{{ project.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" class="btn-primary btn-sm" id="vu-start">
+              <i data-lucide="rocket" class="!h-4 !w-4"></i> Start upload
+            </button>
+            <button type="button" class="btn-ghost btn-sm" id="vu-change">Choose a different file</button>
+          </div>
+        </div>
+
+        <!-- State: uploading -->
+        <div data-vu-state="uploading" hidden>
+          <div class="vu-progress">
+            <div class="vu-progress__head">
+              <span class="vu-progress__label" id="vu-progress-label">Uploading</span>
+              <span class="vu-progress__pct sf-num" id="vu-progress-pct" dir="ltr">0%</span>
+            </div>
+            <div class="sf-bar" role="progressbar" id="vu-progress-bar"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Upload progress">
+              <span id="vu-progress-fill" style="width: 0%;"></span>
+            </div>
+            <p class="vu-progress__detail" id="vu-progress-detail" dir="ltr">—</p>
+            <div class="vu-progress__actions">
+              <span class="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
+                <i data-lucide="wifi" class="!h-3.5 !w-3.5"></i> If your connection drops, we pick up where it left off.
+              </span>
+              <button type="button" class="btn-ghost btn-sm" id="vu-cancel">
+                <i data-lucide="x" class="!h-4 !w-4"></i> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- State: processing -->
+        <div data-vu-state="processing" hidden>
+          <div class="vu-progress">
+            <div class="vu-progress__head">
+              <span class="vu-progress__label">Processing your video…</span>
+            </div>
+            <div class="sf-bar vu-bar--working" role="progressbar" aria-label="Processing">
+              <span></span>
+            </div>
+            <p class="text-[12px] font-medium text-slate-500" id="vu-processing-hint">
+              This usually takes a minute or two. You can keep this page open.
+            </p>
+          </div>
+        </div>
+
+        <!-- State: ready -->
+        <div data-vu-state="ready" hidden>
+          <div class="vu-alert vu-alert--ok mb-5" role="status">
+            <i data-lucide="check-circle-2"></i>
+            <span>Your video is ready. It has been added to your account and is ready to publish.</span>
+          </div>
+          <div id="vu-player" class="mb-5"></div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" class="btn-primary btn-sm" id="vu-another">
+              <i data-lucide="plus" class="!h-4 !w-4"></i> Upload another
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn-ghost btn-sm">
+              <i data-lucide="layout-dashboard" class="!h-4 !w-4"></i> Back to dashboard
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Recent uploads -->
+    {% if recent_videos %}
+    <section class="sf-card reveal overflow-hidden" style="--d:210ms" aria-labelledby="recent-title">
+      <div class="flex items-center gap-3 p-6 pb-5">
+        <div class="sf-chip tint-slate"><i data-lucide="library"></i></div>
+        <div class="min-w-0">
+          <h2 id="recent-title" class="text-[16px] font-bold text-slate-900 leading-tight" style="font-family:'Syne',sans-serif;">Your recent videos</h2>
+          <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Uploads still processing stay here until they are ready.</p>
+        </div>
+      </div>
+      <div class="vu-list">
+        {% for video in recent_videos %}
+        <div class="vu-item">
+          {% if video.thumbnail_url %}
+            <img src="{{ video.thumbnail_url }}" alt="" class="vu-item__thumb" loading="lazy">
+          {% else %}
+            <span class="vu-item__thumb grid place-items-center" aria-hidden="true">
+              <i data-lucide="film" class="!h-4 !w-4 text-slate-400"></i>
+            </span>
+          {% endif %}
+          <div class="vu-item__body">
+            <p class="vu-item__name" dir="auto">{{ video.title|default:"Untitled video" }}</p>
+            <p class="vu-item__meta">
+              <span dir="ltr">{{ video.created_at|date:"j M Y" }}</span>
+              {% if video.duration_display %}<span aria-hidden="true">·</span><span dir="ltr">{{ video.duration_display }}</span>{% endif %}
+              {% if video.size_bytes %}<span aria-hidden="true">·</span><span dir="ltr">{{ video.size_bytes|filesizeformat }}</span>{% endif %}
+            </p>
+          </div>
+          {% if video.status == 'ready' %}
+            <span class="sf-pill pill-active">Ready</span>
+          {% elif video.status == 'error' %}
+            <span class="sf-pill pill-expired">Error</span>
+          {% elif video.status == 'processing' %}
+            <span class="sf-pill pill-warn">Processing</span>
+          {% else %}
+            <span class="sf-pill pill-warn">Uploading</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/video_upload.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

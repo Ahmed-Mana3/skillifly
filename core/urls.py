@@ -54,6 +54,14 @@ urlpatterns = [
     path('ar/dashboard/customize/projects/', views.arabic_customize_project_order_view, name='arabic_customize_project_order'),
     path('dashboard/customize/projects/save/', views.customize_project_order_save, name='customize_project_order_save'),
 
+    # Video uploads — Cloudflare Stream, direct-to-provider via tus
+    path('dashboard/videos/upload/', views.upload_video_view, name='upload_video'),
+    path('ar/dashboard/videos/upload/', views.arabic_upload_video_view, name='arabic_upload_video'),
+    path('videos/create-upload/', views.create_video_upload, name='create_video_upload'),
+    path('videos/<int:video_id>/status/', views.video_status, name='video_status'),
+    path('videos/<int:video_id>/cancel/', views.cancel_video_upload, name='cancel_video_upload'),
+    path('videos/webhooks/cloudflare-stream/', views.cloudflare_stream_webhook, name='cloudflare_stream_webhook'),
+
     path('logout/', views.logout_view, name='logout'),
     path('toggle-visibility/', views.activate_portfolio, name='activate_portfolio'),
     path('sitemap.xml', views.sitemap_view, name='sitemap'),

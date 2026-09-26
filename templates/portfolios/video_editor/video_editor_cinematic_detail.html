@@ -238,7 +238,9 @@
         <main class="player-col">
             <div class="player-box">
                 {% if project.url %}
-                    {% if 'youtube.com' in project.url or 'youtu.be' in project.url %}
+                    {% if 'cloudflarestream.com' in project.url %}
+                        <iframe src="{{ project.embed_url }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    {% elif 'youtube.com' in project.url or 'youtu.be' in project.url %}
                         <iframe src="https://www.youtube.com/embed/{{ project.youtube_id }}?autoplay=1&rel=0&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     {% elif 'vimeo.com' in project.url %}
                         <iframe src="https://player.vimeo.com/video/{{ project.vimeo_id }}?autoplay=1&title=0&byline=0&portrait=0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>

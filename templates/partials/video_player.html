@@ -1,0 +1,61 @@
+{% comment %}
+Renders a ready Cloudflare Stream video.
+
+Uses Cloudflare's own iframe player, which handles every browser and codec
+without shipping HLS.js. Falls back to the raw HLS manifest in a <video>
+element when the iframe is blocked (e.g. a strict CSP that disallows frames).
+
+Usage:
+  {% include "partials/video_player.html" with video=video %}
+  {% include "partials/video_player.html" with video=video aspect="21/9" %}
+{% endcomment %}
+{% if video.is_ready %}
+<div class="sf-player" data-uid="{{ video.cloudflare_uid }}"
+     data-hls="{{ video.playback_hls_url }}"
+     style="--sf-player-aspect: {{ aspect|default:'16 / 9' }}">
+
+  <iframe
+    src="{{ video.embed_url }}"
+    title="{{ video.title|default:'Video player' }}"
+    loading="lazy"
+    style="border:none;"
+    allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+    allowfullscreen></iframe>
+
+  {# Progressive enhancement: replaced by a native <video> if the iframe never loads. #}
+  <video class="sf-player__fallback" controls preload="none"
+         {% if video.thumbnail_url %}poster="{{ video.thumbnail_url }}"{% endif %}
+         style="display:none">
+    <source src="{{ video.playback_hls_url }}" type="application/x-mpegURL">
+  </video>
+</div>
+
+<style>
+  .sf-player { position: relative; aspect-ratio: var(--sf-player-aspect, 16 / 9); border-radius: 16px; overflow: hidden; background: #0f172a; }
+  .sf-player > iframe, .sf-player > .sf-player__fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+
+<script>
+  // If the Cloudflare iframe cannot load (blocked by CSP or an ad blocker),
+  // fall back to the HLS manifest so the video is still watchable.
+  (function () {
+    var frame = document.querySelector('.sf-player[data-uid="{{ video.cloudflare_uid }}"] iframe');
+    var fallback = document.querySelector('.sf-player[data-uid="{{ video.cloudflare_uid }}"] .sf-player__fallback');
+    if (!frame || !fallback) return;
+    var swapped = false;
+    var swap = function () {
+      if (swapped) return;
+      swapped = true;
+      frame.style.display = 'none';
+      fallback.style.display = 'block';
+    };
+    frame.addEventListener('error', swap);
+    // A blank iframe that never fires 'load' is the usual blocked-frame case.
+    setTimeout(function () {
+      try {
+        if (!frame.contentWindow || frame.contentWindow.location.href === 'about:blank') swap();
+      } catch (err) { /* cross-origin = loaded fine */ }
+    }, 4000);
+  })();
+</script>
+{% endif %}

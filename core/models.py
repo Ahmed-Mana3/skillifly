@@ -12,6 +12,61 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def has_active_subscription(self):
+        """True when the most recent paid payment is still inside its window.
+
+        Mirrors the ``UserPayment.objects.filter(user=..., status='paid').last()``
+        check used across the app, in one place.
+        """
+        payment = UserPayment.objects.filter(user=self, status='paid').last()
+        return bool(payment and payment.is_active)
+
+    @property
+    def storage_quota_bytes(self):
+        """Total video storage allowance: plan tier + purchased add-ons.
+
+        This is the single seam for the storage add-on. A checkout flow only
+        has to add to ``Profile.storage_addon_bytes``; every quota check in
+        the app reads this property, so nothing else needs to change.
+        """
+        from django.conf import settings
+        base = (
+            settings.VIDEO_STORAGE_PRO_BYTES
+            if self.has_active_subscription
+            else settings.VIDEO_STORAGE_FREE_BYTES
+        )
+        addon = getattr(getattr(self, 'profile', None), 'storage_addon_bytes', 0) or 0
+        return base + addon
+
+    @property
+    def storage_used_bytes(self):
+        """Bytes reserved by uploads that are live or in flight.
+
+        Derived from the Video rows rather than a running counter so it can
+        never drift out of sync with the database. Failed uploads stop
+        counting so the space is released.
+        """
+        from django.db.models import Sum
+        total = Video.objects.filter(
+            user=self, status__in=('pending', 'processing', 'ready')
+        ).aggregate(total=Sum('size_bytes'))['total']
+        return total or 0
+
+    @property
+    def storage_free_bytes(self):
+        return max(0, self.storage_quota_bytes - self.storage_used_bytes)
+
+    def has_storage_room_for(self, size_bytes):
+        """Can this user store another ``size_bytes`` of video?"""
+        try:
+            size_bytes = int(size_bytes)
+        except (TypeError, ValueError):
+            return False
+        if size_bytes <= 0:
+            return False
+        return self.storage_free_bytes >= size_bytes
+
 # 1b. User Account Type (kept separate from CustomUser so auth data stays clean)
 class UserAccount(models.Model):
     ACCOUNT_TYPE_CHOICES = [
@@ -89,6 +144,13 @@ class Profile(models.Model):
     section_order = models.JSONField(blank=True, default=list, help_text="Ordered list of section keys for portfolio display")
     section_visibility = models.JSONField(blank=True, default=dict, help_text="Map of section key -> bool controlling portfolio section visibility")
     section_names = models.JSONField(blank=True, default=dict, help_text="Map of section key -> custom display name(s) shown on the portfolio")
+
+    # Video storage add-on. The base allowance comes from the user's plan tier
+    # (see CustomUser.storage_quota_bytes); this is the extra purchased on top.
+    storage_addon_bytes = models.BigIntegerField(
+        default=0,
+        help_text="Extra video storage in bytes granted by purchased storage add-ons.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -221,6 +283,11 @@ class Project(models.Model):
         import re
         if not self.url:
             return None
+        # Videos uploaded through Cloudflare Stream (see the Video model).
+        if 'cloudflarestream.com' in self.url:
+            # A /watch link is a share page, not an embeddable player. Normalise
+            # it so server-rendered themes that use embed_url directly still play.
+            return re.sub(r'/watch(\?.*)?$', '/iframe', self.url)
         yt = self.youtube_id
         if yt:
             return f'https://www.youtube.com/embed/{yt}'
@@ -236,11 +303,86 @@ class Project(models.Model):
             if m:
                 return f'https://drive.google.com/file/d/{m.group(1)}/preview'
         if 'facebook.com' in self.url or 'fb.watch' in self.url:
-            m = re.search(r'(?:facebook\.com\/|fb\.watch\/)([A-Za-z0-9_.\/-]+)', self.url)
+            m = re.search(r'(?:facebook\.com\/|fb\.watch\/)([\w\.\/-]+)', self.url)
             if m:
                 return f'https://www.facebook.com/plugins/video.php?href={self.url}'
         return None
+
+    @property
+    def uploaded_video(self):
+        """The ready Cloudflare Stream upload attached to this project, if any."""
+        video = self.videos.filter(status='ready').order_by('-updated_at').first()
+        return video
+
+
+# 8b. Uploaded videos (hosted + transcoded by Cloudflare Stream)
+class Video(models.Model):
+    """A video uploaded straight to Cloudflare Stream via the tus protocol.
+
+    The browser uploads the bytes directly to Cloudflare using a one-time URL
+    that :mod:`core.cloudflare_stream` requests server-side, so neither the
+    file nor the Cloudflare API token ever passes through Django.
+    """
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Upload'),
+        ('processing', 'Processing'),
+        ('ready', 'Ready'),
+        ('error', 'Error'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='videos')
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='videos'
+    )
+    cloudflare_uid = models.CharField(max_length=64, unique=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    title = models.CharField(max_length=255, blank=True)
+    duration_seconds = models.FloatField(null=True, blank=True)
+    size_bytes = models.BigIntegerField(null=True, blank=True)
+    thumbnail_url = models.URLField(max_length=500, blank=True)
+    playback_hls_url = models.URLField(max_length=500, blank=True)
+    playback_dash_url = models.URLField(max_length=500, blank=True)
+    error_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title or self.cloudflare_uid} ({self.get_status_display()})"
+
+    @property
+    def is_ready(self):
+        return self.status == 'ready'
+
+    @property
+    def embed_url(self):
+        """Cloudflare's own iframe player — plays in every browser, no HLS.js."""
+        from django.conf import settings
+        return (
+            f"https://{settings.CLOUDFLARE_STREAM_CUSTOMER_SUBDOMAIN}"
+            f"/{self.cloudflare_uid}/iframe"
+        )
+
+    @property
+    def watch_url(self):
+        from django.conf import settings
+        return f"https://{settings.CLOUDFLARE_STREAM_CUSTOMER_SUBDOMAIN}/{self.cloudflare_uid}"
+
+    def duration_display(self):
+        if not self.duration_seconds:
+            return ''
+        total = int(round(self.duration_seconds))
+        minutes, seconds = divmod(total, 60)
+        hours, minutes = divmod(minutes, 60)
+        if hours:
+            return f"{hours}:{minutes:02d}:{seconds:02d}"
+        return f"{minutes}:{seconds:02d}"
+
 # 9. Social/External Links
+
 class Link(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="links")
     platform = models.CharField(max_length=254)

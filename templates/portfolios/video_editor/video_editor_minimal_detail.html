@@ -197,6 +197,40 @@
             .btn-hire { width: 100%; }
         }
     </style>
+    <script>
+        /* skillifly:cloudflare-player
+         * This template called getYouTubeId() and getEmbedUrl() without ever
+         * defining them, so both the main player and the "more projects"
+         * thumbnails threw a ReferenceError and stayed blank. Define them here,
+         * at the top of the body, so they exist before the first inline script
+         * that uses them. getCloudflareSrc additionally normalises a pasted
+         * /watch link to the embeddable /iframe path on the same host. */
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function getCloudflareSrc(url) {
+            if (!url || url.indexOf('cloudflarestream.com') === -1) return null;
+            return url.replace(/\/watch(\?.*)?$/, '/iframe');
+        }
+
+        function getEmbedUrl(url) {
+            if (!url) return null;
+            const cf = getCloudflareSrc(url);
+            if (cf) return cf;
+            const yt = getYouTubeId(url);
+            if (yt) return `https://www.youtube.com/embed/${yt}`;
+            const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+            if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+            const drive = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([-\w]+)/);
+            if (drive) return `https://drive.google.com/file/d/${drive[1]}/preview`;
+            const insta = url.match(/instagram\.com\/(?:reels|p|reel)\/([^\/?#&]+)/);
+            if (insta) return `https://www.instagram.com/reel/${insta[1]}/embed/`;
+            return null;
+        }
+    </script>
 </head>
 <body>
     <nav>

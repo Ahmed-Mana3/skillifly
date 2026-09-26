@@ -1,0 +1,285 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}ارفع فيديو — Skillifly{% endblock %}
+{% block meta_description %}ارفع فيديو لمعرض أعمالك مباشرةً إلى Cloudflare Stream. رفع قابل للاستئناف وسريع وآمن.{% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
+{% if cloudflare_configured %}
+<!-- مثبّت على إصدار محدد (ليس @latest) حتى لا يعطّل تحديث CDN الرفع. -->
+<script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
+{% endif %}
+<style>
+{% include "dashboard/_dash_base.css" %}
+{% include "dashboard/_upload.css" %}
+
+  /* خطوط الواجهة العربية (تطابق لوحة التحكم العربية) */
+  .dash, .dash button, .dash input, .dash select { font-family: 'Cairo', sans-serif; }
+  .dash h1, .dash h2, .dash h3, .dash h4, .sf-num, .vu-progress__pct, .vu-figure__value { font-family: 'Tajawal', 'Syne', sans-serif; letter-spacing: 0 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash vu-page mx-auto w-full max-w-4xl px-4 sm:px-6 pt-8 sm:pt-10 pb-20"
+     data-vu
+     data-create-url="{% url 'create_video_upload' %}"
+     data-status-url-template="{% url 'video_status' video_id=0 %}"
+     data-cancel-url-template="{% url 'cancel_video_upload' video_id=0 %}"
+     data-csrf="{{ csrf_token }}"
+     data-allowed-types="{{ allowed_mime_types }}"
+     data-max-bytes="{{ max_upload_bytes }}"
+     data-uploaded="تم الرفع"
+     data-preparing="جارٍ تجهيز الرفع…"
+     data-uploading="جارٍ الرفع"
+     data-of="من"
+     data-cancel="إلغاء"
+     data-cancelled="تم إلغاء الرفع."
+     data-processing="جارٍ معالجة الفيديو…"
+     data-processing-hint="عادةً يستغرق ذلك دقيقة أو دقيقتين. يمكنك إبقاء هذه الصفحة مفتوحة."
+     data-ready-title="فيديوك جاهز"
+     data-ready-hint="تمت إضافته إلى حسابك وهو جاهز للنشر."
+     data-upload-another="رفع فيديو آخر"
+     data-add-to-portfolio="أضفه إلى معرض أعمالك"
+     data-open-project="افتح المشروع"
+     data-err-type="هذا الملف لا يبدو فيديو. من فضلك اختر ملف فيديو."
+     data-err-size="حجم هذا الملف أكبر من الحد المسموح."
+     data-err-empty="يبدو أن هذا الملف فارغ."
+     data-err-network="انقطع الاتصال. من فضلك حاول مرة أخرى."
+     data-err-quota="نفدت مساحة تخزين الفيديو لديك. قم بالترقية للحصول على مساحة إضافية."
+     data-err-generic="حدث خطأ من جهتنا. من فضلك حاول مرة أخرى.">
+
+  <span id="sr-live" class="sr-only" aria-live="polite"></span>
+
+  <!-- الترويسة -->
+  <header class="mb-7 reveal" style="--d:0ms">
+    <a href="{% url 'arabic_dashboard' %}" class="sf-cap inline-flex items-center gap-1.5 !text-violet-600 hover:!text-violet-700 transition-colors mb-3">
+      <i data-lucide="arrow-right" class="!h-3.5 !w-3.5"></i> العودة إلى لوحة التحكم
+    </a>
+    <h1 class="flex items-center gap-2.5 text-[28px] sm:text-[32px] font-bold text-black leading-tight" style="font-family:'Tajawal',sans-serif;">
+      <span>ارفع فيديو</span>
+    </h1>
+    <p class="text-slate-700 font-medium mt-1.5 text-[15px] max-w-2xl">
+      يُرفع ملفك مباشرةً إلى جهة استضافة الفيديو لدينا، لذا تنتقل الملفات الكبيرة بسرعة ودون إبطاء هنا.
+    </p>
+  </header>
+
+  <div class="space-y-6">
+
+    <!-- مقياس المساحة -->
+    <section class="sf-card vu-storage reveal" style="--d:70ms" aria-labelledby="storage-title">
+      <div class="vu-storage__top">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="sf-chip tint-violet"><i data-lucide="hard-drive"></i></div>
+          <div class="min-w-0">
+            <h2 id="storage-title" class="text-[15px] font-bold text-slate-900 leading-tight" style="font-family:'Tajawal',sans-serif;">مساحة الفيديو</h2>
+            <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">حتى {{ max_upload_label }} للملف الواحد.</p>
+          </div>
+        </div>
+        <div class="vu-storage__figures">
+          <div>
+            <p class="vu-figure__label">المستخدَم</p>
+            <p class="vu-figure__value">{{ storage_used_label }}</p>
+          </div>
+          <div>
+            <p class="vu-figure__label">المتبقي</p>
+            <p class="vu-figure__value" style="color: #047857;">{{ storage_free_label }}</p>
+          </div>
+          <div>
+            <p class="vu-figure__label">الإجمالي</p>
+            <p class="vu-figure__value">{{ storage_quota_label }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="sf-bar"><span style="width: {{ storage_used_pct }}%;"></span></div>
+    </section>
+
+    {% if not cloudflare_configured %}
+    <div class="vu-alert vu-alert--error" role="alert">
+      <i data-lucide="alert-triangle"></i>
+      <span>خدمة رفع الفيديو غير متاحة حاليًا. من فضلك حاول لاحقًا.</span>
+    </div>
+    {% else %}
+
+    <!-- الرافع -->
+    <section class="sf-card reveal overflow-hidden" style="--d:140ms" aria-labelledby="upload-title">
+      <div class="p-6 sm:p-7">
+
+        <div class="flex items-center gap-3 mb-6">
+          <div class="sf-chip sf-chip-lg tint-blue"><i data-lucide="upload-cloud"></i></div>
+          <div class="min-w-0">
+            <h2 id="upload-title" class="text-[18px] font-bold text-slate-900 leading-tight" style="font-family:'Tajawal',sans-serif;">رفع جديد</h2>
+            <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">MP4 أو MOV أو WebM أو MKV. يُستأنف الرفع تلقائيًا عند انقطاع الاتصال.</p>
+          </div>
+        </div>
+
+        <!-- رسالة الخطأ تظهر هنا داخل الصفحة -->
+        <div id="vu-error" class="vu-alert vu-alert--error mb-5" role="alert" hidden>
+          <i data-lucide="alert-triangle"></i>
+          <span id="vu-error-text"></span>
+        </div>
+
+        <!-- الحالة: اختيار ملف -->
+        <div data-vu-state="idle">
+          <label class="vu-dropzone" id="vu-dropzone">
+            <input type="file" id="vu-file-input" class="vu-input"
+                   accept="{{ allowed_mime_types }},video/*"
+                   aria-describedby="vu-drop-hint">
+            <div class="vu-dropzone__body flex flex-col items-center gap-2.5">
+              <i data-lucide="film" class="vu-dropzone__icon !h-11 !w-11"></i>
+              <span class="vu-dropzone__title">اسحب الفيديو إلى هنا</span>
+              <span class="vu-dropzone__hint" id="vu-drop-hint">
+                أو <span class="vu-dropzone__browse">اختر ملفًا من جهازك</span> — حتى {{ max_upload_label }}
+              </span>
+            </div>
+          </label>
+        </div>
+
+        <!-- الحالة: تم اختيار الملف -->
+        <div data-vu-state="selected" hidden>
+          <div class="vu-file mb-5">
+            <div class="sf-chip tint-blue"><i data-lucide="file-video"></i></div>
+            <div class="vu-file__body">
+              <p class="vu-file__name" id="vu-file-name" dir="auto">—</p>
+              <p class="vu-file__meta" id="vu-file-meta" dir="auto">—</p>
+            </div>
+            <button type="button" class="btn-icon" id="vu-clear" aria-label="إزالة هذا الملف">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+
+          {% if projects %}
+          <div class="vu-field mb-5">
+            <label class="vu-label" for="vu-project">إضافة إلى مشروع <span class="font-medium text-slate-500">(اختياري)</span></label>
+            <select id="vu-project" class="vu-select">
+              <option value="">إضافة إلى فيديوهاتي فقط</option>
+              {% for project in projects %}
+              <option value="{{ project.id }}">{{ project.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" class="btn-primary btn-sm" id="vu-start">
+              <i data-lucide="rocket" class="!h-4 !w-4"></i> ابدأ الرفع
+            </button>
+            <button type="button" class="btn-ghost btn-sm" id="vu-change">اختر ملفًا آخر</button>
+          </div>
+        </div>
+
+        <!-- الحالة:جارٍ الرفع -->
+        <div data-vu-state="uploading" hidden>
+          <div class="vu-progress">
+            <div class="vu-progress__head">
+              <span class="vu-progress__label" id="vu-progress-label">جارٍ الرفع</span>
+              <span class="vu-progress__pct sf-num" id="vu-progress-pct" dir="ltr">0%</span>
+            </div>
+            <div class="sf-bar" role="progressbar" id="vu-progress-bar"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="تقدم الرفع">
+              <span id="vu-progress-fill" style="width: 0%;"></span>
+            </div>
+            <p class="vu-progress__detail" id="vu-progress-detail" dir="ltr">—</p>
+            <div class="vu-progress__actions">
+              <span class="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
+                <i data-lucide="wifi" class="!h-3.5 !w-3.5"></i> إذا انقطع اتصالك، سنكمل من حيث توقّف.
+              </span>
+              <button type="button" class="btn-ghost btn-sm" id="vu-cancel">
+                <i data-lucide="x" class="!h-4 !w-4"></i> إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- الحالة: جارٍ المعالجة -->
+        <div data-vu-state="processing" hidden>
+          <div class="vu-progress">
+            <div class="vu-progress__head">
+              <span class="vu-progress__label">جارٍ معالجة الفيديو…</span>
+            </div>
+            <div class="sf-bar vu-bar--working" role="progressbar" aria-label="جارٍ المعالجة">
+              <span></span>
+            </div>
+            <p class="text-[12px] font-medium text-slate-500" id="vu-processing-hint">
+              عادةً يستغرق ذلك دقيقة أو دقيقتين. يمكنك إبقاء هذه الصفحة مفتوحة.
+            </p>
+          </div>
+        </div>
+
+        <!-- الحالة: جاهز -->
+        <div data-vu-state="ready" hidden>
+          <div class="vu-alert vu-alert--ok mb-5" role="status">
+            <i data-lucide="check-circle-2"></i>
+            <span>فيديوك جاهز. تمت إضافته إلى حسابك وهو جاهز للنشر.</span>
+          </div>
+          <div id="vu-player" class="mb-5"></div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" class="btn-primary btn-sm" id="vu-another">
+              <i data-lucide="plus" class="!h-4 !w-4"></i> ارفع فيديو آخر
+            </button>
+            <a href="{% url 'arabic_dashboard' %}" class="btn-ghost btn-sm">
+              <i data-lucide="layout-dashboard" class="!h-4 !w-4"></i> العودة إلى لوحة التحكم
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- آخر الفيديوهات المرفوعة -->
+    {% if recent_videos %}
+    <section class="sf-card reveal overflow-hidden" style="--d:210ms" aria-labelledby="recent-title">
+      <div class="flex items-center gap-3 p-6 pb-5">
+        <div class="sf-chip tint-slate"><i data-lucide="library"></i></div>
+        <div class="min-w-0">
+          <h2 id="recent-title" class="text-[16px] font-bold text-slate-900 leading-tight" style="font-family:'Tajawal',sans-serif;">فيديوهاتك الأخيرة</h2>
+          <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">تبقى الفيديوهات قيد المعالجة هنا حتى تصبح جاهزة.</p>
+        </div>
+      </div>
+      <div class="vu-list">
+        {% for video in recent_videos %}
+        <div class="vu-item">
+          {% if video.thumbnail_url %}
+            <img src="{{ video.thumbnail_url }}" alt="" class="vu-item__thumb" loading="lazy">
+          {% else %}
+            <span class="vu-item__thumb grid place-items-center" aria-hidden="true">
+              <i data-lucide="film" class="!h-4 !w-4 text-slate-400"></i>
+            </span>
+          {% endif %}
+          <div class="vu-item__body">
+            <p class="vu-item__name" dir="auto">{{ video.title|default:"فيديو بدون عنوان" }}</p>
+            <p class="vu-item__meta">
+              <span dir="ltr">{{ video.created_at|date:"j M Y" }}</span>
+              {% if video.duration_display %}<span aria-hidden="true">·</span><span dir="ltr">{{ video.duration_display }}</span>{% endif %}
+              {% if video.size_bytes %}<span aria-hidden="true">·</span><span dir="ltr">{{ video.size_bytes|filesizeformat }}</span>{% endif %}
+            </p>
+          </div>
+          {% if video.status == 'ready' %}
+            <span class="sf-pill pill-active">جاهز</span>
+          {% elif video.status == 'error' %}
+            <span class="sf-pill pill-expired">خطأ</span>
+          {% elif video.status == 'processing' %}
+            <span class="sf-pill pill-warn">قيد المعالجة</span>
+          {% else %}
+            <span class="sf-pill pill-warn">جارٍ الرفع</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/video_upload.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

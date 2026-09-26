@@ -9,6 +9,10 @@
 # Core Django framework
 Django==5.2.8
 
+# MySQL driver — required by DATABASES when DATABASE_URL is set
+# (django.db.backends.mysql in skillifly/settings.py).
+mysqlclient==2.2.8
+
 # WSGI server for production (replaces `runserver`)
 gunicorn==21.2.0
 

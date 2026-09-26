@@ -559,6 +559,15 @@
         <h2 id="tools-title" class="sf-cap mb-3">Tools &amp; settings</h2>
         <div class="sf-card overflow-hidden">
 
+          <a href="{% url 'upload_video' %}" class="sf-row group">
+            <div class="sf-chip tint-blue"><i data-lucide="upload-cloud"></i></div>
+            <div class="min-w-0 flex-1">
+              <h3 class="text-[14px] font-bold text-black" style="font-family:'Syne',sans-serif;">Upload a video</h3>
+              <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">Add a new video straight to your account.</p>
+            </div>
+            <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px]"></i></span>
+          </a>
+
           <a href="{% url 'reviews_management' %}" class="sf-row group">
             <div class="sf-chip tint-amber"><i data-lucide="star"></i></div>
             <div class="min-w-0 flex-1">
@@ -737,14 +746,14 @@
         </div>
       </div>
       <div class="sf-project-grid">
-        <div class="sf-project-option sf-project-upload" aria-label="Upload a video — coming soon">
+        <a href="{% url 'upload_video' %}" class="sf-project-option sf-project-upload group" aria-label="Upload a video">
           <div class="sf-project-glow"></div>
           <div class="sf-chip tint-blue"><i data-lucide="upload"></i></div>
           <h3>Upload a video</h3>
           <p>Bring new work into one organized project space.</p>
           <div class="sf-project-preview"><i></i><span></span></div>
-          <span class="sf-project-pill"><i data-lucide="sparkles" class="!h-3 !w-3"></i> Coming soon</span>
-        </div>
+          <span class="sf-project-pill"><i data-lucide="arrow-right" class="!h-3 !w-3 rtl:hidden"></i> Start uploading</span>
+        </a>
         <div class="sf-project-option sf-project-deliver" aria-label="Deliver a video to your client — coming soon">
           <div class="sf-project-glow"></div>
           <div class="sf-chip tint-amber"><i data-lucide="send"></i></div>

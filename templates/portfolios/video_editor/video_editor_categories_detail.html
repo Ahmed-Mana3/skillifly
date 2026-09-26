@@ -431,6 +431,12 @@
 
     /* 5. Video URL Embed Resolver */
     (function() {
+        /* skillifly:cloudflare-player: videos uploaded straight to Cloudflare Stream */
+        function getCloudflareSrc(url) {
+            if (!url || url.indexOf('cloudflarestream.com') === -1) return null;
+            return url.replace(/\/watch(\?.*)?$/, '/iframe');
+        }
+
         function getYouTubeId(url) {
             const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
             return (m && m[2].length === 11) ? m[2] : null;
@@ -463,6 +469,8 @@
             player.src = `https://www.tiktok.com/embed/v2/${ttId}`;
         } else if (igId) {
             player.src = `https://www.instagram.com/reel/${igId}/embed/`;
+        } else if (getCloudflareSrc(videoUrl)) {
+            player.src = getCloudflareSrc(videoUrl);
         } else if (driveId) {
             player.src = `https://drive.google.com/file/d/${driveId}/preview`;
         } else if (videoUrl) {
