@@ -171,7 +171,7 @@
                 <label class="bx-label-row" for="f-booking"><span class="bx-label">Booking link</span><span class="bx-opt">Optional</span></label>
                 <input class="bx-input" type="text" id="f-booking" name="booking_url" value="{{ personal_form.booking_url.value|default:'' }}" placeholder="wa.me/15551234567 or calendly.com/you">
                 <p class="bx-hint">WhatsApp, Calendly or any booking page — clients can hire you in one click.</p>
-                <p class="bx-field-error" role="alert"></p>
+                <p class="bx-field-error" role="alert">{% for error in personal_form.booking_url.errors %}{{ error }}{% endfor %}</p>
               </div>
               <div class="bx-field bx-span-2">
                 <label class="bx-label-row" for="f-bio"><span class="bx-label">Short bio</span><span class="bx-opt">Optional</span></label>

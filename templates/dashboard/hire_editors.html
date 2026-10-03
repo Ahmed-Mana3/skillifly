@@ -1,0 +1,194 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Hire an Editor — Real Editor Work, Verified Ratings | Skillifly{% endblock %}
+
+{% block meta_description %}The same hand-picked portfolios as our examples gallery, each with the average rating left by real clients. Preview the work, compare ratings, then hire.{% endblock %}
+
+{% block meta_keywords %}hire video editor, find video editor, freelance video editor, editor portfolio, video editor ratings, hire motion designer{% endblock %}
+
+{% block og_title %}Hire an Editor — Skillifly{% endblock %}
+{% block og_description %}Preview real editor work, compare average client ratings, and hire with confidence.{% endblock %}
+{% block twitter_title %}Hire an Editor — Skillifly{% endblock %}
+{% block twitter_description %}Preview real editor work, compare average client ratings, and hire with confidence.{% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Hire an Editor",
+  "url": "{{ request.build_absolute_uri }}",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for card in editors %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "item": {
+          "@type": "Person",
+          "name": "{{ card.name|escapejs }}",
+          "url": "https://skillifly.cloud/{{ card.username }}/"
+          {% if card.avg_rating %},
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "{{ card.avg_rating }}",
+            "bestRating": "5",
+            "reviewCount": "{{ card.rating_count }}"
+          }{% endif %}
+        }
+      }{% if not forloop.last %},{% endif %}{% endfor %}
+    ]
+  }
+}
+</script>
+
+<!-- Gates the scroll-reveal styles on JS so the page renders fully without it -->
+<script>document.documentElement.classList.add('ex-js');</script>
+
+{% include "core/_showcase_card_styles.html" %}
+{% include "dashboard/_hire_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="ex-page">
+
+  <!-- ── Masthead ── -->
+  <section class="hire-mast">
+    <div class="ex-wrap">
+      <div class="ex-gallery-head">
+        <p class="ex-eyebrow">Hire talent</p>
+        <h1 class="ex-gallery-title">Find an editor, <span class="gradient-text">judge the work</span>, hire with confidence.</h1>
+        <p class="ex-gallery-sub">
+          {{ total_editors }} editor{{ total_editors|pluralize }} · {{ total_rated }} rated by real clients.
+          Every card below is the same portfolio you see in our examples gallery — plus the score.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Sort ── -->
+  <div class="hire-filters">
+    <div class="ex-wrap">
+      <form class="hire-filter-row" method="get" action="{% url 'hire_editors' %}">
+        <div class="hire-sort">
+          <label class="sr-only" for="hire-sort">Sort editors</label>
+          <select id="hire-sort" name="sort" onchange="this.form.submit()">
+            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Top rated</option>
+            <option value="views" {% if sort == 'views' %}selected{% endif %}>Most viewed</option>
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+
+        <p class="hire-count"><b>{{ editors_count }}</b> editor{{ editors_count|pluralize }} shown</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Editor cards — identical to the examples gallery, plus a rating ── -->
+  <section class="ex-gallery">
+    <div class="ex-wrap">
+
+      {% if not user.is_authenticated %}
+      <div class="hire-guest">
+        <div class="hire-guest-text">
+          <strong>Create a free client account to shortlist and hire</strong>
+          <span>It takes under a minute, and it lets you keep track of who you reviewed.</span>
+        </div>
+        <a class="ex-btn" href="{% url 'client_signup' %}">Sign up as a client</a>
+        <a class="ex-btn ex-btn--ghost" href="{% url 'signin' %}">Sign in</a>
+      </div>
+      {% endif %}
+
+      <div class="ex-gallery-head">
+        <p class="ex-eyebrow">{% if sort == 'views' %}Most viewed{% else %}Top rated{% endif %}</p>
+        <h2 class="ex-gallery-title" style="font-size:clamp(1.5rem,3vw,2rem)">
+          {% if sort == 'views' %}The portfolios clients browse most
+          {% else %}Top editors ready to hire{% endif %}
+        </h2>
+        <p class="ex-gallery-sub">
+          Each card is a live Skillifly portfolio with the average client rating added.
+        </p>
+      </div>
+
+      {% if editors %}
+      <ul class="ex-grid" role="list">
+        {% for card in editors %}
+        <li class="ex-reveal">
+          {% include "core/_showcase_card.html" with showcase=card.showcase show_rating=1 rating_avg=card.avg_rating rating_percent=card.rating_percent rating_count=card.rating_count show_hire=1 hire_url=card.booking_url %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="ex-empty">
+        <div style="width:64px;height:64px;margin:0 auto;border-radius:50%;display:grid;place-items:center;background:rgba(124,58,237,0.08)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <h2>No editors to show yet</h2>
+        <p>The directory only lists portfolios we have published — browse the live examples in the meantime.</p>
+        <div class="ex-empty-actions">
+          <a class="ex-btn" href="{% url 'hire_editors' %}">Show all editors</a>
+          <a class="ex-btn ex-btn--ghost" href="{% url 'examples' %}">Browse live examples</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ── Closer ── -->
+  {% if editors %}
+  <section class="ex-cta">
+    <div class="ex-cta-card">
+      <h2>Shortlisted an editor? Close the loop.</h2>
+      <p>Once the work is delivered, leave a review on their portfolio. Your rating is what
+         makes the next client hire confidently — and it keeps your own client profile credible.</p>
+      <div class="ex-cta-actions">
+        <a class="ex-btn" href="{% url 'client_reviews' %}" style="height:50px;padding-inline:32px;font-size:0.9375rem">Manage my reviews</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    var items = document.querySelectorAll('.ex-reveal');
+    if (!items.length) return;
+
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || !('IntersectionObserver' in window)) {
+      items.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    items.forEach(function (el, i) {
+      el.style.transitionDelay = ((i % 3) * 80) + 'ms';
+      io.observe(el);
+    });
+  })();
+</script>
+{% endblock %}

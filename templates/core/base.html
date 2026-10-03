@@ -506,7 +506,7 @@
         {% if is_arabic_page %}
         {% if nav_is_client %}
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_dashboard' %}" class="nav-link">لوحة التحكم</a>
-        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_examples' %}" class="nav-link">توظيف محرر</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_hire_editors' %}" class="nav-link">توظيف محرر</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_reviews' %}" class="nav-link">تقييماتي</a>
         {% else %}
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_dashboard' %}" class="nav-link">لوحة التحكم</a>
@@ -517,7 +517,7 @@
         {% else %}
         {% if nav_is_client %}
         <a href="{{ MAIN_SITE_URL }}{% url 'client_dashboard' %}" class="nav-link">Dashboard</a>
-        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="nav-link">Hire an Editor</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'hire_editors' %}" class="nav-link">Hire an Editor</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'client_reviews' %}" class="nav-link">My Reviews</a>
         {% else %}
         <a href="{{ MAIN_SITE_URL }}{% url 'dashboard' %}" class="nav-link">Dashboard</a>
@@ -577,7 +577,7 @@
         {% if is_arabic_page %}
         {% if nav_is_client %}
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_dashboard' %}" class="block nav-link py-2">لوحة التحكم</a>
-        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_examples' %}" class="block nav-link py-2">توظيف محرر</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'arabic_hire_editors' %}" class="block nav-link py-2">توظيف محرر</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_client_reviews' %}" class="block nav-link py-2">تقييماتي</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'arabic_profile' %}" class="block nav-link py-2">الملف الشخصي</a>
         {% else %}
@@ -590,7 +590,7 @@
         {% else %}
         {% if nav_is_client %}
         <a href="{{ MAIN_SITE_URL }}{% url 'client_dashboard' %}" class="block nav-link py-2">Dashboard</a>
-        <a href="{{ MAIN_SITE_URL }}{% url 'examples' %}" class="block nav-link py-2">Hire an Editor</a>
+        <a href="{{ MAIN_SITE_URL }}{% url 'hire_editors' %}" class="block nav-link py-2">Hire an Editor</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'client_reviews' %}" class="block nav-link py-2">My Reviews</a>
         <a href="{{ MAIN_SITE_URL }}{% url 'profile' %}" class="block nav-link py-2">Profile</a>
         {% else %}

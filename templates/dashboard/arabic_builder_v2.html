@@ -215,7 +215,7 @@
                 <label class="bx-label-row" for="f-booking"><span class="bx-label">رابط الحجز</span><span class="bx-opt">اختياري</span></label>
                 <input class="bx-input" type="text" id="f-booking" name="booking_url" dir="ltr" value="{{ personal_form.booking_url.value|default:'' }}" placeholder="wa.me/201001234567 أو calendly.com/you">
                 <p class="bx-hint">واتساب أو Calendly أو أي صفحة حجز — يستطيع العملاء التواصل معك بنقرة واحدة.</p>
-                <p class="bx-field-error" role="alert"></p>
+                <p class="bx-field-error" role="alert">{% for error in personal_form.booking_url.errors %}{{ error }}{% endfor %}</p>
               </div>
               <div class="bx-field bx-span-2">
                 <label class="bx-label-row" for="f-bio"><span class="bx-label">نبذة مختصرة</span><span class="bx-opt">اختياري</span></label>

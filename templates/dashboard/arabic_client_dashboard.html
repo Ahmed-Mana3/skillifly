@@ -3,174 +3,217 @@
 
 {% block title %}لوحة العميل — Skillifly{% endblock %}
 
-{% block meta_description %}استكشف محررين متميزين وأدر تقييماتك كعميل على Skillifly من خلال مركز تحكم أنيق وسهل.{% endblock %}
+{% block meta_description %}لوحة تحكم العميل في سكيليفلاي: وظّف محرر فيديو، أو أدر التقييمات التي تركتها.{% endblock %}
 
 {% block og_title %}لوحة العميل — Skillifly{% endblock %}
-{% block og_description %}استكشف محررين متميزين وأدر تقييماتك كعميل على Skillifly.{% endblock %}
+{% block og_description %}وظّف محرر فيديو، أو أدر التقييمات التي تركتها.{% endblock %}
 {% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 {% block twitter_title %}لوحة العميل — Skillifly{% endblock %}
-{% block twitter_description %}استكشف محررين متميزين وأدر تقييماتك كعميل على Skillifly.{% endblock %}
+{% block twitter_description %}وظّف محرر فيديو، أو أدر التقييمات التي تركتها.{% endblock %}
 {% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
+{% block ambient_orbs %}{% endblock %}
+
 {% block extra_head %}
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#0F172A" />
+<meta name="robots" content="noindex, nofollow" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
-<meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#3b82f6" />
-<meta name="robots" content="noindex, follow" />
+{% include "dashboard/_client_dash_styles.html" %}
 
 <style>
-    /* ===== Arabic Client Dashboard — Brand Overrides (English palette) ===== */
-    body {
-        background-color: white !important;
-        color: #0F172A !important;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
+  /* Arabic/RTL adjustments layered on top of the shared dashboard stylesheet. */
+  .cdash { font-family: 'Tajawal', 'Cairo', sans-serif; }
+  .cdash h1,
+  .cdash h2,
+  .cdash h3,
+  .cdash .cd-stat b,
+  .cdash .cd-pick-name,
+  .cdash .cd-review-avatar {
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+    letter-spacing: 0;
+  }
 
-    /* Typography: Cairo for headings, Tajawal for body */
-    .arabic-rtl h1,
-    .arabic-rtl h2,
-    .arabic-rtl h3,
-    .arabic-rtl h4 {
-        font-family: 'Cairo', 'Tajawal', sans-serif !important;
-        letter-spacing: 0 !important;
-    }
+  /* Latin-only display treatments. */
+  .cdash .cd-eyebrow { letter-spacing: 0; text-transform: none; font-weight: 700; }
 
-    .arabic-rtl p,
-    .arabic-rtl li,
-    .arabic-rtl a,
-    .arabic-rtl span,
-    .arabic-rtl button {
-        font-family: 'Tajawal', 'Cairo', sans-serif !important;
-    }
+  /* Arabic needs more leading. */
+  .cdash .cd-top h1 { line-height: 1.35; }
+  .cdash .cd-lede { line-height: 1.9; }
+  .cdash .cd-option-banner h2 { line-height: 1.45; }
+  .cdash .cd-option-desc { line-height: 1.9; }
+  .cdash .cd-empty-note { line-height: 1.8; }
 
-    /* Remove decorative Latin text treatments for Arabic */
-    .arabic-rtl .tracking-widest,
-    .arabic-rtl .tracking-tighter,
-    .arabic-rtl .uppercase {
-        letter-spacing: 0 !important;
-        text-transform: none !important;
-    }
-
-    .gradient-brand {
-        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
-    }
-
-    /* Client command center cards */
-    .client-premium-shell {
-        min-height: 100vh;
-    }
-
-    .client-hero-card {
-        border: 1px solid rgba(99, 102, 241, 0.14);
-        border-radius: 24px;
-        background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
-        box-shadow: 0 24px 48px -30px rgba(15, 23, 42, 0.35);
-    }
-
-    .client-kpi-chip {
-        border: 1px solid rgba(99, 102, 241, 0.18);
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 10px 14px;
-    }
-
-    .client-action-card {
-        border-radius: 22px;
-        border: 1px solid rgba(148, 163, 184, 0.22);
-        background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
-        box-shadow: 0 16px 34px -22px rgba(15, 23, 42, 0.3);
-    }
-
-    .client-action-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(99, 102, 241, 0.3);
-        box-shadow: 0 24px 38px -24px rgba(37, 99, 235, 0.35);
-    }
-
-    /* RTL card arrow — points forward (left) and slides on hover */
-    .arabic-rtl .card-arrow {
-        transform: scaleX(-1);
-        transition: transform 0.3s ease;
-    }
-    .arabic-rtl .group:hover .card-arrow {
-        transform: scaleX(-1) translateX(-4px);
-    }
-
-    a:focus-visible,
-    button:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
-        border-radius: 12px;
-    }
+  /* Numerals, usernames and star rows stay left-to-right. */
+  .cdash .cd-stat,
+  .cdash .cd-pick-stars,
+  .cdash .cd-review-text strong { direction: ltr; text-align: start; }
+  .cdash .cd-stat { display: inline-flex; }
+  .cdash .cd-pick-name,
+  .cdash .cd-review-text span { white-space: normal; line-height: 1.5; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="client-premium-shell min-h-screen arabic-rtl" dir="rtl">
-  <div class="max-w-7xl mx-auto px-6 py-12">
+<div class="cdash" dir="rtl" lang="ar">
 
-    <!-- Hero card -->
-    <div class="client-hero-card p-7 md:p-9 mb-8 animate-fadeInUp">
-      <p class="text-xs text-purple-600 font-bold mb-2">مركز تحكم العميل</p>
-      <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black flex items-center gap-2">
-        <span>{{ user.first_name|default:user.username }}</span>
-        <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-8 w-8 sm:h-10 sm:w-10 object-contain" loading="lazy" decoding="async" width="40" height="40">
+  <!-- ── الترويسة ── -->
+  <header class="cd-top">
+    <div class="cd-wrap">
+      <p class="cd-eyebrow">مركز تحكم العميل</p>
+      <h1>
+        {{ user.first_name|default:user.username }}
+        <img src="{% static 'img/bird.png'}" alt="Skillifly" loading="lazy" decoding="async" width="40" height="40">
       </h1>
-      <p class="text-slate-600 font-medium mb-5">قُد بثقة. اكتشف محررين من الطراز الأول، وابنِ سمعتك المهنية عبر تقييمات موثوقة.</p>
-
-      <div class="flex flex-wrap gap-3">
-        <div class="client-kpi-chip">
-          <p class="text-[11px] text-slate-500 font-bold mb-0.5">إجمالي التقييمات</p>
-          <p class="text-lg font-extrabold text-blue-600">{{ reviews_count }}</p>
-        </div>
-        <div class="client-kpi-chip">
-          <p class="text-[11px] text-slate-500 font-bold mb-0.5">المحررون الذين قيّمتهم</p>
-          <p class="text-lg font-extrabold text-violet-600">{{ reviewed_editors_count }}</p>
-        </div>
-      </div>
+      <p class="cd-lede">شيئان فقط يمكنك فعلهما هنا: توظيف المحرر المناسب، وإدارة تقييماتك.</p>
     </div>
+  </header>
 
-    <!-- Action cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fadeInUp" style="animation-delay: 0.1s">
-      <a href="{% url 'arabic_examples' %}" class="client-action-card p-6 group transition-all duration-300 block">
-        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        <h3 class="text-base font-bold mb-1 text-black">وظّف مواهب استثنائية</h3>
-        <p class="text-sm text-slate-600 font-medium">استكشف نماذج مميزة للمحررين واختر من يناسب معاييرك الإبداعية بدقة.</p>
-        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
-          <span>استكشف أفضل المحررين</span>
-          <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-      </a>
+  <!-- ── الخياران فقط ── -->
+  <div class="cd-wrap">
+    <ul class="cd-options" role="list">
 
-      <a href="{% url 'arabic_client_reviews' %}" class="client-action-card p-6 group transition-all duration-300 block">
-        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l2.025 6.236h6.557c.969 0 1.371 1.24.588 1.81l-5.304 3.855 2.026 6.236c.3.921-.755 1.688-1.54 1.118L12 18.327l-5.303 3.855c-.785.57-1.84-.197-1.54-1.118l2.026-6.236L1.879 10.973c-.783-.57-.38-1.81.588-1.81h6.557l2.025-6.236z" />
-          </svg>
-        </div>
-        <h3 class="text-base font-bold mb-1 text-black">أدر حضورك بالتقييمات</h3>
-        <p class="text-sm text-slate-600 font-medium">
-          {% if reviews_count %}{{ reviews_count }} من التقييمات على {{ reviewed_editors_count }} من المحررين. حافظ على صوت عميل موثوق ومميز.
-          {% else %}ابدأ الآن بترك تقييمك الأول وابنِ حضورًا موثوقًا كعميل مميز.{% endif %}
-        </p>
-        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
-          <span>إدارة تقييماتك</span>
-          <svg class="card-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-      </a>
-    </div>
+      <!-- الخيار ١ — توظيف محرر -->
+      <li>
+        <article class="cd-option cd-option--hire">
+          <div class="cd-option-banner">
+            <span class="cd-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <div>
+              <h2>وظّف محررًا</h2>
+              <p>شاهد أعمالًا حقيقية، قارن التقييمات، ثم تواصل</p>
+            </div>
+          </div>
+
+          <div class="cd-option-body">
+            <p class="cd-option-desc">
+              تصفّح {{ editors_count }} محرر{{ editors_count|pluralize }} منشور. كل بطاقة تعرض معاينة لمشاريع
+              المحرر الحقيقية ومتوسط التقييم الذي تركه عملاء حقيقيون — فاختيارك مبني على دليل، لا على صورة جاهزة.
+            </p>
+
+            <div class="cd-stats">
+              <span class="cd-stat"><b>{{ editors_count }}</b> محرر متاح</span>
+              <span class="cd-stat"><b>{{ rated_count }}</b> بتقييمات العملاء</span>
+            </div>
+
+            {% if featured_editors %}
+            <div class="cd-picks">
+              {% for card in featured_editors %}
+              <a class="cd-pick" href="{% url 'preview' card.username %}">
+                <span class="cd-pick-media">
+                  {% if card.showcase.preview_image %}
+                    <img src="{{ card.showcase.preview_image.url }}" alt="عمل في ملف {{ card.name }}" loading="lazy" decoding="async">
+                  {% elif card.showcase.profile.picture %}
+                    <img src="{{ card.showcase.profile.picture.url }}" alt="{{ card.name }}" loading="lazy" decoding="async">
+                  {% else %}
+                    <b>{{ card.username|first|upper }}</b>
+                  {% endif %}
+                </span>
+                <span class="cd-pick-text">
+                  <span class="cd-pick-name">{{ card.name }}</span>
+                  {% if card.avg_rating %}
+                  <span class="cd-pick-stars">
+                    <span class="cd-stars" role="img" aria-label="متوسط التقييم {{ card.avg_rating }} من 5">
+                      ★★★★★
+                      <span class="cd-stars-fill" style="width: {{ card.rating_percent }}%">★★★★★</span>
+                    </span>
+                    <em>{{ card.avg_rating }} · {{ card.rating_count }} تقييم</em>
+                  </span>
+                  {% else %}
+                  <span class="cd-pick-stars"><em>لا توجد تقييمات بعد</em></span>
+                  {% endif %}
+                </span>
+              </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="cd-option-foot">
+            <a class="cd-cta cd-cta--primary" href="{% url 'arabic_hire_editors' %}">
+              تصفّح {{ editors_count }} محرر
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+        </article>
+      </li>
+
+      <!-- الخيار ٢ — إدارة التقييمات -->
+      <li>
+        <article class="cd-option cd-option--reviews">
+          <div class="cd-option-banner">
+            <span class="cd-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.05 2.93c.3-.92 1.6-.92 1.9 0l2.02 6.24h6.56c.97 0 1.37 1.24.59 1.81l-5.3 3.86 2.02 6.23c.3.92-.75 1.69-1.54 1.12L12 18.33l-5.3 3.85c-.79.57-1.84-.2-1.54-1.12l2.02-6.23-5.3-3.86c-.78-.57-.38-1.81.59-1.81h6.56l2.02-6.24z" />
+              </svg>
+            </span>
+            <div>
+              <h2>أدر تقييماتك</h2>
+              <p>تقييماتك هي توقيعك كعميل</p>
+            </div>
+          </div>
+
+          <div class="cd-option-body">
+            <p class="cd-option-desc">
+              {% if reviews_count %}
+                {{ reviews_count }} تقييم على {{ reviewed_editors_count }} محرر.
+                يطّلع المحررون على من يتعاملون معه — سجل تقييمات عادل ومحدّد هو ما يجعلهم يردّ عليك أولًا.
+              {% else %}
+                لم تترك أي تقييم بعد. أنهِ مشروعًا ثم قيّم المحرر؛ فتقييمك هو ما يجعل المحرر التالي يضع طلبك في الأولوية.
+              {% endif %}
+            </p>
+
+            <div class="cd-stats">
+              <span class="cd-stat"><b>{{ reviews_count }}</b> إجمالي التقييمات</span>
+              <span class="cd-stat"><b>{{ reviewed_editors_count }}</b> محرر قِيّمته</span>
+              {% if avg_rating_given %}
+              <span class="cd-stat cd-stat--star"><b>{{ avg_rating_given }}</b> متوسط تقييمك</span>
+              {% endif %}
+            </div>
+
+            {% if recent_reviews %}
+            <div class="cd-reviews">
+              {% for review in recent_reviews %}
+              <div class="cd-review">
+                <span class="cd-review-avatar" aria-hidden="true">{{ review.user_name|slice:":2" }}</span>
+                <span class="cd-review-text">
+                  <strong>@{{ review.user.username }}</strong>
+                  <span>{{ review.rating }}/5 · {{ review.content|truncatewords:12 }}</span>
+                </span>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="cd-empty-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              ستظهر تقييماتك هنا فور أن تقيّم أحد المحررين.
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="cd-option-foot">
+            <a class="cd-cta cd-cta--dark" href="{% url 'arabic_client_reviews' %}">
+              إدارة تقييماتي
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+        </article>
+      </li>
+
+    </ul>
   </div>
+
 </div>
 {% endblock %}

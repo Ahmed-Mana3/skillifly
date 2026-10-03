@@ -1,0 +1,196 @@
+{% comment %}
+Shared dashboard design system (EN + AR, editor + client).
+Every signed-in dashboard — /dashboard/ and /client_dashboard/ — renders inside
+.dash and paints itself with these primitives: .sf-card, .sf-chip + tints,
+.sf-row, .sf-cell, .sf-pill, .sf-bar, .sf-pro, .sf-cap / .sf-num, .reveal.
+Page-specific layouts stay in the page that owns them.
+{% endcomment %}
+<style>
+  /* ── Tokens ── */
+  .dash {
+    --ink: #0f172a;
+    --muted: #334155;
+    --faint: #475569;
+    --line: rgba(15, 23, 42, 0.16);
+    --line-strong: rgba(15, 23, 42, 0.28);
+    --brand: #6d28d9;
+  }
+
+  /* Flat canvas — ambient orbs are removed by the page; hide the noise layer too */
+  body:has(.dash)::before { display: none !important; }
+  body:has(.dash) { background: #FAFBFC !important; }
+
+  /* ── Card ── */
+  .sf-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 20px;
+    box-shadow:
+      0 2px 4px rgba(15, 23, 42, 0.05),
+      0 16px 36px -20px rgba(15, 23, 42, 0.28);
+  }
+
+  /* Lighted rim — light catches the top edge, brand tint grounds the base */
+  .sf-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(170deg,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(255, 255, 255, 0.12) 42%,
+      rgba(109, 40, 217, 0.24) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: background .18s ease;
+  }
+  /* Keep the dashed "pick your theme" variant's own border visible */
+  .sf-card[class*="border-dashed"]::after { content: none; }
+
+  .sf-hover { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .sf-hover:hover {
+    transform: translateY(-2px);
+    border-color: rgba(15, 23, 42, 0.16);
+    box-shadow:
+      0 4px 8px rgba(15, 23, 42, 0.08),
+      0 24px 48px -20px rgba(79, 70, 229, 0.35),
+      0 0 26px -6px rgba(124, 58, 237, 0.22);
+  }
+  .sf-card.sf-hover:hover::after {
+    background: linear-gradient(170deg,
+      #ffffff 0%,
+      rgba(255, 255, 255, 0.25) 42%,
+      rgba(124, 58, 237, 0.45) 100%);
+  }
+
+  /* ── Icon chips ── */
+  .sf-chip { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; transition: transform .18s ease; }
+  .sf-chip svg { width: 19px; height: 19px; }
+  .sf-chip-lg { width: 48px; height: 48px; border-radius: 14px; }
+  .sf-chip-lg svg { width: 20px; height: 20px; }
+  a:hover > .sf-chip, button:hover > .sf-chip { transform: scale(1.06); }
+  .tint-blue    { background: #bfdbfe; color: #1d4ed8; }
+  .tint-sky     { background: #bae6fd; color: #0369a1; }
+  .tint-violet  { background: #ddd6fe; color: #6d28d9; }
+  .tint-fuchsia { background: #f5d0fe; color: #a21caf; }
+  .tint-amber   { background: #fde68a; color: #92400e; }
+  .tint-emerald { background: #a7f3d0; color: #047857; }
+  .tint-slate   { background: #e2e8f0; color: #334155; }
+
+  /* ── Typography helpers ── */
+  .sf-cap { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #334155; }
+  .sf-num { font-family: 'Syne', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+
+  /* ── Compact buttons ── */
+  .btn-sm { padding: 9px 18px !important; font-size: 13px !important; border-radius: 11px !important; }
+  .btn-icon {
+    width: 36px; height: 36px; padding: 0; border-radius: 10px; display: grid; place-items: center;
+    border: 1px solid var(--line-strong); background: #fff; color: var(--muted);
+    cursor: pointer; transition: all .15s ease; text-decoration: none;
+  }
+  .btn-icon:hover { background: #f8fafc; color: var(--brand); border-color: rgba(124, 58, 237, .35); }
+  .btn-icon svg { width: 16px; height: 16px; }
+
+  /* ── Focus ── */
+  .dash :is(a, button, input):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
+
+  /* ── Status strip cells ── */
+  .sf-cell { padding: 20px 22px; display: flex; align-items: center; gap: 14px; min-width: 0; text-decoration: none; }
+  @media (min-width: 640px) { .sf-cell { padding: 22px 24px; } }
+
+  /* ── Rows (tools & settings lists) ── */
+  .sf-row {
+    display: flex; align-items: center; gap: 16px; padding: 16px 22px;
+    color: inherit; text-decoration: none; text-align: start; width: 100%;
+    background: transparent; border: 0; cursor: pointer; font: inherit;
+    transition: background .15s ease;
+  }
+  .sf-row:hover { background: #eef2f7; }
+  .sf-row + .sf-row { border-top: 1px solid var(--line); }
+  .sf-row .go { margin-inline-start: auto; color: var(--faint); display: inline-flex; flex-shrink: 0; transition: transform .18s ease, color .18s ease; }
+  .sf-row:hover .go { transform: translateX(3px); color: var(--brand); }
+  [dir="rtl"] .sf-row:hover .go { transform: translateX(-3px); }
+
+  /* ── Feature card (full-bleed link card) ── */
+  .sf-feature { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 24px; height: 100%; text-decoration: none; }
+
+  /* ── Progress bar ── */
+  .sf-bar { height: 6px; border-radius: 999px; background: #dbe3ee; overflow: hidden; }
+  .sf-bar > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2563eb, #7c3aed, #db2777); }
+
+  /* ── Highlighted card (membership / signature) ── */
+  .sf-pro {
+    position: relative; overflow: hidden;
+    background: linear-gradient(160deg, #ffffff 0%, #faf8ff 45%, #fef5ff 100%);
+    border: 1px solid rgba(124, 58, 237, .22); border-radius: 20px;
+    box-shadow:
+      0 2px 4px rgba(15, 23, 42, 0.05),
+      0 16px 36px -20px rgba(124, 58, 237, 0.38);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .sf-pro:hover {
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, .4);
+    box-shadow:
+      0 4px 8px rgba(15, 23, 42, 0.08),
+      0 24px 48px -20px rgba(124, 58, 237, 0.5),
+      0 0 26px -6px rgba(124, 58, 237, 0.28);
+  }
+  .sf-pro::after {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(170deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.1) 42%,
+      rgba(124, 58, 237, 0.35) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: background .18s ease;
+  }
+  .sf-pro:hover::after {
+    background: linear-gradient(170deg,
+      #ffffff 0%,
+      rgba(255, 255, 255, 0.2) 42%,
+      rgba(124, 58, 237, 0.55) 100%);
+  }
+  .sf-pro::before {
+    content: ''; position: absolute; top: -80px; right: -80px; width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(124, 58, 237, .12), transparent 70%); pointer-events: none;
+    transition: transform .3s ease, opacity .3s ease;
+  }
+  .sf-pro:hover::before { transform: scale(1.3); }
+  [dir="rtl"] .sf-pro::before { right: auto; left: -80px; }
+
+  /* ── Pills ── */
+  .sf-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+  .pill-active  { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .pill-warn    { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .pill-expired { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+  .pill-brand   { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+
+  /* ── Empty state ── */
+  .sf-empty {
+    display: flex; align-items: center; gap: 12px; padding: 18px 20px;
+    border: 1.5px dashed rgba(15, 23, 42, 0.16); border-radius: 16px;
+    background: #f8fafc;
+    font-size: 13.5px; line-height: 1.6; color: #64748b;
+  }
+  .sf-empty svg { width: 18px; height: 18px; flex: 0 0 auto; color: #94a3b8; }
+
+  /* ── Entrance animation ── */
+  .reveal { opacity: 0; transform: translateY(14px); animation: sfRise .55s cubic-bezier(.16, 1, .3, 1) forwards; animation-delay: var(--d, 0ms); }
+  @keyframes sfRise { to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { animation: none; opacity: 1; transform: none; }
+    .dash *, .dash *::before, .dash *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+</style>

@@ -1,0 +1,95 @@
+{% comment %}
+One showcase card, shared by /examples/, /ar/examples/, /hire/ and /ar/hire/.
+
+Required context: showcase (a core.models.Showcase row).
+Optional context:
+  live_label       — badge text on the screenshot        (default: Live)
+  visit_label      — purple action link                   (default: View portfolio)
+  no_rating_label  — copy when the editor has no reviews (default: No client rating yet)
+  review_word      — noun after the review count          (default: reviews)
+  review_word_one  — singular override for a 1-review card (default: review)
+  show_rating      — render the star row (examples pages omit it)
+  rating_avg, rating_percent, rating_count
+  booking_url, hire_label, no_booking_label — render the hire CTA
+{% endcomment %}
+{% with s_user=showcase.profile.user s_pi=showcase.profile.user.personal_info %}
+{% with s_name=s_pi.full_name|default:s_user.username|title %}
+<article class="ex-card">
+
+  <div class="ex-chrome" aria-hidden="true">
+    <span class="ex-chrome-dots"><i></i><i></i><i></i></span>
+    <span class="ex-url">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      <span>skillifly.cloud/{{ s_user.username }}</span>
+    </span>
+  </div>
+
+  <div class="ex-shot">
+    {% if showcase.preview_image %}
+      <img src="{{ showcase.preview_image.url }}" alt="Screenshot of {{ s_name }}’s portfolio" loading="lazy" decoding="async">
+    {% elif showcase.profile.picture %}
+      <img src="{{ showcase.profile.picture.url }}" alt="Profile photo of {{ s_name }}" loading="lazy" decoding="async">
+    {% else %}
+      <div class="ex-shot-empty"><b>{{ s_user.username|first|upper }}</b></div>
+    {% endif %}
+    <span class="ex-live">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+      {% if live_label %}{{ live_label }}{% else %}Live{% endif %}
+    </span>
+  </div>
+
+  <div class="ex-body">
+    <div class="ex-name-row">
+      <h3 class="ex-name" dir="ltr" style="text-align: start;">{% if s_pi.full_name %}{{ s_pi.full_name }}{% else %}{{ s_user.username|title }}{% endif %}</h3>
+      {% if showcase.profile.theme %}
+      <a class="ex-theme-chip" href="{% url 'theme_preview' showcase.profile.theme.name %}" title="Preview the {{ showcase.profile.theme.name }} theme">{{ showcase.profile.theme.name }}</a>
+      {% endif %}
+    </div>
+    {% if showcase.title %}<p class="ex-role">{{ showcase.title }}</p>{% endif %}
+
+    {% with desc=showcase.description|default:showcase.profile.bio %}
+    {% if desc %}<p class="ex-desc">{{ desc|truncatewords:20 }}</p>{% endif %}
+    {% endwith %}
+
+    {% if show_rating %}
+    <div class="ex-rating{% if not rating_avg %} ex-rating--empty{% endif %}">
+      {% if rating_avg %}
+      <span class="ex-stars" role="img"
+            aria-label="{% if rating_aria %}{{ rating_aria }}{% else %}Average rating{% endif %} {{ rating_avg }} {% if rating_aria_end %}{{ rating_aria_end }}{% else %}out of 5 from{% endif %} {{ rating_count }} {% if rating_count == 1 and review_word_one %}{{ review_word_one }}{% elif review_word %}{{ review_word }}{% elif rating_count == 1 %}client review{% else %}client reviews{% endif %}">
+        ★★★★★
+        <span class="ex-stars-fill" style="width: {{ rating_percent }}%">★★★★★</span>
+      </span>
+      <span class="ex-score">{{ rating_avg }}</span>
+      <span class="ex-rating-meta">({{ rating_count }} {% if rating_count == 1 and review_word_one %}{{ review_word_one }}{% elif review_word %}{{ review_word }}{% elif rating_count == 1 %}review{% else %}reviews{% endif %})</span>
+      {% else %}
+      <span class="ex-stars" aria-hidden="true">★★★★★</span>
+      <span class="ex-rating-meta">{% if no_rating_label %}{{ no_rating_label }}{% else %}No client rating yet{% endif %}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="ex-foot">
+      {% if hire_url %}
+      <a class="ex-btn" href="{{ hire_url }}" target="_blank" rel="noopener noreferrer">
+        {% if hire_label %}{{ hire_label }}{% else %}Hire now{% endif %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      {% elif show_hire %}
+      <span class="ex-btn ex-btn--muted" aria-disabled="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        {% if no_booking_label %}{{ no_booking_label }}{% else %}No booking link{% endif %}
+      </span>
+      {% endif %}
+      <span class="ex-visit" aria-hidden="true">
+        {% if visit_label %}{{ visit_label }}{% else %}View portfolio{% endif %}
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </span>
+    </div>
+  </div>
+
+  <a class="ex-card-link" href="{% url 'preview' s_user.username %}">
+    <span class="sr-only">Visit {{ s_name }}’s portfolio</span>
+  </a>
+</article>
+{% endwith %}
+{% endwith %}

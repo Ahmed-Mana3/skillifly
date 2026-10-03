@@ -3,9 +3,11 @@
 
 {% block title %}Payment Page Tracking | Skillifly{% endblock %}
 
-{# base.html renders three blurred gradient orbs behind every page. The landing
-   page kills them (via a CSS override that, as it happens, misses .orb-pink).
-   This is a dense data view, so it takes the cleaner route: drop the nodes. #}
+{% comment %}
+base.html renders three blurred gradient orbs behind every page. The landing
+page kills them (via a CSS override that, as it happens, misses .orb-pink).
+This is a dense data view, so it takes the cleaner route: drop the nodes.
+{% endcomment %}
 {% block ambient_orbs %}{% endblock %}
 
 {% block extra_head %}

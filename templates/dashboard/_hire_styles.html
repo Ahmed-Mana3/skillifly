@@ -1,0 +1,173 @@
+{% comment %}
+Hire-page-only chrome: the masthead stats, the sticky filter bar and the guest
+banner. The editor cards themselves come from core/_showcase_card.html, shared
+with /examples/.
+{% endcomment %}
+<style>
+  .ex-page .hire-mast { padding: 64px 0 40px; }
+
+  /* .ex-wrap carries no padding of its own (each section supplies it), so the
+     masthead and filter bar need their own gutters to line up with .ex-gallery */
+  .ex-page .hire-mast,
+  .ex-page .hire-filters { padding-inline: 24px; }
+
+  /* ── Sticky filter bar ── */
+  .ex-page .hire-filters {
+    position: sticky;
+    /* the base navbar is h-16 + its 1px border-bottom = 65px, at every width */
+    top: 65px;
+    z-index: 30;
+    padding-block: 18px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--ex-hair);
+  }
+  .ex-page .hire-filter-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  .ex-page .hire-sort { position: relative; flex: 0 0 auto; }
+  .ex-page .hire-sort select {
+    height: 46px;
+    padding-inline: 16px 40px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ex-ink);
+    background: #F8FAFC;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 12px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .ex-page .hire-sort > svg {
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: var(--ex-faint);
+    pointer-events: none;
+  }
+  .ex-page .hire-count { font-size: 0.9375rem; color: var(--ex-muted); white-space: nowrap; }
+  .ex-page .hire-count b { color: var(--ex-ink); }
+
+  /* ── Guest banner ── */
+  .ex-page .hire-guest {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    background: #F8FAFC;
+    border: 1px solid var(--ex-hair);
+    border-radius: 18px;
+  }
+  .ex-page .hire-guest-text { flex: 1 1 320px; }
+  .ex-page .hire-guest-text strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ex-ink);
+  }
+  .ex-page .hire-guest-text span { display: block; margin-top: 4px; font-size: 0.875rem; color: var(--ex-muted); }
+
+  /* Outlined twin of .ex-btn — used for the secondary "Sign in" / "Browse
+     examples" actions that used to carry inline styles */
+  .ex-page .ex-btn--ghost {
+    height: 44px;
+    background: #fff;
+    color: var(--ex-ink);
+    border: 1px solid rgba(15, 23, 42, 0.15);
+    box-shadow: none;
+  }
+  .ex-page .ex-btn--ghost:hover { background: rgba(15, 23, 42, 0.04); border-color: rgba(15, 23, 42, 0.3); }
+
+  /* ── Empty state actions ── */
+  .ex-page .ex-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  /* ── Phones ── */
+  @media (max-width: 767px) {
+    .ex-page .hire-mast { padding-block: 36px 28px; }
+    /* the H1 is long — scale it to the viewport instead of the 30px floor */
+    .ex-page .hire-mast .ex-gallery-title { font-size: clamp(1.75rem, 7.5vw, 2.25rem); line-height: 1.15; }
+
+    /* A sticky bar over the cards wastes a slice of a phone viewport, so on
+       phones it scrolls away with the page instead. */
+    .ex-page .hire-filters {
+      position: static;
+      padding-block: 0;
+      background: none;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border-bottom: 0;
+    }
+    .ex-page .hire-filter-row { gap: 10px; }
+    /* 16px keeps iOS Safari from zooming the page on focus */
+    .ex-page .hire-sort { flex: 1 1 auto; min-width: 0; }
+    .ex-page .hire-sort select { width: 100%; height: 48px; font-size: 16px; }
+    .ex-page .hire-count { flex: 0 1 auto; font-size: 0.8125rem; white-space: normal; }
+
+    .ex-page .hire-guest { flex-direction: column; align-items: stretch; gap: 12px; padding: 20px; }
+    /* column direction makes the 320px flex-basis a HEIGHT — reset it */
+    .ex-page .hire-guest-text { flex: 0 0 auto; }
+    .ex-page .hire-guest .ex-btn,
+    .ex-page .hire-guest .ex-btn--ghost { width: 100%; }
+
+    /* Cards: tighter body, names wrap instead of truncating, hire CTA goes wide */
+    .ex-page .ex-body { padding: 18px 18px 20px; }
+    .ex-page .ex-name-row { flex-wrap: wrap; }
+    .ex-page .ex-name { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+    .ex-page .ex-theme-chip {
+      max-width: 50%;
+      /* 11px / 25px tall is unreadable and too small for a thumb */
+      font-size: 0.75rem;
+      padding: 10px 13px;
+    }
+    .ex-page .ex-foot .ex-btn { flex: 1 1 auto; }
+
+    .ex-page .ex-gallery-head { margin-bottom: 36px; }
+    .ex-page .ex-gallery-sub { font-size: 0.9375rem; }
+    .ex-page .ex-cta-card h2 { font-size: clamp(1.5rem, 7vw, 2rem); }
+    .ex-page .ex-cta-card > p { font-size: 0.9375rem; line-height: 1.7; }
+    .ex-page .ex-empty { padding: 56px 18px; }
+    .ex-page .ex-empty-actions { flex-direction: column; }
+    .ex-page .ex-empty-actions .ex-btn,
+    .ex-page .ex-empty-actions .ex-btn--ghost { width: 100%; }
+    .ex-page .ex-cta-actions .ex-btn { width: 100%; }
+  }
+
+  /* Touch devices keep :hover latched after a tap, which would leave cards
+     lifted and images pre-zoomed. Neutralise the hover affordances. */
+  @media (hover: none) {
+    .ex-page .ex-card:hover {
+      transform: none;
+      border-color: rgba(124, 58, 237, 0.14);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+    }
+    .ex-page .ex-card:hover .ex-shot img { transform: none; }
+  }
+
+  /* Stops iOS from inflating text in landscape and from scaling the tap
+     targets on rotation */
+  .ex-page { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  /* Gutters match .ex-gallery's own breakpoint so the filter bar, the masthead
+     and the card grid share one left edge on every width. */
+  @media (max-width: 640px) {
+    .ex-page .hire-mast,
+    .ex-page .hire-filters { padding-inline: 20px; }
+  }
+
+  @media (max-width: 400px) {
+    .ex-page .hire-filter-row { gap: 10px; }
+  }
+</style>

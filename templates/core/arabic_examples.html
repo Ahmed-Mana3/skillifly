@@ -19,7 +19,7 @@
 {% block extra_head %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <meta property="og:locale" content="ar_AR" />
@@ -54,385 +54,49 @@
 <!-- Gates the scroll-reveal styles on JS so the page renders fully without it -->
 <script>document.documentElement.classList.add('ex-js');</script>
 
+{% include "core/_showcase_card_styles.html" %}
+
 <style>
-  /* Same tokens as the landing page — Arabic twin of the English examples page */
-  .ex-page {
-    --ex-ink: #0F172A;
-    --ex-muted: #475569;
-    --ex-faint: #64748B;
-    --ex-hair: rgba(0, 0, 0, 0.08);
-    --ex-purple: #7C3AED;
-    --ex-purple-deep: #6D28D9;
-    --ex-eyebrow: #1E40AF;
-    --ex-live: #10B981;
-    font-family: 'Tajawal', 'Cairo', sans-serif;
-  }
+  /* Arabic twin of the English examples page — the card itself is shared. */
+  .ex-page { font-family: 'Tajawal', 'Cairo', sans-serif; }
   /* Arabic never takes letter-spacing — it breaks glyph joining */
   .ex-page * { letter-spacing: 0 !important; }
-  .ex-page h1, .ex-page h2, .ex-page h3 {
+  .ex-page h1, .ex-page h2, .ex-page h3, .ex-page .ex-score, .ex-page .ex-shot-empty b {
     font-family: 'Cairo', 'Tajawal', sans-serif;
   }
+  .ex-page .btn-primary,
+  .ex-page .btn-ghost { font-family: 'Cairo', 'Tajawal', sans-serif; }
 
-  /* ── Solid brand-purple buttons (identical to landing) ── */
-  .ex-page .btn-primary {
-    background: #7C3AED !important;
-    background-image: none !important;
-    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
-    font-family: 'Cairo', 'Tajawal', sans-serif;
-  }
-  .ex-page .btn-primary:hover {
-    background: #6D28D9 !important;
-    background-image: none !important;
-    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
-  }
-  .ex-page .btn-primary:active { background: #5B21B6 !important; }
-  .ex-page .btn-ghost {
-    border: 1px solid rgba(0, 0, 0, 0.15) !important;
-    color: #0F172A !important;
-    background: #fff !important;
-    font-family: 'Cairo', 'Tajawal', sans-serif;
-  }
-  .ex-page .btn-ghost:hover { background: rgba(0, 0, 0, 0.04) !important; border-color: rgba(0, 0, 0, 0.3) !important; }
+  /* The examples eyebrow and theme chip carry Latin-style tracking by default */
+  .ex-page .ex-eyebrow,
+  .ex-page .ex-theme-chip { letter-spacing: 0; text-transform: none; }
+  .ex-page .ex-eyebrow { font-size: 0.875rem; }
 
-  /* Solid purple accent text (landing override) */
-  .ex-page .gradient-text {
-    background: none !important;
-    -webkit-background-clip: initial !important;
-    background-clip: initial !important;
-    -webkit-text-fill-color: #7C3AED !important;
-    color: #7C3AED !important;
-  }
-
-  /* ── Gallery ── */
-  .ex-gallery { padding: 72px 24px 96px; }
-  .ex-wrap { max-width: 1200px; margin: 0 auto; }
-  .ex-eyebrow {
-    margin: 0 0 16px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--ex-eyebrow);
-    text-align: center;
-  }
-  .ex-gallery-head {
-    text-align: center;
-    max-width: 640px;
-    margin: 0 auto 56px;
-  }
-  .ex-gallery-head .ex-eyebrow { margin-bottom: 12px; }
-  .ex-gallery-title {
-    font-size: clamp(1.75rem, 4vw, 2.75rem);
-    font-weight: 800;
-    line-height: 1.35;
-    color: #000;
-    margin: 0;
-  }
-  .ex-gallery-sub {
-    margin: 16px auto 0;
-    max-width: 540px;
-    color: var(--ex-muted);
-    font-size: 1.0625rem;
-    line-height: 1.8;
-  }
-
-  .ex-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 32px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-  @media (min-width: 640px) { .ex-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 1024px) { .ex-grid { grid-template-columns: repeat(3, 1fr); } }
-
-  /* ── Card — landing community-card DNA: rounded-3xl, purple-tinted border ── */
-  .ex-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: #fff;
-    border: 1px solid rgba(124, 58, 237, 0.14);
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
-  }
-  .ex-card:hover,
-  .ex-card:focus-within {
-    border-color: rgba(124, 58, 237, 0.35);
-    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.14);
-    transform: translateY(-3px);
-  }
-  .ex-card-link {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-  }
-  .ex-card-link:focus-visible {
-    outline: 3px solid rgba(124, 58, 237, 0.45);
-    outline-offset: 3px;
-  }
-
-  /* Simplified browser chrome — echoes the landing hero showcase frame.
-     Bar children mirror in RTL; the URL pill itself stays LTR. */
-  .ex-chrome {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: #E9EDF2;
-    border-bottom: 1px solid var(--ex-hair);
-  }
-  .ex-chrome-dots { display: flex; flex-shrink: 0; gap: 6px; }
-  .ex-chrome-dots i { display: block; width: 9px; height: 9px; border-radius: 50%; }
-  .ex-chrome-dots i:nth-child(1) { background: #F87171; }
-  .ex-chrome-dots i:nth-child(2) { background: #FBBF24; }
-  .ex-chrome-dots i:nth-child(3) { background: #34D399; }
-  .ex-url {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-align: left;
-    direction: ltr; /* web addresses always read left-to-right */
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.2;
-    color: var(--ex-faint);
-    background: #F1F5F9;
-    border: 1px solid rgba(15, 23, 42, 0.06);
-    border-radius: 8px;
-    padding: 5px 10px;
-  }
-  .ex-url span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  }
-  .ex-url svg { flex-shrink: 0; width: 11px; height: 11px; color: var(--ex-live); }
-
-  .ex-shot {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    background: #F1F5F9;
-  }
-  .ex-shot img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* Screenshots carry the site header at the top — never crop it away */
-    object-position: center top;
-    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .ex-card:hover .ex-shot img { transform: scale(1.035); }
-  /* Landing-style live badge — mirrored to the left in RTL */
-  .ex-live {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(6px);
-    border-radius: 999px;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
-    font-size: 12px;
-    font-weight: 700;
-    color: #334155;
-  }
-  .ex-live svg { width: 12px; height: 12px; color: var(--ex-live); }
-
-  .ex-body {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 6px;
-    padding: 22px 24px 24px;
-  }
-  .ex-name-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .ex-name {
-    font-size: 1.0625rem;
-    font-weight: 700;
-    line-height: 1.5;
-    color: var(--ex-ink);
-    margin: 0;
-  }
-  .ex-role { font-size: 0.8125rem; font-weight: 500; color: var(--ex-faint); }
-  .ex-desc {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    font-size: 0.875rem;
-    line-height: 1.7;
-    color: var(--ex-faint);
-    margin: 0;
-  }
-  /* Landing-style theme chip — Latin theme names stay LTR */
-  .ex-theme-chip {
-    position: relative;
-    z-index: 2; /* sits above the stretched card link so it stays its own target */
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    max-width: 55%;
-    padding: 4px 10px;
-    background: #F1F5F9;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--ex-faint);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-decoration: none;
-    direction: ltr;
-    transition: background 0.2s ease, color 0.2s ease;
-  }
-  .ex-theme-chip:hover { background: rgba(124, 58, 237, 0.1); color: var(--ex-purple); }
-  .ex-theme-chip:focus-visible { outline: 3px solid rgba(124, 58, 237, 0.45); outline-offset: 2px; }
-  /* Landing-style purple action link — arrow gap widens on hover, arrow flips for RTL */
-  .ex-visit {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: auto;
-    padding-top: 16px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--ex-purple-deep);
-    transition: gap 0.2s ease;
-  }
-  .ex-card:hover .ex-visit { gap: 10px; }
-  .ex-visit svg { transform: scaleX(-1); }
-
-  /* ── Empty state ── */
-  .ex-empty {
-    padding: 88px 24px;
-    border: 1px dashed rgba(124, 58, 237, 0.3);
-    border-radius: 24px;
-    text-align: center;
-  }
-  .ex-empty h2 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--ex-ink);
-    margin: 16px 0 8px;
-  }
-  .ex-empty p { max-width: 460px; margin: 0 auto 28px; color: var(--ex-muted); }
-
-  /* ── Final CTA ── */
-  .ex-cta {
-    padding: 8px 24px 96px;
-    background: rgba(248, 250, 252, 0.5);
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  }
-  .ex-cta-card {
-    position: relative;
-    max-width: 880px;
-    margin: 88px auto 0;
-    padding: 64px 28px;
-    background: #fff;
-    border: 1px solid rgba(124, 58, 237, 0.14);
-    border-radius: 24px;
-    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08);
-    text-align: center;
-  }
-  .ex-cta-card h2 {
-    font-size: clamp(1.75rem, 4vw, 2.75rem);
-    font-weight: 800;
-    line-height: 1.35;
-    color: #000;
-    margin: 0;
-  }
-  .ex-cta-card > p {
-    max-width: 540px;
-    margin: 20px auto 0;
-    color: var(--ex-muted);
-    font-size: 1.0625rem;
-    line-height: 1.8;
-  }
-  .ex-cta-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 14px;
-    margin-top: 36px;
-  }
-  /* Final-CTA button: scaled up for the closing moment, with the hint sized
-     as a caption directly beneath it (12px gap ≈ the button's inner rhythm) */
-  .ex-page .ex-cta-primary {
+  .ex-page .ex-gallery-title { font-size: clamp(1.75rem, 4vw, 2.75rem); line-height: 1.35; }
+  .ex-page .ex-gallery-sub { max-width: 540px; line-height: 1.8; }
+  .ex-page .ex-name { font-size: 1.0625rem; line-height: 1.5; }
+  .ex-page .ex-desc { line-height: 1.7; }
+  .ex-page .ex-empty h2 { font-size: 1.5rem; font-weight: 800; }
+  .ex-page .ex-cta-card h2 { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; line-height: 1.35; }
+  .ex-page .ex-cta-card > p { max-width: 540px; line-height: 1.8; }
+  .ex-page .ex-page .ex-cta-primary {
     padding: 15px 44px !important;
     font-size: 1.0625rem !important;
     line-height: 1.6 !important;
     border-radius: 14px !important;
   }
-  .ex-cta-hint {
-    margin: 8px 0 0;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--ex-faint);
-  }
-  .ex-cta-checks {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px 28px;
-    margin: 32px 0 0;
-    padding: 28px 0 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    list-style: none;
-  }
-  .ex-cta-checks li {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #334155;
-  }
-  .ex-cta-checks svg { width: 16px; height: 16px; color: var(--ex-live); flex-shrink: 0; }
 
-  /* ── Scroll reveal (JS-gated: .ex-js is only set when JS runs) ── */
-  .ex-js .ex-reveal { opacity: 0; transform: translateY(16px); }
-  .ex-js .ex-reveal.is-visible {
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  @media (max-width: 640px) {
-    .ex-gallery { padding: 56px 20px 72px; }
-    .ex-cta { padding: 8px 20px 72px; }
-    .ex-cta-card { padding: 48px 22px; margin-top: 72px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ex-page *, .ex-page *::before, .ex-page *::after {
-      animation: none !important;
-      transition: none !important;
-    }
-    .ex-js .ex-reveal { opacity: 1 !important; transform: none !important; }
-  }
+  /* RTL: the action-link arrow points backwards */
+  .ex-page .ex-visit svg { transform: scaleX(-1); }
+  /* Numerals and star rows stay left-to-right */
+  .ex-page .ex-stars { display: inline-block; }
+  .ex-page .ex-score,
+  .ex-page .ex-rating-meta { direction: ltr; text-align: start; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="ex-page" dir="rtl">
+<div class="ex-page" dir="rtl" lang="ar">
 
   <!-- Showcase grid -->
   <section class="ex-gallery">
@@ -446,58 +110,9 @@
       {% if showcases %}
       <ul class="ex-grid" role="list">
         {% for showcase in showcases %}
-        {% with s_user=showcase.profile.user s_pi=showcase.profile.user.personal_info %}
         <li class="ex-reveal">
-          <article class="ex-card">
-            <div class="ex-chrome" aria-hidden="true">
-              <span class="ex-chrome-dots"><i></i><i></i><i></i></span>
-              <span class="ex-url">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                <span>skillifly.cloud/{{ s_user.username }}</span>
-              </span>
-            </div>
-
-            <div class="ex-shot">
-              {% if showcase.preview_image %}
-                <img src="{{ showcase.preview_image.url }}" alt="لقطة من ملف {{ s_pi.full_name|default:s_user.username|title }}" loading="lazy" decoding="async">
-              {% elif showcase.profile.picture %}
-                <img src="{{ showcase.profile.picture.url }}" alt="صورة {{ s_pi.full_name|default:s_user.username|title }}" loading="lazy" decoding="async">
-              {% else %}
-                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10">
-                  <span class="text-4xl font-black gradient-text" style="font-family:'Cairo',sans-serif;">{{ s_user.username|first|upper }}</span>
-                </div>
-              {% endif %}
-              <span class="ex-live">
-                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-                مباشر
-              </span>
-            </div>
-
-            <div class="ex-body">
-              <div class="ex-name-row">
-                <h3 class="ex-name" dir="ltr" style="text-align: start;">{% if s_pi.full_name %}{{ s_pi.full_name }}{% else %}{{ s_user.username|title }}{% endif %}</h3>
-                {% if showcase.profile.theme %}
-                <a class="ex-theme-chip" href="{% url 'theme_preview' showcase.profile.theme.name %}" title="معاينة تصميم {{ showcase.profile.theme.name }}">{{ showcase.profile.theme.name }}</a>
-                {% endif %}
-              </div>
-              {% if showcase.title %}<p class="ex-role">{{ showcase.title }}</p>{% endif %}
-
-              {% with desc=showcase.description|default:showcase.profile.bio %}
-              {% if desc %}<p class="ex-desc">{{ desc|truncatewords:20 }}</p>{% endif %}
-              {% endwith %}
-
-              <span class="ex-visit" aria-hidden="true">
-                زيارة الملف
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </span>
-            </div>
-
-            <a class="ex-card-link" href="{% url 'preview' s_user.username %}">
-              <span class="sr-only">زيارة ملف {{ s_pi.full_name|default:s_user.username|title }}</span>
-            </a>
-          </article>
+          {% include "core/_showcase_card.html" with live_label="مباشر" visit_label="زيارة الملف" %}
         </li>
-        {% endwith %}
         {% endfor %}
       </ul>
       {% else %}
@@ -521,7 +136,7 @@
       <div class="ex-cta-actions">
         <a href="{% url 'arabic_signup' %}" class="btn-primary ex-cta-primary">ابدأ مجانًا</a>
       </div>
-      <p class="ex-cta-hint">لا حاجة لبطاقة ائتمان</p>
+      <p class="ex-cta-hint" style="margin:8px 0 0;font-size:0.875rem;font-weight:500;color:var(--ex-faint)">لا حاجة لبطاقة ائتمان</p>
       <ul class="ex-cta-checks">
         <li>
           <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>

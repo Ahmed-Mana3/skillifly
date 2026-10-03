@@ -17,6 +17,39 @@ from builder.forms import (
 from builder.views import save_portfolio_data
 
 
+class BookingUrlFieldTests(TestCase):
+    """The booking field is free text; it must never store a dead link."""
+
+    def _clean(self, value):
+        form = PersonalInfoForm({
+            "fullname": "Editor One",
+            "title": "Video Editor",
+            "booking_url": value,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        return form.cleaned_data["booking_url"]
+
+    def test_phone_number_becomes_a_whatsapp_link(self):
+        self.assertEqual(self._clean("01018344501"), "https://wa.me/01018344501")
+        self.assertEqual(self._clean("wa.me/201001234567"), "https://wa.me/201001234567")
+        self.assertEqual(
+            self._clean("https://wa.me/+20 11 50431732"),
+            "https://wa.me/+201150431732",
+        )
+
+    def test_bare_domain_gets_a_scheme(self):
+        self.assertEqual(self._clean("calendly.com/you"), "https://calendly.com/you")
+
+    def test_half_typed_host_is_rejected_instead_of_saved(self):
+        form = PersonalInfoForm({
+            "fullname": "Editor One",
+            "title": "Video Editor",
+            "booking_url": "https://Mm",
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("booking_url", form.errors)
+
+
 class SavePortfolioDataTests(TestCase):
     def setUp(self):
         User = get_user_model()

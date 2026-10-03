@@ -2,6 +2,8 @@ from django import forms
 from django.forms import formset_factory
 from django.core.validators import RegexValidator
 from datetime import datetime
+import re
+from urllib.parse import urlsplit
 
 # =========================
 # Personal Info (Single Form)
@@ -82,9 +84,24 @@ class PersonalInfoForm(forms.Form):
     )
 
     def clean_booking_url(self):
-        url = self.cleaned_data.get('booking_url')
-        if url and not url.startswith(('http://', 'https://')):
+        url = (self.cleaned_data.get('booking_url') or '').strip()
+        url = re.sub(r'\s+', '', url)
+        if not url:
+            return url
+        # A bare phone/WhatsApp number is the common case here — never turn it
+        # into "https://01018344501", which is a dead link on every surface
+        # that renders the booking CTA.
+        if re.fullmatch(r'[+\d().\-\s]+', url):
+            digits = re.sub(r'\D', '', url)
+            return 'https://wa.me/' + digits if len(digits) >= 7 else url
+        if not re.match(r'^[a-z][a-z0-9+.\-]*://', url, re.I):
             url = 'https://' + url
+        parsed = urlsplit(url)
+        if not re.fullmatch(r'[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9-]+)+',
+                            parsed.hostname or '', re.I):
+            raise forms.ValidationError(
+                'Enter a full booking link (e.g. https://calendly.com/you) or a WhatsApp number.'
+            )
         return url
 
 

@@ -625,6 +625,21 @@ class Showcase(models.Model):
     class Meta:
         ordering = ['order', '-created_at']
 
+    @classmethod
+    def published(cls):
+        """Showcases whose portfolio page is actually reachable.
+
+        Used by every public surface that lists portfolios (/examples/,
+        /ar/examples/, /hire/, /ar/hire/ and the landing page) so they never
+        advertise a card that 403s: a hidden or deleted profile is private, and
+        client accounts are buyers rather than talent.
+        """
+        return cls.objects.filter(
+            is_active=True,
+            profile__is_public=True,
+            profile__is_deleted=False,
+        ).exclude(profile__user__user_account__account_type='client')
+
 
 # 12. SEO Settings
 class SEOSettings(models.Model):

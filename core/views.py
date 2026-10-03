@@ -1,7 +1,8 @@
 import logging
 import os
 import json
-from urllib.parse import quote
+import re
+from urllib.parse import quote, urlsplit
 from decimal import Decimal
 from django.conf import settings
 from datetime import date
@@ -1025,7 +1026,7 @@ def index(request):
     reviews = Review.objects.filter(is_featured=True).order_by('order', '-created_at')[:6]
 
     # Featured community portfolios (same source as the live examples page)
-    showcases = Showcase.objects.filter(is_active=True).select_related(
+    showcases = Showcase.published().select_related(
         'profile__user', 'profile__theme'
     ).order_by('order', '-created_at')[:6]
 
@@ -1072,7 +1073,7 @@ def arabic_landing_view(request):
         ]
 
     # Featured community portfolios (same source as the live examples page)
-    showcases = Showcase.objects.filter(is_active=True).select_related(
+    showcases = Showcase.published().select_related(
         'profile__user', 'profile__theme'
     ).order_by('order', '-created_at')[:6]
 
@@ -2076,10 +2077,206 @@ def _client_reviews_context(request):
 
 def _client_dashboard_context(request):
     reviews = ClientReview.objects.filter(reviewer=request.user)
+    recent_reviews = list(
+        reviews.select_related('user', 'user__personal_info').order_by('-created_at')[:3]
+    )
+    given_avg = reviews.aggregate(avg=Avg('rating'))['avg']
+    editors_count = _showcased_editors().count()
+    rated_count = (
+        ClientReview.objects
+        .filter(user_id__in=_showcased_editors().values('profile__user_id'))
+        .aggregate(n=Count('user_id', distinct=True))['n'] or 0
+    )
     return {
         'reviews_count': reviews.count(),
         'reviewed_editors_count': reviews.values('user_id').distinct().count(),
+        'avg_rating_given': round(float(given_avg), 1) if given_avg else None,
+        'recent_reviews': recent_reviews,
+        'featured_editors': _top_rated_editor_cards(3),
+        'editors_count': editors_count,
+        'rated_count': rated_count,
     }
+
+
+# ------------------------------------------------------------------
+# "Hire an editor" directory
+# ------------------------------------------------------------------
+# The directory deliberately lists exactly the portfolios the /examples/
+# gallery shows (Showcase rows), so the two surfaces never disagree about who
+# is available to hire. The only addition to the shared card is the average
+# client rating.
+
+def _showcased_editors():
+    """The active showcases that back the /examples/ gallery."""
+    return (
+        Showcase.published()
+        .select_related(
+            'profile__user__personal_info',
+            'profile__user__user_account',
+            'profile__theme',
+        )
+        .prefetch_related('profile__user__skills')
+    )
+
+
+def _hire_link(info, phone=''):
+    """A usable booking/contact link for a card, or None.
+
+    ``booking_url`` is free text typed by the user, and in practice it holds
+    three different things: real URLs, bare phone numbers (the builder used to
+    prefix those with ``https://``, producing dead links like
+    ``https://01018344501``) and half-typed hosts such as ``https://Mm``.
+    Normalise all of it here so the Hire CTA never points at a broken page:
+    phone numbers become WhatsApp links, whitespace is stripped, and anything
+    without a real host falls back to the editor's phone and then their email.
+    """
+    raw = (getattr(info, 'booking_url', '') or '').strip()
+    value = re.sub(r'\s+', '', raw)
+
+    if value:
+        # Strip any scheme so a number saved as "https://010…" is still a number.
+        bare = re.sub(r'^[a-z][a-z0-9+.\-]*://', '', value, flags=re.I)
+        if re.fullmatch(r'[+\d().\-]+', bare):
+            digits = re.sub(r'\D', '', bare)
+            if len(digits) >= 7:
+                return 'https://wa.me/' + digits
+        elif '.' in bare.split('/')[0]:
+            if not re.match(r'^[a-z][a-z0-9+.\-]*://', value, re.I):
+                value = 'https://' + value
+            parsed = urlsplit(value)
+            if parsed.scheme in ('http', 'https') and re.fullmatch(
+                r'[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9-]+)+',
+                parsed.hostname or '', re.I
+            ):
+                return value
+
+    digits = re.sub(r'\D', '', phone or '')
+    if len(digits) >= 7:
+        return 'https://wa.me/' + digits
+    if info is not None and getattr(info, 'email', ''):
+        return 'mailto:%s' % info.email
+    return None
+
+
+def _build_editor_cards(showcases):
+    """Attach ratings, skills and the booking link to each showcased portfolio.
+
+    Everything is resolved with three bulk queries rather than per-editor
+    lookups, so the directory stays cheap as the gallery grows.
+    """
+    showcases = list(showcases)
+    if not showcases:
+        return []
+
+    user_ids = [s.profile.user_id for s in showcases]
+
+    rating_map = {}
+    for row in (
+        ClientReview.objects.filter(user_id__in=user_ids)
+        .values('user_id')
+        .annotate(avg=Avg('rating'), total=Count('id'))
+    ):
+        rating_map[row['user_id']] = (row['avg'] or 0, row['total'])
+
+    skills_map = {}
+    for skill in Skill.objects.filter(user_id__in=user_ids).order_by('id'):
+        skills_map.setdefault(skill.user_id, []).append(skill.name)
+
+    cards = []
+    for showcase in showcases:
+        user = showcase.profile.user
+        info = getattr(user, 'personal_info', None)
+
+        name = ''
+        if info and info.full_name:
+            name = info.full_name
+        elif user.get_full_name():
+            name = user.get_full_name()
+        if not name:
+            name = user.username
+
+        avg, total = rating_map.get(user.id, (0.0, 0))
+        cards.append({
+            'showcase': showcase,
+            'user': user,
+            'username': user.username,
+            'name': name,
+            'skills': skills_map.get(user.id, []),
+            'booking_url': _hire_link(info, getattr(info, 'phone', '') if info else ''),
+            'views': showcase.profile.visits or 0,
+            'avg_rating': round(float(avg), 1) if total else None,
+            'rating_percent': (round(float(avg) / 5 * 100) if total else 0),
+            'rating_count': total,
+        })
+    return cards
+
+
+def _top_rated_editor_cards(limit=3):
+    """The strongest-rated showcased editors, for the dashboard shortlist."""
+    cards = _build_editor_cards(_showcased_editors())
+    rated = [c for c in cards if c['avg_rating']]
+    chosen = rated or cards
+    chosen.sort(key=lambda c: (-(c['avg_rating'] or 0), -c['rating_count'], c['name'].lower()))
+    return chosen[:limit]
+
+
+# The only orderings the /hire/ directory offers.
+_HIRE_SORTS = ('rating', 'views')
+
+
+def _editor_directory_context(request, arabic=False):
+    """Data behind the /hire/ page: the examples gallery plus client ratings.
+
+    Sorting is the only control the directory offers — top rated or most
+    viewed. There is no free-text search and no skill filter.
+    """
+    sort = (request.GET.get('sort') or 'rating').strip()
+    if sort not in _HIRE_SORTS:
+        sort = 'rating'
+
+    cards = _build_editor_cards(_showcased_editors())
+    total_editors = len(cards)
+    # The masthead always advertises the whole directory.
+    total_rated = sum(1 for c in cards if c['avg_rating'])
+
+    if sort == 'views':
+        # Most portfolio views first; ratings break ties so the page stays stable.
+        cards.sort(key=lambda c: (
+            -c['views'],
+            -(c['avg_rating'] or 0),
+            -c['rating_count'],
+            c['name'].lower(),
+        ))
+    else:  # 'rating' — rated editors first, best rated first
+        cards.sort(key=lambda c: (
+            0 if c['avg_rating'] else 1,
+            -(c['avg_rating'] or 0),
+            -c['rating_count'],
+            c['name'].lower(),
+        ))
+
+    return {
+        'editors': cards,
+        'editors_count': len(cards),
+        'total_editors': total_editors,
+        'total_rated': total_rated,
+        'sort': sort,
+        'is_arabic_page': bool(arabic),
+    }
+
+
+def hire_editors_view(request):
+    """Client-facing talent directory: work previews, average rating, hire CTA."""
+    return render(request, 'dashboard/hire_editors.html', _editor_directory_context(request))
+
+
+def arabic_hire_editors_view(request):
+    """Arabic twin of the hire-an-editor directory."""
+    return render(
+        request,
+        'dashboard/arabic_hire_editors.html',
+        _editor_directory_context(request, arabic=True),
+    )
 
 
 def _dashboard_context(request):
@@ -2385,6 +2582,7 @@ def sitemap_view(request):
     if not custom_user:
         add('/', '1.0', 'daily', ar_path='/ar/')
         add('/examples/', '0.9', 'weekly', ar_path='/ar/examples/')
+        add('/hire/', '0.9', 'daily', ar_path='/ar/hire/')
         add('/themes/', '0.9', 'weekly')
         add('/signup/', '0.8', 'monthly', ar_path='/ar/signup/')
         add('/signin/', '0.8', 'monthly', ar_path='/ar/signin/')

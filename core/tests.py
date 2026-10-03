@@ -3,7 +3,17 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from urllib.parse import quote
-from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount, School, CustomDomain, PersonalInfo
+import base64
+from core.models import UserPayment, Subscription, Profile, Review, ClientReview, UserAccount, School, CustomDomain, PersonalInfo, Project, Showcase, Skill
+
+# Smallest valid PNG, reused wherever a test needs a real ImageField upload.
+_TINY_PNG = base64.b64decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAFElEQVR4nGM8YVPBgA0wYRUdtBIALU8BjAnZpn0AAAAASUVORK5CYII='
+)
+
+
+def _tiny_png_bytes():
+    return _TINY_PNG
 from django.utils import timezone
 from datetime import timedelta
 import json
@@ -321,6 +331,247 @@ class ClientReviewRedirectFunnelTests(TestCase):
         self.assertEqual(ClientReview.objects.filter(user=self.owner, reviewer__email='fullflow@example.com').count(), 1)
 
 
+class HireEditorsDirectoryTests(TestCase):
+    """The /hire/ talent directory: the examples gallery plus client ratings."""
+
+    def setUp(self):
+        self.client_user = User.objects.create_user(
+            username='hireclient', email='hireclient@example.com', password='pass12345'
+        )
+        UserAccount.objects.create(user=self.client_user, account_type='client')
+
+        self.editor = User.objects.create_user(
+            username='hireeditor', email='hireeditor@example.com', password='pass12345'
+        )
+        self.profile = Profile.objects.create(user=self.editor, is_public=True)
+        PersonalInfo.objects.create(
+            user=self.editor,
+            full_name='Hire Editor',
+            title='Reels & Color Grading',
+            email='hireeditor@example.com',
+            phone='',
+            bio='Short-form editor focused on retention.',
+            booking_url='https://cal.example.com/hireeditor',
+        )
+        Skill.objects.create(user=self.editor, name='Premiere Pro')
+        Project.objects.create(
+            user=self.editor,
+            title='Launch Reel',
+            url='https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        )
+        # The directory only lists what the /examples/ gallery publishes
+        self.showcase = Showcase.objects.create(
+            profile=self.profile,
+            title='Reels & Color Grading',
+            description='Short-form editor focused on retention.',
+            is_active=True,
+            preview_image=SimpleUploadedFile(
+                'hire-editor-preview.png',
+                _tiny_png_bytes(),
+                content_type='image/png',
+            ),
+        )
+        for rating in (5, 4):
+            ClientReview.objects.create(
+                user=self.editor,
+                reviewer=self.client_user,
+                user_name='Hire Client',
+                content='Great editor',
+                rating=rating,
+            )
+
+        self.rated_card = reverse('hire_editors')
+
+    def test_hire_page_shows_card_with_work_preview_and_average_rating(self):
+        response = self.client.get(self.rated_card)
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        # Average of the two ratings, not the raw total
+        self.assertContains(response, '4.5')
+        self.assertContains(response, '2 reviews')
+        # Work preview is the showcase screenshot
+        self.assertIn(self.showcase.preview_image.url, body)
+        self.assertIn('https://cal.example.com/hireeditor', body)
+        self.assertIn(reverse('preview', kwargs={'username': 'hireeditor'}), body)
+
+    def test_hire_page_reuses_the_examples_card_design(self):
+        """Both surfaces render the same shared card; /hire/ adds the rating row."""
+        hire = self.client.get(self.rated_card)
+        self.assertEqual(hire.status_code, 200)
+        self.assertContains(hire, 'ex-chrome-dots')
+        self.assertContains(hire, 'ex-card-link')
+        self.assertContains(hire, 'skillifly.cloud/hireeditor')
+        # The one addition on /hire/ — a star row with an accessible label
+        self.assertContains(hire, 'aria-label="Average rating 4.5')
+
+        examples = self.client.get(reverse('examples'))
+        self.assertEqual(examples.status_code, 200)
+        self.assertContains(examples, 'ex-chrome-dots')
+        self.assertContains(examples, 'ex-card-link')
+        self.assertContains(examples, 'skillifly.cloud/hireeditor')
+        self.assertNotContains(examples, 'aria-label="Average rating')
+
+    def test_portfolios_without_a_showcase_are_not_hireable(self):
+        """Only what the /examples/ gallery publishes can be hired."""
+        outsider = User.objects.create_user(
+            username='notshowcased', email='notshowcased@example.com', password='pass12345'
+        )
+        Profile.objects.create(user=outsider, is_public=True)
+        PersonalInfo.objects.create(
+            user=outsider,
+            full_name='Hidden Editor',
+            email='notshowcased@example.com',
+            phone='',
+            bio='Published but never showcased.',
+            booking_url='https://cal.example.com/notshowcased',
+        )
+        self.assertFalse(Showcase.objects.filter(profile__user=outsider).exists())
+
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'Hidden Editor')
+        self.assertNotContains(response, 'https://cal.example.com/notshowcased')
+        # ...while the showcased editor is still there
+        self.assertContains(response, 'Hire Editor')
+
+    def test_inactive_showcases_are_not_hireable(self):
+        Showcase.objects.filter(profile=self.profile).update(is_active=False)
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'https://cal.example.com/hireeditor')
+
+    def test_private_portfolios_are_not_hireable(self):
+        """A card that 403s on the public portfolio page must not be listed."""
+        Profile.objects.filter(pk=self.profile.pk).update(is_public=False)
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'Hire Editor')
+        self.assertContains(response, 'No editors to show yet')
+
+    def test_client_accounts_are_not_listed_as_hireable_editors(self):
+        UserAccount.objects.update_or_create(
+            user=self.editor, defaults={'account_type': 'client'},
+        )
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'Hire Editor')
+
+    def test_phone_number_booking_link_becomes_a_whatsapp_link(self):
+        """Users type a phone number, not a URL — never link to https://010…"""
+        PersonalInfo.objects.filter(user=self.editor).update(booking_url='https://01018344501')
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'https://01018344501')
+        self.assertContains(response, 'https://wa.me/01018344501')
+
+    def test_half_typed_booking_hosts_fall_back_to_a_working_contact(self):
+        PersonalInfo.objects.filter(user=self.editor).update(
+            booking_url='https://Mm', phone='+201001234567',
+        )
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'https://Mm')
+        self.assertContains(response, 'https://wa.me/201001234567')
+
+    def test_review_counts_are_singular_for_a_single_review(self):
+        ClientReview.objects.filter(user=self.editor).filter(rating=4).delete()
+        response = self.client.get(self.rated_card)
+        self.assertContains(response, '(1 review)')
+        self.assertContains(response, 'from 1 client review"')
+
+    def test_masthead_counts_always_describe_the_whole_directory(self):
+        response = self.client.get(self.rated_card, {'sort': 'views'})
+        body = response.content.decode()
+        self.assertIn('1 editor · 1 rated by real clients', body)
+
+    def test_hire_page_has_no_how_it_works_band(self):
+        """The page leads with the directory, not a four-step explainer."""
+        response = self.client.get(self.rated_card)
+        self.assertNotContains(response, 'hire-steps')
+        self.assertNotContains(response, 'How hiring works on Skillifly')
+        arabic = self.client.get(reverse('arabic_hire_editors'))
+        self.assertNotContains(arabic, 'كيف يتم التوظيف على سكيليفلاي')
+
+    def test_hire_page_offers_only_top_rated_and_most_viewed(self):
+        """No search box and no skill chips — sorting is the only control."""
+        for url in (self.rated_card, reverse('arabic_hire_editors')):
+            response = self.client.get(url)
+            body = response.content.decode()
+            self.assertNotIn('name="q"', body)
+            self.assertNotIn('hire-chips', body)
+            self.assertNotIn('type="search"', body)
+            # Exactly the two orderings the directory supports
+            self.assertEqual(body.count('value="rating"'), 1)
+            self.assertEqual(body.count('value="views"'), 1)
+            self.assertNotIn('value="name"', body)
+            self.assertNotIn('value="reviews"', body)
+
+    def test_hire_page_sorts_by_rating_by_default(self):
+        body = self.client.get(self.rated_card).content.decode()
+        self.assertLess(body.index('Top rated'), body.index('Most viewed'))
+        self.assertIn('Top editors ready to hire', body)
+
+    def test_most_viewed_sort_orders_by_portfolio_visits(self):
+        popular = User.objects.create_user(
+            username='popular', email='popular@example.com', password='pass12345'
+        )
+        popular_profile = Profile.objects.create(user=popular, is_public=True, visits=900)
+        PersonalInfo.objects.create(
+            user=popular, full_name='Popular Editor', email='popular@example.com',
+            phone='', bio='', booking_url='https://cal.example.com/popular',
+        )
+        Showcase.objects.create(
+            profile=popular_profile, title='Busiest Portfolio', description='Most viewed.',
+            is_active=True,
+            preview_image=SimpleUploadedFile('popular.png', _tiny_png_bytes(), content_type='image/png'),
+        )
+        Profile.objects.filter(pk=self.profile.pk).update(visits=5)
+
+        # Default (top rated) puts the 4.5-rated editor ahead of the unrated one
+        body = self.client.get(self.rated_card).content.decode()
+        self.assertLess(body.index('Hire Editor'), body.index('Popular Editor'))
+
+        # Most viewed flips them
+        body = self.client.get(self.rated_card, {'sort': 'views'}).content.decode()
+        self.assertLess(body.index('Popular Editor'), body.index('Hire Editor'))
+        self.assertIn('The portfolios clients browse most', body)
+
+    def test_unknown_sort_falls_back_to_top_rated(self):
+        body = self.client.get(self.rated_card, {'sort': 'reviews'}).content.decode()
+        self.assertIn('Top editors ready to hire', body)
+
+    def test_arabic_hire_page_is_a_mirrored_rtl_twin(self):
+        response = self.client.get(reverse('arabic_hire_editors'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'dir="rtl"')
+        self.assertContains(response, 'متوسط التقييم')
+        self.assertContains(response, 'https://cal.example.com/hireeditor')
+
+    def test_language_cookie_switches_hire_page_to_arabic_twin(self):
+        self.client.cookies['skillifly_lang'] = 'ar'
+        response = self.client.get(self.rated_card)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('arabic_hire_editors'))
+
+    def test_language_cookie_switches_arabic_hire_page_to_english_twin(self):
+        self.client.cookies['skillifly_lang'] = 'en'
+        response = self.client.get(reverse('arabic_hire_editors'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.rated_card)
+
+    def test_client_dashboard_offers_exactly_two_options(self):
+        self.client.login(username='hireclient', password='pass12345')
+        response = self.client.get(reverse('client_dashboard'))
+        body = response.content.decode()
+        self.assertContains(response, 'Hire a talent')
+        self.assertContains(response, 'Manage reviews')
+        self.assertContains(response, reverse('hire_editors'))
+        self.assertContains(response, reverse('client_reviews'))
+        # No editor recommendations on the dashboard — the directory is one click away
+        self.assertNotContains(response, 'Hire Editor')
+        self.assertNotContains(response, 'preview/')
+
+    def test_client_dashboard_has_no_third_option(self):
+        self.client.login(username='hireclient', password='pass12345')
+        response = self.client.get(reverse('client_dashboard'))
+        body = response.content.decode()
+        self.assertEqual(body.count('cd-option cd-option--'), 2)
+
+
 class ClientDashboardRoutingTests(TestCase):
     def setUp(self):
         self.client_user = User.objects.create_user(
@@ -356,16 +607,16 @@ class ClientDashboardRoutingTests(TestCase):
         self.client.login(username='clientdash', password='pass12345')
         response = self.client.get(reverse('client_dashboard'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Hire Exceptional Talent')
-        self.assertContains(response, 'Own Your Review Presence')
+        self.assertContains(response, 'Hire a talent')
+        self.assertContains(response, 'Manage reviews')
 
     def test_arabic_client_dashboard_renders_with_warm_arabic_style(self):
         self.client.login(username='clientdash', password='pass12345')
         response = self.client.get(reverse('arabic_client_dashboard'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'مركز تحكم العميل')
-        self.assertContains(response, 'وظّف مواهب استثنائية')
-        self.assertContains(response, 'أدر حضورك بالتقييمات')
+        self.assertContains(response, 'وظّف محررًا')
+        self.assertContains(response, 'أدر تقييماتك')
         self.assertContains(response, 'dir="rtl"')
         self.assertContains(response, 'إجمالي التقييمات')
 

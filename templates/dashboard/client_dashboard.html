@@ -3,101 +3,327 @@
 
 {% block title %}Client Dashboard — Skillifly{% endblock %}
 
+{% block meta_description %}Your Skillifly client dashboard: hire a video editor, or manage the reviews you have left.{% endblock %}
+
+{% block og_title %}Client Dashboard — Skillifly{% endblock %}
+{% block og_description %}Hire a video editor, or manage the reviews you have left.{% endblock %}
+{% block twitter_title %}Client Dashboard — Skillifly{% endblock %}
+{% block twitter_description %}Hire a video editor, or manage the reviews you have left.{% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
+
 {% block extra_head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<meta name="robots" content="noindex, nofollow" />
+<script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
+{% include "dashboard/_dash_system.html" %}
 <style>
-  .client-premium-shell {
-    min-height: 100vh;
+  /* Client-dashboard layout only — the design system comes from _dash_system.html. */
+  /* Two columns, two rows: each row's cards share one height. On phones the
+     areas fall back to source order — hire, reviews, standing, quick links. */
+  .cd-grid { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1024px) {
+    .cd-grid {
+      grid-template-columns: minmax(0, 1fr) 330px;
+      grid-template-areas:
+        "hire     standing"
+        "reviews  quick";
+    }
+    .cd-hire { grid-area: hire; }
+    .cd-standing { grid-area: standing; }
+    .cd-reviews { grid-area: reviews; }
+    .cd-quick { grid-area: quick; }
   }
 
-  .client-hero-card {
-    border: 1px solid rgba(99, 102, 241, 0.14);
-    border-radius: 24px;
-    background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
-    box-shadow: 0 24px 48px -30px rgba(15, 23, 42, 0.35);
-  }
+  /* The two options: exactly what a client can do from here. */
+  .cd-option { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+  .cd-standing { display: flex; flex-direction: column; }
 
-  .client-kpi-chip {
-    border: 1px solid rgba(99, 102, 241, 0.18);
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 10px 14px;
-  }
+  /* Card head — icon chip + title + one-line promise */
+  .cd-head { display: flex; align-items: center; gap: 14px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+  .cd-head-text { min-width: 0; }
+  .cd-head h2 { margin: 0; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.25; }
+  .cd-head p { margin: 3px 0 0; font-size: 12.5px; font-weight: 500; color: #64748b; line-height: 1.45; }
 
-  .client-action-card {
-    border-radius: 22px;
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
-    box-shadow: 0 16px 34px -22px rgba(15, 23, 42, 0.3);
-  }
+  .cd-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; flex: 1 1 auto; }
+  .cd-desc { margin: 0; font-size: 13.5px; font-weight: 500; line-height: 1.7; color: #475569; }
 
-  .client-action-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(99, 102, 241, 0.3);
-    box-shadow: 0 24px 38px -24px rgba(37, 99, 235, 0.35);
+  .cd-foot { padding: 16px 22px 20px; border-top: 1px solid var(--line); display: flex; }
+  .cd-foot > * { flex: 1 1 auto; }
+
+  /* Chevron affordance inside a status-strip cell */
+  .cd-strip-go { margin-inline-start: auto; color: var(--faint); display: inline-flex; flex-shrink: 0; }
+  .sf-cell:hover .cd-strip-go { color: var(--brand); }
+
+  /* Rows inside the option cards */
+  .cd-name { display: block; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cd-meta { display: flex; align-items: center; gap: 7px; margin-top: 3px; flex-wrap: wrap; }
+  .cd-meta em { font-style: normal; font-size: 11.5px; font-weight: 600; color: #64748b; }
+
+  /* Recent reviews inside the reviews option */
+  .cd-review-av {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    background: #ede9fe; color: #6d28d9; display: grid; place-items: center;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800;
   }
+  .cd-review-name { display: block; font-size: 13.5px; font-weight: 700; color: #0f172a; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cd-review-body { display: block; font-size: 12.5px; font-weight: 500; color: #64748b; line-height: 1.5; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Reputation list in the aside card */
+  .cd-task { display: flex; align-items: flex-start; gap: 11px; font-size: 13px; font-weight: 600; line-height: 1.55; color: #0f172a; padding: 7px 0; }
+  .cd-task svg { width: 17px; height: 17px; flex-shrink: 0; margin-top: 2px; }
+  .cd-task--done { color: #475569; }
+  .cd-task--done svg { color: #059669; }
+  .cd-task--todo { color: #64748b; }
+  .cd-task--todo svg { color: #cbd5e1; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="client-premium-shell min-h-screen">
-  <div class="max-w-7xl mx-auto px-6 py-12">
+<div class="dash mx-auto w-full max-w-7xl px-4 sm:px-6 pt-8 sm:pt-10 pb-20">
 
-    <div class="client-hero-card p-7 md:p-9 mb-8 animate-fadeInUp">
-      <p class="text-xs text-purple-600 font-bold uppercase tracking-widest mb-2">Client Command Center</p>
-      <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black flex items-center gap-2" style="font-family: 'Syne', sans-serif;">
-        <span>{{ user.first_name|default:user.username }}</span>
-        <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-8 w-8 sm:h-10 sm:w-10 object-contain" loading="lazy" decoding="async" width="40" height="40">
-      </h1>
-      <p class="text-slate-600 font-medium mb-5">Lead with confidence. Discover top-tier editors and build your public reputation through trusted reviews.</p>
+  <!-- ── Header ── -->
+  <header class="mb-7 reveal" style="--d:0ms">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+      <div class="min-w-0">
+        <p class="sf-cap mb-1.5 !text-violet-600">Client command center</p>
+        <h1 class="flex items-center gap-2.5 text-[28px] sm:text-[32px] font-bold text-black leading-tight"
+          style="font-family:'Syne',sans-serif;">
+          <span class="truncate">{{ user.first_name|default:user.username }}</span>
+          <img src="{% static 'img/bird.png' %}" alt="" aria-hidden="true" class="h-8 sm:h-9 w-auto shrink-0"
+            loading="lazy" decoding="async">
+        </h1>
+        <p class="text-slate-700 font-medium mt-1.5 text-[15px]">
+          Two things you can do here: hire the right editor, and manage your reviews.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 max-lg:w-full">
+        <a href="{% url 'hire_editors' %}" class="btn-ghost btn-sm flex-1 lg:flex-none justify-center">
+          <i data-lucide="search" class="!h-4 !w-4"></i> Browse editors
+        </a>
+        <a href="{% url 'client_reviews' %}" class="btn-primary btn-sm flex-1 lg:flex-none">
+          <i data-lucide="star" class="!h-4 !w-4"></i> My reviews
+        </a>
+      </div>
+    </div>
+  </header>
 
-      <div class="flex flex-wrap gap-3">
-        <div class="client-kpi-chip">
-          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Total Reviews</p>
-          <p class="text-lg font-extrabold text-blue-600">{{ reviews_count }}</p>
-        </div>
-        <div class="client-kpi-chip">
-          <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Editors Reviewed</p>
-          <p class="text-lg font-extrabold text-violet-600">{{ reviewed_editors_count }}</p>
-        </div>
+  <!-- ── Status strip ── -->
+  <section class="sf-card reveal mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 overflow-hidden"
+    style="--d:70ms" aria-label="Your hiring and review activity">
+
+    <div class="sf-cell border-b sm:border-r lg:border-b-0 lg:border-r" style="border-color: var(--line);">
+      <div class="min-w-0">
+        <p class="sf-num text-[26px] leading-none mb-1.5">{{ editors_count }}</p>
+        <p class="sf-cap">Editors available</p>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fadeInUp" style="animation-delay: 0.1s">
-      <a href="{% url 'examples' %}" class="client-action-card p-6 group transition-all duration-300 block">
-        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Hire Exceptional Talent</h3>
-        <p class="text-sm text-slate-600 font-medium">Explore standout portfolios and shortlist editors that match your exact creative standards.</p>
-        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
-          <span>Explore Top Editors</span>
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-      </a>
-
-      <a href="{% url 'client_reviews' %}" class="client-action-card p-6 group transition-all duration-300 block">
-        <div class="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center mb-4 group-hover:shadow-lg transition-all">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l2.025 6.236h6.557c.969 0 1.371 1.24.588 1.81l-5.304 3.855 2.026 6.236c.3.921-.755 1.688-1.54 1.118L12 18.327l-5.303 3.855c-.785.57-1.84-.197-1.54-1.118l2.026-6.236L1.879 10.973c-.783-.57-.38-1.81.588-1.81h6.557l2.025-6.236z" />
-          </svg>
-        </div>
-        <h3 class="text-base font-bold mb-1 text-black" style="font-family: 'Syne', sans-serif;">Own Your Review Presence</h3>
-        <p class="text-sm text-slate-600 font-medium">{{ reviews_count }} review{{ reviews_count|pluralize }} across {{ reviewed_editors_count }} editor{{ reviewed_editors_count|pluralize }}. Maintain a premium, credible client voice.</p>
-        <div class="flex items-center gap-1 text-blue-600 text-sm mt-4 font-bold">
-          <span>Manage Review Portfolio</span>
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-      </a>
+    <div class="sf-cell border-b sm:border-r lg:border-b-0 lg:border-r" style="border-color: var(--line);">
+      <div class="min-w-0">
+        <p class="sf-num text-[26px] leading-none mb-1.5">{{ rated_count }}</p>
+        <p class="sf-cap">Rated by clients</p>
+      </div>
     </div>
+
+    <a href="{% url 'client_reviews' %}" class="sf-cell group border-b sm:border-r lg:border-b-0 lg:border-r hover:bg-slate-50/80 transition-colors"
+      style="border-color: var(--line);">
+      <div class="min-w-0 flex-1">
+        <p class="sf-num text-[26px] leading-none mb-1.5">{{ reviews_count }}</p>
+        <p class="sf-cap">Reviews you wrote</p>
+      </div>
+      <span class="cd-strip-go">
+        <i data-lucide="chevron-right" class="!h-[18px] !w-[18px] group-hover:text-violet-600 transition-colors"></i>
+      </span>
+    </a>
+
+    <div class="sf-cell">
+      <div class="min-w-0 flex-1">
+        <p class="sf-cap mb-1">Average you give</p>
+        <p class="text-[13px] font-semibold text-slate-900">
+          {% if avg_rating_given %}{{ avg_rating_given }} out of 5{% else %}No ratings yet{% endif %}
+        </p>
+      </div>
+      {% if avg_rating_given %}
+      <span class="sf-pill pill-active">
+        <i data-lucide="circle-check-big" class="!h-3 !w-3"></i>
+        {% if reviews_count >= 3 %}Established{% else %}New{% endif %}
+      </span>
+      {% else %}
+      <span class="sf-pill pill-warn">Waiting</span>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ── The only two options ── -->
+  <div class="cd-grid">
+
+    <!-- Option 1 — Hire a talent -->
+    <section class="sf-card cd-option cd-option--hire cd-hire reveal" style="--d:140ms" aria-labelledby="hire-title">
+      <div class="cd-head">
+        <div class="sf-chip sf-chip-lg tint-violet"><i data-lucide="search"></i></div>
+        <div class="cd-head-text">
+          <h2 id="hire-title">Hire a talent</h2>
+          <p>Preview real work, compare ratings, then contact</p>
+        </div>
+      </div>
+
+      <div class="cd-body">
+        <p class="cd-desc">
+          Browse {{ editors_count }} published editor{{ editors_count|pluralize }}. Every card shows a
+          preview of the editor's actual projects and the average rating left by real clients — so you
+          shortlist on evidence, not on a stock photo.
+        </p>
+      </div>
+
+      <div class="cd-foot">
+        <a class="btn-primary btn-sm w-full" href="{% url 'hire_editors' %}">
+          Browse {{ editors_count }} editor{{ editors_count|pluralize }}
+          <i data-lucide="arrow-right" class="!h-4 !w-4"></i>
+        </a>
+      </div>
+    </section>
+
+    <!-- Option 2 — Manage reviews -->
+    <section class="sf-card cd-option cd-option--reviews cd-reviews reveal" style="--d:210ms"
+      aria-labelledby="reviews-title">
+      <div class="cd-head">
+        <div class="sf-chip sf-chip-lg tint-amber"><i data-lucide="star"></i></div>
+        <div class="cd-head-text">
+          <h2 id="reviews-title">Manage reviews</h2>
+          <p>Your ratings are your client signature</p>
+        </div>
+      </div>
+
+      <div class="cd-body">
+        <p class="cd-desc">
+          {% if reviews_count %}
+          {{ reviews_count }} review{{ reviews_count|pluralize }} across
+          {{ reviewed_editors_count }} editor{{ reviewed_editors_count|pluralize }}. Editors check who they
+          work with — a fair, specific review history is what makes them reply first.
+          {% else %}
+          You haven't left a review yet. Finish a project, then rate the editor: your rating is what makes
+          the next editor prioritise your brief.
+          {% endif %}
+        </p>
+
+        {% if recent_reviews %}
+        <div class="sf-card overflow-hidden">
+          {% for review in recent_reviews %}
+          <div class="sf-row">
+            <span class="cd-review-av" aria-hidden="true">{{ review.user_name|slice:":2"|upper }}</span>
+            <span class="min-w-0 flex-1">
+              <span class="cd-review-name">@{{ review.user.username }}</span>
+              <span class="cd-review-body">{{ review.rating }}/5 · {{ review.content|truncatewords:12 }}</span>
+            </span>
+            <span class="sf-pill pill-active">{{ review.rating }}/5</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="sf-empty">
+          <i data-lucide="clock-3" class="!h-[18px] !w-[18px] shrink-0"></i>
+          Your reviews will show up here once you rate an editor.
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="cd-foot">
+        <a class="btn-ghost btn-sm w-full" href="{% url 'client_reviews' %}">
+          Manage my reviews
+          <i data-lucide="arrow-right" class="!h-4 !w-4"></i>
+        </a>
+      </div>
+    </section>
+
+    <!-- Client standing -->
+    <section class="sf-pro cd-standing reveal p-6" style="--d:210ms" aria-labelledby="standing-title">
+      <div class="flex items-center justify-between mb-4 relative z-10">
+        <p id="standing-title" class="sf-cap !text-[#6d28d9]">Client standing</p>
+        {% if reviews_count >= 3 %}
+        <span class="sf-pill pill-active">Established</span>
+        {% elif reviews_count %}
+        <span class="sf-pill pill-warn">Getting there</span>
+        {% else %}
+        <span class="sf-pill pill-brand">New</span>
+        {% endif %}
+      </div>
+
+      <div class="flex items-center gap-3 mb-1.5 relative z-10">
+        <div class="sf-chip tint-amber !bg-white/80 shadow-sm"><i data-lucide="badge-check"></i></div>
+        <p class="sf-num text-[20px] text-slate-900">
+          {{ reviews_count }} review{{ reviews_count|pluralize }}
+        </p>
+      </div>
+
+      <p class="text-[12.5px] text-slate-700 font-medium mb-5 relative z-10">
+        {% if avg_rating_given %}
+        You average {{ avg_rating_given }}/5 across {{ reviewed_editors_count }} editor{{ reviewed_editors_count|pluralize }}.
+        {% else %}
+        Finish a project and rate the editor — a fair, specific review history is what makes editors reply first.
+        {% endif %}
+      </p>
+
+      <div class="relative z-10 -mx-1 mt-auto">
+        <div class="cd-task cd-task--done">
+          <i data-lucide="circle-check-big"></i>
+          <span>Browse real portfolios before you commit</span>
+        </div>
+        <div class="cd-task {% if reviews_count %}cd-task--done{% else %}cd-task--todo{% endif %}">
+          <i data-lucide="{% if reviews_count %}circle-check-big{% else %}circle{% endif %}"></i>
+          <span>Rate the editor you worked with</span>
+        </div>
+        <div class="cd-task {% if reviews_count >= 3 %}cd-task--done{% else %}cd-task--todo{% endif %}">
+          <i data-lucide="{% if reviews_count >= 3 %}circle-check-big{% else %}circle{% endif %}"></i>
+          <span>Build a history editors trust (3+ reviews)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick links -->
+    <section class="sf-card cd-quick overflow-hidden reveal" style="--d:280ms" aria-labelledby="quicklinks-title">
+      <div class="flex items-center justify-between px-6 pt-5 pb-3">
+        <p id="quicklinks-title" class="sf-cap">Quick links</p>
+      </div>
+        <a href="{% url 'hire_editors' %}" class="sf-row !py-3 group">
+          <div class="sf-chip !w-9 !h-9 !rounded-[11px] tint-violet"><i data-lucide="layout-grid" class="!h-4 !w-4"></i></div>
+          <span class="text-[13.5px] font-bold text-slate-900">Hire an editor</span>
+          <span class="go"><i data-lucide="chevron-right" class="!h-4 !w-4"></i></span>
+        </a>
+        <a href="{% url 'client_reviews' %}" class="sf-row !py-3 group">
+          <div class="sf-chip !w-9 !h-9 !rounded-[11px] tint-amber"><i data-lucide="star" class="!h-4 !w-4"></i></div>
+          <span class="text-[13.5px] font-bold text-slate-900">My reviews</span>
+          <span class="go"><i data-lucide="chevron-right" class="!h-4 !w-4"></i></span>
+        </a>
+        <a href="{% url 'profile' %}" class="sf-row !py-3 group">
+          <div class="sf-chip !w-9 !h-9 !rounded-[11px] tint-slate"><i data-lucide="user-round" class="!h-4 !w-4"></i></div>
+          <span class="text-[13.5px] font-bold text-slate-900">My profile</span>
+          <span class="go"><i data-lucide="chevron-right" class="!h-4 !w-4"></i></span>
+        </a>
+        <a href="{% url 'contact' %}" class="sf-row !py-3 group">
+          <div class="sf-chip !w-9 !h-9 !rounded-[11px] tint-emerald"><i data-lucide="life-buoy" class="!h-4 !w-4"></i></div>
+          <span class="text-[13.5px] font-bold text-slate-900">Help &amp; support</span>
+          <span class="go"><i data-lucide="chevron-right" class="!h-4 !w-4"></i></span>
+        </a>
+      </section>
   </div>
+
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    'use strict';
+    function ready(fn) {
+      if (document.readyState !== 'loading') fn();
+      else document.addEventListener('DOMContentLoaded', fn);
+    }
+    ready(function () {
+      if (window.lucide) {
+        try { window.lucide.createIcons({ attrs: { 'stroke-width': 1.75 } }); }
+        catch (e) { window.lucide.createIcons(); }
+      }
+    });
+  })();
+</script>
 {% endblock %}

@@ -881,8 +881,10 @@
                 <div class="skill-info">
                     <div class="skill-name">{{ skill.name }}</div>
                     <div class="skill-bar-wrap">
-                        {# FIX: Skill model only has 'name' — no 'level' field exists.
-                           Using a fixed 80% bar width for all skills. #}
+                        {% comment %}
+                        FIX: Skill model only has 'name' — no 'level' field exists.
+                        Using a fixed 80% bar width for all skills.
+                        {% endcomment %}
                         <div class="skill-bar" style="width:0" data-width="80%"></div>
                     </div>
                 </div>

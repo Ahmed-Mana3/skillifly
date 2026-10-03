@@ -1,0 +1,230 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}توظيف محرر — أعمال حقيقية وتقييمات موثّقة | Skillifly{% endblock %}
+
+{% block meta_description %}نفس الملفات التي نعرضها في معرض النماذج، مع متوسط تقييم العملاء لكل محرر. شاهد العمل، قارن التقييم، ثم وظّف.{% endblock %}
+
+{% block meta_keywords %}توظيف محرر فيديو, البحث عن محرر فيديو, محرر ريلز, تقييمات محررين, ملف أعمال محرر فيديو{% endblock %}
+
+{% block og_title %}توظيف محرر — Skillifly{% endblock %}
+{% block og_description %}شاهد أعمال المحررين الحقيقية، وقارن تقييمات العملاء، وتوظّف بثقة.{% endblock %}
+{% block twitter_title %}توظيف محرر — Skillifly{% endblock %}
+{% block twitter_description %}شاهد أعمال المحررين الحقيقية، وقارن تقييمات العملاء، وتوظّف بثقة.{% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:locale" content="ar_AR" />
+<meta name="theme-color" content="#0F172A" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "توظيف محرر",
+  "inLanguage": "ar",
+  "url": "{{ request.build_absolute_uri }}",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for card in editors %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "item": {
+          "@type": "Person",
+          "name": "{{ card.name|escapejs }}",
+          "url": "https://skillifly.cloud/{{ card.username }}/"
+          {% if card.avg_rating %},
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "{{ card.avg_rating }}",
+            "bestRating": "5",
+            "reviewCount": "{{ card.rating_count }}"
+          }{% endif %}
+        }
+      }{% if not forloop.last %},{% endif %}{% endfor %}
+    ]
+  }
+}
+</script>
+
+<script>document.documentElement.classList.add('ex-js');</script>
+
+{% include "core/_showcase_card_styles.html" %}
+{% include "dashboard/_hire_styles.html" %}
+
+<style>
+  /* Arabic twin — the card itself is the shared /examples/ card. */
+  .ex-page { font-family: 'Tajawal', 'Cairo', sans-serif; }
+  /* Arabic never takes letter-spacing — it breaks glyph joining */
+  .ex-page * { letter-spacing: 0 !important; }
+  .ex-page h1, .ex-page h2, .ex-page h3,
+  .ex-page .ex-score, .ex-page .ex-shot-empty b, .ex-page .ex-gallery-title {
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+  }
+  .ex-page .btn-primary,
+  .ex-page .btn-ghost,
+  .ex-page .ex-btn { font-family: 'Tajawal', 'Cairo', sans-serif; }
+
+  /* Latin-style display treatments read as noise in Arabic */
+  .ex-page .ex-eyebrow,
+  .ex-page .ex-theme-chip { letter-spacing: 0; text-transform: none; }
+  .ex-page .ex-eyebrow { font-size: 0.875rem; }
+
+  .ex-page .ex-gallery-title { line-height: 1.35; }
+  .ex-page .ex-gallery-sub { max-width: 540px; line-height: 1.85; }
+  .ex-page .ex-name { font-size: 1.0625rem; line-height: 1.5; }
+  .ex-page .ex-desc { line-height: 1.75; }
+  .ex-page .ex-cta-card h2 { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; line-height: 1.35; }
+  .ex-page .ex-cta-card > p { max-width: 540px; line-height: 1.85; }
+
+  /* RTL: the action-link arrow points backwards */
+  .ex-page .ex-visit svg { transform: scaleX(-1); }
+  /* Numerals, scores and star rows stay left-to-right */
+  .ex-page .ex-stars { display: inline-block; }
+  .ex-page .ex-score,
+  .ex-page .ex-rating-meta,
+  .ex-page .hire-count { direction: ltr; text-align: start; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ex-page" dir="rtl" lang="ar">
+
+  <!-- ── الترويسة ── -->
+  <section class="hire-mast">
+    <div class="ex-wrap">
+      <div class="ex-gallery-head">
+        <p class="ex-eyebrow">توظيف المواهب</p>
+        <h1 class="ex-gallery-title">اعثر على محرر، <span class="gradient-text">شاهد أعماله</span>، وتوظّف بثقة.</h1>
+        <p class="ex-gallery-sub">
+          {{ total_editors }} محرر · {{ total_rated }} بتقييمات عملاء حقيقيين.
+          كل بطاقة أدناه هي نفس الملف الذي تراه في معرض النماذج — مع التقييم.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── التصفية ── -->
+  <div class="hire-filters">
+    <div class="ex-wrap">
+      <form class="hire-filter-row" method="get" action="{% url 'arabic_hire_editors' %}">
+        <div class="hire-sort">
+          <label class="sr-only" for="hire-sort">ترتيب المحررين</label>
+          <select id="hire-sort" name="sort" onchange="this.form.submit()">
+            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>الأعلى تقييمًا</option>
+            <option value="views" {% if sort == 'views' %}selected{% endif %}>الأكثر مشاهدة</option>
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+
+        <p class="hire-count"><b>{{ editors_count }}</b> محرر معروض</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── بطاقات المحررين — نفس بطاقة معرض النماذج، مع التقييم ── -->
+  <section class="ex-gallery">
+    <div class="ex-wrap">
+
+      {% if not user.is_authenticated %}
+      <div class="hire-guest">
+        <div class="hire-guest-text">
+          <strong>أنشئ حساب عميل مجاني لتختار وتوظّف</strong>
+          <span>لا يستغرق الأمر أكثر من دقيقة، ويتيح لك متابعة من قيّمتهم.</span>
+        </div>
+        <a class="ex-btn" href="{% url 'arabic_client_signup' %}">تسجيل حساب عميل</a>
+        <a class="ex-btn ex-btn--ghost" href="{% url 'arabic_signin' %}">تسجيل الدخول</a>
+      </div>
+      {% endif %}
+
+      <div class="ex-gallery-head">
+        <p class="ex-eyebrow">{% if sort == 'views' %}الأكثر مشاهدة{% else %}الأعلى تقييمًا{% endif %}</p>
+        <h2 class="ex-gallery-title" style="font-size:clamp(1.5rem,3vw,2rem)">
+          {% if sort == 'views' %}الملفات التي يشاهدها العملاء أكثر من غيرها
+          {% else %}أفضل المحررين الجاهزين للتوظيف{% endif %}
+        </h2>
+        <p class="ex-gallery-sub">
+          كل بطاقة هي ملف أعمال حي على سكيليفلاي مع متوسط تقييم العملاء.
+        </p>
+      </div>
+
+      {% if editors %}
+      <ul class="ex-grid" role="list">
+        {% for card in editors %}
+        <li class="ex-reveal">
+          {% include "core/_showcase_card.html" with showcase=card.showcase live_label="مباشر" visit_label="زيارة الملف" show_rating=1 rating_avg=card.avg_rating rating_percent=card.rating_percent rating_count=card.rating_count rating_aria="متوسط التقييم" rating_aria_end="من 5 بناءً على" review_word="تقييمات" review_word_one="تقييم" no_rating_label="لا يوجد تقييم بعد" show_hire=1 hire_url=card.booking_url hire_label="وظّف الآن" no_booking_label="لا يوجد رابط حجز" %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="ex-empty">
+        <div style="width:64px;height:64px;margin:0 auto;border-radius:50%;display:grid;place-items:center;background:rgba(124,58,237,0.08)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <h2>لا يوجد محررون للعرض بعد</h2>
+        <p>الدليل يعرض فقط الملفات التي نشرناها — تصفّح النماذج الحية في هذه الأثناء.</p>
+        <div class="ex-empty-actions">
+          <a class="ex-btn" href="{% url 'arabic_hire_editors' %}">عرض كل المحررين</a>
+          <a class="ex-btn ex-btn--ghost" href="{% url 'arabic_examples' %}">تصفّح النماذج الحية</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ── الختام ── -->
+  {% if editors %}
+  <section class="ex-cta">
+    <div class="ex-cta-card">
+      <h2>حدّدت محررك؟ أكمل الدورة.</h2>
+      <p>بعد تسليم المشروع اترك تقييمًا في ملفه. تقييمك هو ما يمنح العميل التالي الثقة ليبدأ
+         مشروعه بيقين — وهو ما يحافظ على سمعتك أنت كعميل.</p>
+      <div class="ex-cta-actions">
+        <a class="ex-btn" href="{% url 'arabic_client_reviews' %}" style="height:50px;padding-inline:32px;font-size:0.9375rem">إدارة تقييماتي</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    var items = document.querySelectorAll('.ex-reveal');
+    if (!items.length) return;
+
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || !('IntersectionObserver' in window)) {
+      items.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    items.forEach(function (el, i) {
+      el.style.transitionDelay = ((i % 3) * 80) + 'ms';
+      io.observe(el);
+    });
+  })();
+</script>
+{% endblock %}
