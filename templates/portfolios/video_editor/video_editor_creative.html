@@ -30,6 +30,15 @@
             --accent: #ff3d6b;
             --accent2: #ff8c00;
             --gold: #ffd700;
+            /* Bare channels for the same three brand colours. Everything this
+               theme fades with rgba() rather than a token — hover washes, card
+               glows, pill fills, the ambient orbs, the hero vignette — reads
+               these instead of a literal, so core/theme_colors.py can restate
+               all three in one place when the user recolours the page. Keep
+               these in step with the hex values above. */
+            --accent-rgb: 255, 61, 107;
+            --accent2-rgb: 255, 140, 0;
+            --gold-rgb: 255, 215, 0;
             --text: #f0f0f8;
             --dim: rgba(240, 240, 248, 0.4);
             --dimmer: rgba(240, 240, 248, 0.15);
@@ -65,7 +74,7 @@
             position: fixed;
             width: 40px;
             height: 40px;
-            border: 1px solid rgba(255, 61, 107, 0.6);
+            border: 1px solid rgba(var(--accent-rgb), 0.6);
             border-radius: 50%;
             pointer-events: none;
             z-index: 9998;
@@ -127,7 +136,7 @@
         .orb-1 {
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, #ff3d6b, transparent);
+            background: radial-gradient(circle, var(--accent), transparent);
             top: -20%;
             left: -10%;
             animation-delay: 0s;
@@ -136,7 +145,7 @@
         .orb-2 {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, #ff8c00, transparent);
+            background: radial-gradient(circle, var(--accent2), transparent);
             bottom: -10%;
             right: 5%;
             animation-delay: -3s;
@@ -284,7 +293,7 @@
             gap: 12px;
             padding: 18px 40px;
             background: var(--accent);
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             font-weight: 700;
             font-size: 0.85rem;
             letter-spacing: 0.1em;
@@ -300,14 +309,14 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, #ff3d6b, #ff8c00);
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
             opacity: 0;
             transition: opacity 0.3s;
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 20px 50px rgba(255, 61, 107, 0.4);
+            box-shadow: 0 20px 50px rgba(var(--accent-rgb), 0.4);
         }
 
         .btn-primary:hover::before {
@@ -338,7 +347,7 @@
 
         .btn-secondary:hover {
             border-color: var(--accent);
-            background: rgba(255, 61, 107, 0.08);
+            background: rgba(var(--accent-rgb), 0.08);
             transform: translateY(-3px);
         }
 
@@ -363,7 +372,7 @@
             font-family: 'Bebas Neue', sans-serif;
             font-size: 1.1rem;
             letter-spacing: 0.2em;
-            color: #fff;
+            color: var(--sf-text, #fff);
             display: flex;
             align-items: center;
             gap: 20px;
@@ -496,7 +505,7 @@
 
         .project-card:hover {
             transform: translateY(-8px) scale(1.01);
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 61, 107, 0.3);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(var(--accent-rgb), 0.3);
         }
 
         .project-thumb {
@@ -527,7 +536,7 @@
             justify-content: center;
             font-family: 'Bebas Neue', sans-serif;
             font-size: 4rem;
-            color: rgba(255, 61, 107, 0.2);
+            color: rgba(var(--accent-rgb), 0.2);
         }
 
         .project-overlay {
@@ -545,7 +554,7 @@
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: rgba(255, 61, 107, 0.9);
+            background: rgba(var(--accent-rgb), 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -573,13 +582,13 @@
 
         .badge-reel {
             background: var(--accent);
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
         }
 
         .badge-long {
-            background: rgba(255, 215, 0, 0.2);
+            background: rgba(var(--gold-rgb), 0.2);
             color: var(--gold);
-            border: 1px solid rgba(255, 215, 0, 0.4);
+            border: 1px solid rgba(var(--gold-rgb), 0.4);
         }
 
         .project-body {
@@ -655,7 +664,7 @@
 
         .skill-pill:hover {
             border-color: var(--accent);
-            background: rgba(255, 61, 107, 0.1);
+            background: rgba(var(--accent-rgb), 0.1);
             color: var(--accent);
             transform: translateY(-3px);
         }
@@ -781,7 +790,7 @@
         }
 
         .edu-card:hover {
-            border-color: rgba(255, 61, 107, 0.3);
+            border-color: rgba(var(--accent-rgb), 0.3);
             transform: translateY(-6px);
         }
 
@@ -855,7 +864,7 @@
         }
 
         .review-card:hover {
-            border-color: rgba(255, 61, 107, 0.3);
+            border-color: rgba(var(--accent-rgb), 0.3);
             transform: translateY(-6px);
         }
 
@@ -915,7 +924,7 @@
             font-family: 'Bebas Neue', sans-serif;
             font-size: 1.2rem;
             letter-spacing: 0.05em;
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             flex-shrink: 0;
         }
 
@@ -990,7 +999,7 @@
         }
 
         .creator-pill:hover {
-            background: rgba(255, 61, 107, 0.1);
+            background: rgba(var(--accent-rgb), 0.1);
             border-color: var(--accent);
             transform: translateY(-4px) scale(1.02);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -1035,7 +1044,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(255, 61, 107, 0.12), transparent);
+            background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(var(--accent-rgb), 0.12), transparent);
             pointer-events: none;
         }
 
@@ -1128,7 +1137,7 @@
 
         .social-btn:hover {
             border-color: var(--accent);
-            background: rgba(255, 61, 107, 0.08);
+            background: rgba(var(--accent-rgb), 0.08);
             transform: translateY(-3px);
             color: var(--accent);
         }
@@ -1147,7 +1156,7 @@
             padding: 24px 52px;
             border-radius: 6px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             font-weight: 800;
             font-size: 1rem;
             letter-spacing: 0.1em;
@@ -1169,7 +1178,7 @@
 
         .big-cta:hover {
             transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 30px 80px rgba(255, 61, 107, 0.5);
+            box-shadow: 0 30px 80px rgba(var(--accent-rgb), 0.5);
         }
 
         .big-cta:hover::after {
@@ -1252,9 +1261,9 @@
         }
 
         .skillifly-badge:hover {
-            border-color: rgba(255, 61, 107, 0.4);
+            border-color: rgba(var(--accent-rgb), 0.4);
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(255, 61, 107, 0.2);
+            box-shadow: 0 15px 35px rgba(var(--accent-rgb), 0.2);
         }
 
         .skillifly-badge .powered {
@@ -1362,6 +1371,7 @@
         }
     </style>
     {% include "portfolios/common/section_layout_css.html" %}
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 
 <body>
@@ -1826,8 +1836,20 @@
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
         /* ─── Creator Avatar Fallback ─── */
+        /* Canvas cannot resolve var(), so the brand colours are read back off
+           :root. That keeps the fallback avatars in step with a saved accent
+           instead of freezing them at the shipped rose/orange — and it makes
+           the initials use the same on-accent ink the CSS tokens pick, so a
+           pale accent does not get white initials on it. */
+        const sfThemeTokens = getComputedStyle(document.documentElement);
+        const sfToken = (name, fallback) =>
+            (sfThemeTokens.getPropertyValue(name) || '').trim() || fallback;
+
         function drawCreatorAvatars() {
             const canvases = document.querySelectorAll('.creator-avatar-canvas');
+            const start = sfToken('--accent', '#ff3d6b');
+            const end = sfToken('--accent2', '#ff8c00');
+            const initialsInk = sfToken('--sf-accent-ink', '#ffffff');
             canvases.forEach(canvas => {
                 const ctx = canvas.getContext('2d');
                 const name = canvas.dataset.name || 'C';
@@ -1835,15 +1857,15 @@
                 
                 const { width, height } = canvas;
                 const gradient = ctx.createLinearGradient(0, 0, width, height);
-                gradient.addColorStop(0, '#ff3d6b');
-                gradient.addColorStop(1, '#ff8c00');
+                gradient.addColorStop(0, start);
+                gradient.addColorStop(1, end);
                 
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
                 ctx.arc(width/2, height/2, width/2, 0, Math.PI * 2);
                 ctx.fill();
                 
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = initialsInk;
                 ctx.font = 'bold 36px Outfit';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';

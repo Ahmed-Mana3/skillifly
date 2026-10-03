@@ -299,7 +299,11 @@ def arabic_custom_domain_view(request):
 @login_required
 def customize_theme_view(request):
     """Render the Customize Your Theme page with section-rename, project-order, and experience-order options."""
-    return render(request, 'dashboard/customize_theme.html')
+    from core.theme_colors import background_state
+    profile = getattr(request.user, 'profile', None)
+    return render(request, 'dashboard/customize_theme.html', {
+        'background_state': background_state(profile),
+    })
 
 
 @login_required
@@ -371,7 +375,177 @@ def arabic_customize_section_names_view(request):
 @login_required(login_url='arabic_signin')
 def arabic_customize_theme_view(request):
     """Arabic twin of the Customize Your Theme page."""
-    return render(request, 'dashboard/arabic_customize_theme.html', {'is_arabic_page': True})
+    from core.theme_colors import background_state
+    profile = getattr(request.user, 'profile', None)
+    return render(request, 'dashboard/arabic_customize_theme.html', {
+        'is_arabic_page': True,
+        'background_state': background_state(profile),
+    })
+
+
+def _theme_background_context(request):
+    """Shared context for the colour editor (EN + AR twins)."""
+    from core.theme_colors import (
+        accent_presets_for,
+        background_state,
+        presets_for,
+    )
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    state = background_state(profile)
+    return {
+        'background_state': state,
+        'background_supported': state['supported'],
+        # Theme-aware grid: the theme's own default leads, then the neutral
+        # tones. Falls back to the shared list so the locked panel can still
+        # show a sample grid for an unsupported theme.
+        'background_presets': state['presets'] or presets_for(),
+        'background_current': state['current'],
+        'background_default': state['default'],
+        'background_is_custom': state['custom'],
+        # Drives the live preview so the mock-up wears the user's own accent.
+        'background_accent': state['accent_palette']['accent'],
+        'background_accent_2': state['accent_palette']['partner'],
+        'background_gradient': state['gradient'],
+        # Accent control. Hidden entirely for the neo-brutalist themes, whose
+        # accent is their hard ink and already follows the background — there
+        # is nothing to let the user pick.
+        'accent_supported': state['accent_supported'],
+        'accent_presets': state['accent_presets'] or accent_presets_for(),
+        'accent_current': state['accent'],
+        'accent_default': state['accent_default'],
+        'accent_is_custom': state['accent_custom'],
+        'accent_palette': state['accent_palette'],
+        # Only worth linking when the portfolio is actually reachable.
+        'portfolio_url': '/{}/'.format(request.user.username) if profile.is_public else '',
+    }
+
+
+@login_required
+def customize_theme_background_view(request):
+    """Let a logged-in user recolour the background and accent of a theme.
+
+    Every theme in ``core.theme_colors.THEME_BACKGROUND_SPECS`` exposes the
+    editor. Any other theme lands on the page with an explanation and a link to
+    the theme gallery rather than a 403, so the option stays discoverable.
+    """
+    return render(request, 'dashboard/customize_background.html',
+                  _theme_background_context(request))
+
+
+@login_required(login_url='arabic_signin')
+def arabic_customize_theme_background_view(request):
+    """Arabic twin of the colour editor."""
+    context = _theme_background_context(request)
+    context['is_arabic_page'] = True
+    return render(request, 'dashboard/arabic_customize_background.html', context)
+
+
+@login_required
+@require_POST
+def customize_theme_background_save(request):
+    """AJAX save/reset of a logged-in user's own portfolio colours.
+
+    Accepts ``background`` and/or ``accent`` (hex colours), or ``reset=1`` to
+    drop both back to the theme's shipped values. Either key may be sent on its
+    own — the editor posts whichever control the user touched, and the other
+    colour must survive untouched.
+
+    The theme gate is re-checked here so a crafted POST cannot colour a theme
+    that does not ship the override block, and each value is sanitized before
+    it is stored.
+
+    Picking a theme's *own* shipped colour counts as a reset rather than a
+    customisation — see core.theme_colors.normalize_theme_settings for why —
+    so the response mirrors a ``reset=1`` post and the editor stays truthful.
+    """
+    from core.theme_colors import (
+        apply_accent_selection,
+        apply_background_selection,
+        background_state,
+        derive_accent_palette,
+        derive_palette,
+        normalize_hex_color,
+    )
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    state = background_state(profile)
+    category, theme_name = state['category'], state['theme_name']
+
+    if not state['supported']:
+        return JsonResponse(
+            {'success': False, 'error': 'These colours are not available for this theme.'},
+            status=400,
+        )
+
+    if request.POST.get('reset') == '1':
+        profile.theme_settings = {}
+        profile.save(update_fields=['theme_settings'])
+        return JsonResponse({
+            'success': True,
+            'reset': True,
+            'background': state['default'],
+            'accent': state['accent_default'],
+            'palette': derive_palette(state['default']),
+            'accent_palette': derive_accent_palette(
+                state['accent_default'], state['default'], adjust=False,
+            ),
+        })
+
+    raw_background = request.POST.get('background')
+    raw_accent = request.POST.get('accent')
+    if raw_background is None and raw_accent is None:
+        return JsonResponse(
+            {'success': False, 'error': 'Pick a colour like #0A0E27.'},
+            status=400,
+        )
+    if raw_background is not None and not normalize_hex_color(raw_background):
+        return JsonResponse(
+            {'success': False, 'error': 'Pick a background colour like #0A0E27.'},
+            status=400,
+        )
+    if raw_accent is not None and not normalize_hex_color(raw_accent):
+        return JsonResponse(
+            {'success': False, 'error': 'Pick an accent colour like #10B981.'},
+            status=400,
+        )
+    # The neo-brutalist themes have no accent of their own; refuse rather than
+    # silently drop it, so the editor can never show a saved accent that the
+    # page will not render.
+    if raw_accent is not None and not state['accent_supported']:
+        return JsonResponse(
+            {'success': False, 'error': 'This theme has no accent colour to change.'},
+            status=400,
+        )
+
+    settings = {}
+    reset = False
+    if raw_background is not None:
+        settings, colour, bg_reset = apply_background_selection(
+            profile, {'background': raw_background}, category, theme_name,
+        )
+        reset = reset or bg_reset
+    if raw_accent is not None:
+        settings, colour, accent_reset = apply_accent_selection(
+            profile, dict(settings, accent=raw_accent), category, theme_name,
+        )
+        reset = reset or accent_reset
+
+    # Both handlers merge the other key through from the profile, so `settings`
+    # is the full picture either way.
+    profile.refresh_from_db()
+    background = profile.theme_settings.get('background')
+    accent = profile.theme_settings.get('accent')
+    return JsonResponse({
+        'success': True,
+        'reset': reset or not profile.theme_settings,
+        'background': background or state['default'],
+        'accent': accent or state['accent_default'],
+        'palette': derive_palette(background or state['default']),
+        'accent_palette': derive_accent_palette(
+            accent or state['accent_default'], background or state['default'],
+            adjust=bool(profile.theme_settings),
+        ),
+    })
 
 
 @login_required

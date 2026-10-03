@@ -18,6 +18,19 @@
             --text: #000000;
             --text-dim: #666666;
             --border: #000000;
+
+            /* Polarity-dependent layers, mirroring static/css/monochrome.css so
+               a saved background overrides the whole group together. */
+            --texture: rgba(0, 0, 0, 0.15);
+            --hairline: rgba(0, 0, 0, 0.08);
+            --star-empty: rgba(0, 0, 0, 0.12);
+            --text-shadow-tint: rgba(0, 0, 0, 0.1);
+            --fill-ink: rgba(255, 255, 255, 0.85);
+            --fill-ink-soft: rgba(255, 255, 255, 0.75);
+            --fill-wash: rgba(255, 255, 255, 0.1);
+            --fill-empty: rgba(255, 255, 255, 0.25);
+            --media-black: #000000;
+            --media-scrim: rgba(0, 0, 0, 0.2);
         }
 
         body {
@@ -55,18 +68,18 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #fff;
-            border: 3px solid #000;
+            background: var(--surface);
+            border: 3px solid var(--border);
             padding: 8px 16px;
-            box-shadow: 3px 3px 0px #000;
+            box-shadow: 3px 3px 0px var(--border);
             text-transform: uppercase;
             transition: all 0.2s;
         }
         .btn-back:hover {
             transform: translate(-2px, -2px);
-            box-shadow: 5px 5px 0px #000;
-            background: #000;
-            color: #fff;
+            box-shadow: 5px 5px 0px var(--border);
+            background: var(--text);
+            color: var(--bg);
         }
 
         main {
@@ -86,7 +99,7 @@
         .video-player {
             width: 100%;
             aspect-ratio: 16/9;
-            background: #000;
+            background: var(--media-black);
             border: 3px solid var(--border);
             box-shadow: 8px 8px 0px var(--border);
             overflow: hidden;
@@ -200,7 +213,7 @@
             width: 100%;
             aspect-ratio: 16/9;
             border: 2px solid var(--border);
-            background: #000;
+            background: var(--media-black);
             overflow: hidden;
         }
 
@@ -266,6 +279,7 @@
             }
         }
     </style>
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 <body>
     <!-- Custom Cursor -->

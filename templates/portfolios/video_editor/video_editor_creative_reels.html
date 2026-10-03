@@ -31,6 +31,8 @@
             --border: rgba(255, 255, 255, 0.08);
             --accent: #ff3d6b;
             --accent2: #ff8c00;
+            --accent-rgb: 255, 61, 107;
+            --accent2-rgb: 255, 140, 0;
             --text: #f0f0f8;
             --dim: rgba(240, 240, 248, 0.55);
             --safe-top: env(safe-area-inset-top, 0px);
@@ -99,8 +101,8 @@
         .ambient-solid {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 30% 40%, rgba(255, 61, 107, 0.18), transparent 60%),
-                radial-gradient(circle at 70% 70%, rgba(255, 140, 0, 0.12), transparent 60%);
+            background: radial-gradient(circle at 30% 40%, rgba(var(--accent-rgb), 0.18), transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(var(--accent2-rgb), 0.12), transparent 60%);
             pointer-events: none;
             z-index: 0;
         }
@@ -172,7 +174,7 @@
         .shimmer-ring {
             width: 52px;
             height: 52px;
-            border: 3px solid rgba(255, 61, 107, 0.15);
+            border: 3px solid rgba(var(--accent-rgb), 0.15);
             border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.9s linear infinite;
@@ -276,7 +278,7 @@
             height: 9px;
             border-radius: 50%;
             background: #fff;
-            box-shadow: 0 0 5px rgba(255, 61, 107, 0.6);
+            box-shadow: 0 0 5px rgba(var(--accent-rgb), 0.6);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
@@ -302,7 +304,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
+            color: var(--sf-text, #fff);
             flex-shrink: 0;
             transition: background 0.2s, transform 0.15s;
         }
@@ -334,7 +336,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
+            color: var(--sf-text, #fff);
             transition: background 0.2s;
         }
 
@@ -386,7 +388,7 @@
             align-items: center;
             gap: 10px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             padding: 10px 20px;
             border-radius: 4px;
             font-weight: 700;
@@ -396,13 +398,13 @@
             text-decoration: none;
             margin-top: 12px;
             pointer-events: auto;
-            box-shadow: 0 8px 26px rgba(255, 61, 107, 0.28);
+            box-shadow: 0 8px 26px rgba(var(--accent-rgb), 0.28);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .reel-cta:hover {
             transform: translateY(-3px);
-            box-shadow: 0 14px 36px rgba(255, 61, 107, 0.5);
+            box-shadow: 0 14px 36px rgba(var(--accent-rgb), 0.5);
         }
 
         /* Right action buttons */
@@ -444,7 +446,7 @@
 
         .action-btn:hover {
             transform: scale(1.12);
-            background: rgba(255, 61, 107, 0.3);
+            background: rgba(var(--accent-rgb), 0.3);
             border-color: var(--accent);
         }
 
@@ -544,7 +546,7 @@
 
         .nav-link.active {
             color: var(--accent);
-            background: rgba(255, 61, 107, 0.12);
+            background: rgba(var(--accent-rgb), 0.12);
         }
 
         .nav-sep {
@@ -575,7 +577,7 @@
 
         .close-btn:hover {
             border-color: var(--accent);
-            background: rgba(255, 61, 107, 0.15);
+            background: rgba(var(--accent-rgb), 0.15);
             color: var(--accent);
         }
 
@@ -750,7 +752,7 @@
         }
 
         .social-chip:hover {
-            background: rgba(255, 61, 107, 0.15);
+            background: rgba(var(--accent-rgb), 0.15);
             border-color: var(--accent);
             color: var(--accent);
         }
@@ -761,7 +763,7 @@
             gap: 12px;
             padding: 16px 36px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             font-weight: 800;
             font-size: 0.9rem;
             letter-spacing: 0.1em;
@@ -773,7 +775,7 @@
 
         .contact-big-cta:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 50px rgba(255, 61, 107, 0.5);
+            box-shadow: 0 20px 50px rgba(var(--accent-rgb), 0.5);
         }
 
         /* ─── Responsive ─── */
@@ -820,6 +822,7 @@
             }
         }
     </style>
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 
 <body>

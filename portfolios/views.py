@@ -26,6 +26,7 @@ from core.models import (
     Theme,
     ClientReview,
 )
+from core.theme_colors import resolve_background_palette
 
 
 # ------------------------------------------------------------------
@@ -349,6 +350,7 @@ def preview_view(request, username):
     category_name = (normalize_category(profile.theme.category.name)
                      if profile and profile.theme and profile.theme.category else None)
     section_layout = resolve_section_layout(profile, category_name)
+    theme_background = resolve_background_palette(profile, category_name)
 
     context = {
         'personal_info': personal_info,
@@ -374,6 +376,7 @@ def preview_view(request, username):
         'is_noindex': False,
         'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
         'section_layout': section_layout,
+        'theme_background': theme_background,
         # ONLY the sections the user actually renamed — themes fall back to
         # their hard-coded headings via |default when a key is absent.
         'section_names': section_layout.get('saved_names', {}),
@@ -489,6 +492,7 @@ def portfolio_reels(request, username):
         'category_id': category_id,
         'is_noindex': True,
         'is_subpage': True,
+        'theme_background': resolve_background_palette(profile, category),
         'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)
@@ -564,6 +568,7 @@ def portfolio_long_videos(request, username):
         'category_id': category_id,
         'is_noindex': True,
         'is_subpage': True,
+        'theme_background': resolve_background_palette(profile, category),
         'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)
@@ -637,6 +642,7 @@ def portfolio_video_detail(request, username, slug):
         'category_id': category_id,
         'is_noindex': True,
         'is_subpage': True,
+        'theme_background': resolve_background_palette(profile, category),
         'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)
@@ -706,6 +712,7 @@ def portfolio_category_detail(request, username, category_id):
         'username': username,
         'is_noindex': True,
         'is_subpage': True,
+        'theme_background': resolve_background_palette(profile, category_slug),
         'portfolio_canonical_url': request.build_absolute_uri(f'/{clean_username}/'),
     }
     return render(request, template, context)

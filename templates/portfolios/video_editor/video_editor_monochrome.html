@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/monochrome.css' %}">
     {% include "portfolios/common/section_layout_css.html" %}
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 <body>
 <div class="page-wrapper">
@@ -343,15 +344,13 @@
             cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
             ring.style.width = '60px';
             ring.style.height = '60px';
-            ring.style.borderColor = '#000';
-            ring.style.backgroundColor = 'rgba(0,0,0,0.05)';
+            ring.classList.add('is-hover');
         });
         el.addEventListener('mouseleave', () => {
             cursor.style.transform = 'translate(-50%, -50%) scale(1)';
             ring.style.width = '40px';
             ring.style.height = '40px';
-            ring.style.borderColor = '#000';
-            ring.style.backgroundColor = 'transparent';
+            ring.classList.remove('is-hover');
         });
     });
 
@@ -404,18 +403,21 @@
 
     /* Creator Avatars in Grayscale Neo-Brutalist canvas */
     (function(){
+        const cs = getComputedStyle(document.documentElement);
+        const avatarFill = (cs.getPropertyValue('--text') || '').trim() || '#000000';
+        const avatarInk = (cs.getPropertyValue('--bg') || '').trim() || '#ffffff';
         const canvases = document.querySelectorAll('.creator-avatar-canvas');
         canvases.forEach(canvas => {
             const name = canvas.dataset.name || "C";
             const ctx = canvas.getContext('2d');
             const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            
+
             // Grayscale Background
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = avatarFill;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             // Text
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = avatarInk;
             ctx.font = 'bold 36px Outfit';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';

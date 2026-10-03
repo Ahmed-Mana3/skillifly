@@ -21,6 +21,8 @@
             --border:  rgba(255,255,255,0.06);
             --accent:  #ff3d6b;
             --accent2: #ff8c00;
+            --accent-rgb: 255, 61, 107;
+            --accent2-rgb: 255, 140, 0;
             --text:    #f0f0f8;
             --dim:     rgba(240,240,248,0.45);
             --dimmer:  rgba(240,240,248,0.18);
@@ -90,7 +92,7 @@
         .nav-pill:hover, .nav-pill.active {
             border-color: var(--accent);
             color: var(--accent);
-            background: rgba(255,61,107,0.08);
+            background: rgba(var(--accent-rgb), 0.08);
         }
 
         /* ─── Main Layout ─── */
@@ -127,7 +129,7 @@
             position: absolute;
             bottom: -30px; left: 10%; right: 10%;
             height: 60px;
-            background: radial-gradient(ellipse, rgba(255,61,107,0.25), transparent 70%);
+            background: radial-gradient(ellipse, rgba(var(--accent-rgb), 0.25), transparent 70%);
             filter: blur(20px);
             pointer-events: none;
             z-index: -1;
@@ -142,14 +144,14 @@
             display: inline-flex; align-items: center; gap: 12px;
             padding: 18px 40px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff; font-weight: 700; font-size: 0.9rem;
+            color: var(--sf-accent-ink, #fff); font-weight: 700; font-size: 0.9rem;
             letter-spacing: 0.1em; text-transform: uppercase;
             text-decoration: none; border-radius: 6px;
             transition: transform 0.3s, box-shadow 0.3s;
         }
         .player-fallback a:hover {
             transform: translateY(-3px);
-            box-shadow: 0 20px 50px rgba(255,61,107,0.4);
+            box-shadow: 0 20px 50px rgba(var(--accent-rgb), 0.4);
         }
 
         /* ─── Info Section ─── */
@@ -183,7 +185,7 @@
             background: linear-gradient(135deg, var(--accent), var(--accent2));
             display: flex; align-items: center; justify-content: center;
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.2rem; color: #fff;
+            font-size: 1.2rem; color: var(--sf-accent-ink, #fff);
             flex-shrink: 0;
         }
         .creator-name {
@@ -197,14 +199,14 @@
             display: inline-flex; align-items: center; gap: 12px;
             padding: 14px 28px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff; font-weight: 700; font-size: 0.8rem;
+            color: var(--sf-accent-ink, #fff); font-weight: 700; font-size: 0.8rem;
             letter-spacing: 0.1em; text-transform: uppercase;
             text-decoration: none; border-radius: 4px;
             transition: transform 0.3s, box-shadow 0.3s;
         }
         .cta-request:hover {
             transform: translateY(-3px);
-            box-shadow: 0 20px 50px rgba(255,61,107,0.4);
+            box-shadow: 0 20px 50px rgba(var(--accent-rgb), 0.4);
         }
 
         .desc-box {
@@ -269,7 +271,7 @@
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, #1a0a1e, #0a0a2e);
-            font-size: 1.8rem; color: rgba(255,61,107,0.25);
+            font-size: 1.8rem; color: rgba(var(--accent-rgb), 0.25);
         }
 
         /* Play icon on thumb */
@@ -282,7 +284,7 @@
         .related-card:hover .thumb-play { opacity: 1; }
         .thumb-play-icon {
             width: 32px; height: 32px;
-            background: rgba(255,61,107,0.85);
+            background: rgba(var(--accent-rgb), 0.85);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
         }
@@ -322,7 +324,7 @@
             border-radius: 100px; text-decoration: none;
             transition: border-color 0.3s, transform 0.3s;
         }
-        .skillifly-badge:hover { border-color: rgba(255,61,107,0.4); transform: translateY(-2px); }
+        .skillifly-badge:hover { border-color: rgba(var(--accent-rgb), 0.4); transform: translateY(-2px); }
         .skillifly-badge .s-powered { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
         .skillifly-badge img { width: 18px; height: 18px; object-fit: contain; }
         .skillifly-badge .s-brand {
@@ -345,6 +347,7 @@
             .nav-logo { display: none; }
         }
     </style>
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 <body>
 

@@ -1,0 +1,1330 @@
+﻿{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}الألوان — Skillifly{% endblock %}
+
+{% block ambient_orbs %}{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
+<style>
+  .bgc {
+    --ink: #0f172a;
+    --muted: #334155;
+    --faint: #475569;
+    --line: rgba(15, 23, 42, 0.14);
+    --brand: #6d28d9;
+  }
+
+  body:has(.bgc)::before { display: none !important; }
+  body:has(.bgc) { background: #FAFBFC !important; }
+
+  .bgc, .bgc button, .bgc input { font-family: 'Cairo', sans-serif; }
+  .bgc h1, .bgc h2 { font-family: 'Tajawal', 'Syne', sans-serif; letter-spacing: 0 !important; }
+
+  .bgc :is(a, button, input):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
+  .bgc-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+  }
+  .bgc-breadcrumb a { color: #6d28d9; text-decoration: none; transition: color .15s ease; }
+  .bgc-breadcrumb a:hover { color: #5b21b6; }
+  .bgc-breadcrumb svg { width: 14px; height: 14px; color: #94a3b8; flex-shrink: 0; }
+
+  .bgc-header { margin-bottom: 32px; }
+  .bgc-header h1 { font-size: 28px; font-weight: 700; color: var(--ink); line-height: 1.25; margin: 0 0 6px 0; }
+  .bgc-header p { font-size: 15px; font-weight: 500; color: var(--muted); margin: 0; line-height: 1.7; max-width: 62ch; }
+
+  .bgc-layout {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .bgc-layout { grid-template-columns: minmax(0, 1fr) 340px; }
+  }
+
+  .bgc-panel {
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 16px 36px -24px rgba(15, 23, 42, 0.25);
+  }
+  .bgc-panel:last-child { margin-bottom: 0; }
+  .bgc-panel h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bgc-panel h2 svg { width: 16px; height: 16px; color: #8b5cf6; }
+  .bgc-panel .bgc-hint { font-size: 13px; font-weight: 500; color: #64748b; margin: 0 0 18px 0; line-height: 1.6; }
+
+  .bgc-swatches {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 520px) {
+    .bgc-swatches { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .bgc-swatch {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: right;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .bgc-swatch:hover { border-color: rgba(109, 40, 217, 0.45); transform: translateY(-2px); }
+  .bgc-swatch .bgc-chip {
+    height: 46px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.10);
+    position: relative;
+  }
+  .bgc-swatch .bgc-chip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(140deg, rgba(255,255,255,.35), rgba(255,255,255,0) 55%);
+  }
+  .bgc-swatch .bgc-name { font-size: 12.5px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .bgc-swatch .bgc-hex {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: .03em;
+    direction: ltr;
+    text-align: right;
+  }
+  .bgc-swatch .bgc-tick {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    color: #6d28d9;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.28);
+    opacity: 0;
+    transform: scale(.7);
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .bgc-swatch .bgc-tick svg { width: 13px; height: 13px; }
+  .bgc-swatch[aria-checked="true"] { border-color: #6d28d9; box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.16); }
+  .bgc-swatch[aria-checked="true"] .bgc-tick { opacity: 1; transform: scale(1); }
+
+  .bgc-custom { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .bgc-picker {
+    position: relative;
+    width: 74px;
+    height: 74px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+  }
+  .bgc-picker-face { position: absolute; inset: 0; border-radius: inherit; }
+  .bgc-picker input[type="color"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+  }
+  .bgc-picker input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  .bgc-picker input[type="color"]::-webkit-color-swatch { border: 0; border-radius: inherit; }
+
+  .bgc-field { flex: 1 1 180px; min-width: 160px; }
+  .bgc-field label { display: block; font-size: 12px; font-weight: 700; color: var(--faint); margin-bottom: 6px; }
+  .bgc-field input[type="text"] {
+    width: 100%;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 13px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #F8FAFC;
+    direction: ltr;
+    text-align: right;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .bgc-field input[type="text"]:focus { outline: none; border-color: #6d28d9; background: #fff; }
+  .bgc-field input[type="text"].is-invalid { border-color: #dc2626; background: #FEF2F2; }
+  .bgc-field .bgc-note { display: block; margin-top: 6px; font-size: 12px; font-weight: 600; color: #94a3b8; }
+  .bgc-field .bgc-note.is-error { color: #dc2626; }
+
+  .bgc-preview-col { position: sticky; top: 24px; }
+  @media (max-width: 1023px) { .bgc-preview-col { position: static; } }
+  .bgc-preview {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.45);
+    background: var(--sf-bg, #0a0e27);
+  }
+  .bgc-preview * { transition: background-color .18s ease, color .18s ease, border-color .18s ease; }
+
+  .bgc-mini-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--sf-nav);
+    border-bottom: 1px solid var(--sf-border);
+  }
+  .bgc-mini-logo {
+    font-family: 'Tajawal', 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--sf-accent, #00d9ff);
+  }
+
+  .bgc-mini-links { display: flex; gap: 12px; }
+  .bgc-mini-links span { font-size: 10.5px; font-weight: 600; color: var(--sf-text-muted); }
+
+  .bgc-mini-hero { padding: 26px 18px 22px; text-align: center; }
+  .bgc-mini-eyebrow { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--sf-accent, #00d9ff); margin-bottom: 10px; }
+  .bgc-mini-title {
+    font-family: 'Tajawal', 'Syne', sans-serif;
+    font-size: 23px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 0 0 10px 0;
+    background-image: linear-gradient(
+      135deg,
+      var(--sf-accent, #00d9ff) 0%,
+      var(--sf-hero-mid, #ffffff) 50%,
+      var(--sf-accent-2, #ff006e) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .bgc-mini-copy { font-size: 11.5px; line-height: 1.8; color: var(--sf-text-muted); max-width: 34ch; margin: 0 auto 16px; }
+  .bgc-mini-cta { display: flex; gap: 8px; justify-content: center; }
+  .bgc-mini-btn { font-size: 10.5px; font-weight: 700; padding: 7px 14px; border-radius: 999px; background: var(--sf-accent, #00d9ff); color: var(--sf-accent-ink, var(--sf-ink)); }
+  .bgc-mini-btn.is-ghost { background: transparent; color: var(--sf-accent, #00d9ff); border: 1px solid color-mix(in srgb, var(--sf-accent, #00d9ff) 45%, transparent); }
+
+  .bgc-mini-body { padding: 0 18px 20px; display: grid; gap: 10px; }
+  .bgc-mini-card { background: var(--sf-surface); border: 1px solid var(--sf-border); border-radius: 12px; overflow: hidden; }
+  /* البطاقة الأولى تحمل خلفَ العادي، والثانية والثالثة تحمل تغيير مختلف الألوان، وكذلك النظرة تعطي المجموعة الذي يستخدمها الإصلاح. */
+  .bgc-mini-thumb { height: 56px; background: var(--sf-surface-2); }
+  .bgc-mini-thumb.is-accent { background: linear-gradient(135deg, var(--sf-accent, #00d9ff) 0%, var(--sf-accent-2, #ff006e) 100%); }
+  .bgc-mini-thumb.is-trio { background: linear-gradient(135deg, var(--sf-accent-2, #ff006e) 0%, var(--sf-accent-3, #ffd700) 100%); opacity: .8; }
+  .bgc-mini-cardbody { padding: 10px 12px 12px; display: grid; gap: 6px; }
+  .bgc-mini-line { height: 7px; border-radius: 999px; background: var(--sf-text-faint); opacity: .55; }
+  .bgc-mini-line.is-title { width: 62%; opacity: .9; }
+  .bgc-mini-line.is-meta { width: 34%; }
+  .bgc-mini-cta-final {
+    margin-top: 2px;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--sf-accent, #00d9ff) 0%, var(--sf-accent-2, #ff006e) 100%);
+    font-family: 'Tajawal', 'Syne', sans-serif;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--sf-accent-ink, var(--sf-ink));
+  }
+
+  /* ── Neo-brutalist family (Cyan / Yellow / Monochrome) ─────────────────────
+     These themes have no accent control: their accent *is* the hard ink, which
+     travels with the background's polarity. The generic preview above is built
+     out of the accent gradient, so for this family it would show a cyan-to-pink
+     call to action the published page can never have — the preview would lie
+     about the one thing the user is choosing. These rules restate the same
+     preview in the family's own idiom instead: square edges, 3px borders,
+     offset shadows, an inverted hard-ink fill and the printed dot-grid.
+     Everything reads from tokens the existing paint() already writes, so the
+     live preview still tracks the picker without a second copy of the colour
+     maths. */
+  .bgc-preview[data-family="brutal"] {
+    position: relative;
+    border-radius: 0;
+    border: 3px solid var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(var(--sf-grid) 1.5px, transparent 1.5px),
+      radial-gradient(var(--sf-grid) 1.5px, transparent 1.5px);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+  }
+  .bgc-preview[data-family="brutal"] > * { position: relative; z-index: 1; }
+
+  .bgc-preview[data-family="brutal"] .bgc-mini-nav {
+    border-bottom: 3px solid var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-logo,
+  .bgc-preview[data-family="brutal"] .bgc-mini-eyebrow {
+    color: var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-title {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-card {
+    border-radius: 0;
+    border: 3px solid var(--sf-hard-ink);
+    box-shadow: 5px 5px 0 var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-line { border-radius: 0; }
+  .bgc-preview[data-family="brutal"] .bgc-mini-btn {
+    border-radius: 0;
+    background: var(--sf-bg);
+    color: var(--sf-hard-ink);
+    border: 3px solid var(--sf-hard-ink);
+    box-shadow: 4px 4px 0 var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-btn.is-ghost {
+    background: transparent;
+    color: var(--sf-hard-ink);
+    border: 3px solid var(--sf-hard-ink);
+    box-shadow: none;
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-thumb.is-accent {
+    background: var(--sf-hard-ink);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-thumb.is-trio {
+    background: var(--sf-surface-2);
+  }
+  .bgc-preview[data-family="brutal"] .bgc-mini-cta-final {
+    border-radius: 0;
+    background: var(--sf-hard-ink);
+    color: var(--sf-bg);
+    border: 3px solid var(--sf-hard-ink);
+    box-shadow: 5px 5px 0 var(--sf-hard-ink);
+  }
+
+  /* ── Developer Classic ────────────────────────────────────────────────────
+     Classic fills its hero with the accent and prints the accent's own ink on
+     top, so the generic preview above — gradient type sitting directly on the
+     page background — describes a page this theme can never render. These
+     rules restate the same preview in Classic's own idiom. */
+  .bgc-preview[data-variant="developer"] .bgc-mini-hero {
+    margin: 14px;
+    padding: 22px 16px 20px;
+    border-radius: 14px;
+    background: var(--sf-accent, #1e3a8a);
+  }
+  .bgc-preview[data-variant="developer"] .bgc-mini-title {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--sf-accent-ink, #ffffff);
+  }
+  .bgc-preview[data-variant="developer"] .bgc-mini-eyebrow {
+    color: var(--sf-accent-ink, #ffffff);
+    opacity: .8;
+  }
+  .bgc-preview[data-variant="developer"] .bgc-mini-copy {
+    color: var(--sf-accent-ink, #ffffff);
+    opacity: .88;
+  }
+  .bgc-preview[data-variant="developer"] .bgc-mini-btn {
+    background: var(--sf-accent-ink, #ffffff);
+    color: var(--sf-accent, #1e3a8a);
+  }
+  .bgc-preview[data-variant="developer"] .bgc-mini-btn.is-ghost {
+    background: transparent;
+    color: var(--sf-accent-ink, #ffffff);
+    border-color: currentColor;
+  }
+  .bgc-preview[data-variant="developer"] .bgc-mini-cta-final {
+    background: var(--sf-accent, #1e3a8a);
+    color: var(--sf-accent-ink, #ffffff);
+  }
+
+  /* Contrast readout — reassurance that the pick is readable before saving. */
+  .bgc-a11y {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+    background: #ECFDF5;
+    border: 1px solid rgba(5, 150, 105, 0.22);
+    color: #047857;
+  }
+  .bgc-a11y svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .bgc-a11y b { font-weight: 800; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+  .bgc-a11y.is-warn {
+    background: #FFFBEB;
+    border-color: rgba(217, 119, 6, 0.25);
+    color: #B45309;
+  }
+
+  .bgc-sr {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .bgc-tokens {
+    margin-top: 12px;
+    display: grid;
+    gap: 1px;
+    background: rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .bgc-token { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #fff; font-size: 12px; }
+  .bgc-token i {
+    width: 16px; height: 16px; border-radius: 5px;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.14);
+    flex-shrink: 0;
+  }
+  .bgc-token span { color: var(--muted); font-weight: 600; }
+  .bgc-token code {
+    margin-right: auto;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    direction: ltr;
+  }
+
+  .bgc-locked {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 32px 28px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 16px 36px -24px rgba(15, 23, 42, 0.25);
+  }
+  .bgc-locked-list {
+    list-style: none;
+    margin: 0;
+    padding: 14px 16px;
+    width: 100%;
+    display: grid;
+    gap: 6px;
+    border-radius: 14px;
+    background: #F8FAFC;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #64748b;
+  }
+  .bgc-locked-list b { color: var(--ink); font-weight: 800; }
+  .bgc-locked .bgc-lockchip {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    color: #475569;
+  }
+  .bgc-locked .bgc-lockchip svg { width: 22px; height: 22px; }
+  .bgc-locked h2 { font-size: 19px; font-weight: 700; color: var(--ink); margin: 0; }
+  .bgc-locked p { font-size: 14.5px; font-weight: 500; color: #64748b; margin: 0; line-height: 1.8; max-width: 58ch; }
+  .bgc-locked .bgc-current {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--faint);
+    background: #F8FAFC;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+    padding: 7px 14px;
+  }
+  .bgc-locked .bgc-current i {
+    width: 14px; height: 14px; border-radius: 5px;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.16);
+    background: {{ background_state.palette.background }};
+  }
+  .bgc-locked .bgc-current code { font-family: ui-monospace, Menlo, monospace; direction: ltr; }
+
+  .bgc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 13px 22px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .bgc-btn svg { width: 16px; height: 16px; }
+  .bgc-btn-primary {
+    background: linear-gradient(135deg, #6d28d9, #4c1d95);
+    color: #fff;
+    box-shadow: 0 8px 20px -10px rgba(109, 40, 217, 0.75);
+  }
+  .bgc-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px -10px rgba(109, 40, 217, 0.85); }
+  .bgc-btn-primary:disabled { background: #E2E8F0; color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+  .bgc-btn-ghost { background: #fff; color: var(--muted); border-color: var(--line); }
+  .bgc-btn-ghost:hover:not(:disabled) { border-color: #94a3b8; color: var(--ink); }
+  .bgc-btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
+
+  .bgc-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 16px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 16px 36px -26px rgba(15, 23, 42, 0.25);
+  }
+  .bgc-actions .bgc-status {
+    flex: 1 1 200px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+  }
+  .bgc-status-icon { display: inline-grid; place-items: center; flex-shrink: 0; }
+  .bgc-status-icon > * { grid-area: 1 / 1; display: none; width: 15px; height: 15px; }
+  .bgc-status.is-saved .bgc-status-icon [data-for="saved"],
+  .bgc-status.is-dirty .bgc-status-icon [data-for="dirty"],
+  .bgc-status.is-busy .bgc-status-icon [data-for="busy"],
+  .bgc-status.is-error .bgc-status-icon [data-for="error"] { display: block; }
+  .bgc-status.is-busy .bgc-status-icon [data-for="busy"] { animation: bgcSpin 1s linear infinite; }
+  @keyframes bgcSpin { to { transform: rotate(360deg); } }
+  .bgc-actions .bgc-status.is-dirty { color: #b45309; }
+  .bgc-actions .bgc-status.is-saved { color: #047857; }
+  .bgc-actions .bgc-status.is-error { color: #b91c1c; }
+  .bgc-actions .bgc-view {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6d28d9;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bgc-actions .bgc-view:hover { color: #5b21b6; text-decoration: underline; }
+  .bgc-actions .bgc-view svg { width: 14px; height: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bgc *, .bgc *::before, .bgc *::after {
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bgc mx-auto w-full max-w-5xl px-4 sm:px-6 pt-8 sm:pt-10 pb-20" dir="rtl">
+
+  <nav class="bgc-breadcrumb mb-6" aria-label="شريط التنقل">
+    <a href="{% url 'arabic_dashboard' %}">لوحة التحكم</a>
+    <i data-lucide="chevron-left"></i>
+    <a href="{% url 'arabic_customize_theme' %}">تخصيص التصميم</a>
+    <i data-lucide="chevron-left"></i>
+    <span class="text-slate-900">الألوان</span>
+  </nav>
+
+  <header class="bgc-header">
+    <h1>الألوان</h1>
+    {% if background_supported %}
+      <p>
+        أعد تلوين صفحة {{ background_state.theme_name }} ولون هويتك المميّز.
+        <strong>{% if background_state.theme_name %}{{ background_state.theme_name }}{% else %}القالب الحالي{% endif %}</strong> —
+        النصوص والبطاقات والحدود تُشتقّ من اختيارك للون الخلفية، ويُفحص لون الهوية للتأكد من وضوحه قبل حفظه.
+      </p>
+    {% else %}
+      <p>أعد تلوين خلفية معرضك ولون هويتك المميّز. متاح على {{ background_state.supported_count }} قالبًا.</p>
+    {% endif %}
+  </header>
+
+  {% if not background_supported %}
+    <div class="bgc-locked">
+      <div class="bgc-lockchip"><i data-lucide="lock"></i></div>
+      <h2>تغيير الألوان غير متاح على هذا القالب</h2>
+      <p>
+        قالبك الحالي هو <strong>{% if background_state.theme_name %}{{ background_state.theme_name }}{% else %}قالب خارج مجموعة القوالب القابلة للتلوين{% endif %}</strong>.
+        انتقل إلى قالب يدعم تغيير الألوان لتفعيل هذه الخاصية — لن تفقد ألوانك المحفوظة.
+      </p>
+      <ul class="bgc-locked-list">
+        {% for slug, label, names in background_state.supported_categories %}
+          <li><b>{{ label }}</b> — {{ names|join:", " }}</li>
+        {% endfor %}
+      </ul>
+      <span class="bgc-current">
+        <i></i>
+        <code>{{ background_state.current }}</code>
+        {% if background_is_custom %}<em style="font-style:normal;opacity:.65">· محفوظ</em>{% endif %}
+      </span>
+      <a href="{% url 'arabic_themes' %}" class="bgc-btn bgc-btn-primary">
+        <i data-lucide="palette"></i>
+        تصفّح القوالب
+      </a>
+    </div>
+  {% else %}
+
+  <div class="bgc-layout">
+
+    <div>
+      <section class="bgc-panel" aria-labelledby="bgc-presets-title">
+        <h2 id="bgc-presets-title"><i data-lucide="swatch-book"></i> خلفيات جاهزة</h2>
+        <p class="bgc-hint">درجات مختارة تنسجم مع لون القالب. أول درجة هي خلفية {{ background_state.theme_name }} كما هي اليوم.</p>
+        <div class="bgc-swatches" role="radiogroup" aria-labelledby="bgc-presets-title" id="bgc-swatches">
+          {% for preset in background_presets %}
+            <button type="button" class="bgc-swatch" role="radio" aria-checked="false"
+                    data-hex="{{ preset.value }}" aria-label="{{ preset.label_ar }} {{ preset.value }}">
+              <span class="bgc-chip" style="background: {{ preset.value }}"></span>
+              <span class="bgc-name">{{ preset.label_ar }}</span>
+              <span class="bgc-hex">{{ preset.value }}</span>
+              <span class="bgc-tick"><i data-lucide="check"></i></span>
+            </button>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="bgc-panel" aria-labelledby="bgc-custom-title">
+        <h2 id="bgc-custom-title"><i data-lucide="pipette"></i> خلفية مخصصة</h2>
+        <p class="bgc-hint">أي لون سداسي صلب. القيم الشفافة مرفوضة — تحتاج الصفحة إلى خلفية معتمة.</p>
+        <div class="bgc-custom">
+          <div class="bgc-picker">
+            <span class="bgc-picker-face" id="bgc-picker-face" style="background: {{ background_current }}"></span>
+            <input type="color" id="bgc-color" value="{{ background_current }}"
+                   aria-label="اختر لون الخلفية">
+          </div>
+          <div class="bgc-field">
+            <label for="bgc-hex">القيمة السداسية</label>
+            <input type="text" id="bgc-hex" value="{{ background_current }}" maxlength="7"
+                   spellcheck="false" autocomplete="off"
+                   aria-describedby="bgc-hex-note">
+            <span class="bgc-note" id="bgc-hex-note">مثال: {{ background_default }}</span>
+          </div>
+        </div>
+      </section>
+
+      {% if accent_supported %}
+      <section class="bgc-panel" aria-labelledby="bgc-accent-title">
+        <h2 id="bgc-accent-title"><i data-lucide="paintbrush"></i> لون الهوية</h2>
+        <p class="bgc-hint">اللون الذي تقف عليه بطلتك وعناوينك وروابطك وأزرارك —
+          {{ accent_default }} كما ينشره قالب {{ background_state.theme_name }} اليوم.
+          أي لون لا يُقرأ بوضوح على خلفيتك يُعدَّل إلى أقرب درجة مقروءة، وتظهر لك النتيجة النهائية بالأسفل.</p>
+        <div class="bgc-swatches" role="radiogroup" aria-labelledby="bgc-accent-title" id="bgc-accent-swatches">
+          {% for preset in accent_presets %}
+            <button type="button" class="bgc-swatch" role="radio" aria-checked="false"
+                    data-hex="{{ preset.value }}" aria-label="{{ preset.label_ar }} {{ preset.value }}">
+              <span class="bgc-chip" style="background: {{ preset.value }}"></span>
+              <span class="bgc-name">{{ preset.label_ar }}</span>
+              <span class="bgc-hex">{{ preset.value }}</span>
+              <span class="bgc-tick"><i data-lucide="check"></i></span>
+            </button>
+          {% endfor %}
+        </div>
+        <div class="bgc-custom">
+          <div class="bgc-picker">
+            <span class="bgc-picker-face" id="bgc-accent-picker-face" style="background: {{ accent_current }}"></span>
+            <input type="color" id="bgc-accent-color" value="{{ accent_current }}"
+                   aria-label="اختر لون الهوية">
+          </div>
+          <div class="bgc-field">
+            <label for="bgc-accent-hex">القيمة السداسية</label>
+            <input type="text" id="bgc-accent-hex" value="{{ accent_current }}" maxlength="7"
+                   spellcheck="false" autocomplete="off"
+                   aria-describedby="bgc-accent-hex-note">
+            <span class="bgc-note" id="bgc-accent-hex-note">مثال: {{ accent_default }}</span>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <div class="bgc-actions">
+        <span class="bgc-status" id="bgc-status" role="status" aria-live="polite">
+          <span class="bgc-status-icon" aria-hidden="true">
+            <i data-lucide="circle-check" data-for="saved"></i>
+            <i data-lucide="circle-dashed" data-for="dirty"></i>
+            <i data-lucide="loader" data-for="busy"></i>
+            <i data-lucide="triangle-alert" data-for="error"></i>
+          </span>
+          <span id="bgc-status-text">يستخدم ألوان القالب الافتراضية.</span>
+        </span>
+        <button type="button" class="bgc-btn bgc-btn-ghost" id="bgc-reset" {% if not background_is_custom and not accent_is_custom %}disabled{% endif %}>
+          <i data-lucide="rotate-ccw"></i>
+          إعادة للافتراضي
+        </button>
+        <button type="button" class="bgc-btn bgc-btn-primary" id="bgc-save" disabled>
+          <i data-lucide="check"></i>
+          <span id="bgc-save-label">احفظ التغييرات</span>
+        </button>
+        {% if portfolio_url %}
+          <a href="{{ portfolio_url }}" class="bgc-view" target="_blank" rel="noopener">
+            شاهد معرضك
+            <i data-lucide="external-link"></i>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bgc-preview-col">
+      <h2 class="bgc-sr" id="bgc-preview-title">معاينة مباشرة</h2>
+      <div class="bgc-preview" id="bgc-preview" aria-labelledby="bgc-preview-title"
+           data-family="{{ background_state.family }}"
+           data-variant="{{ background_state.preview_variant }}"
+           style="--sf-accent: {{ accent_palette.accent }}; --sf-accent-2: {{ accent_palette.partner }}; --sf-accent-3: {{ accent_palette.trio }}; --sf-accent-rgb: {{ accent_palette.primary_rgb }}; --sf-accent2-rgb: {{ accent_palette.partner_rgb }}; --sf-gold-rgb: {{ accent_palette.trio_rgb }}; --sf-accent-ink: {{ accent_palette.ink }}; --sf-grid: {{ palette.grid }}">
+        {% if background_state.preview_variant == 'developer' %}
+        <div class="bgc-mini-nav">
+          <span class="bgc-mini-logo">مطوّر</span>
+          <span class="bgc-mini-links"><span>أعمالي</span><span>مهاراتي</span><span>تواصل</span></span>
+        </div>
+        <div class="bgc-mini-hero">
+          <div class="bgc-mini-eyebrow">{{ background_state.theme_name }}</div>
+          <h2 class="bgc-mini-title">كود يُطلَق<br>ويصمد</h2>
+          <p class="bgc-mini-copy">سطر قصير من النص لتقدّر وضوح الألوان على هذه الخلفية.</p>
+          <div class="bgc-mini-cta">
+            <span class="bgc-mini-btn">تواصل معي</span>
+            <span class="bgc-mini-btn is-ghost">شغّلي</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="bgc-mini-nav">
+          <span class="bgc-mini-logo">محرّر</span>
+          <span class="bgc-mini-links"><span>أعمالي</span><span>ريلز</span><span>عني</span></span>
+        </div>
+        <div class="bgc-mini-hero">
+          <div class="bgc-mini-eyebrow">{{ background_state.theme_name }}</div>
+          <h2 class="bgc-mini-title">مونتاج يحكي القصة<br>من غير توقّف</h2>
+          <p class="bgc-mini-copy">سطر قصير من النص لتقدّر وضوح الألوان على هذه الخلفية.</p>
+          <div class="bgc-mini-cta">
+            <span class="bgc-mini-btn">شاهد الريل</span>
+            <span class="bgc-mini-btn is-ghost">تواصل</span>
+          </div>
+        </div>
+        {% endif %}
+        <div class="bgc-mini-body">
+          <div class="bgc-mini-card">
+            <div class="bgc-mini-thumb"></div>
+            <div class="bgc-mini-cardbody">
+              <div class="bgc-mini-line is-title"></div>
+              <div class="bgc-mini-line is-meta"></div>
+            </div>
+          </div>
+          <div class="bgc-mini-card">
+            <div class="bgc-mini-thumb is-accent"></div>
+            <div class="bgc-mini-cardbody">
+              <div class="bgc-mini-line is-title"></div>
+              <div class="bgc-mini-line is-meta"></div>
+            </div>
+          </div>
+          <div class="bgc-mini-card">
+            <div class="bgc-mini-thumb is-trio"></div>
+            <div class="bgc-mini-cardbody">
+              <div class="bgc-mini-line is-title"></div>
+              <div class="bgc-mini-line is-meta"></div>
+            </div>
+          </div>
+          {% if background_state.preview_variant == 'developer' %}
+          <div class="bgc-mini-cta-final">لنبني مشروعًا تفتخرين به</div>
+          {% else %}
+          <div class="bgc-mini-cta-final">لنتحدث عن مشروعك القادم</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <p class="bgc-a11y" id="bgc-a11y" role="status" aria-live="polite">
+        <i data-lucide="shield-check" aria-hidden="true"></i>
+        <span id="bgc-a11y-text">لون النص يطابق معيار WCAG AA على هذه الخلفية.</span>
+      </p>
+      {% comment %}
+        The neo-brutalist themes have no accent to check: their accent is the hard
+        ink, which already travels with the background, so a readout here would
+        grade a colour the reader cannot change and cannot see.
+      {% endcomment %}
+      {% if accent_supported %}
+      <p class="bgc-a11y" id="bgc-accent-a11y" role="status" aria-live="polite">
+        <i data-lucide="shield-check" aria-hidden="true"></i>
+        <span id="bgc-accent-a11y-text">لون الهوية يطابق معيار WCAG AA على هذه الخلفية.</span>
+      </p>
+      {% endif %}
+
+      <div class="bgc-tokens" id="bgc-tokens">
+        <div class="bgc-token"><i data-sf="background"></i><span>الخلفية</span><code data-sf-text="background"></code></div>
+        <div class="bgc-token"><i data-sf="surface"></i><span>البطاقات</span><code data-sf-text="surface"></code></div>
+        <div class="bgc-token"><i data-sf="ink"></i><span>حبر العنصر المميّز</span><code data-sf-text="ink"></code></div>
+        <div class="bgc-token"><i data-sf="text"></i><span>لون النص</span><code data-sf-text="text"></code></div>
+        {% if accent_supported %}
+        <div class="bgc-token"><i data-sa="accent"></i><span>لون الهوية</span><code data-sa-text="accent"></code></div>
+        <div class="bgc-token"><i data-sa="partner"></i><span>اللون الثاني</span><code data-sa-text="partner"></code></div>
+        <div class="bgc-token"><i data-sa="trio"></i><span>اللون الثالث</span><code data-sa-text="trio"></code></div>
+        <div class="bgc-token"><i data-sa="ink"></i><span>النص فوق الهوية</span><code data-sa-text="ink"></code></div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    'use strict';
+
+    var saveUrl = "{% url 'customize_theme_background_save' %}";
+    var csrf = "{{ csrf_token }}";
+    var DEFAULT_BG = "{{ background_default }}";
+    var HEX_EXAMPLE = DEFAULT_BG;
+    var ACCENT_SUPPORTED = {% if accent_supported %}true{% else %}false{% endif %};
+
+    var root = document.getElementById('bgc-preview');
+    if (!root) { return; }
+
+    var colorInput = document.getElementById('bgc-color');
+    var hexInput = document.getElementById('bgc-hex');
+    var hexNote = document.getElementById('bgc-hex-note');
+    var pickerFace = document.getElementById('bgc-picker-face');
+    var accentColorInput = document.getElementById('bgc-accent-color');
+    var accentHexInput = document.getElementById('bgc-accent-hex');
+    var accentHexNote = document.getElementById('bgc-accent-hex-note');
+    var accentPickerFace = document.getElementById('bgc-accent-picker-face');
+    var saveBtn = document.getElementById('bgc-save');
+    var saveLabel = document.getElementById('bgc-save-label');
+    var resetBtn = document.getElementById('bgc-reset');
+    var statusBox = document.getElementById('bgc-status');
+    var statusText = document.getElementById('bgc-status-text');
+    var a11yBox = document.getElementById('bgc-a11y');
+    var a11yText = document.getElementById('bgc-a11y-text');
+    var accentA11yBox = document.getElementById('bgc-accent-a11y');
+    var accentA11yText = document.getElementById('bgc-accent-a11y-text');
+    var swatches = Array.prototype.slice.call(document.querySelectorAll('#bgc-swatches .bgc-swatch'));
+    var accentSwatches = Array.prototype.slice.call(document.querySelectorAll('#bgc-accent-swatches .bgc-swatch'));
+    var tokenChips = Array.prototype.slice.call(document.querySelectorAll('.bgc-tokens i[data-sf]'));
+    var tokenCodes = Array.prototype.slice.call(document.querySelectorAll('.bgc-tokens code[data-sf-text]'));
+    var accentChips = Array.prototype.slice.call(document.querySelectorAll('.bgc-tokens i[data-sa]'));
+    var accentCodes = Array.prototype.slice.call(document.querySelectorAll('.bgc-tokens code[data-sa-text]'));
+
+    var WHITE = [255, 255, 255];
+    var BLACK = [0, 0, 0];
+    var ACCENT_INK = [10, 14, 39];
+    var ACCENT_MIN_CONTRAST = 3.0;
+    /* ميثال core.theme_colors.TRIO_HUE_SHIFT و TRIO_FALLBACK. */
+    var TRIO_HUE_SHIFT = 0.16;
+    var TRIO_FALLBACK = [255, 215, 0];
+
+    /* نفس حسابات core.theme_colors.derive_palette و derive_accent_palette —
+       نسخة الخادم هي المرجع. */
+    function parseHex(value) {
+      if (typeof value !== 'string') return null;
+      var raw = value.trim().replace(/^#/, '');
+      if (raw.length === 3) { raw = raw[0] + raw[0] + raw[1] + raw[1] + raw[2] + raw[2]; }
+      if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
+      return [parseInt(raw.slice(0, 2), 16), parseInt(raw.slice(2, 4), 16), parseInt(raw.slice(4, 6), 16)];
+    }
+
+    function clamp(value) { return Math.max(0, Math.min(255, Math.round(value))); }
+
+    function toHex(rgb) {
+      return '#' + rgb.slice(0, 3).map(function (c) {
+        return ('0' + clamp(c).toString(16)).slice(-2);
+      }).join('').toUpperCase();
+    }
+
+    function toRgba(rgb, alpha) {
+      return 'rgba(' + clamp(rgb[0]) + ', ' + clamp(rgb[1]) + ', ' + clamp(rgb[2]) + ', ' + alpha + ')';
+    }
+
+    function linearize(channel) {
+      var c = channel / 255;
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+
+    function luminance(rgb) {
+      return 0.2126 * linearize(rgb[0]) + 0.7152 * linearize(rgb[1]) + 0.0722 * linearize(rgb[2]);
+    }
+
+    function contrast(a, b) {
+      var la = luminance(a), lb = luminance(b);
+      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    function isDark(rgb) { return contrast(rgb, WHITE) >= contrast(rgb, BLACK); }
+
+    function mix(base, layer, weight) {
+      return [0, 1, 2].map(function (i) { return base[i] + (layer[i] - base[i]) * weight; });
+    }
+
+    /* ---- HSL لحساب اللون الثالث، ميثال
+       core.theme_colors._trio_tone: نقل التغيير لدائه ثابتًا من الدارة بحد ثابت محدد
+       بدل تمرير إلى لون ثالث ثابت. */
+    function rgbToHls(rgb) {
+      var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+      var max = Math.max(r, g, b), min = Math.min(r, g, b);
+      var l = (max + min) / 2, h = 0, s = 0;
+      if (max !== min) {
+        var d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) { h = (g - b) / d + (g < b ? 6 : 0); }
+        else if (max === g) { h = (b - r) / d + 2; }
+        else { h = (r - g) / d + 4; }
+        h /= 6;
+      }
+      return [h, l, s];
+    }
+
+    function hlsToRgb(h, l, s) {
+      if (s === 0) { var flat = l * 255; return [flat, flat, flat]; }
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      function channel(t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+      }
+      return [channel(h + 1 / 3), channel(h), channel(h - 1 / 3)].map(function (c) {
+        return clamp(c * 255);
+      });
+    }
+
+    function trioTone(rgb) {
+      var hls = rgbToHls(rgb);
+      if (hls[2] < 0.08 || hls[1] < 0.06) { return TRIO_FALLBACK; }
+      return hlsToRgb((hls[0] + TRIO_HUE_SHIFT) % 1, hls[1], Math.min(1, Math.max(0.5, hls[2])));
+    }
+
+    function toChannels(rgb) {
+      return rgb.map(clamp).join(', ');
+    }
+
+    function derive(background) {
+      var bg = parseHex(background) || parseHex(DEFAULT_BG);
+      var palette;
+      if (isDark(bg)) {
+        palette = {
+          surface: toHex(mix(bg, WHITE, 0.10)),
+          surface_2: toHex(mix(bg, WHITE, 0.18)),
+          text: toHex(WHITE),
+          text_muted: toHex(mix(WHITE, bg, 0.38)),
+          text_faint: toHex(mix(WHITE, bg, 0.58)),
+          border: toRgba(WHITE, 0.12),
+          nav: toRgba(bg, 0.95),
+          ink: toHex(mix(bg, BLACK, 0.20)),
+          hard_ink: toHex(mix(bg, WHITE, 0.92)),
+          hero_mid: toHex(WHITE),
+          grid: toRgba(WHITE, 0.025)
+        };
+      } else {
+        var ink = mix(bg, BLACK, 0.72);
+        palette = {
+          surface: toHex(mix(bg, BLACK, 0.05)),
+          surface_2: toHex(mix(bg, BLACK, 0.10)),
+          text: toHex(ACCENT_INK),
+          text_muted: toHex(mix(ACCENT_INK, bg, 0.40)),
+          text_faint: toHex(mix(ACCENT_INK, bg, 0.62)),
+          border: toRgba(ACCENT_INK, 0.14),
+          nav: toRgba(bg, 0.95),
+          ink: toHex(ink),
+          hard_ink: toHex(mix(bg, BLACK, 0.92)),
+          hero_mid: toHex(ink),
+          grid: toRgba(ACCENT_INK, 0.055)
+        };
+      }
+      palette.background = toHex(bg);
+      palette.contrast = Math.round(contrast(bg, parseHex(palette.text)) * 10) / 10;
+      return palette;
+    }
+
+    function deriveAccent(accent, background) {
+      var base = parseHex(accent) || parseHex(DEFAULT_BG);
+      var bg = parseHex(background) || parseHex(DEFAULT_BG);
+      var darkBg = isDark(bg);
+
+      var readable = base;
+      if (contrast(readable, bg) < ACCENT_MIN_CONTRAST) {
+        var away = darkBg ? WHITE : BLACK;
+        for (var step = 1; step <= 20; step++) {
+          var candidate = mix(readable, away, step * 0.05);
+          if (contrast(candidate, bg) >= ACCENT_MIN_CONTRAST) { readable = candidate; break; }
+        }
+        if (contrast(readable, bg) < ACCENT_MIN_CONTRAST) {
+          readable = darkBg ? WHITE : BLACK;
+        }
+      }
+
+      var partnerWay = darkBg ? WHITE : BLACK;
+      var trio = trioTone(readable);
+      return {
+        accent: toHex(readable),
+        adjusted: toHex(readable) !== toHex(base),
+        partner: toHex(mix(readable, partnerWay, 0.28)),
+        trio: toHex(trio),
+        glow: toHex(mix(readable, WHITE, 0.30)),
+        soft: toRgba(readable, darkBg ? 0.14 : 0.12),
+        ink: toHex(isDark(readable) ? BLACK : WHITE),
+        accent_rgb: toChannels(readable),
+        partner_rgb: toChannels(mix(readable, partnerWay, 0.28)),
+        trio_rgb: toChannels(trio),
+        contrast: Math.round(contrast(bg, readable) * 10) / 10
+      };
+    }
+
+    var saved = "{{ background_current|upper }}";
+    var isCustom = {% if background_is_custom %}true{% else %}false{% endif %};
+    var selected = saved;
+
+    var savedAccent = "{% if accent_supported %}{{ accent_current|upper }}{% endif %}";
+    var isAccentCustom = {% if accent_is_custom %}true{% else %}false{% endif %};
+    var selectedAccent = savedAccent;
+
+    var busy = false;
+
+    function dirty() {
+      return selected !== saved || selectedAccent !== savedAccent;
+    }
+
+    function paint() {
+      var p = derive(selected);
+      root.style.setProperty('--sf-bg', p.background);
+      root.style.setProperty('--sf-surface', p.surface);
+      root.style.setProperty('--sf-surface-2', p.surface_2);
+      root.style.setProperty('--sf-text', p.text);
+      root.style.setProperty('--sf-text-muted', p.text_muted);
+      root.style.setProperty('--sf-text-faint', p.text_faint);
+      root.style.setProperty('--sf-border', p.border);
+      root.style.setProperty('--sf-nav', p.nav);
+      root.style.setProperty('--sf-ink', p.ink);
+      root.style.setProperty('--sf-hard-ink', p.hard_ink);
+      root.style.setProperty('--sf-hero-mid', p.hero_mid);
+      root.style.setProperty('--sf-grid', p.grid);
+      root.style.background = p.background;
+
+      pickerFace.style.background = p.background;
+
+      var a = deriveAccent(selectedAccent, p.background);
+      root.style.setProperty('--sf-accent', a.accent);
+      root.style.setProperty('--sf-accent-2', a.partner);
+      root.style.setProperty('--sf-accent-3', a.trio);
+      root.style.setProperty('--sf-accent-rgb', a.accent_rgb);
+      root.style.setProperty('--sf-accent2-rgb', a.partner_rgb);
+      root.style.setProperty('--sf-gold-rgb', a.trio_rgb);
+      root.style.setProperty('--sf-accent-glow', a.glow);
+      root.style.setProperty('--sf-accent-ink', a.ink);
+      if (accentPickerFace) { accentPickerFace.style.background = a.accent; }
+
+      tokenChips.forEach(function (chip) {
+        chip.style.background = p[chip.getAttribute('data-sf')] || p.background;
+      });
+      tokenCodes.forEach(function (code) {
+        code.textContent = p[code.getAttribute('data-sf-text')] || '';
+      });
+      accentChips.forEach(function (chip) {
+        chip.style.background = a[chip.getAttribute('data-sa')] || a.accent;
+      });
+      accentCodes.forEach(function (code) {
+        code.textContent = a[code.getAttribute('data-sa-text')] || '';
+      });
+
+      if (a11yBox) {
+        var passes = p.contrast >= 4.5;
+        a11yBox.className = 'bgc-a11y' + (passes ? '' : ' is-warn');
+        a11yText.innerHTML = passes
+          ? 'لون النص يطابق معيار WCAG AA على هذه الخلفية — <b>' + p.contrast.toFixed(1) + ':1</b>.'
+          : 'لون النص أقل من معيار WCAG AA عند <b>' + p.contrast.toFixed(1) + ':1</b>. جرّب درجة أفتح أو أغمق.';
+      }
+
+      if (accentA11yBox) {
+        var accentPasses = a.contrast >= ACCENT_MIN_CONTRAST;
+        accentA11yBox.className = 'bgc-a11y' + (accentPasses ? '' : ' is-warn');
+        if (!accentPasses) {
+          accentA11yText.innerHTML =
+            'لون الهوية أقل من معيار WCAG AA عند <b>' + a.contrast.toFixed(1) + ':1</b>. جرّب درجة أفتح أو أغمق.';
+        } else if (a.adjusted) {
+          accentA11yText.innerHTML =
+            'تم تعديل لون الهوية إلى <b>' + a.accent + '</b> ليبقى مقروءًا عند <b>' + a.contrast.toFixed(1) + ':1</b>.';
+        } else {
+          accentA11yText.innerHTML =
+            'لون الهوية يطابق معيار WCAG AA على هذه الخلفية — <b>' + a.contrast.toFixed(1) + ':1</b>.';
+        }
+      }
+
+      swatches.forEach(function (swatch) {
+        swatch.setAttribute('aria-checked', swatch.getAttribute('data-hex').toUpperCase() === selected ? 'true' : 'false');
+      });
+      accentSwatches.forEach(function (swatch) {
+        swatch.setAttribute('aria-checked', swatch.getAttribute('data-hex').toUpperCase() === selectedAccent ? 'true' : 'false');
+      });
+    }
+
+    function setStatus(kind, message) {
+      statusBox.className = 'bgc-status' + (kind ? ' ' + kind : '');
+      statusText.textContent = message;
+    }
+
+    function markDirty() {
+      var isDirty = dirty();
+      saveBtn.disabled = busy || !isDirty;
+      saveLabel.textContent = isDirty ? 'احفظ التغييرات' : 'تم الحفظ';
+      resetBtn.disabled = busy || !(isCustom || isAccentCustom);
+      if (busy) { setStatus('is-busy', 'جارٍ الحفظ…'); return; }
+      if (isDirty) {
+        setStatus('is-dirty', 'لون غير محفوظ — احفظه ليظهر في معرضك.');
+      } else if (isCustom || isAccentCustom) {
+        setStatus('is-saved', 'تم الحفظ. معرضك يستخدم هذه الألوان.');
+      } else {
+        setStatus('is-saved', 'يستخدم ألوان القالب الافتراضية.');
+      }
+    }
+
+    function select(hex, opts) {
+      selected = hex;
+      if (!opts || !opts.skipHex) { hexInput.value = hex; }
+      hexInput.classList.remove('is-invalid');
+      hexNote.classList.remove('is-error');
+      hexNote.textContent = 'مثال: ' + HEX_EXAMPLE;
+      if (colorInput.value.toUpperCase() !== hex) { colorInput.value = hex; }
+      paint();
+      markDirty();
+    }
+
+    function selectAccent(hex, opts) {
+      if (!ACCENT_SUPPORTED) { return; }
+      selectedAccent = hex;
+      if (!opts || !opts.skipHex) { accentHexInput.value = hex; }
+      accentHexInput.classList.remove('is-invalid');
+      accentHexNote.classList.remove('is-error');
+      accentHexNote.textContent = 'مثال: ' + HEX_EXAMPLE;
+      if (accentColorInput.value.toUpperCase() !== hex) { accentColorInput.value = hex; }
+      paint();
+      markDirty();
+    }
+
+    swatches.forEach(function (swatch) {
+      swatch.addEventListener('click', function () {
+        select(swatch.getAttribute('data-hex').toUpperCase());
+      });
+    });
+
+    accentSwatches.forEach(function (swatch) {
+      swatch.addEventListener('click', function () {
+        selectAccent(swatch.getAttribute('data-hex').toUpperCase());
+      });
+    });
+
+    colorInput.addEventListener('input', function () {
+      select(colorInput.value.toUpperCase());
+    });
+
+    if (accentColorInput) {
+      accentColorInput.addEventListener('input', function () {
+        selectAccent(accentColorInput.value.toUpperCase());
+      });
+    }
+
+    hexInput.addEventListener('input', function () {
+      var parsed = parseHex(hexInput.value);
+      if (!parsed) {
+        hexInput.classList.add('is-invalid');
+        hexNote.classList.add('is-error');
+        hexNote.textContent = 'استخدم 6 خانات سداسية، مثال ' + HEX_EXAMPLE;
+        return;
+      }
+      select(toHex(parsed), { skipHex: true });
+      colorInput.value = toHex(parsed);
+    });
+
+    if (accentHexInput) {
+      accentHexInput.addEventListener('input', function () {
+        var parsed = parseHex(accentHexInput.value);
+        if (!parsed) {
+          accentHexInput.classList.add('is-invalid');
+          accentHexNote.classList.add('is-error');
+          accentHexNote.textContent = 'استخدم 6 خانات سداسية، مثال ' + HEX_EXAMPLE;
+          return;
+        }
+        selectAccent(toHex(parsed), { skipHex: true });
+        accentColorInput.value = toHex(parsed);
+      });
+
+      accentHexInput.addEventListener('blur', function () {
+        if (!parseHex(accentHexInput.value)) {
+          accentHexInput.value = selectedAccent;
+          accentHexInput.classList.remove('is-invalid');
+          accentHexNote.classList.remove('is-error');
+          accentHexNote.textContent = 'مثال: ' + HEX_EXAMPLE;
+        }
+      });
+    }
+
+    hexInput.addEventListener('blur', function () {
+      if (!parseHex(hexInput.value)) {
+        hexInput.value = selected;
+        hexInput.classList.remove('is-invalid');
+        hexNote.classList.remove('is-error');
+        hexNote.textContent = 'مثال: ' + HEX_EXAMPLE;
+      }
+    });
+
+    function wireArrowKeys(list, onPick) {
+      list.forEach(function (swatch, index) {
+        swatch.addEventListener('keydown', function (e) {
+          var delta = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowDown' ? 1
+                    : e.key === 'ArrowRight' ? -1 : e.key === 'ArrowUp' ? -1 : 0;
+          if (!delta) return;
+          e.preventDefault();
+          var next = list[(index + delta + list.length) % list.length];
+          next.focus();
+          onPick(next.getAttribute('data-hex').toUpperCase());
+        });
+      });
+    }
+
+    wireArrowKeys(swatches, select);
+    wireArrowKeys(accentSwatches, selectAccent);
+
+    function post(body, onDone) {
+      var failed = false;
+      busy = true;
+      markDirty();
+      fetch(saveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-CSRFToken': csrf },
+        body: body.toString()
+      })
+        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+        .then(function (result) {
+          if (!result.ok || !result.data.success) {
+            failed = true;
+            setStatus('is-error', result.data.error || 'تعذّر الحفظ. حاول مرة أخرى.');
+            return;
+          }
+          onDone(result.data);
+        })
+        .catch(function () {
+          failed = true;
+          setStatus('is-error', 'خطأ في الاتصال — لم يتم حفظ الألوان.');
+        })
+        .then(function () {
+          busy = false;
+          if (failed) {
+            saveBtn.disabled = !dirty();
+            saveLabel.textContent = 'احفظ التغييرات';
+            resetBtn.disabled = !(isCustom || isAccentCustom);
+            return;
+          }
+          markDirty();
+        });
+    }
+
+    saveBtn.addEventListener('click', function () {
+      var body = new URLSearchParams();
+      if (selected !== saved) { body.set('background', selected); }
+      if (ACCENT_SUPPORTED && selectedAccent !== savedAccent) { body.set('accent', selectedAccent); }
+      post(body, function (data) {
+        saved = data.background;
+        // الخادم يعتبر اختيار لون القالب نفسه إعادة ضبط، لا تخصيصاً.
+        isCustom = !data.reset && !!data.palette;
+        isAccentCustom = !data.reset && !!data.accent_palette && !!data.accent;
+        selected = saved;
+        hexInput.value = saved;
+        colorInput.value = saved;
+        if (ACCENT_SUPPORTED) {
+          savedAccent = (data.accent || selectedAccent).toUpperCase();
+          selectedAccent = savedAccent;
+          accentHexInput.value = savedAccent;
+          accentColorInput.value = savedAccent;
+        }
+        paint();
+      });
+    });
+
+    resetBtn.addEventListener('click', function () {
+      var body = new URLSearchParams();
+      body.set('reset', '1');
+      post(body, function (data) {
+        saved = data.background;
+        isCustom = false;
+        selected = saved;
+        hexInput.value = saved;
+        colorInput.value = saved;
+        if (ACCENT_SUPPORTED) {
+          savedAccent = (data.accent || savedAccent).toUpperCase();
+          isAccentCustom = false;
+          selectedAccent = savedAccent;
+          accentHexInput.value = savedAccent;
+          accentColorInput.value = savedAccent;
+        }
+        paint();
+      });
+    });
+
+    if (window.lucide) {
+      try { window.lucide.createIcons({ attrs: { 'stroke-width': 1.75 } }); }
+      catch (e) { window.lucide.createIcons(); }
+    }
+
+    paint();
+    markDirty();
+  })();
+</script>
+{% endblock %}

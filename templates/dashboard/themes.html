@@ -533,7 +533,14 @@
             {% if theme.id == current_theme_id %}checked{% endif %}
             data-name="{{ theme.name }}"
             data-category-name="{{ theme.category.name|default:'Theme' }}"
-            data-thumb="{{ theme.preview_image.url|default:'' }}"
+            {% comment %}
+              A theme may legitimately have no preview_image (a fresh one added
+              by script, before an art upload). The tc-frame branch below
+              already falls back to a gradient card, so this attribute has to
+              agree with it. `|default:''` cannot be used here: the ValueError
+              is raised while RESOLVING `.url`, before any filter runs.
+            {% endcomment %}
+            data-thumb="{% if theme.preview_image %}{{ theme.preview_image.url }}{% endif %}"
             data-preview-url="{% url 'theme_preview' theme_name=theme.name|lower|slugify %}">
 
           <!-- Preview -->

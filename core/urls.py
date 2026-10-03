@@ -53,6 +53,9 @@ urlpatterns = [
     path('dashboard/customize/projects/', views.customize_project_order_view, name='customize_project_order'),
     path('ar/dashboard/customize/projects/', views.arabic_customize_project_order_view, name='arabic_customize_project_order'),
     path('dashboard/customize/projects/save/', views.customize_project_order_save, name='customize_project_order_save'),
+    path('dashboard/customize/background/', views.customize_theme_background_view, name='customize_theme_background'),
+    path('ar/dashboard/customize/background/', views.arabic_customize_theme_background_view, name='arabic_customize_theme_background'),
+    path('dashboard/customize/background/save/', views.customize_theme_background_save, name='customize_theme_background_save'),
 
     # Video uploads — Cloudflare Stream, direct-to-provider via tus
     path('dashboard/videos/upload/', views.upload_video_view, name='upload_video'),

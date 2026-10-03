@@ -17,6 +17,19 @@
             --text: #000000;
             --text-dim: #666666;
             --border: #000000;
+
+            /* Polarity-dependent layers, mirroring static/css/monochrome.css so
+               a saved background overrides the whole group together. */
+            --texture: rgba(0, 0, 0, 0.15);
+            --hairline: rgba(0, 0, 0, 0.08);
+            --star-empty: rgba(0, 0, 0, 0.12);
+            --text-shadow-tint: rgba(0, 0, 0, 0.1);
+            --fill-ink: rgba(255, 255, 255, 0.85);
+            --fill-ink-soft: rgba(255, 255, 255, 0.75);
+            --fill-wash: rgba(255, 255, 255, 0.1);
+            --fill-empty: rgba(255, 255, 255, 0.25);
+            --media-black: #000000;
+            --media-scrim: rgba(0, 0, 0, 0.2);
         }
 
         body {
@@ -152,14 +165,14 @@
             transform: translate(-50%, -50%) scale(0.8);
             width: 60px;
             height: 60px;
-            background: #fff;
-            border: 3px solid #000;
+            background: var(--surface);
+            border: 3px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transition: all 0.2s;
-            color: #000;
+            color: var(--text);
         }
 
         .project-card:hover .play-btn {
@@ -217,6 +230,7 @@
             }
         }
     </style>
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 <body>
     <!-- Custom Cursor -->

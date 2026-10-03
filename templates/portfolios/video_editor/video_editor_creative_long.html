@@ -18,6 +18,8 @@
             --border:   rgba(255,255,255,0.06);
             --accent:   #ff3d6b;
             --accent2:  #ff8c00;
+            --accent-rgb: 255, 61, 107;
+            --accent2-rgb: 255, 140, 0;
             --text:     #f0f0f8;
             --dim:      rgba(240,240,248,0.4);
             --dimmer:   rgba(240,240,248,0.15);
@@ -67,7 +69,7 @@
             font-weight: 700;
             font-size: 1.4rem;
             letter-spacing: 0.1em;
-            color: #fff;
+            color: var(--sf-text, #fff);
             text-decoration: none;
             background: linear-gradient(135deg, var(--text), var(--dim));
             -webkit-background-clip: text;
@@ -95,7 +97,7 @@
         .nav-pill:hover, .nav-pill.active {
             color: var(--accent);
             border-color: var(--accent);
-            background: rgba(255, 61, 107, 0.08);
+            background: rgba(var(--accent-rgb), 0.08);
         }
 
         /* ─── Main Content ─── */
@@ -135,7 +137,7 @@
 
         .video-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 61, 107, 0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.3);
         }
 
         .thumbnail-wrapper {
@@ -182,10 +184,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             transform: scale(0.8);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(255, 61, 107, 0.4);
+            box-shadow: 0 10px 30px rgba(var(--accent-rgb), 0.4);
         }
 
         .video-card:hover .play-btn {
@@ -224,7 +226,7 @@
         /* ─── Contact Section ─── */
         .contact-cta-section {
             padding: 120px 5%;
-            background: radial-gradient(circle at 50% 100%, rgba(255, 61, 107, 0.1), transparent 70%);
+            background: radial-gradient(circle at 50% 100%, rgba(var(--accent-rgb), 0.1), transparent 70%);
             text-align: center;
             border-top: 1px solid var(--border);
         }
@@ -246,7 +248,7 @@
             align-items: center;
             gap: 15px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff;
+            color: var(--sf-accent-ink, #fff);
             padding: 22px 50px;
             border-radius: 6px;
             font-weight: 800;
@@ -254,13 +256,13 @@
             font-size: 1rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            box-shadow: 0 20px 50px rgba(255, 61, 107, 0.3);
+            box-shadow: 0 20px 50px rgba(var(--accent-rgb), 0.3);
             transition: all 0.3s;
         }
 
         .big-cta-btn:hover {
             transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 30px 70px rgba(255, 61, 107, 0.5);
+            box-shadow: 0 30px 70px rgba(var(--accent-rgb), 0.5);
         }
 
         /* ─── Footer ─── */
@@ -292,7 +294,7 @@
         }
 
         .skillifly-badge:hover {
-            border-color: rgba(255, 61, 107, 0.4);
+            border-color: rgba(var(--accent-rgb), 0.4);
             transform: translateY(-3px);
         }
 
@@ -321,11 +323,12 @@
             .nav-pill { padding: 6px 12px; font-size: 0.65rem; }
         }
     </style>
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 <body>
 
-    <header>
-        <a href="/{{ personal_info.user.username }}/" class="logo">
+<header class="sf-scrim">
+  <a href="/{{ personal_info.user.username }}/" class="logo">
             {{ personal_info.full_name|upper }}
         </a>
         <nav class="nav-links">

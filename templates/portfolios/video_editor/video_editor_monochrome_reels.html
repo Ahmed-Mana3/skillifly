@@ -20,6 +20,19 @@
             --border: #000000;
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bot: env(safe-area-inset-bottom, 0px);
+
+            /* Polarity-dependent layers, mirroring static/css/monochrome.css so
+               a saved background overrides the whole group together. */
+            --texture: rgba(0, 0, 0, 0.15);
+            --hairline: rgba(0, 0, 0, 0.08);
+            --star-empty: rgba(0, 0, 0, 0.12);
+            --text-shadow-tint: rgba(0, 0, 0, 0.1);
+            --fill-ink: rgba(255, 255, 255, 0.85);
+            --fill-ink-soft: rgba(255, 255, 255, 0.75);
+            --fill-wash: rgba(255, 255, 255, 0.1);
+            --fill-empty: rgba(255, 255, 255, 0.25);
+            /* Media surfaces belong to the footage, not to the palette. */
+            --media-black: #000000;
         }
 
         * {
@@ -30,8 +43,11 @@
         }
 
         body {
-            background: #000; /* Keep black for video viewing snaps */
-            color: #fff;
+            /* The page follows the reader's background; the black is kept around
+               the video itself, on .video-wrapper, where it is actually the
+               letterbox. */
+            background-color: var(--bg);
+            color: var(--text);
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
         }
@@ -59,7 +75,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
+            background-color: var(--bg);
         }
 
         /* ─── Video Wrapper ─── */
@@ -72,8 +88,9 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border-left: 3px solid #333;
-            border-right: 3px solid #333;
+            background-color: var(--media-black);
+            border-left: 3px solid var(--border);
+            border-right: 3px solid var(--border);
         }
         @media (max-width: 768px) { .video-wrapper { max-width: 100%; border: none; } }
 
@@ -90,7 +107,7 @@
             border: none;
             pointer-events: auto;
         }
-        .video-content video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        .video-content video { width: 100%; height: 100%; object-fit: cover; background: var(--media-black); }
 
         /* Ambient Glow Background */
         .ambient-glow {
@@ -118,7 +135,7 @@
             font-family: 'Bebas Neue', sans-serif;
             font-size: 1.8rem;
             margin-bottom: 8px;
-            text-shadow: 2px 2px 0px #000;
+            text-shadow: 2px 2px 0px var(--media-black);
             letter-spacing: 1px;
             text-transform: uppercase;
         }
@@ -136,39 +153,39 @@
         .action-btn {
             width: 48px;
             height: 48px;
-            background: #fff;
-            border: 3px solid #000;
+            background: var(--surface);
+            border: 3px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: transform 0.2s;
             pointer-events: auto;
-            color: #000;
-            box-shadow: 4px 4px 0px #000;
+            color: var(--text);
+            box-shadow: 4px 4px 0px var(--border);
         }
 
         .action-btn:hover {
             transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px #000;
-            background: #000;
-            color: #fff;
+            box-shadow: 6px 6px 0px var(--border);
+            background: var(--text);
+            color: var(--bg);
         }
 
         .request-btn {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            background: #fff;
-            color: #000;
+            background: var(--surface);
+            color: var(--text);
             padding: 12px 24px;
-            border: 3px solid #000;
+            border: 3px solid var(--border);
             font-weight: 800;
             font-size: 0.85rem;
             text-decoration: none;
             margin-top: 15px;
             pointer-events: auto;
-            box-shadow: 4px 4px 0px #000;
+            box-shadow: 4px 4px 0px var(--border);
             transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -176,9 +193,9 @@
 
         .request-btn:hover {
             transform: translate(-3px, -3px);
-            box-shadow: 7px 7px 0px #000;
-            background: #000;
-            color: #fff;
+            box-shadow: 7px 7px 0px var(--border);
+            background: var(--text);
+            color: var(--bg);
         }
 
         /* ─── Navigation ─── */
@@ -190,15 +207,15 @@
             z-index: 100;
             display: flex;
             gap: 20px;
-            background: #fff;
-            border: 3px solid #000;
+            background: var(--surface);
+            border: 3px solid var(--border);
             padding: 10px 24px;
-            box-shadow: 4px 4px 0px #000;
+            box-shadow: 4px 4px 0px var(--border);
         }
 
         .nav-link {
             text-decoration: none;
-            color: #666;
+            color: var(--text-dim);
             font-size: 0.85rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -206,19 +223,19 @@
             transition: color 0.3s;
         }
 
-        .nav-link.active { color: #000; }
-        .nav-link:hover { color: #000; }
+        .nav-link.active { color: var(--text); }
+        .nav-link:hover { color: var(--text); }
 
         .back-home {
             position: fixed;
             top: 25px;
             left: 25px;
             z-index: 100;
-            color: #000;
-            background: #fff;
-            border: 3px solid #000;
+            color: var(--text);
+            background: var(--surface);
+            border: 3px solid var(--border);
             padding: 6px;
-            box-shadow: 3px 3px 0px #000;
+            box-shadow: 3px 3px 0px var(--border);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -227,9 +244,9 @@
         }
         .back-home:hover {
             transform: translate(-2px, -2px);
-            box-shadow: 5px 5px 0px #000;
-            background: #000;
-            color: #fff;
+            box-shadow: 5px 5px 0px var(--border);
+            background: var(--text);
+            color: var(--bg);
         }
 
         /* ─── Loading state ─── */
@@ -253,8 +270,8 @@
 
         /* ─── Contact Slide ─── */
         #contactSlide {
-            background: #fff;
-            color: #000;
+            background-color: var(--bg);
+            color: var(--text);
             overflow: hidden;
         }
 
@@ -264,8 +281,8 @@
             max-width: 600px;
             width: 100%;
             pointer-events: auto;
-            background: #fff;
-            border: 3px solid #000;
+            background: var(--surface);
+            border: 3px solid var(--border);
             box-shadow: var(--shadow-lg);
             position: relative;
             z-index: 2;
@@ -276,7 +293,7 @@
             font-size: clamp(3rem, 6vw, 4.5rem);
             line-height: 1;
             margin-bottom: 30px;
-            color: #000;
+            color: var(--text);
         }
 
         .contact-info-list {
@@ -288,7 +305,7 @@
 
         .contact-info-value {
             font-size: 1.2rem;
-            color: #000;
+            color: var(--text);
             text-decoration: none;
             font-weight: 800;
             display: inline-flex;
@@ -299,7 +316,7 @@
             transition: border-color 0.2s;
             text-transform: uppercase;
         }
-        .contact-info-value:hover { border-bottom-color: #000; }
+        .contact-info-value:hover { border-bottom-color: var(--text); }
 
         .reel-social-links {
             display: flex;
@@ -309,6 +326,7 @@
             margin-bottom: 40px;
         }
     </style>
+{% include "portfolios/common/theme_background_css.html" %}
 </head>
 <body>
 

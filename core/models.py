@@ -144,6 +144,7 @@ class Profile(models.Model):
     section_order = models.JSONField(blank=True, default=list, help_text="Ordered list of section keys for portfolio display")
     section_visibility = models.JSONField(blank=True, default=dict, help_text="Map of section key -> bool controlling portfolio section visibility")
     section_names = models.JSONField(blank=True, default=dict, help_text="Map of section key -> custom display name(s) shown on the portfolio")
+    theme_settings = models.JSONField(blank=True, default=dict, help_text="Per-theme appearance overrides, e.g. {'background': '#0A0E27'}. Only honoured by themes listed in core.theme_colors.BACKGROUND_ENABLED_THEMES.")
 
     # Video storage add-on. The base allowance comes from the user's plan tier
     # (see CustomUser.storage_quota_bytes); this is the extra purchased on top.

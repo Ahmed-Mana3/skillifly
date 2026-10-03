@@ -1,0 +1,599 @@
+{% comment %}
+  Theme colour overrides — emitted only when the profile saved a background
+  and/or accent colour for a theme that supports them
+  (core.theme_colors.THEME_BACKGROUND_SPECS).
+
+  Requires: theme_background, the dict returned by
+  core.theme_colors.resolve_background_palette, with keys
+    custom         (bool)  -> no saved background; emit no background tokens
+    accent_custom  (bool)  -> no saved accent; emit no accent tokens
+    family         (str)   -> which CSS token vocabulary the theme spells its
+                              background with; see core.theme_colors.THEME_BACKGROUND_SPECS
+accent_tokens  (dict)  -> slot -> CSS custom properties carrying the accent,
+                              e.g. {'primary': ('--accent',), 'glow': ('--accent-glow',)}
+    accent_channels (dict) -> slot -> CSS custom properties carrying that tone as
+                              bare RGB channels, e.g. {'primary': ('--accent-rgb',)}
+    accent_channel_vars (list) -> the same thing already resolved against the
+                              live palette: [{'property': '--accent-rgb',
+                              'channels': '255, 61, 107'}, ...]
+    palette        (dict)  -> background, ink, ink_soft, hard_ink, surface,
+                              surface_2, surface_glass, text, text_muted, text_faint,
+                              border, border_strong, nav, overlay, hero_mid,
+                              hero_veil, shadow, texture, hairline, star_empty,
+                              fill_ink, fill_ink_soft, fill_wash, fill_empty,
+                              text_shadow
+    accent_palette (dict)  -> accent/primary, partner, trio, glow, soft, ink, and a
+                              <slot>_rgb companion for each
+
+  Why this is one partial for thirteen themes
+  ------------------------------------------
+  Each theme family names the same ideas differently — minimal says --bg-dark,
+  editorial-studio says --paper, the neo-brutalist themes say --bg but pair it
+  with hard borders and offset shadows, and the animated pair writes its chrome
+  as literals. Rather than fork the stylesheet per theme, this file emits one
+  neutral --sf-* token set and then bridges it into whichever vocabulary
+  `family` names. core/theme_colors.py owns *what* each theme looks like; this
+  file only owns how to say it.
+
+  The accent is the same story one level down: the registry lists which custom
+  properties carry it, so the loop below needs no per-theme branch. A theme with
+  an empty accent map (the neo-brutalist family, whose accent *is* the hard ink)
+  emits nothing, and the editor does not offer the control in the first place.
+
+  Custom properties only move a colour the theme spells as a token. Creative
+  fades its own brand colour with rgba(255, 61, 107, .08) in about forty
+  places — hover washes, card glows, pill fills, the ambient orbs — and those
+  literals cannot follow an overridden token. So the registry also lists
+  `accent_channels`, the properties that carry each tone as bare "255, 61, 107"
+  channels, and the theme writes rgba(var(--accent-rgb), .08) instead. Every
+  template that lists channels has to define the matching default in its own
+  :root, so an untouched theme still renders exactly as shipped.
+
+  Custom properties set in :root win on source order, so this block must stay
+  the last thing in <head>. The handful of rules that paint a literal instead
+  of a token (minimal's body, editorial-studio's gradient body) are handled with
+  !important below. Where a theme paints a literal that is *meant* to stay put
+  — the black letterbox behind a video, the scrim over a thumbnail — it is left
+  alone on purpose: that surface belongs to the media, not to the palette.
+{% endcomment %}
+{% if theme_background.custom or theme_background.accent_custom %}
+<style>
+{% if theme_background.custom %}
+  :root {
+    /* Neutral tokens. Every theme reads from one of these. */
+    --sf-bg: {{ theme_background.palette.background }};
+    --sf-ink: {{ theme_background.palette.ink }};
+    --sf-ink-soft: {{ theme_background.palette.ink_soft }};
+    --sf-hard-ink: {{ theme_background.palette.hard_ink }};
+    --sf-surface: {{ theme_background.palette.surface }};
+    --sf-surface-2: {{ theme_background.palette.surface_2 }};
+    --sf-surface-deep: {{ theme_background.palette.surface_deep }};
+    --sf-surface-glass: {{ theme_background.palette.surface_glass }};
+    --sf-sheen: {{ theme_background.palette.sheen }};
+    --sf-text: {{ theme_background.palette.text }};
+    --sf-text-muted: {{ theme_background.palette.text_muted }};
+    --sf-text-faint: {{ theme_background.palette.text_faint }};
+    --sf-border: {{ theme_background.palette.border }};
+    --sf-border-strong: {{ theme_background.palette.border_strong }};
+    --sf-nav: {{ theme_background.palette.nav }};
+    --sf-overlay: {{ theme_background.palette.overlay }};
+    --sf-hero-mid: {{ theme_background.palette.hero_mid }};
+    --sf-hero-veil: {{ theme_background.palette.hero_veil }};
+    --sf-grid: {{ theme_background.palette.grid }};
+    --sf-shadow: {{ theme_background.palette.shadow }};
+    --sf-texture: {{ theme_background.palette.texture }};
+    --sf-hairline: {{ theme_background.palette.hairline }};
+    --sf-star-empty: {{ theme_background.palette.star_empty }};
+    --sf-fill-ink: {{ theme_background.palette.fill_ink }};
+    --sf-fill-ink-soft: {{ theme_background.palette.fill_ink_soft }};
+    --sf-fill-wash: {{ theme_background.palette.fill_wash }};
+    --sf-fill-empty: {{ theme_background.palette.fill_empty }};
+    --sf-text-shadow: {{ theme_background.palette.text_shadow }};
+  }
+{% if theme_background.family == 'glass' %}
+
+  /* Animated, Animated Dark, Creative, Creative White. The token vocabulary is
+     the same as `surface`, but these themes write their chrome as literals
+     tuned to one polarity — a glass navbar bar, outlined hero type, an amber
+     badge, the reels-player chips. Bridging the tokens alone leaves a cream
+     navbar and invisible outline text floating on a dark page, so each literal
+     is re-pointed here.
+
+     Selectors are scoped rather than element-wide on purpose. A bare `header`
+     or `.dot` would also match rules in the other themes of this family that
+     are correct as authored (the Animated long header deliberately has no
+     background; `.nav-brand .dot` is Creative White's accent dot), so those
+     two carry an explicit `sf-scrim` class / a parent qualifier instead.
+
+     Nothing here emits unless a colour was actually saved, so an untouched
+     theme still renders byte-identically to as authored. */
+  :root {
+    --bg: var(--sf-bg);
+    --surface: var(--sf-surface);
+    --surface-hover: var(--sf-surface-2);
+    --surface-solid: var(--sf-surface-2);
+    --glass: var(--sf-surface-glass);
+    --border: var(--sf-border);
+    --border-hover: var(--sf-border-strong);
+    --text: var(--sf-text);
+    --text-muted: var(--sf-text-muted);
+    --text-dim: var(--sf-text-muted);
+    --text-color: var(--sf-text);
+    --dim: var(--sf-text-muted);
+    --dimmer: var(--sf-text-faint);
+    --shadow-sm: 0 4px 12px var(--sf-shadow);
+    --shadow-md: 0 12px 32px var(--sf-shadow);
+    --shadow-lg: 0 24px 64px var(--sf-shadow);
+  }
+
+  body {
+    background: var(--sf-bg) !important;
+    color: var(--sf-text) !important;
+  }
+
+  /* Chrome that the theme hardcodes as a light or dark literal. */
+  .navbar {
+    background: var(--sf-nav) !important;
+    border-color: var(--sf-border) !important;
+    box-shadow: 0 10px 40px var(--sf-shadow) !important;
+  }
+
+  .nav-links a,
+  .nav-link { color: var(--sf-text) !important; }
+
+  .hero::before {
+    background: radial-gradient(
+      ellipse 92% 72% at 50% 45%,
+      var(--sf-hero-veil) 0%,
+      var(--sf-hero-veil) 48%,
+      transparent 80%
+    ) !important;
+  }
+
+  /* The hero's hairline grid. Only Creative paints one, and its authored value
+     is white at 2.5% — near enough invisible that it vanishes completely on a
+     light pick, taking the hero's texture with it. */
+  .hero::after {
+    background-image:
+      linear-gradient(var(--sf-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--sf-grid) 1px, transparent 1px) !important;
+  }
+
+  .hero-title { color: var(--sf-text) !important; }
+
+  .hero-bio {
+    color: var(--sf-text-muted) !important;
+    text-shadow: 0 1px 4px var(--sf-shadow) !important;
+  }
+
+  .hero-title .grad-text {
+    filter: drop-shadow(0 3px 18px var(--sf-shadow)) !important;
+  }
+
+  .hero-avatar { border-color: var(--sf-hard-ink) !important; }
+
+  /* Outlined hero type with a transparent fill, so the stroke is the only
+     thing visible. Creative strokes it white, Creative White strokes it navy,
+     and either one vanishes against the wrong polarity. */
+  .hero-title .outline-text {
+    -webkit-text-stroke-color: var(--sf-text-muted) !important;
+  }
+
+  /* The amber "long form" badge pairs a dark amber label with a pale amber
+     wash. On a dark background that pairing inverts into unreadable type. */
+  .badge-long { color: var(--sf-hard-ink) !important; }
+
+  /* Bars that quote the theme's own background as a flat translucent scrim.
+     Opt-in via .sf-scrim — see the note above on why not `header`. */
+  .sf-scrim { background: var(--sf-overlay) !important; }
+
+  /* Placeholder fills built from a literal dark gradient. */
+  .project-thumb-placeholder,
+  .related-thumb-placeholder { background: var(--sf-surface-2) !important; }
+
+  /* Video-card shimmer, written as a literal of the theme's own background. */
+  .loading-shimmer {
+    background-image: linear-gradient(90deg, var(--sf-bg) 25%, var(--sf-surface) 50%, var(--sf-bg) 75%) !important;
+  }
+
+  /* Empty review stars. Every variant writes a faint hairline in its own
+     polarity — rgba(0,0,0,.15) light, rgba(255,255,255,.15) dark. */
+  .review-stars svg.empty { fill: var(--sf-border-strong) !important; }
+
+  /* Reels-player chrome: translucent-white chips and near-white labels baked
+     for a dark page. `.progress-dots` qualifies `.dot` so it cannot reach
+     Creative White's `.nav-brand .dot`. */
+  .drive-btn,
+  .drive-fs-btn,
+  .drive-progress-wrap,
+  .nav-sep,
+  .swipe-hint-arrow span,
+  .progress-dots .dot {
+    background: var(--sf-surface-glass) !important;
+  }
+
+.drive-btn:hover,
+  .drive-fs-btn:hover { background: var(--sf-surface-2) !important; }
+
+  .drive-btn,
+  .drive-fs-btn { color: var(--sf-text) !important; }
+
+  .drive-time { color: var(--sf-text-muted) !important; }
+
+  /* The scrubber handle and the loading ring are painted pure / near-white
+     because they sit over video, where nothing else is guaranteed to read. */
+  .drive-progress-thumb { background: var(--sf-text) !important; }
+
+  .shimmer-ring { border-color: var(--sf-border-strong) !important; }
+
+  .slide-counter { color: var(--sf-text-muted) !important; }
+
+  /* The reel/long stage container. A white hairline is invisible on a light
+     pick, which reads as the card losing its edge. */
+  .video-wrapper { border-color: var(--sf-border) !important; }
+
+  .swipe-hint-label { color: var(--sf-text-faint) !important; }
+
+  .tap-ring {
+    background: var(--sf-overlay) !important;
+    border-color: var(--sf-border-strong) !important;
+  }
+
+  .close-btn { background: var(--sf-overlay) !important; }
+
+  /* Creators marquee. */
+  .creators-marquee-container {
+    background: var(--sf-overlay) !important;
+    border-top-color: var(--sf-border) !important;
+    border-bottom-color: var(--sf-border) !important;
+  }
+
+  .creator-bubble {
+    background: var(--sf-surface) !important;
+    box-shadow: 0 8px 20px var(--sf-shadow) !important;
+  }
+
+  .creator-bubble:hover {
+    background: var(--sf-surface-2) !important;
+    box-shadow: 0 15px 35px var(--sf-shadow) !important;
+  }
+
+  .creator-avatar-img { border-color: var(--sf-border) !important; }
+
+  .creator-label-name { color: var(--sf-text) !important; }
+
+  .review-card:hover { background: var(--sf-surface-2) !important; }
+
+  /* Reels and long-video sub-pages. */
+  .top-nav {
+    background: var(--sf-overlay) !important;
+    border-color: var(--sf-border) !important;
+  }
+
+  .action-btn {
+    background: var(--sf-surface-glass) !important;
+    border-color: var(--sf-border) !important;
+    color: var(--sf-text) !important;
+  }
+
+  .action-btn:hover { background: var(--sf-surface-2) !important; }
+
+  .reel-desc { color: var(--sf-text) !important; }
+
+  .reels-container { background: var(--sf-bg) !important; }
+
+  .thumbnail-wrapper { background: var(--sf-surface-2) !important; }
+
+  ::-webkit-scrollbar-track { background: var(--sf-bg) !important; }
+{% elif theme_background.family == 'surface' %}
+
+  /* Pro, Creative, Cinematic, Categories and friends. */
+  :root {
+    --bg: var(--sf-bg);
+    --surface: var(--sf-surface);
+    --surface-hover: var(--sf-surface-2);
+    --surface-solid: var(--sf-surface-2);
+    --glass: var(--sf-surface-glass);
+    --border: var(--sf-border);
+    --border-hover: var(--sf-border-strong);
+    --text: var(--sf-text);
+    --text-muted: var(--sf-text-muted);
+    --text-dim: var(--sf-text-muted);
+    --dim: var(--sf-text-muted);
+    --dimmer: var(--sf-text-faint);
+  }
+
+  body {
+    background: var(--sf-bg) !important;
+    color: var(--sf-text) !important;
+  }
+
+  ::-webkit-scrollbar-track { background: var(--sf-bg) !important; }
+{% elif theme_background.family == 'minimal' %}
+
+  /* Minimal. It paints its navy as a literal and reuses --bg-dark as a
+     foreground on top of its fixed cyan/pink accent gradient. */
+  :root {
+    --bg-dark: var(--sf-ink);
+    --bg: var(--sf-bg);
+    --bg-card: var(--sf-surface);
+    --bg-card-light: var(--sf-surface-2);
+    --surface: var(--sf-surface);
+    --text: var(--sf-text);
+    --text-primary: var(--sf-text);
+    --text-secondary: var(--sf-text-muted);
+    --text-tertiary: var(--sf-text-faint);
+    --text-dim: var(--sf-text-muted);
+    --border-color: var(--sf-border);
+    --glass: var(--sf-surface-glass);
+  }
+
+  body {
+    background: var(--sf-bg) !important;
+    color: var(--sf-text) !important;
+  }
+
+  nav {
+    background: var(--sf-nav) !important;
+    border-bottom-color: var(--sf-border) !important;
+  }
+
+  .top-nav {
+    background: var(--sf-overlay) !important;
+    border-color: var(--sf-border) !important;
+  }
+
+  .back-home {
+    background: var(--sf-overlay) !important;
+    color: var(--sf-text) !important;
+    border-color: var(--sf-border) !important;
+  }
+
+  .action-btn {
+    background: var(--sf-surface-glass) !important;
+    border-color: var(--sf-border) !important;
+  }
+
+  .play-overlay { background: var(--sf-overlay) !important; }
+
+  .loading-shimmer {
+    background-image: linear-gradient(90deg, var(--sf-bg) 25%, var(--sf-surface) 50%, var(--sf-bg) 75%) !important;
+  }
+
+  .cta-final p { color: var(--sf-ink-soft) !important; }
+
+  /* The middle stop is pure white, which vanishes on a light background. */
+  .hero h1 {
+    background-image: linear-gradient(135deg, #00d9ff 0%, var(--sf-hero-mid) 50%, #ff006e 100%);
+  }
+
+  ::-webkit-scrollbar-track { background: var(--sf-bg) !important; }
+{% elif theme_background.family == 'paper' %}
+
+  /* Editorial Studio: a paper-and-ink vocabulary under a layered body
+     background, so the whole stack has to be replaced rather than re-tinted. */
+  :root {
+    --paper: var(--sf-bg);
+    --paper-strong: var(--sf-surface-2);
+    --panel: var(--sf-surface-glass);
+    --ink: var(--sf-hard-ink);
+    --muted: var(--sf-text-muted);
+    --line: var(--sf-border);
+    --body: var(--sf-bg);
+    --text: var(--sf-text);
+    --text-primary: var(--sf-text);
+    --text-muted: var(--sf-text-muted);
+  }
+
+  body {
+    background: var(--sf-bg) !important;
+    color: var(--sf-text) !important;
+  }
+
+  ::-webkit-scrollbar-track { background: var(--sf-bg) !important; }
+{% elif theme_background.family == 'brutal' %}
+
+  /* Cyan, Yellow, Monochrome. Neo-brutalist themes draw 3px borders and offset
+     shadows in --border / --shadow-color, and their accent *is* that same
+     black, so all three have to travel with the background's polarity or the
+     layout falls apart and the headings disappear. */
+  :root {
+    --bg: var(--sf-bg);
+    --surface: var(--sf-surface);
+    --glass: var(--sf-surface-glass);
+    --accent: var(--sf-hard-ink);
+    --border: var(--sf-hard-ink);
+    --shadow-color: var(--sf-hard-ink);
+    --shadow-sm: 4px 4px 0px var(--sf-hard-ink);
+    --shadow-md: 8px 8px 0px var(--sf-hard-ink);
+    --shadow-lg: 12px 12px 0px var(--sf-hard-ink);
+    --shadow-hover: 12px 12px 0px var(--sf-hard-ink);
+    --text: var(--sf-hard-ink);
+    --text-primary: var(--sf-hard-ink);
+    --text-dim: var(--sf-text-muted);
+    --text-muted: var(--sf-text-muted);
+    --dim: var(--sf-text-muted);
+    --dimmer: var(--sf-text-faint);
+    /* The dot-grid the family prints over the whole page, and the hairline
+       rules and floating outlines drawn with it. */
+    --texture: var(--sf-texture);
+    --hairline: var(--sf-hairline);
+    --star-empty: var(--sf-star-empty);
+    --text-shadow-tint: var(--sf-text-shadow);
+    /* Everything that sits on an inverted hover fill, which these themes paint
+       with --text and which therefore carries the opposite polarity. */
+    --fill-ink: var(--sf-fill-ink);
+    --fill-ink-soft: var(--sf-fill-ink-soft);
+    --fill-wash: var(--sf-fill-wash);
+    --fill-empty: var(--sf-fill-empty);
+  }
+
+  /* background-color, never the `background` shorthand: the shorthand resets
+     background-image to none, which is how the dot-grid these three themes are
+     built around disappeared the moment anybody picked a background. */
+  html,
+  body {
+    background-color: var(--sf-bg) !important;
+    color: var(--sf-hard-ink) !important;
+  }
+
+  ::-webkit-scrollbar-track { background: var(--sf-bg) !important; }
+{% elif theme_background.family == 'classic' %}
+
+  /* Developer Classic. Its Tailwind layout reads every colour from a --sfc-*
+     token the theme declares itself, so the bridge is a straight repoint — the
+     one thing the family has to solve for itself is that its hairlines and
+     card shadows are stated as light-grey and black-alpha literals tuned to the
+     shipped near-white page, and a black hairline is simply not there on a dark
+     pick. The derived border/text tokens carry the polarity instead.
+
+     Note the surface mapping: Classic ships *white* cards on a near-white page,
+     which is the one place its surfaces lift rather than recede. `--sf-surface`
+     recedes on a light pick (it is derived as a shade of ink over the page), so
+     on light backgrounds the cards gain the separation they were missing
+     rather than losing it. */
+  :root {
+    --sfc-bg: var(--sf-bg);
+    --sfc-surface: var(--sf-surface);
+    --sfc-surface-2: var(--sf-surface-2);
+    --sfc-surface-3: var(--sf-bg);
+    --sfc-text: var(--sf-text);
+    --sfc-text-strong: var(--sf-text);
+    --sfc-text-soft: var(--sf-text-muted);
+    --sfc-text-muted: var(--sf-text-muted);
+    --sfc-text-faint: var(--sf-text-faint);
+    --sfc-border: var(--sf-border);
+    --sfc-border-soft: var(--sf-border);
+  }
+
+  body {
+    background: var(--sf-bg) !important;
+    color: var(--sf-text) !important;
+  }
+
+  ::-webkit-scrollbar-track { background: var(--sf-bg) !important; }
+{% else %}
+  body {
+    background: var(--sf-bg) !important;
+    color: var(--sf-text) !important;
+  }
+{% endif %}
+{% endif %}
+{% if theme_background.family == 'glass' %}
+{% comment %}
+  Ink-filled buttons. The glass themes' CTAs (Animated's "Watch Reels" pill and
+  its sibling, Animated long's contact CTA) fill themselves with the page's text
+  token and paint the label a literal white, which only reads while that token
+  is dark. The token follows the background's polarity, so on a dark pick
+  --text becomes white and the button renders as white type on a white pill —
+  the one button nobody can afford to lose. Filling the label with the page's
+  own background keeps the pair inverted on either polarity.
+
+  This sits outside the `custom` gate on purpose: an accent-only pick still
+  leaves the same pairing in place, and the --sf-* tokens it needs are only
+  defined by the background block, hence the fallbacks back to the theme's own
+  --bg / --text. `!important` also outranks the accent block's `.contact-cta`
+  rule below, which assumes an accent-filled surface — for the Animated long
+  page that fill is the ink, not the accent.
+{% endcomment %}
+  .btn-main,
+  .contact-cta {
+    background: var(--sf-text, var(--text)) !important;
+    color: var(--sf-bg, var(--bg)) !important;
+  }
+
+  .btn-sub:hover,
+  .social-icon:hover {
+    background: var(--sf-text, var(--text)) !important;
+    color: var(--sf-bg, var(--bg)) !important;
+  }
+
+  .social-icon:hover { border-color: var(--sf-text, var(--text)) !important; }
+{% endif %}
+{% if theme_background.accent_custom %}
+{% comment %}
+  Accent override. The derived tones already account for the background in
+  force, so a single --sf-accent-* set bridges into every theme's vocabulary
+  without a per-theme branch.
+{% endcomment %}
+  :root {
+    --sf-accent: {{ theme_background.accent_palette.accent }};
+    /* Slot aliases, so the loop below can address every tone by slot name
+       without special-casing "primary". */
+    --sf-accent-primary: var(--sf-accent);
+    --sf-accent-partner: {{ theme_background.accent_palette.partner }};
+    --sf-accent-trio: {{ theme_background.accent_palette.trio }};
+    --sf-accent-glow: {{ theme_background.accent_palette.glow }};
+    --sf-accent-soft: {{ theme_background.accent_palette.soft }};
+    --sf-accent-ink: {{ theme_background.accent_palette.ink }};
+  }
+
+  :root {
+  {% for slot, properties in theme_background.accent_tokens.items %}
+    {% for property in properties %}
+    {{ property }}: var(--sf-accent-{{ slot }});
+    {% endfor %}
+  {% endfor %}
+  }
+
+  /* Bare channels, for the themes that fade the accent with rgba() rather
+     than through a token. Without these the override recolours the labels and
+     leaves every wash, glow and orb in the old brand colour. */
+  :root {
+  {% for channel in theme_background.accent_channel_vars %}
+    {{ channel.property }}: {{ channel.channels }};
+  {% endfor %}
+  }
+{% if theme_background.family == 'surface' %}
+  /* Categories composes its headings out of the two accent stops. Rebuilding
+     --grad here is what makes a recoloured Categories theme read as one
+     consistent green (or any other colour) rather than a green label over a
+     stale gradient. */
+  :root {
+    --grad: linear-gradient(135deg, var(--sf-accent) 0%, var(--sf-accent-glow) 100%);
+  }
+{% elif theme_background.family == 'minimal' %}
+  /* Minimal paints its hero heading as a literal cyan/pink gradient rather
+     than a token, so it needs the literal itself replaced. */
+  .hero h1 {
+    background-image: linear-gradient(135deg, var(--sf-accent) 0%, var(--sf-hero-mid, #ffffff) 50%, var(--sf-accent-partner) 100%);
+  }
+{% elif theme_background.family == 'classic' %}
+  /* Classic fills its hero with the accent and prints a white / blue-100 /
+     blue-50 ladder on top of it, so an accent-only pick has to re-derive that
+     ladder rather than keep three blue literals. Everything on that block
+     answers to the accent's own ink tone — white on a dark accent, near-black
+     on a light one — which is the only version of this hero that is readable
+     after a recolour. The two page-side accents (the skill-pill border and the
+     footer hairline) are tints of the new brand colour rather than fixed
+     blue-200 / blue-100 values.
+
+     Only emitted under `accent_custom`: with the shipped navy the theme's own
+     ladder is already correct, and `color-mix` is a progressive enhancement
+     rather than something the shipped page should depend on. */
+  :root {
+    --sfc-hero-ink: var(--sf-accent-ink);
+    --sfc-hero-title: var(--sf-accent-ink);
+    --sfc-hero-sub: color-mix(in srgb, var(--sf-accent-ink) 82%, var(--sf-accent));
+    --sfc-hero-bio: color-mix(in srgb, var(--sf-accent-ink) 92%, var(--sf-accent));
+    --sfc-hero-hover: color-mix(in srgb, var(--sf-accent-ink) 76%, var(--sf-accent));
+    --sfc-cta-ink: var(--sf-accent);
+    --sfc-cta-hover: color-mix(in srgb, var(--sf-accent-ink) 92%, var(--sf-accent));
+    --sfc-accent-line: color-mix(in srgb, var(--sf-accent) 32%, var(--sfc-surface, #FFFFFF));
+    --sfc-accent-soft: color-mix(in srgb, var(--sf-accent) 22%, var(--sfc-surface, #FFFFFF));
+  }
+{% endif %}
+  /* Label text sitting on a filled accent surface (buttons, pills).
+     `.contact-cta` is Pro's filled-accent button; without it Pro keeps its
+     authored `color: #000`, which is unreadable the moment the accent is
+     nudged light against a dark background. */
+  .accent-fill,
+  .btn-primary,
+  .cta-btn,
+  .contact-btn,
+  .contact-cta {
+    color: var(--sf-accent-ink);
+  }
+{% endif %}
+</style>
+{% endif %}

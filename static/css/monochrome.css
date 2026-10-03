@@ -13,15 +13,34 @@
   --border: #000000;
   --border-width: 3px;
   --shadow-color: #000000;
-  
+
   /* Neo-brutalist shadows */
   --shadow-sm: 4px 4px 0px var(--shadow-color);
   --shadow-md: 8px 8px 0px var(--shadow-color);
   --shadow-lg: 12px 12px 0px var(--shadow-color);
   --shadow-hover: 12px 12px 0px var(--shadow-color);
-  
+
   --radius: 0px; /* Sharp edges */
   --transition: cubic-bezier(0.19, 1, 0.22, 1);
+
+  /* Polarity-dependent layers. Defaults below are the shipped black-ink values
+     for a light page; core/theme_colors.py + portfolios/common/
+     theme_background_css.html override the whole group when the reader picks a
+     background, so nothing here is locked to one polarity. */
+  --texture: rgba(0, 0, 0, 0.15);
+  --hairline: rgba(0, 0, 0, 0.08);
+  --star-empty: rgba(0, 0, 0, 0.12);
+  --text-shadow-tint: rgba(0, 0, 0, 0.1);
+  /* Text and washes that sit on an inverted hover fill, which this theme paints
+     with --text and therefore flips with the page. */
+  --fill-ink: rgba(255, 255, 255, 0.85);
+  --fill-ink-soft: rgba(255, 255, 255, 0.75);
+  --fill-wash: rgba(255, 255, 255, 0.1);
+  --fill-empty: rgba(255, 255, 255, 0.25);
+  /* Media surfaces. These belong to the footage, not to the palette, so they
+     stay black on every background. */
+  --media-black: #000000;
+  --media-scrim: rgba(0, 0, 0, 0.2);
 }
 
 html {
@@ -32,15 +51,15 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
   font-family: 'Outfit', sans-serif;
   overflow-x: hidden;
   max-width: 100vw;
   /* Neo-brutalist grid background */
-  background-image: 
-    radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px), 
-    radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px);
+  background-image:
+    radial-gradient(var(--texture) 1.5px, transparent 1.5px),
+    radial-gradient(var(--texture) 1.5px, transparent 1.5px);
   background-size: 40px 40px;
   background-position: 0 0, 20px 20px;
 }
@@ -57,7 +76,7 @@ body {
   position: fixed;
   width: 10px;
   height: 10px;
-  background: #000;
+  background: var(--text);
   border-radius: 0px; /* Sharp cursor */
   pointer-events: none;
   z-index: 9999;
@@ -70,13 +89,20 @@ body {
   position: fixed;
   width: 40px;
   height: 40px;
-  border: 2px solid #000;
+  border: 2px solid var(--border);
   border-radius: 0px; /* Sharp ring */
   pointer-events: none;
   z-index: 9998;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s, transform 0.15s;
+  transition: width 0.2s, height 0.2s, transform 0.15s, background-color 0.15s, border-color 0.15s;
 }
+
+/* Hover state, expressed in tokens rather than inline styles so it follows the
+   reader's chosen background instead of staying welded to black. */
+.cursor-ring.is-hover {
+  border-color: var(--text);
+  background-color: var(--hairline);
+}
+
 
 @media(max-width: 900px) {
   .cursor-dot, .cursor-ring {
@@ -98,7 +124,7 @@ body {
 
 .shape {
   position: absolute;
-  border: 2px solid rgba(0, 0, 0, 0.08);
+  border: 2px solid var(--hairline);
   background: transparent;
   pointer-events: none;
   animation: morph 20s ease-in-out infinite alternate;
@@ -235,7 +261,7 @@ body {
   .nav-links a {
     font-size: 0.85rem;
     padding: 12px 20px;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
+    border-bottom: 1px solid var(--hairline);
     letter-spacing: 0.08em;
   }
 
@@ -400,7 +426,7 @@ body {
   -webkit-text-fill-color: initial;
   color: var(--text);
   text-transform: uppercase;
-  text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+  text-shadow: 3px 3px 0px var(--text-shadow-tint);
 }
 
 .hero-bio {
@@ -781,7 +807,7 @@ body {
 .project-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.2);
+  background: var(--media-scrim);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -1026,7 +1052,7 @@ body {
 }
 
 .review-stars svg.empty {
-  fill: rgba(0, 0, 0, 0.12);
+  fill: var(--star-empty);
 }
 
 .review-card:hover .review-stars svg {
@@ -1034,7 +1060,7 @@ body {
 }
 
 .review-card:hover .review-stars svg.empty {
-  fill: rgba(255, 255, 255, 0.25);
+  fill: var(--fill-empty);
 }
 
 .review-content {
@@ -1046,7 +1072,7 @@ body {
 }
 
 .review-card:hover .review-content {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--fill-ink);
 }
 
 .review-author {
@@ -1111,7 +1137,7 @@ body {
 }
 
 .review-card:hover .review-title {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--fill-ink-soft);
 }
 
 /* Contact Box */
@@ -1189,7 +1215,7 @@ body {
 
 .social-icon:hover {
   transform: translate(-3px, -3px);
-  box-shadow: 4px 4px 0px #000;
+  box-shadow: 4px 4px 0px var(--border);
 }
 
 /* Footer */
@@ -1220,7 +1246,7 @@ body {
 
 .skillifly-tag:hover {
   transform: translate(-3px, -3px);
-  box-shadow: 4px 4px 0px #000;
+  box-shadow: 4px 4px 0px var(--border);
 }
 
 .skillifly-tag img {
@@ -1420,7 +1446,7 @@ body {
     justify-content: center;
     border: 2px solid var(--border);
     padding: 12px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--fill-wash);
   }
 }
 

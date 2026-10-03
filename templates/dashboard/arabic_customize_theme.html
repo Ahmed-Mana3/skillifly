@@ -69,7 +69,7 @@
     grid-template-columns: 1fr;
   }
   @media (min-width: 768px) {
-    .cust-grid { grid-template-columns: repeat(3, 1fr); }
+    .cust-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   .cust-option {
@@ -139,6 +139,7 @@
   .chip-blue    { background: linear-gradient(135deg, #bfdbfe, #93c5fd); color: #1d4ed8; }
   .chip-amber   { background: linear-gradient(135deg, #fde68a, #fcd34d); color: #92400e; }
   .chip-emerald { background: linear-gradient(135deg, #a7f3d0, #6ee7b7); color: #047857; }
+  .chip-violet  { background: linear-gradient(135deg, #ddd6fe, #c4b5fd); color: #5b21b6; }
 
   .cust-option h3 {
     font-size: 17px;
@@ -193,6 +194,7 @@
   .glow-blue    { background: rgba(59, 130, 246, 0.15); top: -40px; left: -40px; }
   .glow-amber   { background: rgba(245, 158, 11, 0.15); top: -40px; left: -40px; }
   .glow-emerald { background: rgba(16, 185, 129, 0.15); top: -40px; left: -40px; }
+  .glow-violet  { background: rgba(139, 92, 246, 0.15); top: -40px; left: -40px; }
 
   .cust-preview {
     display: flex;
@@ -229,6 +231,46 @@
   .dot-blue    { background: #3b82f6; }
   .dot-amber   { background: #f59e0b; }
   .dot-emerald { background: #10b981; }
+  .dot-violet  { background: #8b5cf6; }
+
+  /* بطاقة اللون — تعرض ألوان المستخدم الفعلية بعد اشتقاقها */
+  .cust-tokens {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    margin-bottom: 16px;
+  }
+  .cust-tokens i {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+    transition: background .22s ease;
+  }
+  .cust-tokens code {
+    margin-left: auto;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: .02em;
+  }
+
+  /* حالة مقفلة — الخيار موجود لكن هذا القالب لا يدعمه بعد */
+  .cust-option.is-locked { background: #FCFCFD; }
+  .cust-option.is-locked:hover { transform: none; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 16px 36px -20px rgba(15, 23, 42, 0.25); }
+  .cust-option.is-locked .cust-chip { filter: grayscale(1); opacity: .6; }
+  .cust-option.is-locked h3 { color: #475569; }
+  .cust-option.is-locked .cust-pill {
+    background: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
+  }
+  .cust-option.is-locked:hover .cust-pill { background: #e2e8f0; }
 
   .cust-reveal {
     opacity: 0;
@@ -261,7 +303,7 @@
   <!-- عنوان الصفحة -->
   <header class="cust-header cust-reveal" style="--d:60ms">
     <h1>خصّص تصميمك</h1>
-    <p>اضبط مظهر معرض أعمالك وشكله — غيّر أسماء الأقسام، أعد ترتيب المحتوى، واجعله يعكس شخصيتك.</p>
+    <p>اضبط مظهر معرض أعمالك وشكله — غيّر أسماء الأقسام، أعد ترتيب المحتوى، غيّر لون الصفحة، واجعله يعكس شخصيتك.</p>
   </header>
 
   <!-- شبكة الخيارات -->
@@ -312,6 +354,39 @@
       <span class="cust-pill">
         <i data-lucide="arrow-left" class="!h-3 !w-3"></i>
         رتّب الآن
+      </span>
+    </a>
+
+    <!-- الخيار ٤: الألوان — مفعّل للقوالب المسجّلة في core.theme_colors -->
+    <a href="{% url 'arabic_customize_theme_background' %}"
+       class="cust-option cust-reveal{% if not background_state.supported %} is-locked{% endif %}"
+       style="--d:360ms" aria-label="تغيير الألوان">
+      <div class="cust-glow glow-violet"></div>
+      <div class="cust-chip chip-violet">
+        {% if background_state.supported %}<i data-lucide="palette"></i>{% else %}<i data-lucide="lock"></i>{% endif %}
+      </div>
+      <h3>تغيير الألوان</h3>
+      <p class="cust-desc">
+        {% if background_state.supported %}
+          أعد تلوين خلفية صفحتك ولون هويتك المميّز. يتحدّث لون النصوص والبطاقات والحدود تلقائيًا حتى يبقى كل شيء واضحًا.
+        {% else %}
+          غير متاح على قالب {{ background_state.theme_name|default:"هذا القالب" }}. انتقل إلى أحد القوالب الـ{{ background_state.supported_count }} التي تدعمه.
+        {% endif %}
+      </p>
+      <div class="cust-tokens" aria-hidden="true">
+        <i style="background: {{ background_state.palette.background }}"></i>
+        <i style="background: {{ background_state.accent_palette.accent }}"></i>
+        <i style="background: {{ background_state.palette.surface }}"></i>
+        <code>{{ background_state.current }}</code>
+      </div>
+      <span class="cust-pill">
+        {% if background_state.supported %}
+          <i data-lucide="arrow-left" class="!h-3 !w-3"></i>
+          اختر لونًا
+        {% else %}
+          <i data-lucide="palette" class="!h-3 !w-3"></i>
+          تصفّح القوالب
+        {% endif %}
       </span>
     </a>
 
