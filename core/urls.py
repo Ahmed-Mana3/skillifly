@@ -1,4 +1,5 @@
 from django.urls import path, include
+from django.views.generic import RedirectView
 from core import views
 from builder import views as builder_views
 
@@ -75,7 +76,9 @@ urlpatterns = [
     path('contact/', views.contact_view, name='contact'),
     path('sw.js', views.service_worker, name='service_worker'),
     path('image-thumb/<path:name>/<int:size>/', views.image_thumb, name='image_thumb'),
-    path('submit-review-exclusive/', views.submit_review_view, name='submit_review'),
+    path('review-the-website/', views.submit_review_view, name='review_website'),
+    # Legacy path kept so old bookmarks / shared links still land on the page.
+    path('submit-review-exclusive/', RedirectView.as_view(pattern_name='review_website', permanent=True)),
     path('review/<str:username>/', views.client_review_view, name='client_review'),
     path('ar/review/<str:username>/', views.arabic_client_review_view, name='arabic_client_review'),
     path('revenue-report-exclusive/', views.revenue_report, name='revenue_report'),

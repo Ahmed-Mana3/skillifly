@@ -47,6 +47,7 @@ class CustomDomainMiddleware:
         '/examples/',
         '/update_portfolio/',
         '/ar/',
+        '/review-the-website/',
         '/submit-review-exclusive/',
         '/manage/',
         '/user-activity/',
