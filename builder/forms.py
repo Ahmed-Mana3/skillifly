@@ -235,6 +235,19 @@ class ProjectCategoryForm(forms.Form):
 # Projects (Formset)
 # =========================
 class ProjectForm(forms.Form):
+    #: Message shown when the submitted chip id is not one of the user's own
+    #: collections. Hidden inputs fail silently otherwise, so this is the only
+    #: feedback the user gets.
+    INVALID_CATEGORY_ERROR = "This collection is no longer available. Pick one from the list."
+    #: Arabic twin; the Arabic builder swaps it in before validation.
+    INVALID_CATEGORY_ERROR_AR = "هذه المجموعة لم تعد متاحة. اختر مجموعة من القائمة."
+
+    def __init__(self, *args, user=None, **kwargs):
+        # ``user`` scopes category validation to the signed-in owner. It arrives
+        # via the formset's ``form_kwargs``.
+        super().__init__(*args, **kwargs)
+        self.user = user
+
     id = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={"class": "project-id-input"}))
     name = forms.CharField(
         required=True,
@@ -278,6 +291,52 @@ class ProjectForm(forms.Form):
         required=False,
         widget=forms.HiddenInput(attrs={"class": "project-category-input category-dropdown"})
     )
+
+    # The category chip writes straight into the hidden ``category_id`` input, so
+    # clicking a chip on a blank placeholder row used to flip ``has_changed()``
+    # to True and defeat Django's ``empty_permitted`` shortcut, producing a bogus
+    # "name: This field is required." A chip selection alone must not make a row
+    # count as filled in.
+    EMPTINESS_IGNORED_FIELDS = frozenset({"category_id"})
+
+    def has_changed(self):
+        # Delegates to Django's own per-field comparison (the same thing
+        # ``changed_data`` does) so only the ignored fields differ.
+        return any(
+            name not in self.EMPTINESS_IGNORED_FIELDS and bound_field._has_changed()
+            for name, bound_field in self._bound_items()
+        )
+
+    def clean_category_id(self):
+        """Reject collection ids the user does not own.
+
+        ``category_id`` is a plain CharField because the chips write ids straight
+        into a hidden input. Without this check a tampered or stale id resolves
+        to None in ``_category_for`` and the assignment is dropped without any
+        signal to the user.
+        """
+        from core.models import ProjectCategory
+
+        invalid_message = getattr(
+            self, "invalid_category_error", None
+        ) or self.INVALID_CATEGORY_ERROR
+
+        raw = (self.cleaned_data.get("category_id") or "").strip()
+        if not raw:
+            return ""
+        try:
+            category_id = int(raw)
+        except (TypeError, ValueError):
+            raise forms.ValidationError(invalid_message, code="invalid_category")
+        if self.user is None:
+            # No owner in scope (standalone formset use, e.g. tests): only the
+            # shape can be checked here.
+            return category_id
+        if not ProjectCategory.objects.filter(
+            id=category_id, user=self.user
+        ).exists():
+            raise forms.ValidationError(invalid_message, code="invalid_category")
+        return category_id
 
 
 # =========================

@@ -468,7 +468,7 @@
                   <div class="bx-field bx-span-2">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video title{% else %}Project name{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
                     <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="e.g. Brand Campaign 2025" required>
-                    <p class="bx-field-error" role="alert"></p>
+                    <p class="bx-field-error" role="alert">{% for e in form.name.errors %}{{ e }}{% endfor %}</p>
                   </div>
 
                   {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
@@ -482,12 +482,17 @@
                     </div>
                   </div>
                   {% endif %}
+                  {% if form.category_id.errors %}
+                  <div class="bx-field bx-span-2">
+                    <p class="bx-field-error" role="alert">{% for e in form.category_id.errors %}{{ e }}{% endfor %}</p>
+                  </div>
+                  {% endif %}
 
                   <div class="bx-field">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
                     <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="YouTube, Vimeo or TikTok URL">
                     <p class="bx-hint">YouTube, Vimeo and TikTok links are embedded automatically.</p>
-                    <p class="bx-field-error" role="alert"></p>
+                    <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
                   </div>
                   <div class="bx-field">
                     <label class="bx-label-row"><span class="bx-label">Display size</span></label>
@@ -496,7 +501,7 @@
                   <div class="bx-field bx-span-2">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Your role in this video{% else %}What was your role?{% endif %}</span><span class="bx-opt">Optional</span></label>
                     <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="Editor? Colorist? Motion designer? Say what you did…">{{ form.description.value|default:'' }}</textarea>
-                    <p class="bx-field-error" role="alert"></p>
+                    <p class="bx-field-error" role="alert">{% for e in form.description.errors %}{{ e }}{% endfor %}</p>
                   </div>
                   {% if show_project_images %}
                   <div class="bx-field bx-span-2">

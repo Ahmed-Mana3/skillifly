@@ -9,6 +9,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from datetime import date
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Import models from core
 from core.models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory
@@ -30,6 +33,7 @@ from builder.forms import (
     LinkFormSetUpdate,
     CreatorFormSetUpdate,
     ProjectCategoryFormSetUpdate,
+    ProjectForm,
 )
 
 @login_required
@@ -222,6 +226,7 @@ def _translate_project_video_types(project_formset):
                 ('long', 'فيديو طويل'),
                 ('reel', 'ريلز / فيديو قصير'),
             ]
+        form.invalid_category_error = ProjectForm.INVALID_CATEGORY_ERROR_AR
 
 
 def _builder_flow(request, arabic=False):
@@ -231,7 +236,7 @@ def _builder_flow(request, arabic=False):
         skill_formset = SkillFormSet(request.POST, prefix="skills")
         education_formset = EducationFormSet(request.POST, prefix="education")
         experience_formset = ExperienceFormSet(request.POST, prefix="experience")
-        project_formset = ProjectFormSet(request.POST, request.FILES, prefix="projects")
+        project_formset = ProjectFormSet(request.POST, request.FILES, prefix="projects", form_kwargs={"user": request.user})
         project_category_formset = ProjectCategoryFormSet(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSet(request.POST, prefix="links")
         creator_formset = CreatorFormSet(request.POST, request.FILES, prefix="creators")
@@ -260,13 +265,13 @@ def _builder_flow(request, arabic=False):
 
             return redirect("preview", username=request.user.username)
         else:
-            print("--- BUILDER VALIDATION ERRORS ---")
-            print(f"Personal Form Errors: {personal_form.errors}")
-            print(f"Skill Errors: {skill_formset.errors}")
-            print(f"Education Errors: {education_formset.errors}")
-            print(f"Experience Errors: {experience_formset.errors}")
-            print(f"Project Errors: {project_formset.errors}")
-            print(f"Link Errors: {link_formset.errors}")
+            logger.warning(
+                "Builder validation failed for user %s: personal=%s skills=%s education=%s "
+                "experience=%s projects=%s links=%s creators=%s",
+                request.user.pk, personal_form.errors, skill_formset.errors,
+                education_formset.errors, experience_formset.errors,
+                project_formset.errors, link_formset.errors, creator_formset.errors,
+            )
             from django.contrib import messages
             error_msg = ("يرجى تصحيح الأخطاء المظللة في ملفك المهني."
                          if arabic else
@@ -281,7 +286,7 @@ def _builder_flow(request, arabic=False):
         skill_formset = SkillFormSet(initial=initial["skills"], prefix="skills")
         education_formset = EducationFormSet(initial=initial["education"], prefix="education")
         experience_formset = ExperienceFormSet(initial=initial["experience"], prefix="experience")
-        project_formset = ProjectFormSet(initial=initial["projects"], prefix="projects")
+        project_formset = ProjectFormSet(initial=initial["projects"], prefix="projects", form_kwargs={"user": request.user})
         project_category_formset = ProjectCategoryFormSet(initial=initial["project_categories"], prefix="project_categories")
         link_formset = LinkFormSet(initial=initial["links"], prefix="links")
         creator_formset = CreatorFormSet(initial=initial["creators"], prefix="creators")
@@ -382,7 +387,7 @@ def _update_flow(request, arabic=False):
         skill_formset = SkillFormSetUpdate(request.POST, prefix="skills")
         education_formset = EducationFormSetUpdate(request.POST, prefix="education")
         experience_formset = ExperienceFormSetUpdate(request.POST, prefix="experience")
-        project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects")
+        project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects", form_kwargs={"user": request.user})
         project_category_formset = ProjectCategoryFormSetUpdate(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSetUpdate(request.POST, prefix="links")
         creator_formset = CreatorFormSetUpdate(request.POST, request.FILES, prefix="creators")
@@ -410,13 +415,13 @@ def _update_flow(request, arabic=False):
 
             return redirect("arabic_dashboard" if arabic else "dashboard")
         else:
-            print("--- UPDATE PORTFOLIO VALIDATION ERRORS ---")
-            print(f"Personal Form Errors: {personal_form.errors}")
-            print(f"Skill Errors: {skill_formset.errors}")
-            print(f"Education Errors: {education_formset.errors}")
-            print(f"Experience Errors: {experience_formset.errors}")
-            print(f"Project Errors: {project_formset.errors}")
-            print(f"Link Errors: {link_formset.errors}")
+            logger.warning(
+                "Update portfolio validation failed for user %s: personal=%s skills=%s "
+                "education=%s experience=%s projects=%s links=%s creators=%s",
+                request.user.pk, personal_form.errors, skill_formset.errors,
+                education_formset.errors, experience_formset.errors,
+                project_formset.errors, link_formset.errors, creator_formset.errors,
+            )
             from django.contrib import messages
             error_msg = ("تعذر حفظ التغييرات. يرجى التحقق من الأخطاء في النموذج."
                          if arabic else
@@ -443,7 +448,7 @@ def _update_flow(request, arabic=False):
         skill_formset = SkillFormSetUpdate(initial=initial["skills"], prefix="skills")
         education_formset = EducationFormSetUpdate(initial=initial["education"], prefix="education")
         experience_formset = ExperienceFormSetUpdate(initial=initial["experience"], prefix="experience")
-        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects")
+        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects", form_kwargs={"user": request.user})
         project_category_formset = ProjectCategoryFormSetUpdate(initial=initial["project_categories"], prefix="project_categories")
         link_formset = LinkFormSetUpdate(initial=initial["links"], prefix="links")
         creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")

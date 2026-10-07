@@ -512,7 +512,7 @@
                   <div class="bx-field bx-span-2">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}عنوان الفيديو{% else %}اسم المشروع{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
                     <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="مثال: حملة إعلانية 2025" required>
-                    <p class="bx-field-error" role="alert"></p>
+                    <p class="bx-field-error" role="alert">{% for e in form.name.errors %}{{ e }}{% endfor %}</p>
                   </div>
 
                   {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
@@ -526,12 +526,17 @@
                     </div>
                   </div>
                   {% endif %}
+                  {% if form.category_id.errors %}
+                  <div class="bx-field bx-span-2">
+                    <p class="bx-field-error" role="alert">{% for e in form.category_id.errors %}{{ e }}{% endfor %}</p>
+                  </div>
+                  {% endif %}
 
                   <div class="bx-field">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}رابط الفيديو{% else %}رابط المشروع{% endif %}</span><span class="bx-opt">اختياري</span></label>
                     <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك">
                     <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك تُدمج تلقائيًا في ملفك.</p>
-                    <p class="bx-field-error" role="alert"></p>
+                    <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
                   </div>
                   <div class="bx-field">
                     <label class="bx-label-row"><span class="bx-label">حجم العرض</span></label>
@@ -540,7 +545,7 @@
                   <div class="bx-field bx-span-2">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}دورك في هذا الفيديو{% else %}ما كان دورك؟{% endif %}</span><span class="bx-opt">اختياري</span></label>
                     <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="مونتاج؟ تصحيح ألوان؟ موشن جرافيك؟ اذكر ما قمت به…">{{ form.description.value|default:'' }}</textarea>
-                    <p class="bx-field-error" role="alert"></p>
+                    <p class="bx-field-error" role="alert">{% for e in form.description.errors %}{{ e }}{% endfor %}</p>
                   </div>
                   {% if show_project_images %}
                   <div class="bx-field bx-span-2">
