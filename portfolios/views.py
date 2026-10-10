@@ -346,6 +346,24 @@ def preview_view(request, username):
             if len(uncategorized_previews) < 4 and (not p.image or all(existing.image.name != p.image.name for existing in uncategorized_previews)):
                 uncategorized_previews.append(p)
 
+    # Handle theme preview for demo portfolio only. This has to happen before
+    # the section layout and colour palette are resolved, because both are
+    # keyed by the theme in force — otherwise a preview of theme B renders
+    # with theme A's registry entries (wrong accent tokens, wrong family).
+    if preview_theme_id and user.username == 'alex_mercer':
+        try:
+            preview_theme = Theme.objects.get(id=preview_theme_id)
+            if profile:
+                profile.theme = preview_theme
+            else:
+                class MockProfile:
+                    theme = preview_theme
+                    is_public = True
+                    visits = 0
+                profile = MockProfile()
+        except Theme.DoesNotExist:
+            pass
+
     from core.section_order import resolve_section_layout, normalize_category
     category_name = (normalize_category(profile.theme.category.name)
                      if profile and profile.theme and profile.theme.category else None)
@@ -384,22 +402,6 @@ def preview_view(request, username):
 
     # Dynamic template selection based on theme
     template_name = 'portfolios/developer/developer_minimal.html'  # Default fallback
-
-    # Handle theme preview for demo portfolio only
-    if preview_theme_id and user.username == 'alex_mercer':
-        try:
-            preview_theme = Theme.objects.get(id=preview_theme_id)
-            if profile:
-                profile.theme = preview_theme
-            else:
-                class MockProfile:
-                    theme = preview_theme
-                    is_public = True
-                    visits = 0
-                profile = MockProfile()
-                context['profile'] = profile
-        except Theme.DoesNotExist:
-            pass
 
     if profile and profile.theme:
         category = profile.theme.category.name.lower().replace(" ", "_") if profile.theme.category else "theme"

@@ -125,6 +125,11 @@ THEME_SECTION_DEFAULTS = {
     ('video_editor', 'editorial_studio'): [
         'projects', 'experience', 'education', 'creators', 'reviews', 'contact',
     ],
+    # kinetic: creative's sequence; social links live inside its contact
+    # section, so there is no standalone links section.
+    ('video_editor', 'kinetic'): [
+        'projects', 'skills', 'experience', 'education', 'creators', 'reviews', 'contact',
+    ],
 }
 
 # (category, theme) pairs whose public template ships the section-layout
@@ -143,6 +148,7 @@ LAYOUT_ENABLED_THEMES = {
     ('video_editor', 'cinematic'),
     ('video_editor', 'pro'),
     ('video_editor', 'editorial_studio'),
+    ('video_editor', 'kinetic'),
 }
 
 DEFAULT_SECTION_ORDER = list(SECTION_ORDER_DEFAULTS['video_editor'])

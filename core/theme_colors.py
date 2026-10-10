@@ -276,6 +276,25 @@ THEME_BACKGROUND_SPECS = {
         'gradient': ('#FF5A3C', '#0F9F9A', '#6C4CC4'),
         'accent_tokens': dict(_PAPER_ACCENT_TOKENS),
     },
+    ('video_editor', 'kinetic'): {
+        'default': '#F7F6F2',
+        'family': FAMILY_SURFACE,
+        'accent': '#7C3AED',
+        'gradient': ('#7C3AED', '#4F46E5', '#DB2777'),
+        # Kinetic wears the landing page's brand purple/indigo/pink and fades every
+        # tone with rgba(var(--accent*-rgb), a) — auroras, glows, chip washes,
+        # card hover rings — so the channels travel with the tokens.
+        'accent_tokens': {
+            SLOT_PRIMARY: ('--accent',),
+            SLOT_PARTNER: ('--accent2',),
+            SLOT_TRIO: ('--accent3',),
+        },
+        'accent_channels': {
+            SLOT_PRIMARY: ('--accent-rgb',),
+            SLOT_PARTNER: ('--accent2-rgb',),
+            SLOT_TRIO: ('--accent3-rgb',),
+        },
+    },
     ('video_editor', 'cyan'): {
         'default': '#00E5FF',
         'family': FAMILY_BRUTAL,

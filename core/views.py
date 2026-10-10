@@ -921,6 +921,7 @@ SHOWCASE_THEME_LABELS = {
     'animated_dark': '🌙 Animated Dark',
     'monochrome': '◑ Monochrome',
     'categories': '🗂 Categories',
+    'kinetic': '⚡ Kinetic',
 }
 
 
