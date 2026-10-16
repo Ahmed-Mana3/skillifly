@@ -1,0 +1,94 @@
+{# Owner-only bar injected into the user's own portfolio after reaching 100 XP in the launch checklist (?launched=1). #}
+{# Self-contained (it lands inside any theme): every rule is scoped under #sfl-root and icons are inline SVG. #}
+{# Visual language copied from the dashboard: white .sf-card, tinted icon chip, .sf-pill, site buttons. #}
+<div id="sfl-root" dir="{% if arabic %}rtl{% else %}ltr{% endif %}" lang="{% if arabic %}ar{% else %}en{% endif %}">
+{% if arabic %}
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Tajawal:wght@700&display=swap" rel="stylesheet">
+{% else %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:opsz,wght@9..40,500;9..40,600;9..40,800&display=swap" rel="stylesheet">
+{% endif %}
+<style>
+  #sfl-root, #sfl-root * { box-sizing: border-box; }
+  #sfl-root { --sfl-body: {% if arabic %}'Cairo', 'Segoe UI', Tahoma, sans-serif{% else %}'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif{% endif %};
+    --sfl-head: {% if arabic %}'Tajawal', 'Cairo', sans-serif{% else %}'Syne', 'DM Sans', sans-serif{% endif %};
+    font-family: var(--sfl-body); color: #0F172A; line-height: 1.45; text-transform: none; letter-spacing: normal; -webkit-font-smoothing: antialiased; }
+  #sfl-root p { margin: 0; padding: 0; text-transform: none; letter-spacing: normal; }
+  #sfl-root svg { display: block; }
+
+  #sfl-root .sfl-bar-wrap { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 2147483500; margin: 0 auto; max-width: 1040px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 14px 16px;
+    background: #fff; border: 1px solid rgba(15, 23, 42, .10); border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, .05), 0 16px 36px -20px rgba(15, 23, 42, .28), 0 24px 48px -24px rgba(15, 23, 42, .35);
+    animation: sflRise .5s cubic-bezier(.16, 1, .3, 1) both; }
+  @keyframes sflRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  #sfl-root .sfl-chip { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; background: #fde68a; color: #92400e; }
+  #sfl-root .sfl-chip svg { width: 19px; height: 19px; }
+  #sfl-root .sfl-bar-msg { flex: 1 1 240px; min-width: 0; }
+  #sfl-root .sfl-bar-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-family: var(--sfl-head); font-size: 14.5px; font-weight: 700; color: #000; }
+  #sfl-root .sfl-pill { direction: ltr; unicode-bidi: isolate; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px;
+    font-family: var(--sfl-body); font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
+    background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  #sfl-root .sfl-pill svg { width: 11px; height: 11px; }
+  #sfl-root .sfl-bar-sub { font-size: 12.5px; font-weight: 500; color: #334155; margin-top: 3px; }
+  #sfl-root .sfl-bar-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  #sfl-root .sfl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px;
+    border-radius: 12px; cursor: pointer; text-decoration: none; font-family: var(--sfl-head); font-size: 14px; font-weight: 700;
+    white-space: nowrap; transition: transform .2s ease, box-shadow .2s ease, background .15s ease; }
+  #sfl-root[dir="rtl"] .sfl-btn { font-family: var(--sfl-body); }
+  #sfl-root .sfl-btn svg { width: 16px; height: 16px; }
+  #sfl-root .sfl-btn-primary { color: #fff; border: 0; background: #7C3AED; box-shadow: 0 10px 25px -5px rgba(124, 58, 237, .35); }
+  #sfl-root .sfl-btn-primary:hover { background: #6D28D9; transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(124, 58, 237, .45); }
+  #sfl-root .sfl-btn-primary:active { background: #5B21B6; transform: none; }
+  #sfl-root .sfl-btn-primary svg { transition: transform .2s ease; }
+  #sfl-root .sfl-btn-primary:hover svg { transform: translateX(3px); }
+  #sfl-root .sfl-btn-ghost { color: #0F172A; background: #F8FAFC; border: 1px solid #E2E8F0; }
+  #sfl-root .sfl-btn-ghost:hover { background: #F5F3FF; border-color: rgba(124, 58, 237, .45); color: #6D28D9; }
+  #sfl-root .sfl-close { width: 40px; height: 40px; border: 1px solid rgba(15, 23, 42, .28); border-radius: 10px; background: #fff; color: #334155;
+    cursor: pointer; display: grid; place-items: center; }
+  #sfl-root .sfl-close:hover { background: #F8FAFC; color: #6d28d9; }
+  #sfl-root .sfl-close svg { width: 16px; height: 16px; }
+  #sfl-root .sfl-btn:focus-visible, #sfl-root .sfl-close:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
+  @media (max-width: 640px) {
+    #sfl-root .sfl-bar-wrap { left: 8px; right: 8px; bottom: 8px; padding: 14px; }
+    #sfl-root .sfl-bar-wrap > .sfl-chip { display: none; }
+    #sfl-root .sfl-bar-msg { padding-inline-end: 44px; }
+    #sfl-root .sfl-bar-actions { width: 100%; }
+    #sfl-root .sfl-bar-actions .sfl-btn { flex: 1 1 auto; }
+    #sfl-root .sfl-close { position: absolute; top: 10px; inset-inline-end: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { #sfl-root .sfl-bar-wrap { animation: none; } }
+</style>
+
+<div class="sfl-bar-wrap" id="sfl-bar" role="region" aria-label="{% if arabic %}معرض أعمالك{% else %}Your portfolio{% endif %}">
+  <div class="sfl-chip" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+  </div>
+  <div class="sfl-bar-msg">
+    <p class="sfl-bar-title">
+      <span>{% if arabic %}هذا معرض أعمالك يا {{ first_name }}.{% else %}This is your portfolio, {{ first_name }}.{% endif %}</span>
+      <span class="sfl-pill"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>{{ launch.xp }} XP</span>
+    </p>
+    <p class="sfl-bar-sub">
+      {% if is_live %}
+        {% if arabic %}منشور على <bdi>{{ portfolio_link }}</bdi>{% else %}Live at <bdi>{{ portfolio_link }}</bdi>{% endif %}
+      {% else %}
+        {% if arabic %}أنت فقط من يراه الآن. انشره لتشارك رابطك مع العملاء.{% else %}Only you can see it for now. Publish it to share your link with clients.{% endif %}
+      {% endif %}
+    </p>
+  </div>
+  <div class="sfl-bar-actions">
+    {% if not is_live %}
+    <a class="sfl-btn sfl-btn-ghost" href="{{ publish_url }}">{% if arabic %}انشره{% else %}Publish it{% endif %}</a>
+    {% endif %}
+    <a class="sfl-btn sfl-btn-primary" href="{{ dashboard_url }}" id="sfl-dashboard">
+      {% if arabic %}إلى لوحة التحكم{% else %}Go to my dashboard{% endif %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" {% if arabic %}style="transform: scaleX(-1)"{% endif %}><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <button type="button" class="sfl-close" aria-label="{% if arabic %}إغلاق{% else %}Dismiss{% endif %}"
+      onclick="document.getElementById('sfl-bar').remove()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+</div>
+</div>

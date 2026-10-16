@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-16T12:14:13.856Z",
+  "specification": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\candidate.json",
+    "sha256": "88b981223408344c27549216395b0efa34f31753c981fb3f07ef377573bb2dcb",
+    "bytes": 4070
+  },
+  "artifact": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+    "sha256": "ef1f9b35b6d7075acaf29d107e53b4867a36f238016461e320521372d5d1ca8e",
+    "bytes": 827781
+  },
+  "stages": {
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\am537\\.claude\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "architecture",
+        "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\candidate.json",
+        "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "88b981223408344c27549216395b0efa34f31753c981fb3f07ef377573bb2dcb",
+          "bytes": 4070
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1045,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\am537\\.claude\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "architecture",
+        "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\candidate.json",
+        "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "78f47ce5-c6ee-491b-bb48-669dfcd9059a",
+        "ok": true,
+        "command": "deliver",
+        "type": "architecture",
+        "input": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\candidate.json",
+        "output": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+        "specification": {
+          "sha256": "88b981223408344c27549216395b0efa34f31753c981fb3f07ef377573bb2dcb",
+          "bytes": 4070
+        },
+        "artifact": {
+          "sha256": "ef1f9b35b6d7075acaf29d107e53b4867a36f238016461e320521372d5d1ca8e",
+          "bytes": 827781
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 359,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\am537\\.claude\\skills\\archify\\bin\\archify.mjs",
+        "check",
+        "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+        "artifact": {
+          "sha256": "ef1f9b35b6d7075acaf29d107e53b4867a36f238016461e320521372d5d1ca8e",
+          "bytes": 827781
+        },
+        "checks": [
+          {
+            "name": "single_svg",
+            "ok": true,
+            "details": [
+              "found 1 <svg> block(s)"
+            ]
+          },
+          {
+            "name": "finite_svg",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "orthogonal_arrows",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "label_route_clearance",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_crossings",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_corridors",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "container_border_runs",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "route_rhythm",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "legend_clearance",
+            "ok": true,
+            "details": []
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "metrics": {
+            "properCrossings": 0,
+            "resolvedCrossovers": 0,
+            "ambiguousCorridors": 0,
+            "arrowheadCollisions": 0,
+            "containerBorderRuns": 0,
+            "labelRouteClearanceIssues": 0,
+            "labelCanvasOverflowIssues": 0,
+            "minLabelRouteClearance": 5,
+            "desktopReadabilityIssues": 0,
+            "viewportHeightIssues": 0,
+            "minProjectedNodeTextPx": 7.5,
+            "maxBends": 2,
+            "routesOverSuggestedBends": 0,
+            "maxStretch": 1,
+            "routesOverSuggestedStretch": 0,
+            "minSegmentPx": 40,
+            "minInteriorSegmentPx": 126,
+            "shortSegmentCount": 0,
+            "shortEndpointSegmentCount": 0,
+            "shortInteriorSegmentCount": 0,
+            "microSegmentCount": 0
+          },
+          "suggestedLimits": {
+            "bendsPerRelationship": 2,
+            "stretch": 1.35,
+            "segmentPx": 16,
+            "microSegmentPx": 8
+          },
+          "routeReview": {
+            "crossings": [],
+            "detours": []
+          },
+          "leadingSpace": {
+            "measured": true,
+            "emptyTopPx": 60,
+            "emptyTopRatio": 0.099,
+            "occupiedTop": 60,
+            "viewBoxTop": 0,
+            "canvasHeight": 608,
+            "typicalNodeHeight": 60,
+            "reviewSuggested": false
+          },
+          "desktopReadability": {
+            "budgetBasis": "recognized-declared-wide",
+            "readerContract": "declared-wide-v1",
+            "availableDiagramWidth": 1181.25,
+            "actualBudgetPx": 1181.25,
+            "actualReaderWidth": 1211.25,
+            "desiredReaderWidth": 1211.25,
+            "viewportCap": 1376,
+            "limit": "source-size",
+            "requestedTargetPx": 7.5,
+            "requestedTargetMet": true,
+            "hardFloorPx": 6,
+            "hardFloorMet": true,
+            "minimumOwner": {
+              "kind": "edge",
+              "id": "users-to-nginx",
+              "from": "users",
+              "to": "nginx"
+            },
+            "minimumSourceTextPx": 8,
+            "minimumProjectedTextPx": 7.5,
+            "semanticTextCount": 34
+          },
+          "issues": []
+        },
+        "provenance": "current",
+        "deliveryReceiptId": "78f47ce5-c6ee-491b-bb48-669dfcd9059a"
+      }
+    },
+    "browser-check": {
+      "status": "skipped",
+      "exitCode": 2,
+      "durationMs": 144,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\am537\\.claude\\skills\\archify\\bin\\archify.mjs",
+        "browser-check",
+        "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+        "--json",
+        "--require-provenance"
+      ],
+      "execution": "in-process",
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "browser-check",
+        "evidenceKind": "automated-browser",
+        "status": "skipped",
+        "visualReview": "not-requested",
+        "provenance": "current",
+        "deliveryReceiptId": "78f47ce5-c6ee-491b-bb48-669dfcd9059a",
+        "artifact": {
+          "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+          "sha256": "ef1f9b35b6d7075acaf29d107e53b4867a36f238016461e320521372d5d1ca8e",
+          "bytes": 827781
+        },
+        "state": {
+          "detail": "read",
+          "motion": "still"
+        },
+        "chrome": {
+          "status": "unavailable",
+          "executable": null
+        },
+        "diagnostics": [
+          {
+            "code": "viewer/chrome-unavailable",
+            "severity": "warning",
+            "message": "Chrome or Chromium is unavailable. Set ARCHIFY_CHROME to its executable path.",
+            "subject": {
+              "artifact": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html"
+            },
+            "evidence": {
+              "executable": null
+            },
+            "supportedFixes": [
+              "set ARCHIFY_CHROME to a Chrome or Chromium executable and rerun browser-check"
+            ]
+          }
+        ],
+        "containment": {
+          "status": "skipped",
+          "policy": "fit-or-reader-declared-readable-vertical-scroll",
+          "viewports": []
+        },
+        "themeStates": {
+          "status": "skipped",
+          "viewports": []
+        },
+        "readability": {
+          "status": "skipped",
+          "minimumProjectedNodeTextPx": 6,
+          "viewports": []
+        },
+        "viewerChrome": {
+          "status": "skipped",
+          "viewports": []
+        },
+        "captures": {
+          "status": "not-requested",
+          "screenshots": [],
+          "contactSheet": null
+        },
+        "sidecars": {
+          "receipt": "skillifly-system.browser-check.json",
+          "files": []
+        },
+        "error": "Chrome or Chromium is unavailable. Set ARCHIFY_CHROME to its executable path."
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "Chrome or Chromium is unavailable. Set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome or Chromium executable and rerun browser-check"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.finalize.json",
+    "summaryReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.finalize-summary.json",
+    "browserCheckReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "browser-check",
+  "finishedAt": "2026-10-16T12:14:16.165Z",
+  "durationMs": 2308,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-16T12:14:14.312Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}

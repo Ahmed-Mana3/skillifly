@@ -1,0 +1,183 @@
+{% extends "launch/base.html" %}
+
+{% block title %}{{ step.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ls-form { padding: 24px; }
+  @media (min-width: 640px) { .ls-form { padding: 32px; } }
+  .lk-summary { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .lk-summary b { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px;
+    background: #7C3AED; color: #fff; font-size: 14px; transition: transform .2s; }
+  .lk-group { margin-top: 24px; }
+  .lk-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lk-chip { position: relative; display: inline-flex; cursor: pointer; }
+  .lk-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .lk-chip-body { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid #E2E8F0; background: #fff; color: #334155; font-size: 13.5px; font-weight: 600; user-select: none;
+    transition: background .18s, color .18s, border-color .18s, transform .18s, box-shadow .18s; }
+  .lk-chip:hover .lk-chip-body { border-color: rgba(124, 58, 237, .5); color: #7C3AED; transform: translateY(-1px); }
+  .lk-chip:active .lk-chip-body { transform: scale(.96); }
+  .lk-check { display: none; }
+  .lk-check svg { width: 14px; height: 14px; }
+  .lk-chip input:checked + .lk-chip-body { background: #7C3AED; border-color: #7C3AED; color: #fff; box-shadow: 0 6px 14px -6px rgba(124, 58, 237, .6);
+    animation: lkPop .3s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes lkPop { 50% { transform: scale(1.07); } }
+  .lk-chip input:checked + .lk-chip-body .lk-check { display: inline-flex; }
+  .lk-chip input:focus-visible + .lk-chip-body { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .lk-own { display: flex; gap: 10px; margin-top: 12px; }
+  .lk-own .sf-input { flex: 1; min-width: 0; }
+  .lk-max { font-size: 13px; font-weight: 700; color: #B45309; margin-top: 10px; }
+  /* Phones: chips and the custom-skill row fit the width, every target stays 44px */
+  @media (max-width: 639px) {
+    .lk-chips { gap: 8px; }
+    .lk-chip-body { font-size: 14px; }
+    .lk-own { flex-wrap: wrap; }
+    .lk-own .sf-input { flex-basis: 100%; }
+    .lk-own .btn-ghost { flex: 1 1 auto; }
+  }
+</style>
+{% endblock %}
+
+{% block top_center %}{% include "launch/_step_top.html" %}{% endblock %}
+{% block top_end %}
+<a class="btn-icon" href="{{ step.back_url }}" aria-label="{% if is_arabic_page %}العودة إلى قائمة الإطلاق{% else %}Back to the launch checklist{% endif %}">
+  <i data-lucide="x"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 sm:px-6 pt-8 sm:pt-10 pb-16">
+  {% include "launch/_step_head.html" %}
+  {% include "launch/_messages.html" %}
+
+  <form method="POST" class="sf-card ls-form reveal" id="lk-form" novalidate style="--d:70ms" data-max="{{ max_skills }}">
+    {% csrf_token %}
+
+    <div class="lk-summary" aria-live="polite">
+      <div class="min-w-0">
+        <p class="sf-cap">{% if is_arabic_page %}اختياراتك{% else %}Selected{% endif %}</p>
+        <p class="mt-1 text-[14px] text-slate-700 font-medium"><b data-count>0</b> · <span data-meter-label>{% if is_arabic_page %}اختر مهارة واحدة على الأقل{% else %}Pick at least one{% endif %}</span></p>
+      </div>
+    </div>
+    {% if error %}<p class="lx-error" role="alert">{{ error }}</p>{% endif %}
+
+    {% for group in groups %}
+    <fieldset class="lk-group">
+      <legend class="sf-cap mb-3">{{ group.title }}</legend>
+      <div class="lk-chips">
+        {% for chip in group.chips %}
+        <label class="lk-chip">
+          <input type="checkbox" name="skills" value="{{ chip.value }}" {% if chip.checked %}checked{% endif %}>
+          <span class="lk-chip-body"><span class="lk-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>{{ chip.label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endfor %}
+
+    <fieldset class="lk-group">
+      <legend class="sf-cap mb-3">{% if is_arabic_page %}مهارات أخرى{% else %}Add your own{% endif %}</legend>
+      <div class="lk-chips" id="lk-extras">
+        {% for chip in extras %}
+        <label class="lk-chip">
+          <input type="checkbox" name="skills" value="{{ chip.value }}" checked>
+          <span class="lk-chip-body"><span class="lk-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>{{ chip.label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="lk-own">
+        <label class="sr-only" for="lk-own-input">{% if is_arabic_page %}أضف مهارة{% else %}Add a skill{% endif %}</label>
+        <input type="text" class="sf-input" id="lk-own-input" name="custom_skills" maxlength="{{ max_length }}" autocomplete="off"
+          placeholder="{% if is_arabic_page %}مثال: Topaz Video AI{% else %}e.g. Topaz Video AI{% endif %}">
+        <button type="button" class="btn-ghost btn-sm" id="lk-own-add"><i data-lucide="plus" class="!h-4 !w-4"></i>{% if is_arabic_page %}أضف{% else %}Add{% endif %}</button>
+      </div>
+      <p class="lk-max" id="lk-max" hidden>{% if is_arabic_page %}يمكنك اختيار {{ max_skills }} مهارة كحد أقصى.{% else %}You can pick up to {{ max_skills }} skills.{% endif %}</p>
+    </fieldset>
+
+    <div class="lx-actions">
+      <button type="submit" class="btn-primary" id="lk-submit">
+        <span data-label>{% if step.finishes %}{% if is_arabic_page %}احفظ وأكمل <bdi dir="ltr">100 XP</bdi>{% else %}Save &amp; reach 100 XP{% endif %}{% else %}{% if is_arabic_page %}احفظ وتابع{% else %}Save &amp; continue{% endif %}{% endif %}</span>
+        <span class="lx-btn-xp">+{{ step.xp }} XP</span>
+      </button>
+      <a class="lx-link" href="{{ step.back_url }}">{% if is_arabic_page %}ليس الآن{% else %}Not now{% endif %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById('lk-form');
+  var arabic = document.documentElement.dir === 'rtl';
+  var max = parseInt(form.dataset.max, 10) || 20;
+  var countEl = form.querySelector('[data-count]');
+  var labelEl = form.querySelector('[data-meter-label]');
+  var submitBtn = document.getElementById('lk-submit');
+  var extras = document.getElementById('lk-extras');
+  var ownInput = document.getElementById('lk-own-input');
+  var maxNote = document.getElementById('lk-max');
+  var labels = arabic
+    ? ['اختر مهارة واحدة على الأقل', 'بداية جيدة', 'ملف قوي', 'ملف احترافي']
+    : ['Pick at least one', 'Good start', 'Strong profile', 'Pro profile'];
+  var checkSvg = form.querySelector('.lk-check').innerHTML;
+
+  function boxes() { return form.querySelectorAll('input[name="skills"]'); }
+  function checked() { return form.querySelectorAll('input[name="skills"]:checked').length; }
+
+  function update() {
+    var n = checked();
+    countEl.textContent = n;
+    labelEl.textContent = labels[n === 0 ? 0 : n < 3 ? 1 : n < 6 ? 2 : 3];
+    submitBtn.disabled = n === 0 && !ownInput.value.trim();
+    maxNote.hidden = n < max;
+  }
+
+  form.addEventListener('change', function (e) {
+    var box = e.target;
+    if (box.name !== 'skills') return;
+    if (box.checked && checked() > max) { box.checked = false; maxNote.hidden = false; return; }
+    update();
+  });
+
+  function addOwn() {
+    var name = ownInput.value.replace(/\s+/g, ' ').trim().slice(0, parseInt(ownInput.maxLength, 10) || 60);
+    if (!name) return;
+    var existing = Array.prototype.find.call(boxes(), function (b) { return b.value.toLowerCase() === name.toLowerCase(); });
+    if (existing) {
+      if (!existing.checked && checked() < max) existing.checked = true;
+    } else if (checked() < max) {
+      var label = document.createElement('label');
+      label.className = 'lk-chip';
+      var input = document.createElement('input');
+      input.type = 'checkbox'; input.name = 'skills'; input.value = name; input.checked = true;
+      var body = document.createElement('span');
+      body.className = 'lk-chip-body';
+      body.innerHTML = '<span class="lk-check" aria-hidden="true">' + checkSvg + '</span>';
+      body.appendChild(document.createTextNode(name));
+      label.appendChild(input); label.appendChild(body);
+      extras.appendChild(label);
+    } else {
+      maxNote.hidden = false;
+      return;
+    }
+    ownInput.value = '';
+    ownInput.focus();
+    update();
+  }
+
+  document.getElementById('lk-own-add').addEventListener('click', addOwn);
+  ownInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addOwn(); } });
+  ownInput.addEventListener('input', update);
+
+  form.addEventListener('submit', function (e) {
+    if (form.dataset.busy || (checked() === 0 && !ownInput.value.trim())) { e.preventDefault(); return; }
+    form.dataset.busy = '1';
+    submitBtn.querySelector('[data-label]').textContent = arabic ? 'جارٍ الحفظ…' : 'Saving…';
+  });
+
+  update();
+})();
+</script>
+{% endblock %}

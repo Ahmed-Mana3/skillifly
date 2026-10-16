@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skillifly</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F1F5F9;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F1F5F9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:560px;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="center" style="padding-bottom:20px;">
+              <span style="font-size:22px;font-weight:700;color:#0F172A;">Skillifly</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#FFFFFF;border-radius:20px;overflow:hidden;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr><td height="4" style="background:linear-gradient(90deg,#3B82F6,#8B5CF6,#D946EF);font-size:0;line-height:0;">&nbsp;</td></tr>
+              </table>
+              {% for b in blocks %}
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="{{ b.dir }}">
+                <tr>
+                  <td style="padding:32px 36px;{% if not forloop.last %}border-bottom:1px solid #E2E8F0;{% endif %}text-align:{% if b.dir == 'rtl' %}right{% else %}left{% endif %};">
+                    <h1 style="margin:0 0 12px;font-size:21px;font-weight:700;color:#0F172A;line-height:1.35;">{{ b.heading }}</h1>
+                    <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.65;">{{ b.body }}</p>
+                    {% if b.cta_url %}
+                    <a href="{{ b.cta_url }}" style="display:inline-block;background:#0F172A;color:#FFFFFF;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:99px;">{{ b.cta_label }}</a>
+                    {% endif %}
+                    {% if b.extra_url %}
+                    <p style="margin:18px 0 0;font-size:14px;"><a href="{{ b.extra_url }}" style="color:#3B82F6;font-weight:600;text-decoration:none;">{{ b.extra_label }}</a></p>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+              {% endfor %}
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:22px 0 8px;font-size:12px;color:#94A3B8;line-height:1.6;">
+              <a href="{{ unsubscribe_url }}" style="color:#94A3B8;">Unsubscribe</a> &nbsp;·&nbsp;
+              <a href="{{ unsubscribe_url }}" style="color:#94A3B8;">إلغاء الاشتراك</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

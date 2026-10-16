@@ -4,7 +4,7 @@ from core.models import (
     Experience, Education, Skill, Project, Link, 
     Subscription, UserPayment, DiscountCode, SiteSettings, 
     Review, ClientReview, Showcase, SEOSettings, CustomDomain, ManualPayment,
-    PaymentTrackingEvent,
+    PaymentTrackingEvent, ActivationEvent, NudgeLog,
 )
 
 # Register your models here.
@@ -96,3 +96,31 @@ class PaymentTrackingEventAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'session_id', 'ip_address', 'user_agent')
     ordering = ('-created_at',)
 
+
+@admin.register(ActivationEvent)
+class ActivationEventAdmin(admin.ModelAdmin):
+    """Read-only view of the editor activation funnel."""
+    list_display = ('created_at', 'user', 'name', 'props')
+    list_filter = ('name',)
+    search_fields = ('user__username', 'user__email')
+    date_hierarchy = 'created_at'
+    raw_id_fields = ('user',)
+    readonly_fields = ('user', 'name', 'props', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(NudgeLog)
+class NudgeLogAdmin(admin.ModelAdmin):
+    list_display = ('sent_at', 'user', 'key')
+    list_filter = ('key',)
+    search_fields = ('user__username', 'user__email')
+    raw_id_fields = ('user',)
+    readonly_fields = ('user', 'key', 'sent_at')
+
+    def has_add_permission(self, request):
+        return False

@@ -89,7 +89,7 @@
                             <tr>
                               <td style="padding-right:10px;vertical-align:top;padding-top:1px;">⏱</td>
                               <td style="font-size:13px;color:#92400E;line-height:1.5;">
-                                <strong>This code expires in 10 minutes.</strong> If you didn't create a Skillifly account, you can safely ignore this email.
+                                <strong>This code expires in {{ LIFETIME_MINUTES|default:30 }} minutes.</strong> If you didn't create a Skillifly account, you can safely ignore this email.
                               </td>
                             </tr>
                           </table>

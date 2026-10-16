@@ -1,0 +1,59 @@
+{# Owner-only bar injected at the bottom of the user's own portfolio after onboarding (?welcome=1). #}
+<style>
+  .sfw-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999999; background: #0f172a; color: #fff;
+    padding: 14px 20px; font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 -10px 25px -5px rgba(0,0,0,.3);
+    display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+  .sfw-bar * { box-sizing: border-box; }
+  .sfw-msg { min-width: 220px; flex: 1 1 280px; }
+  .sfw-title { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.35; }
+  .sfw-sub { margin: 4px 0 0; font-size: 12.5px; color: #94a3b8; font-weight: 600; }
+  .sfw-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .sfw-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px;
+    border-radius: 99px; border: 1px solid #475569; color: #fff; background: transparent; font-size: 13.5px;
+    font-weight: 600; text-decoration: none; cursor: pointer; font-family: inherit; }
+  .sfw-btn:hover { background: #1e293b; }
+  .sfw-btn-primary { background: #3b82f6; border-color: #3b82f6; box-shadow: 0 4px 6px -1px rgba(59,130,246,.5); }
+  .sfw-btn-primary:hover { background: #2563eb; }
+  .sfw-looks { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .sfw-looks form { margin: 0; }
+  .sfw-looks-label { font-size: 12.5px; font-weight: 600; color: #94a3b8; padding: 0 4px; }
+  .sfw-close { background: transparent; border: 0; color: #94a3b8; font-size: 22px; line-height: 1; cursor: pointer; min-width: 44px; min-height: 44px; }
+  @media (max-width: 640px) {
+    .sfw-bar { padding: 12px 14px; }
+    .sfw-actions { width: 100%; }
+    .sfw-actions > * { flex: 1 1 auto; }
+  }
+</style>
+<div class="sfw-bar" id="sfw-bar" dir="{% if arabic %}rtl{% else %}ltr{% endif %}" role="region"
+  aria-label="{% if arabic %}معرض أعمالك{% else %}Your portfolio{% endif %}">
+  <div class="sfw-msg">
+    <p class="sfw-title">
+      {% if arabic %}هذا معرض أعمالك يا {{ first_name }}. أنت فقط من يراه الآن.{% else %}This is your portfolio, {{ first_name }}. Only you can see it for now.{% endif %}
+    </p>
+    <p class="sfw-sub">
+      {% if arabic %}جاهز للعملاء {{ ready.count }}/3: 3 فيديوهات · مسمّاك الوظيفي · وسيلة تواصل{% else %}Client-ready {{ ready.count }}/3: 3 videos · your title · a way to contact you{% endif %}
+    </p>
+  </div>
+  <div class="sfw-actions">
+    <a class="sfw-btn" href="{{ add_url }}">{% if arabic %}أضف فيديوهات أخرى{% else %}Add more videos{% endif %}</a>
+    {% if looks %}
+    <span class="sfw-looks" role="group" aria-label="{% if arabic %}جرّب تصميمًا آخر{% else %}Try another look{% endif %}">
+      <span class="sfw-looks-label" aria-hidden="true">{% if arabic %}جرّب تصميمًا آخر{% else %}Try another look{% endif %}</span>
+      {% for t in looks %}
+      <form method="POST" action="{{ theme_action }}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <input type="hidden" name="theme" value="{{ t.pk }}">
+        <input type="hidden" name="lang" value="{% if arabic %}ar{% else %}en{% endif %}">
+        <button type="submit" class="sfw-btn" {% if t.pk == current_theme_id %}aria-current="true" style="background:#1e293b;"{% endif %}>{{ t.name }}</button>
+      </form>
+      {% endfor %}
+    </span>
+    {% else %}
+    <a class="sfw-btn" href="{{ themes_url }}">{% if arabic %}جرّب تصميمًا آخر{% else %}Try another look{% endif %}</a>
+    {% endif %}
+    <a class="sfw-btn" href="{{ edit_url }}">{% if arabic %}عدّل الاسم والمسمّى{% else %}Edit name &amp; title{% endif %}</a>
+    <a class="sfw-btn sfw-btn-primary" href="{{ live_url }}">{% if arabic %}انشر معرضك{% else %}Go live{% endif %}</a>
+    <button type="button" class="sfw-close" aria-label="{% if arabic %}إغلاق{% else %}Dismiss{% endif %}"
+      onclick="document.getElementById('sfw-bar').remove()">&times;</button>
+  </div>
+</div>

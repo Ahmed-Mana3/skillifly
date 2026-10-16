@@ -136,3 +136,60 @@ sudo certbot --nginx -d skillifly.cloud -d www.skillifly.cloud
 
 To run the Celery worker in production, you should create another systemd service similar to `skillifly.service` that runs:
 `venv/bin/celery -A skillifly worker --loglevel=info`
+
+## 10. Onboarding v2 (welcome flow, nudge emails)
+
+Design and rollout notes live in `ONBOARDING_V2_PLAN.md`. Everything user-visible is behind
+switches in **Admin -> Core -> Site Settings**, all **off by default**:
+
+| Switch | Effect |
+|---|---|
+| `onboarding_v2_enabled` | New editors are sent to `/welcome/` (paste a video link), see a first-run dashboard, get the reveal bar and the short signup form |
+| `defer_email_verification` | New editors are let in before entering the email code; the code is required to publish or pay |
+| `nudges_enabled` | The hourly `send_onboarding_nudges` job sends emails (a dry run works either way) |
+| `default_editor_theme` | Theme given to new editors (empty = Video Editor > Creative). Must not need a profile photo |
+
+Migrate (the schema changes only add columns and tables), then restart gunicorn:
+```bash
+python manage.py migrate
+sudo systemctl restart skillifly
+```
+
+### Nudge email timer
+```bash
+sudo cp deploy/systemd/skillifly-nudges.service deploy/systemd/skillifly-nudges.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now skillifly-nudges.timer
+systemctl list-timers | grep skillifly        # next run
+journalctl -u skillifly-nudges --since today  # what it sent
+```
+Preview what the next run would send without sending anything:
+```bash
+python manage.py send_onboarding_nudges --dry-run --ignore-quiet-hours
+```
+Before turning `nudges_enabled` on, check SPF / DKIM / DMARC for the sending domain and send a test
+message to mail-tester.com. Emails are never sent between 22:00 and 09:00 Cairo time.
+
+### Funnel report
+```bash
+python manage.py activation_report --since 2026-05-01 --until 2026-09-30 --stalled-csv logs/stalled.csv
+python manage.py activation_report --since 2026-05-01 --until 2026-09-30 --compare-since <launch date>
+```
+The CSV contains email addresses: it is written under `logs/` (git-ignored) and must not be committed.
+
+### Setting up a portfolio by hand for someone who replied with links
+```bash
+python manage.py add_concierge_projects <username> <video-url> [<video-url> ...] [--title "Brand film"] [--lang ar] [--dry-run]
+```
+Does what the welcome page does (lookup, thumbnail, default theme, personal info) but labels the projects
+`source=concierge`, so `activation_report` shows them separately ("first project by source") and they don't
+inflate real product activation. `--dry-run` looks the links up and creates nothing.
+
+### Optional settings (`.env`)
+`SITE_BASE_URL` (absolute URL used in emails), `NUDGE_FOUNDER_NAME` (name used in the personal
+"quick question" email), `CLARITY_PROJECT_ID` (Microsoft Clarity session recordings on the signup,
+dashboard, builder and welcome pages; form inputs are masked by default).
+
+### Rollback
+Untick `onboarding_v2_enabled` in Site Settings (no deploy needed) and `systemctl disable --now skillifly-nudges.timer`.
+Created projects, personal info and themes are ordinary records and stay as they are.

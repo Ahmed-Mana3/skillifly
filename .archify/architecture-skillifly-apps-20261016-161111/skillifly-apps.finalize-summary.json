@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-apps-20261016-161111\\candidate.json",
+    "sha256": "bf8ff6cddd592318b0ffec35f328070de00fc69d50568e6a510324857e74ddc6",
+    "bytes": 4107
+  },
+  "artifact": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-apps-20261016-161111\\skillifly-apps.html",
+    "sha256": "fa510fac9d182ce4ec783feee0564467e84be0b76f2fa3065deaaf8997277e99",
+    "bytes": 826545
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-apps-20261016-161111\\skillifly-apps.finalize.json",
+    "summaryReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-apps-20261016-161111\\skillifly-apps.finalize-summary.json",
+    "browserCheckReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-apps-20261016-161111\\skillifly-apps.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-16T12:14:14.312Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 9412
+}

@@ -89,6 +89,29 @@ class UserAccount(models.Model):
         related_name='admins',
         help_text="Set only for school_admin accounts — the school this user manages",
     )
+    signup_lang = models.CharField(
+        max_length=2, blank=True, default='',
+        help_text="Language the user signed up in ('en' | 'ar'); picks the language of emails.",
+    )
+    email_opt_out = models.BooleanField(
+        default=False,
+        help_text="User unsubscribed from onboarding nudge emails.",
+    )
+    # Full-screen launch checklist after signup (see core/launch.py).
+    LAUNCH_STATUS_CHOICES = [
+        ('', 'Not in the launch flow'),
+        ('active', 'In progress'),
+        ('done', 'Finished'),
+    ]
+    launch_status = models.CharField(
+        max_length=10, blank=True, default='', choices=LAUNCH_STATUS_CHOICES,
+        help_text="Launch checklist state. Set to 'In progress' at signup while the checklist is enabled; "
+                  "accounts created before it stay empty and are never sent to it.",
+    )
+    launch_theme_picked = models.BooleanField(
+        default=False,
+        help_text="The user chose a theme during the launch checklist (the auto-assigned default doesn't count).",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -104,11 +127,22 @@ class EmailOTP(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_otp')
     otp = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+
+    #: Wrong codes allowed before the user must request a fresh one.
+    MAX_ATTEMPTS = 5
+    #: Minutes a code stays valid. Paired with MAX_ATTEMPTS: a longer window is
+    #: only safe because guesses are capped.
+    LIFETIME_MINUTES = 30
 
     def is_expired(self):
         from django.utils import timezone
         import datetime
-        return timezone.now() > self.created_at + datetime.timedelta(minutes=10)
+        return timezone.now() > self.created_at + datetime.timedelta(minutes=self.LIFETIME_MINUTES)
+
+    @property
+    def is_locked(self):
+        return self.attempts >= self.MAX_ATTEMPTS
 
 # 2. Categories for Themes (e.g., Creative, Corporate, Minimal)
 class Category(models.Model):
@@ -168,6 +202,8 @@ class PersonalInfo(models.Model):
     phone =  models.CharField(max_length=20)
     bio = models.TextField()
     booking_url = models.CharField(max_length=500, blank=True, null=True)
+    # null: rows created before this field existed have an unknown creation time.
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"PersonalInfo: {self.full_name}"
@@ -241,6 +277,8 @@ class Project(models.Model):
     media_width = models.PositiveIntegerField(null=True, blank=True, help_text="True video width in px (probed, used to size the player box)")
     media_height = models.PositiveIntegerField(null=True, blank=True, help_text="True video height in px (probed, used to size the player box)")
     order = models.PositiveIntegerField(default=0, db_index=True, help_text="Order of appearance on the portfolio")
+    # null: rows created before this field existed have an unknown creation time.
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ['order', 'id']
@@ -495,6 +533,30 @@ class SiteSettings(models.Model):
         help_text="Map of theme slug to a username whose portfolio is pinned for that tab ('' or missing = auto-pick the best available).",
     )
 
+    # Editor onboarding v2 (see ONBOARDING_V2_PLAN.md)
+    onboarding_v2_enabled = models.BooleanField(
+        default=False,
+        help_text="New editor onboarding: welcome page, first-run dashboard, reveal bar.",
+    )
+    default_editor_theme = models.ForeignKey(
+        'Theme', null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+        help_text="Theme auto-assigned to new editors. Must not need a profile photo "
+                  "(not Animated / Animated Dark / Creative White). Empty = Video Editor > Creative.",
+    )
+    defer_email_verification = models.BooleanField(
+        default=False,
+        help_text="Let new editors in before they enter the email code; require it before publishing or paying.",
+    )
+    nudges_enabled = models.BooleanField(
+        default=False,
+        help_text="Send automated onboarding nudge emails (needs the send_onboarding_nudges timer).",
+    )
+    launch_checklist_enabled = models.BooleanField(
+        default=True,
+        help_text="Send new editors through the full-screen launch checklist after signup "
+                  "(about you, first video, theme, skills, then their portfolio). Takes precedence over the welcome page.",
+    )
+
     class Meta:
         verbose_name = "Site Settings"
         verbose_name_plural = "Site Settings"
@@ -730,6 +792,41 @@ class PaymentTrackingEvent(models.Model):
         if self.plan_type:
             label += f" ({self.plan_type})"
         return label
+
+
+class ActivationEvent(models.Model):
+    """One step of the editor activation funnel (signup -> first project -> paid).
+
+    Written server-side by ``core.activation.track``; event names are
+    whitelisted there.
+    """
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='activation_events')
+    name = models.CharField(max_length=40, db_index=True)
+    props = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['name', 'created_at'])]
+
+    def __str__(self):
+        return f"{self.name} · {self.user_id}"
+
+
+class NudgeLog(models.Model):
+    """Records that an onboarding nudge email went to a user (each key at most once)."""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='nudges')
+    key = models.CharField(max_length=40)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-sent_at']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'key'], name='uniq_nudge_user_key'),
+        ]
+
+    def __str__(self):
+        return f"{self.key} -> {self.user_id}"
 
 class Creator(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="creators")

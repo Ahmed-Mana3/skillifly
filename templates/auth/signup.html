@@ -74,11 +74,22 @@
       <!-- Email / Password Form -->
       <form method="POST" novalidate>
         {% csrf_token %}
+        {# Honeypot: hidden from people, filled in by bots. #}
+        <div style="position:absolute;left:-9999px;" aria-hidden="true">
+          <label>Company website <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
+        </div>
 
         {% if next %}
         <input type="hidden" name="next" value="{{ next }}">
         {% endif %}
 
+        {% if short_signup %}
+        <div class="mb-4">
+          <label class="sf-label" for="full_name">Full name</label>
+          {{ form.full_name }}
+          {% for error in form.full_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+        </div>
+        {% else %}
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label class="sf-label">First name</label>
@@ -95,6 +106,7 @@
             {% endif %}
           </div>
         </div>
+        {% endif %}
 
         <div class="mb-4">
           <label class="sf-label">Username</label>
@@ -115,6 +127,17 @@
           {% endif %}
         </div>
 
+        {% if short_signup %}
+        <div class="mb-6">
+          <label class="sf-label" for="password1">Password</label>
+          <div class="relative">
+            {{ form.password1 }}
+            <button type="button" id="toggle-password" aria-controls="password1" aria-pressed="false"
+              class="absolute top-1/2 -translate-y-1/2 right-3 text-xs font-bold text-slate-600 hover:text-black bg-transparent border-0 cursor-pointer px-2 py-1">Show</button>
+          </div>
+          {% for error in form.password1.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
+        </div>
+        {% else %}
         <div class="mb-4">
           <label class="sf-label">Password</label>
           {{ form.password1 }}
@@ -130,6 +153,7 @@
           {% for error in form.password2.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
           {% endif %}
         </div>
+        {% endif %}
 
         <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
           Create editor account
@@ -164,4 +188,42 @@
     el.classList.add('sf-input');
   });
 </script>
+{% if short_signup %}
+<script>
+  (function () {
+    var name = document.getElementById('full_name');
+    var user = document.getElementById('username');
+    var email = document.getElementById('email');
+    var pw = document.getElementById('password1');
+    var toggle = document.getElementById('toggle-password');
+    if (!name || !user || !pw) return;
+
+    // Show / hide password (replaces the confirm-password field).
+    pw.style.paddingRight = '4.5rem';
+    toggle.addEventListener('click', function () {
+      var show = pw.type === 'password';
+      pw.type = show ? 'text' : 'password';
+      toggle.textContent = show ? 'Hide' : 'Show';
+      toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+    });
+
+    // Suggest a username from the name (or the email) until the user types their own.
+    var suggested = '';
+    function slug(text) {
+      return text.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    }
+    function suggest() {
+      if (user.value && user.value !== suggested) return;   // user chose their own
+      var s = slug(name.value);
+      if (s.length < 3 && email && email.value.indexOf('@') > 0) s = slug(email.value.split('@')[0]);
+      if (s.length < 3) return;
+      suggested = s.slice(0, 20);
+      user.value = suggested;
+    }
+    name.addEventListener('input', suggest);
+    if (email) email.addEventListener('blur', suggest);
+  })();
+</script>
+{% endif %}
 {% endblock %}

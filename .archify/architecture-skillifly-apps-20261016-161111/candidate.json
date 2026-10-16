@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Skillifly Django apps: responsibilities and communication",
+    "locale": "en",
+    "output": ".archify/architecture-skillifly-apps-20261016-161111/skillifly-apps.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "blog", "type": "backend", "label": "blog", "sublabel": "posts, own models", "pos": [40, 40], "size": [150, 70] },
+    { "id": "builder", "type": "backend", "label": "builder", "sublabel": "portfolio editor forms", "pos": [335, 40], "size": [150, 70] },
+    { "id": "stream", "type": "cloud", "label": "Cloudflare Stream", "sublabel": "video hosting", "pos": [640, 40], "size": [150, 70] },
+    { "id": "portfolios", "type": "backend", "label": "portfolios", "sublabel": "public pages, themes", "pos": [40, 240], "size": [150, 70] },
+    { "id": "core", "type": "backend", "label": "core", "sublabel": "models, auth, dashboard", "pos": [330, 230], "size": [160, 90] },
+    { "id": "agent", "type": "backend", "label": "agent", "sublabel": "AI chat edits portfolio", "pos": [640, 240], "size": [150, 70] },
+    { "id": "ai", "type": "external", "label": "Groq / Gemini", "sublabel": "LLM providers", "pos": [920, 240], "size": [150, 70] },
+    { "id": "analytics", "type": "backend", "label": "analytics", "sublabel": "visits, events, reports", "pos": [40, 430], "size": [150, 70] },
+    { "id": "payments", "type": "backend", "label": "payments", "sublabel": "plans, checkout, coupons", "pos": [335, 430], "size": [150, 70] },
+    { "id": "school", "type": "backend", "label": "school", "sublabel": "school pages, ratings", "pos": [640, 430], "size": [150, 70] },
+    { "id": "fawaterk", "type": "external", "label": "Fawaterk", "sublabel": "payment gateway", "pos": [335, 590], "size": [150, 70] }
+  ],
+  "connections": [
+    { "id": "portfolios-to-core", "from": "portfolios", "to": "core", "label": "theme + layout" },
+    { "id": "builder-to-core", "from": "builder", "to": "core", "label": "onboarding + layout" },
+    { "id": "payments-to-core", "from": "payments", "to": "core", "label": "affiliate + activation" },
+    { "id": "agent-to-core", "from": "agent", "to": "core", "label": "AI + layout helpers" },
+    { "id": "core-to-blog", "from": "core", "to": "blog", "label": "mounts /manage/blog/", "variant": "dashed" },
+    { "id": "core-to-stream", "from": "core", "to": "stream", "label": "upload URL", "variant": "dashed" },
+    { "id": "agent-to-ai", "from": "agent", "to": "ai", "label": "function calls", "variant": "emphasis" },
+    { "id": "payments-to-analytics", "from": "payments", "to": "analytics", "label": "client IP" },
+    { "id": "payments-to-school", "from": "payments", "to": "school", "label": "enroll_in_school" },
+    { "id": "payments-to-fawaterk", "from": "payments", "to": "fawaterk", "label": "create invoice", "variant": "emphasis" },
+    { "id": "fawaterk-to-payments", "from": "fawaterk", "to": "payments", "label": "webhook", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Shared data layer",
+      "items": [
+        "Every app imports its models from core.models; only blog owns its Post, Category and Tag.",
+        "Apps call each other as plain Python imports in one process, never over HTTP.",
+        "analytics and school only read and write core models, plus the helpers shown."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Back-references into other apps",
+      "items": [
+        "core re-exports the portfolios views so older URL names still resolve.",
+        "core.urls routes /ar/builder/ and /ar/update/ to builder views.",
+        "core.onboarding imports get_client_ip from analytics.",
+        "core's payment-tracking page reads its label tables from payments."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Routing order",
+      "items": [
+        "payments, builder, analytics, core, school, agent, then portfolios last for the <username>/ catch-all.",
+        "blog is reached on the blog host, which switches to its own URLconf."
+      ]
+    }
+  ]
+}

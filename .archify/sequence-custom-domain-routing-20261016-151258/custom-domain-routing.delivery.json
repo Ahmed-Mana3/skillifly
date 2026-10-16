@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "b24a80f7-4eba-4fb8-935b-ff682eb4ba2d",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "D:\\skillifly_dev\\skillifly\\.archify\\sequence-custom-domain-routing-20261016-151258\\candidate.json",
+  "output": "D:\\skillifly_dev\\skillifly\\.archify\\sequence-custom-domain-routing-20261016-151258\\custom-domain-routing.html",
+  "specification": {
+    "sha256": "040f220bdfb6fda712248d89a29b67a144b9a903eaa3debe5fc869f4999006e5",
+    "bytes": 2912
+  },
+  "artifact": {
+    "sha256": "39d2aef5a6858d28eb8b9276081e39047cc07e67aaf3b2d4cd917f704bc1af2e",
+    "bytes": 813017
+  }
+}

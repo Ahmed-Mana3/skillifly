@@ -11,8 +11,28 @@ from datetime import datetime
 User = get_user_model()  
 
 class RegisterForm(UserCreationForm):
+    """Editor signup.
+
+    Accepts either the classic first/last name + confirm-password fields or the
+    short form (one ``full_name`` field, no confirm-password). Both post paths
+    validate identically, so the legacy template keeps working.
+    """
+
+    full_name = forms.CharField(
+        required=False,
+        max_length=300,
+        widget=forms.TextInput(
+            attrs={
+                "id": "full_name",
+                "placeholder": "Sara Ali",
+                "autocomplete": "name",
+                "class": "form-control",
+            }
+        )
+    )
+
     first_name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(
             attrs={
                 "id": "first_name",
@@ -23,7 +43,7 @@ class RegisterForm(UserCreationForm):
     )
 
     last_name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(
             attrs={
                 "id": "last_name",
@@ -42,7 +62,7 @@ class RegisterForm(UserCreationForm):
                 "class": "form-control",
             }
         ),
-        help_text="Your portfolio will be at: portfoliobuilder.com/yourusername"
+        help_text="Your portfolio will be at: skillifly.cloud/yourusername"
     )
 
     email = forms.EmailField(
@@ -69,7 +89,7 @@ class RegisterForm(UserCreationForm):
     )
 
     password2 = forms.CharField(
-        required=True,
+        required=False,  # the short signup form has no confirm field; see clean()
         label="Confirm Password",
         widget=forms.PasswordInput(
             attrs={
@@ -83,6 +103,42 @@ class RegisterForm(UserCreationForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name", "username", "email"]
+
+    def clean(self):
+        cleaned = super().clean()
+
+        # Name: either first/last, or one "full name" split at the first space.
+        first = (cleaned.get('first_name') or '').strip()
+        last = (cleaned.get('last_name') or '').strip()
+        full = (cleaned.get('full_name') or '').strip()
+        if full and not first:
+            first, _, rest = full.partition(' ')
+            last = last or rest.strip()
+        if not first:
+            # Show the error on a field the posted form actually renders.
+            self.add_error('first_name' if 'first_name' in self.data else 'full_name',
+                           'Please enter your name.')
+        cleaned['first_name'], cleaned['last_name'] = first[:150], last[:150]
+
+        # No confirm field posted: Django's password-strength check and save() both read
+        # password2, so mirror password1 into it or weak passwords would skip validation.
+        if not cleaned.get('password2') and cleaned.get('password1'):
+            cleaned['password2'] = cleaned['password1']
+        return cleaned
+
+    def add_error(self, field, error):
+        # The short form doesn't render password2, so surface its errors on password1.
+        if field == 'password2' and not (self.data.get('password2') or '').strip():
+            field = 'password1'
+        super().add_error(field, error)
+
+    def clean_username(self):
+        from django.conf import settings
+        username = super().clean_username()
+        # A username equal to a site route (e.g. "welcome") would hide the portfolio.
+        if (username or '').lower() in settings.RESERVED_USERNAMES:
+            raise ValidationError('This username is reserved. Please choose another.', code='reserved')
+        return username
 
 class ClientRegisterForm(forms.Form):
     """Minimal signup form for client accounts (no username, no OTP)."""

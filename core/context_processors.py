@@ -126,8 +126,17 @@ def site_globals(request):
     from .middleware import LanguagePreferenceMiddleware
     route_map = dict(LanguagePreferenceMiddleware.ROUTE_MAP)
 
+    # Session recordings (Microsoft Clarity) only on the onboarding funnel pages.
+    clarity_id = ''
+    bare_path = path[3:] if path.startswith('/ar/') else path
+    if getattr(settings, 'CLARITY_PROJECT_ID', '') and bare_path.startswith(
+        ('/signup', '/dashboard', '/builder', '/welcome', '/themes')
+    ):
+        clarity_id = settings.CLARITY_PROJECT_ID
+
     return {
         'MAIN_SITE_URL': main_site_url,
         'is_arabic_page': is_arabic_page,
         'lang_route_map': json.dumps(route_map),
+        'clarity_project_id': clarity_id,
     }

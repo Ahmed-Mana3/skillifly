@@ -90,7 +90,7 @@
 
   <div class="bx-progress" role="group" aria-label="نسبة إنجاز الملف">
     <div class="bx-progress-track"><div class="bx-progress-fill" id="bx-progress-fill"></div></div>
-    <span class="bx-progress-label" id="bx-progress-label">0 من 7 أقسام مكتملة</span>
+    <span class="bx-progress-label" id="bx-progress-label">{% if category == 'video_editor' %}جاهز للعملاء 0/3{% else %}0 من 7 أقسام مكتملة{% endif %}</span>
   </div>
 
   <div class="bx-layout">
@@ -534,8 +534,8 @@
 
                   <div class="bx-field">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}رابط الفيديو{% else %}رابط المشروع{% endif %}</span><span class="bx-opt">اختياري</span></label>
-                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك">
-                    <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك تُدمج تلقائيًا في ملفك.</p>
+                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك أو ريلز إنستجرام أو درايف">
+                    <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك وريلز إنستجرام وجوجل درايف تُعرض مباشرة في معرضك. درايف: اجعل المشاركة «أي شخص لديه الرابط».</p>
                     <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
                   </div>
                   <div class="bx-field">
@@ -1050,8 +1050,8 @@
 
     <div class="bx-field">
       <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}رابط الفيديو{% else %}رابط المشروع{% endif %}</span><span class="bx-opt">اختياري</span></label>
-      <input type="text" name="projects-__prefix__-url" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك">
-      <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك تُدمج تلقائيًا في ملفك.</p>
+      <input type="text" name="projects-__prefix__-url" class="bx-input" dir="ltr" placeholder="رابط يوتيوب أو فيميو أو تيك توك أو ريلز إنستجرام أو درايف">
+      <p class="bx-hint">روابط يوتيوب وفيميو وتيك توك وريلز إنستجرام وجوجل درايف تُعرض مباشرة في معرضك. درايف: اجعل المشاركة «أي شخص لديه الرابط».</p>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
@@ -1253,6 +1253,7 @@
     secReviews: 'آراء العملاء',
     kickerPrefix: 'القسم {n}',
     progressOf: '{done} من {total} أقسام مكتملة',
+    clientReadyOf: 'جاهز للعملاء {done}/3',
     charsCount: '{n} حرف',
     msgStepAttention: 'بعض الحقول في هذا القسم تحتاج مراجعة — يمكنك المتابعة، وسننبّهك لأي ناقص قبل الحفظ.',
     msgFixBeforeLaunch: 'يرجى تصحيح الحقول المظللة قبل النشر.',

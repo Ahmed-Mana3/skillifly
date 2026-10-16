@@ -255,6 +255,29 @@ ACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
+# Usernames that would shadow a site route (portfolios live at /<username>/, and the
+# portfolios URLConf is last, so a route wins over a user with the same name).
+RESERVED_USERNAMES = frozenset({
+    "welcome", "launch", "dashboard", "builder", "signup", "signin", "logout", "themes", "profile",
+    "payment", "preview", "examples", "hire", "review", "ar", "blog", "manage", "admin",
+    "accounts", "videos", "email", "static", "media", "api", "agent", "school", "affiliate",
+    "contact", "terms", "privacy", "analytics", "image-thumb", "manual-pay", "fawaterk",
+    "verify-email", "resend-otp", "toggle-visibility", "client_dashboard", "client_reviews",
+    "school_admin_dashboard", "my-school-stats", "review-the-website", "robots.txt",
+    "sitemap.xml", "llms.txt", "sw.js", "ckeditor5",
+})
+ACCOUNT_USERNAME_BLACKLIST = sorted(RESERVED_USERNAMES)
+
+# Absolute base URL used in emails (nudges link back to the site).
+SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "https://skillifly.cloud").rstrip("/")
+
+# Name used in the personal "quick question" nudge email ("I'm <name>, I built Skillifly").
+# Leave empty to send it as "We built Skillifly".
+NUDGE_FOUNDER_NAME = os.environ.get("NUDGE_FOUNDER_NAME", "")
+
+# Optional Microsoft Clarity project id: session recordings on signup/dashboard/builder/welcome.
+CLARITY_PROJECT_ID = os.environ.get("CLARITY_PROJECT_ID", "")
+
 SOCIALACCOUNT_AUTO_SIGNUP = False
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_REQUIRED = True

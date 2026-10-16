@@ -1,0 +1,14 @@
+{# Page header of a launch step, in the dashboard's header style. Needs `step` (launch.step_header). #}
+<header class="mb-7 reveal" style="--d:0ms">
+  <div class="flex items-center gap-4">
+    <div class="sf-chip sf-chip-lg tint-{{ step.tint }} lx-head-chip"><i data-lucide="{{ step.icon }}"></i></div>
+    <div class="min-w-0">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+        <p class="sf-cap !text-violet-600">{% if is_arabic_page %}الخطوة {{ step.number }} من {{ step.total }}{% else %}Step {{ step.number }} of {{ step.total }}{% endif %}</p>
+        <span class="sf-pill pill-warn lx-xp"><i data-lucide="zap"></i>+{{ step.xp }} XP</span>
+      </div>
+      <h1 class="text-[26px] sm:text-[32px] font-bold text-black leading-tight font-display">{{ step.title }}</h1>
+    </div>
+  </div>
+  <p class="text-slate-700 font-medium mt-3 text-[15px] max-w-xl">{{ step.lead }}</p>
+</header>

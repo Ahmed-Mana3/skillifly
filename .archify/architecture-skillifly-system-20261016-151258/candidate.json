@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Skillifly system architecture",
+    "locale": "en",
+    "output": ".archify/architecture-skillifly-system-20261016-151258/skillifly-system.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "users", "type": "external", "label": "Visitors & owners", "sublabel": "Browser, EN / AR", "pos": [40, 200], "size": [130, 60] },
+    { "id": "nginx", "type": "cloud", "label": "Nginx", "sublabel": "TLS, certbot", "pos": [230, 200], "size": [130, 60] },
+    { "id": "mw", "type": "backend", "label": "Django middleware", "sublabel": "domain, host, language", "pos": [430, 190], "size": [130, 80] },
+    { "id": "builder", "type": "backend", "label": "builder", "sublabel": "portfolio editor", "pos": [690, 60], "size": [130, 60] },
+    { "id": "portfolios", "type": "backend", "label": "portfolios", "sublabel": "public pages", "pos": [690, 200], "size": [130, 60] },
+    { "id": "payments", "type": "backend", "label": "payments", "sublabel": "pricing, checkout", "pos": [690, 340], "size": [130, 60] },
+    { "id": "core", "type": "backend", "label": "core", "sublabel": "all models, auth", "pos": [900, 185], "size": [130, 90] },
+    { "id": "db", "type": "database", "label": "Database", "sublabel": "SQLite, Postgres", "pos": [1090, 200], "size": [130, 60] },
+    { "id": "stream", "type": "cloud", "label": "Cloudflare Stream", "sublabel": "video hosting", "pos": [900, 60], "size": [130, 60] },
+    { "id": "ai", "type": "external", "label": "Groq / Gemini", "sublabel": "AI copywriting", "pos": [900, 340], "size": [130, 60] },
+    { "id": "fawaterk", "type": "external", "label": "Fawaterk", "sublabel": "payment gateway", "pos": [690, 480], "size": [130, 60] }
+  ],
+  "connections": [
+    { "id": "users-to-nginx", "from": "users", "to": "nginx", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "nginx-to-mw", "from": "nginx", "to": "mw", "label": "proxy" },
+    { "id": "mw-to-builder", "from": "mw", "to": "builder", "label": "/builder/" },
+    { "id": "mw-to-portfolios", "from": "mw", "to": "portfolios", "label": "/<username>/", "variant": "emphasis" },
+    { "id": "mw-to-payments", "from": "mw", "to": "payments", "label": "/payment/" },
+    { "id": "builder-to-core", "from": "builder", "to": "core", "label": "ORM" },
+    { "id": "portfolios-to-core", "from": "portfolios", "to": "core", "label": "ORM" },
+    { "id": "payments-to-core", "from": "payments", "to": "core", "label": "ORM" },
+    { "id": "core-to-db", "from": "core", "to": "db", "label": "SQL" },
+    { "id": "core-to-stream", "from": "core", "to": "stream", "label": "upload URL", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "core-to-ai", "from": "core", "to": "ai", "label": "generate copy", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "payments-to-fawaterk", "from": "payments", "to": "fawaterk", "label": "create invoice", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Request path",
+      "items": [
+        "Nginx forwards to Gunicorn; one middleware chain runs before any app.",
+        "The portfolios URLconf is last because of its <username>/ catch-all.",
+        "WhiteNoise serves static files from inside Django."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Data and services",
+      "items": [
+        "All models live in core, so every app reaches the database through it.",
+        "Cloudflare Stream receives video uploads; core only issues the upload URL.",
+        "AI copy tries Groq first, then Gemini, then fixed templates."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Not drawn or not wired",
+      "items": [
+        "blog, analytics, school and agent apps sit behind the same middleware.",
+        "Celery and Redis are configured, but no task or .delay() call exists in code.",
+        "Manual receipts are not sent to Gemini: the view only checks the image opens, then auto-verifies."
+      ]
+    }
+  ]
+}

@@ -74,6 +74,10 @@ class SkilliflySocialAccountAdapter(DefaultSocialAccountAdapter):
         elif account_type == "school_admin":
             # School admin: create account without school (school is chosen on a separate page)
             UserAccount.objects.update_or_create(user=user, defaults={"account_type": "school_admin"})
+        from core import activation, launch
+        activation.record_signup(request, user, account_type, method="google")
+        if account_type == "editor":
+            launch.start(user)
         request.session.pop("signup_account_type", None)
         return user
 

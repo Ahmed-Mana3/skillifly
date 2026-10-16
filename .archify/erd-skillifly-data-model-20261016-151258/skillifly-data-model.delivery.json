@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8111d600-ac50-411d-bf52-2e29e1803ed3",
+  "status": "current",
+  "command": "deliver",
+  "type": "erd",
+  "input": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\candidate.json",
+  "output": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\skillifly-data-model.html",
+  "specification": {
+    "sha256": "7230e198557809f4298092eafcedcfa8d1b43f709646d617b1078b418039747a",
+    "bytes": 15865
+  },
+  "artifact": {
+    "sha256": "f1c53713ee5d1f09dbd77c73033aaf8267b89c8c67cb976051e8c5418429b0a1",
+    "bytes": 921734
+  }
+}

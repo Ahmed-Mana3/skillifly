@@ -1,0 +1,33 @@
+{# One video-link row on the welcome page. `row` is optional (posted values after a validation error). #}
+<div class="wl-row rounded-2xl border border-slate-200 bg-white p-4 mb-3" data-row>
+  <label class="sf-label">
+    {% if is_arabic_page %}رابط الفيديو{% else %}Video link{% endif %}
+  </label>
+  <input type="text" name="url" class="sf-input" dir="ltr" inputmode="url" autocomplete="off"
+    autocapitalize="off" spellcheck="false" data-url
+    value="{{ row.url|default:'' }}"
+    placeholder="{% if is_arabic_page %}الصق رابط يوتيوب أو فيميو أو تيك توك أو إنستجرام أو درايف{% else %}Paste a YouTube, Vimeo, TikTok, Instagram or Drive link{% endif %}">
+
+  <div class="wl-card mt-3 flex flex-col sm:flex-row gap-3 items-start {% if not row.url %}hidden{% endif %}" data-card aria-live="polite">
+    <div class="w-full sm:w-32 h-20 sm:h-[72px] rounded-lg bg-slate-100 overflow-hidden shrink-0 grid place-items-center text-slate-400" data-thumb-box>
+      <img data-thumb alt="" class="w-full h-full object-cover" hidden>
+      <span data-thumb-placeholder aria-hidden="true">▶</span>
+    </div>
+    <div class="flex-1 min-w-0 w-full">
+      <label class="sf-label">{% if is_arabic_page %}عنوان الفيديو{% else %}Video title{% endif %}</label>
+      <input type="text" name="title" class="sf-input" data-title maxlength="500"
+        value="{{ row.title|default:'' }}"
+        placeholder="{% if is_arabic_page %}فيديو من أعمالي{% else %}e.g. Brand Campaign 2025{% endif %}">
+      <input type="hidden" name="video_type" value="{{ row.video_type|default:'long' }}" data-type>
+      <div class="mt-2 inline-flex rounded-full border border-slate-200 p-0.5 text-sm font-semibold" role="group"
+        aria-label="{% if is_arabic_page %}نوع الفيديو{% else %}Video format{% endif %}">
+        <button type="button" data-type-btn="long"
+          class="px-3 py-1.5 rounded-full min-h-[44px] sm:min-h-0">{% if is_arabic_page %}فيديو طويل{% else %}Long video{% endif %}</button>
+        <button type="button" data-type-btn="reel"
+          class="px-3 py-1.5 rounded-full min-h-[44px] sm:min-h-0">{% if is_arabic_page %}ريلز{% else %}Reel{% endif %}</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-2 text-sm font-medium {% if row.error %}text-red-600{% else %}text-slate-600 hidden{% endif %}" data-msg role="alert">{{ row.error|default:'' }}</p>
+</div>

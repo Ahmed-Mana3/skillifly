@@ -148,9 +148,85 @@ def theme_preview_view(request, theme_name):
     return preview_view(request, 'alex_mercer')
 
 
+def _inject_welcome_bar(request, response, user):
+    """Owner-only "this is your portfolio" bar shown right after onboarding (?welcome=1).
+
+    Rendered through a template (not an f-string) because the first name is
+    user-controlled and must be HTML-escaped.
+    """
+    from django.middleware.csrf import get_token
+    from django.template.loader import render_to_string
+    from django.urls import reverse
+    from core import activation, onboarding
+
+    arabic = request.GET.get('lang') == 'ar' or request.COOKIES.get('skillifly_lang') == 'ar'
+    profile = Profile.objects.filter(user=user).first()
+    ready = onboarding.client_ready(user)
+    looks = list(onboarding.look_choices())
+    bar = render_to_string('onboarding/_welcome_bar.html', {
+        'arabic': arabic,
+        'first_name': user.first_name or user.username,
+        'ready': ready,
+        'looks': looks if len(looks) > 1 else [],
+        'current_theme_id': profile.theme_id if profile else None,
+        'csrf_token': get_token(request),
+        'theme_action': reverse('welcome_set_theme'),
+        'add_url': onboarding.welcome_url(arabic, add=1, ra='add'),
+        'themes_url': reverse('arabic_themes' if arabic else 'themes') + '?ra=looks',
+        'edit_url': reverse('arabic_update_portfolio' if arabic else 'update_portfolio') + '?ra=edit#identity',
+        'live_url': reverse('arabic_payment' if arabic else 'payment') + '?ra=live',
+    })
+    activation.track(user, 'reveal_viewed', projects=Project.objects.filter(user=user).count())
+
+    content = response.content.decode('utf-8')
+    if '</body>' in content:
+        content = content.replace('</body>', bar + '</body>', 1)
+    else:
+        content += bar
+    response.content = content.encode('utf-8')
+    return response
+
+
+def _inject_launched_bar(request, response, user):
+    """Owner-only celebration + "go to your dashboard" bar at the end of the launch checklist (?launched=1)."""
+    from django.template.loader import render_to_string
+    from django.urls import reverse
+    from core import activation, launch
+
+    arabic = request.GET.get('lang') == 'ar' or request.COOKIES.get('skillifly_lang') == 'ar'
+    state = launch.progress(user, arabic)
+    bar = render_to_string('launch/_launched_bar.html', {
+        'arabic': arabic,
+        'first_name': user.first_name or user.username,
+        'launch': state,
+        'is_live': state['done']['publish'],
+        'portfolio_link': f"{request.get_host().split(':')[0].replace('www.', '')}/{user.username}",
+        'dashboard_url': reverse('arabic_dashboard' if arabic else 'dashboard'),
+        'publish_url': reverse('arabic_payment' if arabic else 'payment') + '?ra=live',
+    })
+    activation.track(user, 'reveal_viewed', projects=Project.objects.filter(user=user).count(), via='launch')
+
+    content = response.content.decode('utf-8')
+    if '</body>' in content:
+        content = content.replace('</body>', bar + '</body>', 1)
+    else:
+        content += bar
+    response.content = content.encode('utf-8')
+    return response
+
+
 def _inject_preview_bar(request, response, profile, user):
     """Helper to inject the preview bar HTML into the response for theme previews."""
     if user.username != 'alex_mercer':
+        if request.user.is_authenticated and request.user.pk == user.pk:
+            if request.GET.get('launched') == '1':
+                return _inject_launched_bar(request, response, user)
+            if request.GET.get('welcome') == '1':
+                return _inject_welcome_bar(request, response, user)
+        return response
+
+    # Embedded in another page (landing hero, onboarding demo): no "Apply Theme" bar.
+    if request.GET.get('embed') == '1':
         return response
 
     preview_theme_id = request.GET.get('preview_theme') or request.session.get('preview_theme')

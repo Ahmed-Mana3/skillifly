@@ -1,0 +1,14 @@
+{% autoescape off %}{% for b in blocks %}{{ b.heading }}
+
+{{ b.body }}
+{% if b.cta_url %}
+{{ b.cta_label }}: {{ b.cta_url }}
+{% endif %}{% if b.extra_url %}{{ b.extra_label }}: {{ b.extra_url }}
+{% endif %}
+{% if not forloop.last %}------------------------------
+
+{% endif %}{% endfor %}
+--
+Skillifly · {{ site_url }}
+Unsubscribe / إلغاء الاشتراك: {{ unsubscribe_url }}
+{% endautoescape %}

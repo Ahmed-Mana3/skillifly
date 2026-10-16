@@ -1,0 +1,239 @@
+{% extends "launch/base.html" %}
+
+{% block title %}{{ step.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ls-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (min-width: 1024px) { .ls-grid { grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; } }
+  .ls-form { padding: 24px; }
+  @media (min-width: 640px) { .ls-form { padding: 32px; } }
+  .ls-field + .ls-field { margin-top: 22px; }
+
+  .ls-photo { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border: 1.5px dashed rgba(124, 58, 237, .3); border-radius: 16px; background: #FAF8FF; transition: border-color .2s, background .2s; }
+  .ls-photo:hover { border-color: #7C3AED; background: #F5F3FF; }
+  .ls-avatar { position: relative; width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; overflow: hidden; display: grid; place-items: center;
+    background: #DDD6FE; color: #6D28D9; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+  .ls-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ls-photo-btn { position: relative; }
+  .ls-photo-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .ls-photo-btn:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .ls-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ls-chips .ls-chip { min-height: 44px; }
+  .ls-chip { transition: all .18s ease; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #E2E8F0; background: #fff; color: #334155;
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+  .ls-chip:hover { border-color: rgba(124, 58, 237, .5); color: #7C3AED; transform: translateY(-1px); }
+  .ls-chip:active { transform: scale(.96); }
+  .ls-chip[aria-pressed="true"] { background: #7C3AED; border-color: #7C3AED; color: #fff; box-shadow: 0 6px 14px -6px rgba(124, 58, 237, .6); }
+  .ls-count { margin-inline-start: auto; font-size: 12px; font-weight: 600; color: #64748B; direction: ltr; unicode-bidi: isolate; }
+
+  /* Live preview */
+  .ls-preview { order: -1; }
+  @media (min-width: 1024px) { .ls-preview { order: 0; position: sticky; top: 88px; } }
+  .ls-pv { overflow: hidden; }
+  .ls-pv-cover { height: 72px; background: linear-gradient(160deg, #EFF6FF 0%, #F5F3FF 50%, #FDF4FF 100%); border-bottom: 1px solid rgba(15, 23, 42, .06); }
+  .ls-pv-body { padding: 0 22px 22px; margin-top: -32px; position: relative; }
+  .ls-pv .ls-avatar { width: 68px; height: 68px; border: 4px solid #fff; box-shadow: 0 0 0 2px #7C3AED, 0 10px 22px -8px rgba(124, 58, 237, .55); }
+  .ls-pv-name { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 700; color: #000; margin-top: 10px; line-height: 1.25; word-break: break-word; }
+  .ls-pv-title { color: #7C3AED; font-weight: 700; font-size: 13.5px; margin-top: 2px; word-break: break-word; }
+  .ls-pv-bio { color: #334155; font-size: 13.5px; line-height: 1.6; margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+  .ls-pv-bio.is-empty { color: #94A3B8; font-style: italic; }
+  .ls-pv-hire { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 14px; border-radius: 999px;
+    background: #7C3AED; box-shadow: 0 8px 18px -8px rgba(124, 58, 237, .6); color: #fff; font-size: 12.5px; font-weight: 700; }
+  .ls-pv-hire svg { width: 14px; height: 14px; }
+  [dir="rtl"] .ls-pv-name, [dir="rtl"] .ls-avatar { font-family: 'Tajawal', 'Syne', sans-serif; }
+  @media (max-width: 1023px) {
+    .ls-pv-cover, .ls-pv-bio, .ls-pv-hire, .ls-preview .ls-pv-cap { display: none; }
+    .ls-pv-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 14px; align-items: center; margin-top: 0; padding: 14px 16px; }
+    .ls-pv .ls-avatar { width: 48px; height: 48px; border-width: 0; box-shadow: none; font-size: 16px; grid-row: span 2; }
+    .ls-pv-name { margin-top: 0; font-size: 16px; }
+  }
+</style>
+{% endblock %}
+
+{% block top_center %}{% include "launch/_step_top.html" %}{% endblock %}
+{% block top_end %}
+<a class="btn-icon" href="{{ step.back_url }}" aria-label="{% if is_arabic_page %}العودة إلى قائمة الإطلاق{% else %}Back to the launch checklist{% endif %}">
+  <i data-lucide="x"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 sm:px-6 pt-8 sm:pt-10 pb-16">
+  {% include "launch/_step_head.html" %}
+  {% include "launch/_messages.html" %}
+
+  <div class="ls-grid">
+    <form method="POST" enctype="multipart/form-data" class="sf-card ls-form reveal" id="ls-form" novalidate style="--d:70ms">
+      {% csrf_token %}
+
+      <div class="ls-field">
+        <span class="sf-label">{% if is_arabic_page %}الصورة الشخصية{% else %}Profile photo{% endif %}
+          <span class="lx-optional">{% if is_arabic_page %}اختياري{% else %}Optional{% endif %}</span></span>
+        <div class="ls-photo">
+          <span class="ls-avatar" data-avatar>
+            <span data-initials></span>
+            {% if photo_url %}<img src="{{ photo_url }}" alt="" data-photo>{% else %}<img alt="" data-photo hidden>{% endif %}
+          </span>
+          <div class="min-w-0">
+            <span class="ls-photo-btn btn-ghost btn-sm">
+              <i data-lucide="camera"></i>
+              <span data-photo-label>{% if photo_url %}{% if is_arabic_page %}غيّر الصورة{% else %}Change photo{% endif %}{% else %}{% if is_arabic_page %}ارفع صورة{% else %}Upload photo{% endif %}{% endif %}</span>
+              <input type="file" name="picture" id="ls-picture" accept="image/jpeg,image/png,image/webp"
+                aria-label="{% if is_arabic_page %}الصورة الشخصية{% else %}Profile photo{% endif %}">
+            </span>
+            <p class="lx-hint">{% if is_arabic_page %}تظهر في بعض التصاميم. JPG أو PNG حتى 5 ميجابايت.{% else %}Some themes show it. JPG or PNG, up to 5 MB.{% endif %}</p>
+          </div>
+        </div>
+        <p class="lx-error" data-photo-error {% if not errors.picture %}hidden{% endif %} role="alert">{{ errors.picture|default:'' }}</p>
+      </div>
+
+      <div class="ls-field">
+        <label class="sf-label" for="ls-name">{% if is_arabic_page %}اسمك{% else %}Your name{% endif %}</label>
+        <input class="sf-input {% if errors.fullname %}is-invalid{% endif %}" id="ls-name" name="fullname" value="{{ values.fullname }}" maxlength="254"
+          autocomplete="name" required placeholder="{% if is_arabic_page %}مثال: سارة علي{% else %}e.g. Sara Ali{% endif %}"
+          {% if errors.fullname %}aria-invalid="true" aria-describedby="ls-name-err"{% endif %}>
+        {% if errors.fullname %}<p class="lx-error" id="ls-name-err">{{ errors.fullname }}</p>{% endif %}
+      </div>
+
+      <div class="ls-field">
+        <label class="sf-label" for="ls-title">{% if is_arabic_page %}مسمّاك الوظيفي{% else %}Your title{% endif %}</label>
+        <input class="sf-input {% if errors.title %}is-invalid{% endif %}" id="ls-title" name="title" value="{{ values.title }}" maxlength="120"
+          autocomplete="organization-title" required placeholder="{% if is_arabic_page %}مثال: مونتير فيديو{% else %}e.g. Video Editor{% endif %}"
+          {% if errors.title %}aria-invalid="true" aria-describedby="ls-title-err"{% endif %}>
+        {% if errors.title %}<p class="lx-error" id="ls-title-err">{{ errors.title }}</p>{% endif %}
+        <div class="ls-chips" role="group" aria-label="{% if is_arabic_page %}اقتراحات{% else %}Suggestions{% endif %}">
+          {% for suggestion in title_suggestions %}
+          <button type="button" class="ls-chip" data-title-chip="{{ suggestion }}" aria-pressed="{% if suggestion == values.title %}true{% else %}false{% endif %}">{{ suggestion }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="ls-field">
+        <label class="sf-label" for="ls-bio">{% if is_arabic_page %}نبذة قصيرة{% else %}Short bio{% endif %}
+          <span class="lx-optional">{% if is_arabic_page %}اختياري{% else %}Optional{% endif %}</span>
+          <span class="ls-count" data-bio-count aria-live="polite"></span></label>
+        <textarea class="sf-input" id="ls-bio" name="bio" maxlength="600" rows="4"
+          placeholder="{% if is_arabic_page %}أقوم بمونتاج فيديوهات يوتيوب وإعلانات قصيرة سريعة الإيقاع تشدّ المشاهد حتى النهاية.{% else %}I edit fast-paced YouTube videos and brand reels that keep viewers watching to the end.{% endif %}">{{ values.bio }}</textarea>
+      </div>
+
+      <div class="ls-field">
+        <label class="sf-label" for="ls-contact">{% if is_arabic_page %}رقم واتساب أو رابط الحجز{% else %}WhatsApp number or booking link{% endif %}
+          <span class="lx-optional">{% if is_arabic_page %}اختياري{% else %}Optional{% endif %}</span></label>
+        <input class="sf-input {% if errors.booking_url %}is-invalid{% endif %}" id="ls-contact" name="booking_url" value="{{ values.booking_url }}" maxlength="300"
+          dir="ltr" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"
+          placeholder="+20 100 123 4567 · calendly.com/you"
+          aria-describedby="{% if errors.booking_url %}ls-contact-err {% endif %}ls-contact-hint">
+        {% if errors.booking_url %}<p class="lx-error" id="ls-contact-err">{{ errors.booking_url }}</p>{% endif %}
+        <p class="lx-hint" id="ls-contact-hint">{% if is_arabic_page %}يتحوّل إلى زر «اطلبني» في معرضك، ليتواصل معك العملاء بضغطة.{% else %}Turns into a "Hire me" button on your portfolio, so clients reach you in one tap.{% endif %}</p>
+      </div>
+
+      <div class="lx-actions">
+        <button type="submit" class="btn-primary" id="ls-submit">
+          <span data-label>{% if step.finishes %}{% if is_arabic_page %}احفظ وأكمل <bdi dir="ltr">100 XP</bdi>{% else %}Save &amp; reach 100 XP{% endif %}{% else %}{% if is_arabic_page %}احفظ وتابع{% else %}Save &amp; continue{% endif %}{% endif %}</span>
+          <span class="lx-btn-xp">+{{ step.xp }} XP</span>
+        </button>
+        <a class="lx-link" href="{{ step.back_url }}">{% if is_arabic_page %}ليس الآن{% else %}Not now{% endif %}</a>
+      </div>
+    </form>
+
+    <aside class="ls-preview reveal" aria-label="{% if is_arabic_page %}معاينة مباشرة{% else %}Live preview{% endif %}" style="--d:140ms">
+      <p class="sf-cap mb-3 hidden lg:block">{% if is_arabic_page %}معاينة مباشرة{% else %}Live preview{% endif %}</p>
+      <div class="sf-card ls-pv" aria-hidden="true">
+        <div class="ls-pv-cover"></div>
+        <div class="ls-pv-body">
+          <span class="ls-avatar" data-avatar>
+            <span data-initials></span>
+            {% if photo_url %}<img src="{{ photo_url }}" alt="" data-photo>{% else %}<img alt="" data-photo hidden>{% endif %}
+          </span>
+          <p class="ls-pv-name" data-pv="fullname"></p>
+          <p class="ls-pv-title" data-pv="title"></p>
+          <p class="ls-pv-bio" data-pv="bio"></p>
+          <span class="ls-pv-hire" data-pv-hire hidden><i data-lucide="message-circle"></i>{% if is_arabic_page %}اطلبني{% else %}Hire me{% endif %}</span>
+        </div>
+      </div>
+      <p class="ls-pv-cap mt-3 text-[12.5px] text-slate-600 font-medium">{% if is_arabic_page %}هكذا سيراك العملاء في معرضك.{% else %}How clients will see you on your portfolio.{% endif %}</p>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById('ls-form');
+  var arabic = document.documentElement.dir === 'rtl';
+  var MAX_BYTES = 5 * 1024 * 1024;
+  var placeholders = {
+    fullname: arabic ? 'اسمك' : 'Your name',
+    title: arabic ? 'مسمّاك الوظيفي' : 'Your title',
+    bio: arabic ? 'ستظهر نبذتك هنا.' : 'Your short bio shows up here.'
+  };
+  var inputs = { fullname: form.fullname, title: form.title, bio: form.bio, booking_url: form.booking_url };
+
+  function initials(name) {
+    var parts = name.trim().split(/\s+/).filter(Boolean);
+    return ((parts[0] || '')[0] || '') + (parts.length > 1 ? (parts[parts.length - 1][0] || '') : '');
+  }
+
+  function sync() {
+    ['fullname', 'title', 'bio'].forEach(function (key) {
+      var el = document.querySelector('[data-pv="' + key + '"]');
+      var value = inputs[key].value.trim();
+      el.textContent = value || placeholders[key];
+      if (key === 'bio') el.classList.toggle('is-empty', !value);
+    });
+    var ini = initials(inputs.fullname.value).toUpperCase() || '?';
+    document.querySelectorAll('[data-initials]').forEach(function (el) { el.textContent = ini; });
+    document.querySelector('[data-pv-hire]').hidden = !inputs.booking_url.value.trim();
+    document.querySelectorAll('[data-title-chip]').forEach(function (chip) {
+      chip.setAttribute('aria-pressed', chip.dataset.titleChip === inputs.title.value.trim() ? 'true' : 'false');
+    });
+    var len = inputs.bio.value.length;
+    document.querySelector('[data-bio-count]').textContent = len ? len + ' / ' + inputs.bio.maxLength : '';
+  }
+
+  Object.keys(inputs).forEach(function (key) { inputs[key].addEventListener('input', sync); });
+
+  document.querySelectorAll('[data-title-chip]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      inputs.title.value = chip.dataset.titleChip;
+      inputs.title.classList.remove('is-invalid');
+      sync();
+    });
+  });
+
+  var file = document.getElementById('ls-picture');
+  var photoError = document.querySelector('[data-photo-error]');
+  file.addEventListener('change', function () {
+    var f = file.files && file.files[0];
+    photoError.hidden = true;
+    if (!f) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type) || f.size > MAX_BYTES) {
+      photoError.textContent = arabic ? 'ارفع صورة JPG أو PNG أو WebP أصغر من 5 ميجابايت.' : 'Upload a JPG, PNG or WebP photo under 5 MB.';
+      photoError.hidden = false;
+      file.value = '';
+      return;
+    }
+    var url = URL.createObjectURL(f);
+    document.querySelectorAll('[data-photo]').forEach(function (img) { img.src = url; img.hidden = false; });
+    document.querySelector('[data-photo-label]').textContent = arabic ? 'غيّر الصورة' : 'Change photo';
+  });
+
+  form.addEventListener('submit', function (e) {
+    if (form.dataset.busy) { e.preventDefault(); return; }
+    var missing = ['fullname', 'title'].filter(function (key) { return !inputs[key].value.trim(); });
+    missing.forEach(function (key) { inputs[key].classList.add('is-invalid'); });
+    if (missing.length) { e.preventDefault(); inputs[missing[0]].focus(); return; }
+    form.dataset.busy = '1';
+    var btn = document.getElementById('ls-submit');
+    btn.setAttribute('aria-disabled', 'true');
+    btn.querySelector('[data-label]').textContent = arabic ? 'جارٍ الحفظ…' : 'Saving…';
+  });
+
+  sync();
+})();
+</script>
+{% endblock %}

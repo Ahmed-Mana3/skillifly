@@ -1,0 +1,301 @@
+{% extends "launch/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_arabic_page %}قائمة إطلاق معرضك{% else %}Launch checklist{% endif %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Steps reuse the dashboard's .sf-row; these only add the three states. */
+  .lc-step + .lc-step { border-top: 1px solid var(--line); }
+  .lc-step .sf-row { padding: 16px 18px; }
+  @media (min-width: 640px) { .lc-step .sf-row { padding: 18px 24px; } }
+  .lc-name { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }  /* first_name falls back to the username, which can be one long word */
+  .lc-step h3 { font-family: 'Syne', sans-serif; font-size: 14.5px; font-weight: 700; color: #000; line-height: 1.3; }
+  /* The step to do now: purple edge, glowing icon, the one place the eye goes */
+  .lc-current { position: relative; }
+  .lc-current::before { content: ''; position: absolute; top: 14px; bottom: 14px; inset-inline-start: 0; width: 4px;
+    border-radius: 0 4px 4px 0; background: var(--lx-purple); }
+  [dir="rtl"] .lc-current::before { border-radius: 4px 0 0 4px; }
+  .lc-current .sf-row { align-items: flex-start; background: linear-gradient(120deg, #F5F3FF 0%, #FAF8FF 55%, #fff 100%); cursor: default; }
+  .lc-current .sf-row:hover { background: linear-gradient(120deg, #F5F3FF 0%, #FAF8FF 55%, #fff 100%); }
+  .lc-current h3 { font-size: 17px; }
+  .lc-current .sf-chip { position: relative; box-shadow: 0 8px 18px -8px rgba(124, 58, 237, .55); }
+  .lc-current .sf-chip::after { content: ''; position: absolute; inset: -5px; border-radius: 18px; border: 2px solid rgba(124, 58, 237, .35);
+    animation: lcRing 2s ease-out infinite; }
+  @keyframes lcRing { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.18); opacity: 0; } }
+  .lc-current .pill-warn { box-shadow: 0 4px 12px -6px rgba(217, 119, 6, .6); }
+
+  .lc-done .sf-row { transition: background .15s ease, transform .2s ease; }
+  .lc-done .sf-row:hover { background: #F5F3FF; }
+  .lc-done .sf-row:hover h3 { color: var(--lx-purple-hover); }
+  .lc-done .sf-row:hover .sf-chip { transform: scale(1.06) rotate(-4deg); }
+  .lc-locked .sf-row { cursor: default; }
+  .lc-locked .sf-row:hover { background: transparent; }
+  .lc-locked h3 { color: #64748B; }
+  .lc-locked .sf-chip { background: #F1F5F9; color: #94A3B8; }
+
+  /* XP counter and the 100 XP card */
+  .lc-xpcount { padding: 5px 10px; border-radius: 999px; background: #FFFBEB; border: 1px solid #FDE68A; }
+  .lc-xpbar { height: 8px; }
+  .lc-ready .sf-chip { animation: lcBob 2.4s ease-in-out infinite; box-shadow: 0 10px 22px -10px rgba(217, 119, 6, .7); }
+  @keyframes lcBob { 50% { transform: translateY(-4px) rotate(-4deg); } }
+  @media (prefers-reduced-motion: reduce) { .lc-current .sf-chip::after, .lc-ready .sf-chip { animation: none; } }
+  .lc-flash .sf-row { animation: lcFlash 1.8s ease .25s both; }
+  @keyframes lcFlash { from { background: #ECFDF5; } to { background: transparent; } }
+
+  .lc-xpbar > span { transition: width .9s cubic-bezier(.16, 1, .3, 1); }
+  .lc-xpnum { font-variant-numeric: tabular-nums; }
+
+  /* Step-done toast (same look as the dashboard's notification toast) */
+  .lc-toast { position: fixed; z-index: 50; bottom: calc(20px + env(safe-area-inset-bottom)); inset-inline: 16px; display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .97); border: 1px solid #E2E8F0;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, .18); transform: translateY(16px); opacity: 0; pointer-events: none;
+    transition: transform .35s cubic-bezier(.16, 1, .3, 1), opacity .3s ease; }
+  @media (min-width: 640px) { .lc-toast { inset-inline: auto 20px; max-width: 360px; } }
+  /* Phones: drop in under the top bar, where the bottom one would cover the next step's button */
+  @media (max-width: 639px) { .lc-toast { bottom: auto; top: calc(74px + env(safe-area-inset-top)); transform: translateY(-16px); } }
+  .lc-toast.is-in { transform: none; opacity: 1; }
+  .lc-toast { border-inline-start: 4px solid var(--lx-purple); }
+
+  /* Touch screens: a tapped completed step must not keep its hover look */
+  @media (hover: none) {
+    .lc-done .sf-row:hover { background: transparent; }
+    .lc-done .sf-row:hover h3 { color: #000; }
+    .lc-done .sf-row:hover .sf-chip { transform: none; }
+  }
+
+  /* Phones: each step is a compact grid, icon | title over its XP | chevron, so the four steps scan at a glance
+     and nothing drops onto a line of its own. The text column is flattened (display: contents) into the grid. */
+  @media (max-width: 479px) {
+    .lc-step .sf-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 0 12px; align-items: center; padding: 14px 16px; }
+    .lc-step .sf-row > .min-w-0 { display: contents; }
+    .lc-step .sf-chip { grid-column: 1; grid-row: 1 / span 2; }
+    .lc-step h3 { grid-column: 2 / 4; grid-row: 1; align-self: end; }
+    .lc-step .sf-row > .lx-xp { grid-column: 2; grid-row: 2; justify-self: start; align-self: start; margin-top: 6px; }
+    .lc-step .sf-row > .go { grid-column: 4; grid-row: 1 / span 2; }
+    .lc-locked .sf-row > .min-w-0 > p { grid-column: 3; grid-row: 2; align-self: start; margin-top: 8px; }  /* "Unlocks after step 2" beside its XP */
+    .lc-done .sf-row > .min-w-0 > p { grid-column: 2 / 4; grid-row: 3; margin-top: 6px; }
+
+    /* The step to do now: icon beside step + title, XP on the end, then the text and a full-width button */
+    .lc-current .sf-row { grid-template-columns: auto minmax(0, 1fr) auto; padding: 16px 16px 18px; }
+    .lc-current .sf-chip { width: 44px; height: 44px; }
+    .lc-current .sf-chip svg { width: 18px; height: 18px; }
+    .lc-current .sf-cap { grid-column: 2; grid-row: 1; align-self: end; margin-bottom: 2px; }
+    .lc-current h3 { grid-column: 2 / 4; grid-row: 2; align-self: start; }
+    .lc-current .sf-row > .lx-xp { grid-column: 3; grid-row: 1; justify-self: end; align-self: center; margin: 0; }
+    .lc-current .sf-row > .min-w-0 > p:not(.sf-cap) { grid-column: 1 / -1; grid-row: 3; margin-top: 12px; }
+    .lc-current .btn-primary { grid-column: 1 / -1; grid-row: 4; width: 100%; margin-top: 14px; }
+
+    /* 100 XP card: trophy beside the title, then the text and two full-width buttons */
+    .sf-card .lc-ready { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; row-gap: 0; align-items: center; }
+    .lc-ready > .min-w-0 { display: contents; }
+    .lc-ready .sf-chip { width: 44px; height: 44px; }
+    .lc-ready h3 { grid-column: 2; }
+    .lc-ready > .min-w-0 > :not(h3) { grid-column: 1 / -1; }
+    .lc-ready > .min-w-0 > p:first-of-type { margin-top: 12px; }
+    .lc-ready .btn-primary, .lc-ready .btn-ghost { flex: 1 1 100%; }
+
+    .lc-top-dash { display: none !important; }  /* the 100 XP card right below has the same button */
+  }
+</style>
+{% endblock %}
+
+{% block top_end %}
+{% if launch.ready %}
+<a class="btn-ghost btn-sm lc-top-dash" href="{{ dashboard_url }}">
+  {% if is_arabic_page %}إلى لوحة التحكم{% else %}Go to dashboard{% endif %}
+  <i data-lucide="arrow-right" class="!h-4 !w-4 rtl:rotate-180"></i>
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 sm:px-6 pt-8 sm:pt-10 pb-12 sm:pb-24" id="lx-checklist">
+
+  <header class="mb-7 reveal" style="--d:0ms">
+    <p class="sf-cap mb-1.5 !text-violet-600">{% if is_arabic_page %}قائمة الإطلاق{% else %}Launch checklist{% endif %}</p>
+    {# The greeting is hidden until the first step is done (the "Welcome" state). #}
+    {% if launch.done_count %}
+    {# The bird stays beside the name (one inline block) instead of drifting to the edge or onto its own line when the heading wraps. #}
+    <h1 class="lc-hello text-[28px] sm:text-[32px] font-bold text-black leading-tight font-display">
+      {% if launch.ready %}{% if is_arabic_page %}أنت جاهز يا{% else %}You're ready,{% endif %}{% else %}{% if is_arabic_page %}أحسنت يا{% else %}Nice going,{% endif %}{% endif %}
+      <span class="lc-name">{{ first_name }}&nbsp;<img src="{% static 'img/bird.png' %}" alt="" aria-hidden="true" class="inline-block align-middle h-8 sm:h-9 w-auto -mt-1"></span>
+    </h1>
+    {% endif %}
+    <p class="text-slate-700 font-medium mt-1.5 text-[15px]">
+      {% if launch.ready %}
+        {% if is_arabic_page %}جمعت <bdi dir="ltr">100 XP</bdi>. معرض أعمالك جاهز للمشاهدة.{% else %}You reached 100 XP. Your portfolio is ready to view.{% endif %}
+      {% else %}
+        {% if is_arabic_page %}اجمع <bdi dir="ltr">100 XP</bdi> في 4 خطوات سريعة ويصبح معرضك جاهزًا. حوالي 3 دقائق.{% else %}Earn 100 XP in 4 quick steps and your portfolio is ready. About 3 minutes.{% endif %}
+      {% endif %}
+    </p>
+  </header>
+
+  {% include "launch/_messages.html" %}
+
+  <section class="sf-card overflow-hidden reveal" style="--d:70ms" aria-labelledby="lc-title">
+    <div class="px-5 sm:px-6 pt-5 pb-5">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h2 id="lc-title" class="sf-cap">{% if is_arabic_page %}نقاط الخبرة{% else %}Your XP{% endif %}</h2>
+        <span class="lx-xp lc-xpcount inline-flex items-center gap-1.5 text-[13px] font-bold text-amber-800">
+          <i data-lucide="zap" class="!h-3.5 !w-3.5 text-amber-500"></i>
+          <span><b class="lc-xpnum text-slate-900 text-[15px]" data-xp data-from="{{ start_xp }}">{{ launch.xp }}</b> / {{ launch.xp_total }} XP</span>
+        </span>
+      </div>
+      <div class="sf-bar lc-xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ launch.xp_total }}" aria-valuenow="{{ launch.xp }}"
+        aria-label="{% if is_arabic_page %}نقاط الخبرة{% else %}XP earned{% endif %}">
+        <span style="width: {{ start_percent }}%;" data-percent="{{ launch.percent }}"></span>
+      </div>
+
+      {% if launch.ready %}
+      <!-- 100 XP: the portfolio is ready to view, the dashboard is next -->
+      <div class="lc-ready flex items-start gap-4 mt-5">
+        <div class="sf-chip sf-chip-lg tint-amber"><i data-lucide="trophy"></i></div>
+        <div class="min-w-0 flex-1">
+          <h3 class="text-[19px] font-bold text-black leading-snug font-display">
+            {% if launch.is_live %}{% if is_arabic_page %}معرضك منشور ومكتمل{% else %}Your portfolio is complete and live{% endif %}
+            {% else %}{% if is_arabic_page %}معرض أعمالك جاهز للمشاهدة{% else %}Your portfolio is ready to view{% endif %}{% endif %}
+          </h3>
+          <p class="text-[13.5px] text-slate-700 font-medium mt-1 leading-relaxed">
+            {% if is_arabic_page %}ألقِ نظرة عليه، ثم انتقل إلى لوحة التحكم لتديره وتطوّره.{% else %}Take a look at it, then head to your dashboard to manage and grow it.{% endif %}
+          </p>
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <a class="btn-primary btn-sm" href="{{ launched_url }}"><i data-lucide="eye" class="!h-4 !w-4"></i>{% if is_arabic_page %}شاهد معرضي{% else %}View my portfolio{% endif %}</a>
+            <a class="btn-ghost btn-sm" href="{{ dashboard_url }}"><i data-lucide="layout-dashboard" class="!h-4 !w-4"></i>{% if is_arabic_page %}إلى لوحة التحكم{% else %}Go to dashboard{% endif %}</a>
+          </div>
+          {% if not launch.is_live %}
+          <p class="text-[12.5px] text-slate-600 font-medium mt-4">
+            {% if is_arabic_page %}يراه العملاء بعد النشر.{% else %}Clients can see it once you publish it.{% endif %}
+            <a class="lx-inline-link font-bold text-[#7C3AED] hover:text-[#5B21B6] underline-offset-2 hover:underline" href="{{ publish_url }}">{% if is_arabic_page %}انشره الآن{% else %}Publish now{% endif %}</a>
+          </p>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <p class="mt-3 flex items-center gap-1.5 text-[12.5px] text-slate-700 font-medium min-w-0">
+        <i data-lucide="link-2" class="!h-3.5 !w-3.5 shrink-0 text-violet-600"></i>
+        <span class="min-w-0">{% if is_arabic_page %}رابطك محجوز لك:{% else %}Your link is reserved:{% endif %}
+          <b class="text-slate-900 break-all" dir="ltr">{{ portfolio_host }}/{{ request.user.username }}</b></span>
+      </p>
+      {% endif %}
+    </div>
+
+    <ol class="border-t" style="border-color: var(--line);">
+      {% for step in launch.steps %}
+      <li class="lc-step {% if step.done %}lc-done{% elif step.current %}lc-current{% else %}lc-locked{% endif %}{% if celebrate and celebrate.key == step.key %} lc-flash{% endif %}"
+        data-step="{{ step.key }}" {% if step.current %}aria-current="step"{% endif %}>
+
+        {% if step.done %}
+        <a class="sf-row group" href="{{ step.url }}" aria-label="{{ step.title }}, {% if is_arabic_page %}تم ({{ step.xp }} XP). تعديل{% else %}done ({{ step.xp }} XP). Edit{% endif %}">
+          <div class="sf-chip tint-emerald"><i data-lucide="check"></i></div>
+          <div class="min-w-0 flex-1">
+            <h3>{{ step.title }}</h3>
+            {% if step.key == 'theme' and launch.photo_hint %}
+            <p class="text-[12.5px] text-amber-700 font-semibold mt-0.5">
+              {% if is_arabic_page %}هذا التصميم يعرض صورتك الشخصية. أضفها من الخطوة 1.{% else %}This look shows a profile photo. Add one in step 1.{% endif %}
+            </p>
+            {% endif %}
+          </div>
+          <span class="sf-pill pill-active lx-xp"><i data-lucide="check"></i>+{{ step.xp }} XP</span>
+          <span class="go"><i data-lucide="chevron-right" class="!h-[18px] !w-[18px] rtl:rotate-180"></i></span>
+        </a>
+
+        {% elif step.current %}
+        <div class="sf-row">
+          <div class="sf-chip sf-chip-lg tint-{{ step.tint }}"><i data-lucide="{{ step.icon }}"></i></div>
+          <div class="min-w-0 flex-1">
+            <p class="sf-cap !text-violet-600 mb-1">{% if is_arabic_page %}الخطوة {{ step.number }} · {{ step.time }}{% else %}Step {{ step.number }} · {{ step.time }}{% endif %}</p>
+            <h3>{{ step.title }}</h3>
+            <p class="text-[13.5px] text-slate-700 font-medium mt-1 leading-relaxed">{{ step.body }}</p>
+            <a class="btn-primary btn-sm mt-4" href="{{ step.url }}">{{ step.cta }}<i data-lucide="arrow-right" class="!h-4 !w-4 rtl:rotate-180"></i></a>
+          </div>
+          <!-- On the card's end, in line with the other steps' XP -->
+          <span class="sf-pill pill-warn lx-xp shrink-0"><i data-lucide="zap"></i>+{{ step.xp }} XP</span>
+        </div>
+
+        {% else %}
+        <div class="sf-row" aria-disabled="true">
+          <div class="sf-chip tint-slate"><i data-lucide="{{ step.icon }}"></i></div>
+          <div class="min-w-0 flex-1">
+            <h3>{{ step.title }}</h3>
+            <p class="text-[12.5px] text-slate-500 font-medium mt-0.5">{% if is_arabic_page %}تُفتح بعد الخطوة {{ step.number|add:"-1" }}{% else %}Unlocks after step {{ step.number|add:"-1" }}{% endif %}</p>
+          </div>
+          <span class="sf-pill pill-locked lx-xp"><i data-lucide="lock"></i>+{{ step.xp }} XP</span>
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <p class="mt-5 flex items-center gap-2 text-[12.5px] font-medium text-slate-600 reveal" style="--d:140ms">
+    <i data-lucide="shield-check" class="!h-4 !w-4 shrink-0"></i>
+    {% if is_arabic_page %}معرضك خاص حتى تنشره، ويمكنك تعديل كل شيء لاحقًا.{% else %}Your portfolio stays private until you publish it, and you can change everything later.{% endif %}
+  </p>
+</div>
+
+{% if celebrate or celebrate_ready %}
+<div class="lc-toast" id="lc-toast" role="status" aria-live="polite" {% if celebrate_ready %}data-big="1"{% endif %}>
+  {% if celebrate_ready %}
+  <div class="sf-chip tint-amber"><i data-lucide="trophy"></i></div>
+  <div class="min-w-0">
+    <p class="font-bold text-[14px] text-slate-900">{% if is_arabic_page %}<bdi dir="ltr">100 XP</bdi>! أنت جاهز{% else %}100 XP! You're ready.{% endif %}</p>
+    <p class="text-[12.5px] text-slate-700 font-medium mt-0.5">{% if is_arabic_page %}معرض أعمالك جاهز للمشاهدة.{% else %}Your portfolio is ready to view.{% endif %}</p>
+  </div>
+  {% else %}
+  <div class="sf-chip tint-emerald"><i data-lucide="party-popper"></i></div>
+  <div class="min-w-0">
+    <p class="font-bold text-[14px] text-slate-900"><bdi dir="ltr">+{{ celebrate.xp }} XP</bdi> · {{ celebrate.cheer }}</p>
+    <p class="text-[12.5px] text-slate-700 font-medium mt-0.5"><bdi dir="ltr">{{ launch.xp }} / {{ launch.xp_total }} XP</bdi></p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var root = document.getElementById('lx-checklist');
+  var bar = root.querySelector('.lc-xpbar > span');
+  var xpEl = root.querySelector('[data-xp]');
+  var toast = document.getElementById('lc-toast');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var to = +xpEl.textContent, from = +xpEl.dataset.from;
+
+  // After a step the XP bar grows from where it was and the number counts up.
+  setTimeout(function () {
+    bar.style.width = bar.dataset.percent + '%';
+    if (reduce || from >= to) return;
+    var t0 = null;
+    requestAnimationFrame(function frame(ts) {
+      if (t0 === null) t0 = ts;
+      var k = Math.min(1, (ts - t0) / 900);
+      xpEl.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(frame);
+    });
+  }, reduce ? 0 : 350);
+  if (!reduce && from < to) xpEl.textContent = from;
+
+  if (toast) {
+    var big = toast.dataset.big === '1';
+    setTimeout(function () {
+      toast.classList.add('is-in');
+      var chip = root.querySelector('.lc-flash .sf-chip');
+      var box = chip && !big ? chip.getBoundingClientRect() : null;
+      window.sfConfetti(box ? { x: (box.left + box.width / 2) / innerWidth, y: (box.top + box.height / 2) / innerHeight, count: 90 }
+                            : { x: 0.5, y: 0.3, count: big ? 200 : 90 });
+    }, 350);
+    setTimeout(function () { toast.classList.remove('is-in'); }, big ? 6000 : 4500);
+    // Don't celebrate again on refresh.
+    if (window.history.replaceState) window.history.replaceState(null, '', window.location.pathname);
+  }
+
+  // Bring the step to do next into view on small screens.
+  var current = root.querySelector('.lc-current');
+  if (current && window.innerWidth < 1024 && current.getBoundingClientRect().bottom > window.innerHeight) {
+    setTimeout(function () { current.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); }, 500);
+  }
+})();
+</script>
+{% endblock %}

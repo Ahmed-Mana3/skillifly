@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\candidate.json",
+    "sha256": "88b981223408344c27549216395b0efa34f31753c981fb3f07ef377573bb2dcb",
+    "bytes": 4070
+  },
+  "artifact": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+    "sha256": "ef1f9b35b6d7075acaf29d107e53b4867a36f238016461e320521372d5d1ca8e",
+    "bytes": 827781
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "Chrome or Chromium is unavailable. Set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome or Chromium executable and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.finalize.json",
+    "summaryReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.finalize-summary.json",
+    "browserCheckReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-16T12:14:14.312Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2308
+}

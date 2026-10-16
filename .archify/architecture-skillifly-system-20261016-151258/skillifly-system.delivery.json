@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0f783424-d33c-4c33-af51-1247b4aa62eb",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\candidate.json",
+  "output": "D:\\skillifly_dev\\skillifly\\.archify\\architecture-skillifly-system-20261016-151258\\skillifly-system.html",
+  "specification": {
+    "sha256": "88b981223408344c27549216395b0efa34f31753c981fb3f07ef377573bb2dcb",
+    "bytes": 4070
+  },
+  "artifact": {
+    "sha256": "ef1f9b35b6d7075acaf29d107e53b4867a36f238016461e320521372d5d1ca8e",
+    "bytes": 827781
+  }
+}

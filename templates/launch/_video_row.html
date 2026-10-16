@@ -1,0 +1,64 @@
+{# One video-link row on the launch "first video" page. `row` is optional (posted values after an error). #}
+{# Icons are inline SVG: rows are cloned from a <template>, which the icon script never sees. #}
+{# Reel is the default format; the thumbnail input is renamed thumbnail_<row> by the page script before submit. #}
+<div class="lv-row sf-card{% if row.video_type != 'long' %} is-reel{% endif %}" data-row>
+  <label class="block">
+    <span class="sf-label">{% if is_arabic_page %}رابط الفيديو{% else %}Video link{% endif %}</span>
+    <span class="lv-url">
+      <svg class="lv-url-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <input type="text" name="url" class="sf-input lv-url-input" dir="ltr" inputmode="url" autocomplete="off"
+        autocapitalize="off" spellcheck="false" data-url value="{{ row.url|default:'' }}"
+        placeholder="{% if is_arabic_page %}الصق رابط يوتيوب أو فيميو أو تيك توك…{% else %}Paste a YouTube, Vimeo or TikTok link…{% endif %}">
+    </span>
+  </label>
+  <button type="button" class="lv-remove btn-icon" data-remove hidden aria-label="{% if is_arabic_page %}احذف هذا الفيديو{% else %}Remove this video{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+
+  <div class="lv-card{% if not row.url %} hidden{% endif %}" data-card aria-live="polite">
+    <!-- Video mockup: the looked-up thumbnail, or the user's own -->
+    <div class="lv-thumb" data-thumb-box>
+      <img data-thumb alt="" hidden>
+      <img data-custom-thumb alt="" hidden>
+      <span class="lv-thumb-ph" data-thumb-placeholder aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14Z"/></svg>
+      </span>
+      <label class="lv-thumb-add" data-thumb-add hidden>
+        <input type="file" name="thumbnail_{{ forloop.counter0|default:'0' }}" accept="image/jpeg,image/png,image/webp" data-thumb-input
+          aria-label="{% if is_arabic_page %}أضف صورة مصغّرة لهذا الفيديو{% else %}Add a thumbnail for this video{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 5h6M19 2v6"/><path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>
+        <span data-thumb-add-label
+          data-add="{% if is_arabic_page %}أضف صورة مصغّرة{% else %}Add thumbnail{% endif %}"
+          data-change="{% if is_arabic_page %}غيّر الصورة المصغّرة{% else %}Change thumbnail{% endif %}">{% if is_arabic_page %}أضف صورة مصغّرة{% else %}Add thumbnail{% endif %}</span>
+        <span class="lv-thumb-ratio" dir="ltr">4:5</span>
+      </label>
+      <button type="button" class="lv-thumb-clear" data-thumb-clear hidden aria-label="{% if is_arabic_page %}احذف الصورة المصغّرة{% else %}Remove your thumbnail{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="lv-fields">
+      <label class="block">
+        <span class="sf-label">{% if is_arabic_page %}عنوان الفيديو{% else %}Title{% endif %}</span>
+        <input type="text" name="title" class="sf-input" data-title maxlength="500" value="{{ row.title|default:'' }}"
+          placeholder="{% if is_arabic_page %}مثال: إعلان رمضان 2025{% else %}e.g. Brand Campaign 2025{% endif %}">
+      </label>
+      <input type="hidden" name="video_type" value="{% if row.video_type == 'long' %}long{% else %}reel{% endif %}" data-type>
+      <div class="lv-seg" role="group" aria-label="{% if is_arabic_page %}نوع الفيديو{% else %}Video format{% endif %}">
+        <button type="button" data-type-btn="reel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2.5"/></svg>
+          {% if is_arabic_page %}ريلز{% else %}Reel{% endif %}
+        </button>
+        <button type="button" data-type-btn="long">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2.5"/></svg>
+          {% if is_arabic_page %}فيديو طويل{% else %}Long video{% endif %}
+        </button>
+      </div>
+      <p class="lv-type-hint" data-type-hint hidden>
+        {% if is_arabic_page %}يبدو أنه فيديو أفقي.{% else %}This looks like a horizontal video.{% endif %}
+        <button type="button" data-type-fix>{% if is_arabic_page %}اجعله فيديو طويل{% else %}Use Long video{% endif %}</button>
+      </p>
+    </div>
+  </div>
+
+  <p class="lv-msg{% if row.error %} is-error{% else %} hidden{% endif %}" data-msg role="alert">{{ row.error|default:'' }}</p>
+</div>

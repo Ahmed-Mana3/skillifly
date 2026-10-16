@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Custom-domain portfolio request",
+    "locale": "en",
+    "output": ".archify/sequence-custom-domain-routing-20261016-151258/custom-domain-routing.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "browser", "type": "external", "label": "Browser", "sublabel": "client-site.com" },
+    { "id": "domain", "type": "backend", "label": "CustomDomain MW", "sublabel": "rewrites path_info" },
+    { "id": "lang", "type": "backend", "label": "Language MW", "sublabel": "skillifly_lang cookie" },
+    { "id": "urls", "type": "backend", "label": "URLConf", "sublabel": "portfolios last" },
+    { "id": "view", "type": "backend", "label": "portfolio view", "sublabel": "preview_view and subpages" },
+    { "id": "db", "type": "database", "label": "Database", "sublabel": "CustomDomain, payments" }
+  ],
+  "messages": [
+    { "id": "get-reels", "from": "browser", "to": "domain", "y": 160, "label": "GET /reels/", "variant": "emphasis", "note": "Host is not a Skillifly domain." },
+    { "id": "lookup-domain", "from": "domain", "to": "db", "y": 215, "label": "find CustomDomain by host", "variant": "default", "note": "Verified or not: routing never waits on DNS." },
+    { "id": "owner-row", "from": "db", "to": "domain", "y": 270, "label": "owner user", "variant": "return" },
+    { "id": "rewrite-path", "from": "domain", "to": "lang", "y": 310, "label": "/reels/ becomes /<user>/reels/", "variant": "emphasis", "note": "System paths such as /builder/ are skipped." },
+    { "id": "check-lang", "from": "lang", "to": "urls", "y": 375, "label": "pass through", "variant": "default", "note": "ROUTE_MAP only redirects bilingual system pages." },
+    { "id": "resolve", "from": "urls", "to": "view", "y": 440, "label": "portfolio_reels(username)", "variant": "default", "note": "Matched by the <username>/ catch-all, registered last." },
+    { "id": "read-visibility", "from": "view", "to": "db", "y": 530, "label": "latest paid UserPayment, Profile", "variant": "security" },
+    { "id": "visibility-rows", "from": "db", "to": "view", "y": 562, "label": "payment window, is_public", "variant": "return" },
+    { "id": "html-response", "from": "view", "to": "browser", "y": 605, "label": "200 HTML, or 403 if private", "variant": "return", "note": "A lapsed payment flips the profile to private first." }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What the middleware decides",
+      "items": [
+        "Only hosts outside the Skillifly set are looked up as custom domains.",
+        "An unknown host falls through unchanged and may 404."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Left out",
+      "items": [
+        "Localhost redirect and blog-host switching do not apply to this request.",
+        "The CSRF-origin middleware only matters for form posts."
+      ]
+    }
+  ]
+}

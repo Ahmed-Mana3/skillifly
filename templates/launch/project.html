@@ -1,0 +1,368 @@
+{% extends "launch/base.html" %}
+
+{% block title %}{{ step.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .lv-works { margin-top: -14px; margin-bottom: 22px; font-size: 12.5px; font-weight: 600; color: #64748B; }
+  .lv-row { position: relative; padding: 20px; margin-bottom: 14px; }
+  @media (min-width: 640px) { .lv-row { padding: 24px; } }
+  .lv-row.is-new { animation: sfRise .45s cubic-bezier(.16, 1, .3, 1) both; }
+  .lv-url { position: relative; display: block; }
+  .lv-url-icon { position: absolute; top: 50%; transform: translateY(-50%); left: 14px; width: 18px; height: 18px; color: #7C3AED; pointer-events: none; }
+  .lv-row { transition: box-shadow .25s ease; }
+  .lv-row:focus-within { box-shadow: 0 0 0 4px rgba(124, 58, 237, .1), 0 18px 40px -24px rgba(124, 58, 237, .45); }
+  .lv-url-input { padding-left: 42px !important; }
+  .lv-remove { position: absolute; top: 14px; inset-inline-end: 14px; }
+
+  .lv-card { display: grid; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+  @media (min-width: 560px) { .lv-card { grid-template-columns: 200px minmax(0, 1fr); align-items: start; } .is-reel .lv-card { grid-template-columns: 168px minmax(0, 1fr); } }
+  .lv-card.hidden { display: none; }
+
+  /* Video mockup: a small dark player. Reels show their thumbnail at 4:5, long videos at 16:9. */
+  .lv-thumb { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; display: grid; place-items: center;
+    background: linear-gradient(160deg, #1E1B4B 0%, #0F172A 100%); box-shadow: 0 10px 24px -14px rgba(15, 23, 42, .55); }
+  .is-reel .lv-thumb { aspect-ratio: 4 / 5; border-radius: 16px; }
+  @media (max-width: 559px) { .is-reel .lv-thumb { width: 216px; margin-inline: auto; } }
+  .lv-thumb-ratio { font-size: 11px; font-weight: 600; opacity: .75; }
+  .lv-row:not(.is-reel) .lv-thumb-ratio { display: none; }
+  .lv-thumb::after { content: ''; position: absolute; z-index: 1; left: 10px; right: 10px; bottom: 9px; height: 3px; border-radius: 3px; pointer-events: none;
+    background: linear-gradient(90deg, #A78BFA 0 32%, rgba(255, 255, 255, .35) 32% 100%); }
+  [dir="rtl"] .lv-thumb::after { background: linear-gradient(270deg, #A78BFA 0 32%, rgba(255, 255, 255, .35) 32% 100%); }
+  .lv-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .lv-thumb-ph { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .16); color: #fff; }
+  .lv-thumb-ph svg { width: 18px; height: 18px; margin-inline-start: 2px; }
+  .lv-thumb-ph[hidden] { display: none; }
+  .lv-thumb-add { position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: calc(100% - 16px);
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 12px; border-radius: 14px; cursor: pointer;
+    background: rgba(15, 23, 42, .66); color: #fff; border: 1px solid rgba(255, 255, 255, .2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    font-size: 12.5px; font-weight: 700; line-height: 1.25; text-align: center; transition: background .15s ease; }
+  .lv-thumb-add:hover { background: #7C3AED; border-color: #7C3AED; transform: translate(-50%, -50%) scale(1.05); }
+  .lv-thumb-add:focus-within { outline: 2px solid #A78BFA; outline-offset: 2px; }
+  .lv-thumb-add { transition: background .15s ease, transform .2s ease; }
+  .lv-thumb-add svg { width: 20px; height: 20px; }
+  .lv-thumb-add input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .lv-thumb-add[hidden] { display: none; }
+  .lv-thumb-add.is-pop { animation: lvPop .35s cubic-bezier(.2, 1.3, .4, 1); }
+  @keyframes lvPop { from { opacity: 0; transform: translate(-50%, -50%) scale(.85); } }
+  .lv-thumb-clear { position: absolute; z-index: 3; top: 8px; inset-inline-end: 8px; width: 32px; height: 32px; border-radius: 50%; border: 0; cursor: pointer;
+    display: grid; place-items: center; background: rgba(15, 23, 42, .7); color: #fff; }
+  .lv-thumb-clear:hover { background: #DC2626; }
+  .lv-thumb-clear svg { width: 14px; height: 14px; }
+  .lv-thumb-clear[hidden] { display: none; }
+  .lv-type-hint { margin-top: 10px; font-size: 12.5px; font-weight: 600; color: #475569; }
+  .lv-type-hint[hidden] { display: none; }
+  .lv-type-hint button { padding: 0; border: 0; background: none; color: #7C3AED; font: inherit; font-weight: 800; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 2px; }
+  .lv-skeleton .lv-thumb, .lv-skeleton [data-title] { animation: lvPulse 1.1s ease-in-out infinite; }
+  @keyframes lvPulse { 50% { opacity: .5; } }
+  .lv-seg { display: inline-flex; margin-top: 12px; padding: 3px; border-radius: 12px; background: #F1F5F9; gap: 3px; }
+  .lv-seg button { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border: 0; border-radius: 9px;
+    background: transparent; color: #334155; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
+  .lv-seg button svg { width: 15px; height: 15px; }
+  .lv-seg button:hover { color: #7C3AED; }
+  .lv-seg button.is-active { background: #7C3AED; color: #fff; box-shadow: 0 6px 14px -6px rgba(124, 58, 237, .6); }
+  .lv-msg { margin-top: 12px; font-size: 13px; font-weight: 600; color: #334155; }
+  .lv-msg.hidden { display: none; }
+  .lv-msg.is-error { color: #DC2626; }
+
+  .lv-add { transition: all .2s ease; width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 16px;
+    border: 1.5px dashed #C4B5FD; background: rgba(245, 243, 255, .5); color: #6D28D9; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .lv-add:hover { background: #F5F3FF; border-color: #7C3AED; color: #7C3AED; transform: translateY(-1px); }
+  .lv-add svg { width: 17px; height: 17px; }
+  .lv-submit { margin-top: 18px; }
+  .lv-submit .lx-actions { margin: 0; padding: 16px 0 calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(to top, #FAFBFC 70%, rgba(250, 251, 252, 0)); border-radius: 0; }
+
+  .lv-existing { margin-top: 28px; }
+  .lv-existing ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .lv-existing li { overflow: hidden; }
+  .lv-existing .lv-ex-thumb { aspect-ratio: 16 / 9; background: #F1F5F9 center / cover no-repeat; border-radius: 20px 20px 0 0; }
+  .lv-existing p { padding: 10px 12px; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+{% endblock %}
+
+{% block top_center %}{% include "launch/_step_top.html" %}{% endblock %}
+{% block top_end %}
+<a class="btn-icon" href="{{ step.back_url }}" aria-label="{% if is_arabic_page %}العودة إلى قائمة الإطلاق{% else %}Back to the launch checklist{% endif %}">
+  <i data-lucide="x"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 sm:px-6 pt-8 sm:pt-10 pb-16">
+  {% include "launch/_step_head.html" %}
+  <p class="lv-works reveal" style="--d:40ms">{% if is_arabic_page %}يعمل مع يوتيوب وفيميو وتيك توك وإنستجرام وجوجل درايف.{% else %}Works with YouTube, Vimeo, TikTok, Instagram and Google Drive.{% endif %}</p>
+
+  {% include "launch/_messages.html" %}
+
+  <form method="POST" enctype="multipart/form-data" id="lv-form" novalidate class="reveal" style="--d:70ms"
+    data-msg-thumb="{% if is_arabic_page %}اختر صورة JPG أو PNG أو WebP أصغر من 5 ميجابايت.{% else %}Choose a JPG, PNG or WebP image under 5 MB.{% endif %}"
+    data-preview-url="{{ preview_link_url }}"
+    data-lang="{% if is_arabic_page %}ar{% else %}en{% endif %}"
+    data-max="{{ max_links }}"
+    data-has-existing="{% if existing %}1{% else %}0{% endif %}"
+    data-msg-duplicate="{% if is_arabic_page %}موجود بالفعل في معرضك.{% else %}Already in your portfolio.{% endif %}"
+    data-msg-drive="{% if is_arabic_page %}جوجل درايف: اجعل المشاركة «أي شخص لديه الرابط».{% else %}Google Drive: set sharing to &quot;Anyone with the link&quot;.{% endif %}"
+    data-msg-type-title="{% if is_arabic_page %}اكتب عنوانًا لهذا الفيديو.{% else %}Type a title for this video.{% endif %}"
+    data-msg-busy="{% if is_arabic_page %}جارٍ إضافة الفيديو…{% else %}Adding your video…{% endif %}">
+    {% csrf_token %}
+
+    <div id="lv-rows">
+      {% for row in rows %}
+        {% include "launch/_video_row.html" with row=row %}
+      {% empty %}
+        {% include "launch/_video_row.html" %}
+      {% endfor %}
+    </div>
+    <template id="lv-row-template">{% include "launch/_video_row.html" %}</template>
+
+    <button type="button" class="lv-add" id="lv-add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      {% if is_arabic_page %}أضف فيديو آخر{% else %}Add another video{% endif %}
+    </button>
+    <div class="sf-empty mt-4">
+      <i data-lucide="lightbulb"></i>
+      <span>{% if is_arabic_page %}يقرّر العملاء عادةً بعد مشاهدة 3 أعمال قوية. يمكنك إضافة حتى 3 الآن.{% else %}Clients usually decide after seeing 3 strong pieces. You can add up to 3 now.{% endif %}</span>
+    </div>
+
+    <div class="lv-submit">
+      <div class="lx-actions">
+        <button type="submit" class="btn-primary" id="lv-submit">
+          <span data-label>{% if step.finishes %}{% if is_arabic_page %}أضف وأكمل <bdi dir="ltr">100 XP</bdi>{% else %}Add &amp; reach 100 XP{% endif %}{% elif existing %}{% if is_arabic_page %}احفظ وتابع{% else %}Save &amp; continue{% endif %}{% else %}{% if is_arabic_page %}أضف إلى معرضي{% else %}Add to my portfolio{% endif %}{% endif %}</span>
+          <span class="lx-btn-xp">+{{ step.xp }} XP</span>
+        </button>
+        <a class="lx-link" href="{{ step.back_url }}">{% if is_arabic_page %}ليس الآن{% else %}Not now{% endif %}</a>
+      </div>
+    </div>
+  </form>
+
+  {% if existing %}
+  <section class="lv-existing" aria-labelledby="lv-existing-title">
+    <h2 class="sf-cap" id="lv-existing-title">{% if is_arabic_page %}موجود في معرضك{% else %}Already in your portfolio{% endif %}</h2>
+    <ul>
+      {% for project in existing %}
+      <li class="sf-card">
+        <div class="lv-ex-thumb" {% if project.image %}style="background-image: url('{{ project.image.url }}')"{% endif %}></div>
+        <p title="{{ project.title }}">{{ project.title }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById('lv-form');
+  var rowsEl = document.getElementById('lv-rows');
+  var tpl = document.getElementById('lv-row-template');
+  var addBtn = document.getElementById('lv-add');
+  var submitBtn = document.getElementById('lv-submit');
+  var max = parseInt(form.dataset.max, 10) || 3;
+  var hasExisting = form.dataset.hasExisting === '1';
+  var lang = form.dataset.lang;
+  var csrf = form.querySelector('[name=csrfmiddlewaretoken]').value;
+  var MAX_THUMB_BYTES = 5 * 1024 * 1024;
+  var submitting = false;
+
+  function rows() { return rowsEl.querySelectorAll('[data-row]'); }
+
+  // Uploads are matched to rows by position: thumbnail_0 belongs to the first row, and so on.
+  function renumber() {
+    rows().forEach(function (r, i) { r.querySelector('[data-thumb-input]').name = 'thumbnail_' + i; });
+  }
+
+  function setType(row, type) {
+    row.querySelector('[data-type]').value = type;
+    row.classList.toggle('is-reel', type === 'reel');
+    row.querySelectorAll('[data-type-btn]').forEach(function (b) {
+      var on = b.dataset.typeBtn === type;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function showMsg(row, text, isError, kind) {
+    var el = row.querySelector('[data-msg]');
+    el.textContent = text || '';
+    el.dataset.kind = text ? (kind || '') : '';
+    el.classList.toggle('hidden', !text);
+    el.classList.toggle('is-error', !!isError);
+  }
+
+  function refresh() {
+    var any = false;
+    rows().forEach(function (r) {
+      if (r.querySelector('[data-url]').value.trim() && r.dataset.blocked !== '1') any = true;
+    });
+    var blocked = Array.prototype.some.call(rows(), function (r) { return r.dataset.blocked === '1'; });
+    submitBtn.disabled = submitting || blocked || !(any || hasExisting);
+    addBtn.hidden = rows().length >= max;
+    var many = rows().length > 1;
+    rows().forEach(function (r) { r.querySelector('[data-remove]').hidden = !many; });
+  }
+
+  function wire(row) {
+    var urlInput = row.querySelector('[data-url]');
+    var titleInput = row.querySelector('[data-title]');
+    var autoImg = row.querySelector('[data-thumb]');
+    var customImg = row.querySelector('[data-custom-thumb]');
+    var placeholder = row.querySelector('[data-thumb-placeholder]');
+    var thumbAdd = row.querySelector('[data-thumb-add]');
+    var thumbLabel = row.querySelector('[data-thumb-add-label]');
+    var thumbInput = row.querySelector('[data-thumb-input]');
+    var thumbClear = row.querySelector('[data-thumb-clear]');
+    var hint = row.querySelector('[data-type-hint]');
+    var customUrl = null;
+    var timer = null, seq = 0;
+
+    // Reel is the default; a lookup only offers to switch, it never overrides the user's pick.
+    setType(row, row.querySelector('[data-type]').value || 'reel');
+    row.querySelectorAll('[data-type-btn]').forEach(function (b) {
+      b.addEventListener('click', function () { row.dataset.typeTouched = '1'; hint.hidden = true; setType(row, b.dataset.typeBtn); });
+    });
+    row.querySelector('[data-type-fix]').addEventListener('click', function () {
+      row.dataset.typeTouched = '1'; hint.hidden = true; setType(row, 'long');
+    });
+
+    // "Add thumbnail" appears on the mockup once the video has a title ("Change" once they picked their own).
+    function syncThumb() {
+      var hasImage = !customImg.hidden || !autoImg.hidden;
+      var titled = !!titleInput.value.trim();
+      if (thumbAdd.hidden && titled) {
+        thumbAdd.classList.remove('is-pop'); void thumbAdd.offsetWidth; thumbAdd.classList.add('is-pop');
+      }
+      thumbAdd.hidden = !titled;
+      thumbLabel.textContent = customImg.hidden ? thumbLabel.dataset.add : thumbLabel.dataset.change;
+      placeholder.hidden = hasImage || titled;
+      thumbClear.hidden = customImg.hidden;
+    }
+
+    function clearCustom() {
+      if (customUrl) URL.revokeObjectURL(customUrl);
+      customUrl = null;
+      customImg.removeAttribute('src');
+      customImg.hidden = true;
+      syncThumb();
+    }
+
+    thumbInput.addEventListener('change', function () {
+      var file = thumbInput.files && thumbInput.files[0];
+      if (!file) { clearCustom(); return; }
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > MAX_THUMB_BYTES) {
+        thumbInput.value = '';
+        clearCustom();
+        showMsg(row, form.dataset.msgThumb, true, 'thumb');
+        return;
+      }
+      if (row.querySelector('[data-msg]').dataset.kind === 'thumb') showMsg(row, '');
+      if (customUrl) URL.revokeObjectURL(customUrl);
+      customUrl = URL.createObjectURL(file);
+      customImg.src = customUrl;
+      customImg.hidden = false;
+      syncThumb();
+    });
+    thumbClear.addEventListener('click', function () { thumbInput.value = ''; clearCustom(); thumbInput.focus(); });
+    titleInput.addEventListener('input', syncThumb);
+
+    row.querySelector('[data-remove]').addEventListener('click', function () {
+      if (rows().length <= 1) return;
+      if (customUrl) URL.revokeObjectURL(customUrl);
+      row.remove();
+      renumber();
+      refresh();
+      var last = rows()[rows().length - 1];
+      if (last) last.querySelector('[data-url]').focus();
+    });
+
+    function lookup() {
+      var url = urlInput.value.trim();
+      var card = row.querySelector('[data-card]');
+      row.dataset.blocked = '0';
+      if (!url) { card.classList.add('hidden'); showMsg(row, ''); refresh(); return; }
+      var mine = ++seq;
+      card.classList.remove('hidden');
+      row.classList.add('lv-skeleton');
+      fetch(form.dataset.previewUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body: JSON.stringify({ url: url, lang: lang }),
+        credentials: 'same-origin'
+      }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'provider_error' }; }); })
+        .then(function (d) {
+          if (mine !== seq) return;  // a newer paste superseded this one
+          row.classList.remove('lv-skeleton');
+          autoImg.hidden = true;
+          if (d.thumbnail_url) {
+            autoImg.onload = function () { autoImg.hidden = false; syncThumb(); };
+            autoImg.onerror = function () { autoImg.hidden = true; syncThumb(); };
+            autoImg.src = d.thumbnail_url;
+          }
+          hint.hidden = true;
+          if (d.ok) {
+            if (d.url) urlInput.value = d.url;
+            if (d.title && !titleInput.value.trim()) titleInput.value = d.title;
+            if (row.dataset.typeTouched !== '1') {
+              if (d.video_type === 'reel') setType(row, 'reel');
+              else if (d.video_type === 'long' && (d.provider === 'youtube' || d.provider === 'vimeo')
+                       && row.querySelector('[data-type]').value === 'reel') hint.hidden = false;
+            }
+            if (d.duplicate) showMsg(row, form.dataset.msgDuplicate, false);
+            else if (d.provider === 'drive') showMsg(row, form.dataset.msgDrive, false);
+            else if (!d.title && !titleInput.value.trim()) { showMsg(row, form.dataset.msgTypeTitle, false); titleInput.focus(); }
+            else showMsg(row, '', false);
+          } else if (d.error === 'invalid' || d.hard) {
+            card.classList.add('hidden');
+            row.dataset.blocked = d.hard ? '1' : '0';
+            showMsg(row, d.message, true);
+          } else {
+            showMsg(row, d.message, false);  // lookup hiccup: still addable, just type a title
+            titleInput.focus();
+          }
+          syncThumb();
+          refresh();
+        })
+        .catch(function () {
+          if (mine !== seq) return;
+          row.classList.remove('lv-skeleton');
+          refresh();
+        });
+    }
+
+    function schedule() { clearTimeout(timer); timer = setTimeout(lookup, 400); }
+    urlInput.addEventListener('input', schedule);
+    urlInput.addEventListener('paste', function () { setTimeout(schedule, 0); });
+    if (urlInput.value.trim() && !row.querySelector('[data-msg]').textContent.trim()) lookup();
+    syncThumb();
+  }
+
+  rows().forEach(wire);
+  renumber();
+
+  addBtn.addEventListener('click', function () {
+    if (rows().length >= max) return;
+    var node = tpl.content.firstElementChild.cloneNode(true);
+    node.classList.add('is-new');
+    rowsEl.appendChild(node);
+    wire(node);
+    renumber();
+    node.querySelector('[data-url]').focus();
+    refresh();
+  });
+
+  form.addEventListener('submit', function (e) {
+    if (submitting || submitBtn.disabled) { e.preventDefault(); return; }
+    renumber();
+    submitting = true;
+    submitBtn.disabled = true;
+    var filled = Array.prototype.some.call(form.querySelectorAll('[data-url]'), function (i) { return i.value.trim(); });
+    if (filled) submitBtn.querySelector('[data-label]').textContent = form.dataset.msgBusy;
+  });
+
+  refresh();
+  if (!hasExisting) { var first = rows()[0]; if (first && !first.querySelector('[data-url]').value) first.querySelector('[data-url]').focus({ preventScroll: true }); }
+})();
+</script>
+{% endblock %}

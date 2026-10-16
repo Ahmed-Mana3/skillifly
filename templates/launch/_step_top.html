@@ -1,0 +1,9 @@
+{# "Step n of 4" and the XP earned so far, in the top bar of a launch step page. Needs `step` (launch.step_header). #}
+<div class="lx-progress">
+  <span class="sf-cap">{% if is_arabic_page %}الخطوة {{ step.number }} من {{ step.total }}{% else %}Step {{ step.number }} of {{ step.total }}{% endif %}</span>
+  <div class="sf-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ step.xp_total }}" aria-valuenow="{{ step.xp_so_far }}"
+    aria-label="{% if is_arabic_page %}نقاط الخبرة{% else %}XP earned{% endif %}">
+    <span style="width: {{ step.percent }}%;"></span>
+  </div>
+  <span class="lx-xp text-[12px] font-bold text-slate-700 whitespace-nowrap">{{ step.xp_so_far }}/{{ step.xp_total }} XP</span>
+</div>

@@ -17,7 +17,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 
 from core.models import UserPayment, Subscription, Profile, CustomUser, DiscountCode, SiteSettings, ManualPayment
-from core.views import process_affiliate_earning
+from core.views import process_affiliate_earning, _require_verified_email
 
 logger = logging.getLogger('payments')
 
@@ -173,6 +173,8 @@ def payment_funnel_track(request):
 def pricing_view(request):
     """Render the payment page"""
     _track_payment_event(request, 'page_view', 'payment')
+    from core import activation
+    activation.track_reveal_action(request)
     context = {
         'free_features': [
             '1 portfolio theme',
@@ -201,6 +203,8 @@ def pricing_view(request):
 def arabic_pricing_view(request):
     """Render the payment page (Arabic RTL version)"""
     _track_payment_event(request, 'page_view', 'payment')
+    from core import activation
+    activation.track_reveal_action(request)
     context = {
         'is_arabic_page': True,
     }
@@ -254,6 +258,11 @@ def manual_payment_view(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'Invalid plan selected.')
         return redirect('payment')
+
+    # Accounts let in before verifying their email must verify before paying.
+    gate = _require_verified_email(request, request.get_full_path())
+    if gate:
+        return gate
 
     _track_payment_event(request, 'page_view', 'manual_payment', plan_type=plan_type)
 
@@ -469,6 +478,10 @@ def arabic_manual_payment_view(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'الخطة المحددة غير صالحة.')
         return redirect('arabic_payment')
+
+    gate = _require_verified_email(request, request.get_full_path(), arabic=True)
+    if gate:
+        return gate
 
     _track_payment_event(request, 'page_view', 'manual_payment', plan_type=plan_type)
 
@@ -760,6 +773,10 @@ def fawaterk_checkout(request, plan_type):
         messages.error(request, 'Invalid plan selected.')
         return redirect('payment')
 
+    gate = _require_verified_email(request, request.get_full_path())
+    if gate:
+        return gate
+
     _track_payment_event(request, 'page_view', 'fawaterk_checkout', plan_type=plan_type)
 
     amount_str, sub_name, sub_days = PLAN_CATALOGUE[plan_type]
@@ -848,6 +865,10 @@ def arabic_fawaterk_checkout(request, plan_type):
     if plan_type not in PLAN_CATALOGUE:
         messages.error(request, 'الخطة المحددة غير صالحة.')
         return redirect('arabic_payment')
+
+    gate = _require_verified_email(request, request.get_full_path(), arabic=True)
+    if gate:
+        return gate
 
     _track_payment_event(request, 'page_view', 'fawaterk_checkout', plan_type=plan_type)
 

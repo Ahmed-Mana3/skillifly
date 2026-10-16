@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import get_language
 
+from core import activation
 from core.models import AgentConversation, AgentMessage, PortfolioSnapshot
 from agent.services import AgentService
 from agent.tools import restore_snapshot, get_portfolio_state
@@ -38,7 +39,10 @@ def chat_view(request):
         lang = "ar" if (cookie_lang == "ar" or path_is_ar) else "en"
 
     service = AgentService(user=request.user, language=lang)
-    result = service.process_message(message)
+    # Label any Project the agent creates so the activation funnel can tell it
+    # apart from builder / welcome-page projects.
+    with activation.source("agent"):
+        result = service.process_message(message)
 
     return JsonResponse({
         "success": True,

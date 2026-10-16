@@ -11,6 +11,8 @@ from django.db import transaction
 from datetime import date
 import logging
 
+from core import activation, onboarding
+
 logger = logging.getLogger(__name__)
 
 # Import models from core
@@ -229,7 +231,26 @@ def _translate_project_video_types(project_formset):
         form.invalid_category_error = ProjectForm.INVALID_CATEGORY_ERROR_AR
 
 
+def _invalid_sections(**forms):
+    """Names of the sections whose form/formset failed validation (for analytics)."""
+    return [name for name, form in forms.items() if not form.is_valid()]
+
+
+def _first_project_redirect(request, had_projects, arabic):
+    """Redirect to the user's own portfolio when this save created their first project.
+
+    Returns None otherwise, so the caller keeps its normal redirect.
+    """
+    if not had_projects and Project.objects.filter(user=request.user).exists():
+        return redirect(onboarding.reveal_url(request.user, arabic))
+    return None
+
+
 def _builder_flow(request, arabic=False):
+    if request.method == "GET":
+        # Editors without a theme would otherwise preview as the developer template.
+        onboarding.ensure_default_theme(request.user)
+
     if request.method == "POST":
         personal_form = PersonalInfoForm(request.POST, request.FILES)
 
@@ -254,7 +275,13 @@ def _builder_flow(request, arabic=False):
             and creator_formset.is_valid()
         ):
 
-            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+            had_projects = Project.objects.filter(user=request.user).exists()
+            with activation.source('builder'):
+                save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+            activation.track(
+                request.user, 'builder_saved', flow='builder',
+                projects=Project.objects.filter(user=request.user).count(),
+            )
 
             # Set profile to public if user has payment
             payment = UserPayment.objects.filter(user=request.user, status='paid').last()
@@ -263,6 +290,9 @@ def _builder_flow(request, arabic=False):
                 profile.is_public = True
                 profile.save()
 
+            first_project = _first_project_redirect(request, had_projects, arabic)
+            if first_project:
+                return first_project
             return redirect("preview", username=request.user.username)
         else:
             logger.warning(
@@ -271,6 +301,14 @@ def _builder_flow(request, arabic=False):
                 request.user.pk, personal_form.errors, skill_formset.errors,
                 education_formset.errors, experience_formset.errors,
                 project_formset.errors, link_formset.errors, creator_formset.errors,
+            )
+            activation.track(
+                request.user, 'builder_save_failed', flow='builder',
+                sections=_invalid_sections(
+                    identity=personal_form, skills=skill_formset, education=education_formset,
+                    experience=experience_formset, projects=project_formset,
+                    links=link_formset, creators=creator_formset,
+                ),
             )
             from django.contrib import messages
             error_msg = ("يرجى تصحيح الأخطاء المظللة في ملفك المهني."
@@ -281,7 +319,9 @@ def _builder_flow(request, arabic=False):
     else:
         initial = _portfolio_initial_data(request.user)
 
-        personal_form = PersonalInfoForm()
+        personal_form = PersonalInfoForm(initial=onboarding.personal_initial(
+            request.user, PersonalInfo.objects.filter(user=request.user).first(), arabic,
+        ))
 
         skill_formset = SkillFormSet(initial=initial["skills"], prefix="skills")
         education_formset = EducationFormSet(initial=initial["education"], prefix="education")
@@ -378,6 +418,10 @@ def arabic_update_portfolio_view(request):
 def _update_flow(request, arabic=False):
     user = request.user
 
+    if request.method == "GET":
+        onboarding.ensure_default_theme(user)
+        activation.track_reveal_action(request)
+
     # helper for existing data
     personal_info = PersonalInfo.objects.filter(user=user).first()
 
@@ -404,7 +448,13 @@ def _update_flow(request, arabic=False):
             and link_formset.is_valid()
             and creator_formset.is_valid()
         ):
-            save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+            had_projects = Project.objects.filter(user=user).exists()
+            with activation.source('builder'):
+                save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+            activation.track(
+                user, 'builder_saved', flow='update',
+                projects=Project.objects.filter(user=user).count(),
+            )
             # Set profile to public if user has active payment
             payment = UserPayment.objects.filter(user=request.user, status='paid').last()
             if payment and payment.is_active:
@@ -413,6 +463,9 @@ def _update_flow(request, arabic=False):
                     profile.is_public = True
                     profile.save()
 
+            first_project = _first_project_redirect(request, had_projects, arabic)
+            if first_project:
+                return first_project
             return redirect("arabic_dashboard" if arabic else "dashboard")
         else:
             logger.warning(
@@ -421,6 +474,14 @@ def _update_flow(request, arabic=False):
                 request.user.pk, personal_form.errors, skill_formset.errors,
                 education_formset.errors, experience_formset.errors,
                 project_formset.errors, link_formset.errors, creator_formset.errors,
+            )
+            activation.track(
+                user, 'builder_save_failed', flow='update',
+                sections=_invalid_sections(
+                    identity=personal_form, skills=skill_formset, education=education_formset,
+                    experience=experience_formset, projects=project_formset,
+                    links=link_formset, creators=creator_formset,
+                ),
             )
             from django.contrib import messages
             error_msg = ("تعذر حفظ التغييرات. يرجى التحقق من الأخطاء في النموذج."
@@ -432,18 +493,8 @@ def _update_flow(request, arabic=False):
         # Pre-fill forms with existing data
         initial = _portfolio_initial_data(user)
 
-        # Personal Info
-        initial_personal = {}
-        if personal_info:
-            initial_personal = {
-                'fullname': personal_info.full_name,
-                'title': personal_info.title,
-                'email': personal_info.email,
-                'phone': personal_info.phone,
-                'bio': personal_info.bio,
-                'booking_url': personal_info.booking_url,
-            }
-        personal_form = PersonalInfoForm(initial=initial_personal)
+        # Personal Info (name/title are pre-filled from signup for brand-new users)
+        personal_form = PersonalInfoForm(initial=onboarding.personal_initial(user, personal_info, arabic))
 
         skill_formset = SkillFormSetUpdate(initial=initial["skills"], prefix="skills")
         education_formset = EducationFormSetUpdate(initial=initial["education"], prefix="education")
@@ -614,6 +665,27 @@ def _update_or_create(existing_map, submitted_ids, data, model_cls, user, fields
         model_cls.objects.create(user=user, **fields)
 
 
+def _track_profile_fields_added(user, previous, personal_data):
+    """Record which personal-info fields went from empty/placeholder to filled in."""
+    def filled(value):
+        return bool((value or '').strip())
+
+    added = []
+    for field in ('bio', 'booking_url', 'phone'):
+        if filled(personal_data.get(field)) and not (previous and filled(getattr(previous, field, ''))):
+            added.append(field)
+    new_title = (personal_data.get('title') or '').strip()
+    old_title = (previous.title or '').strip() if previous else ''
+    if new_title and new_title not in onboarding.PLACEHOLDER_TITLES and (
+        not old_title or old_title in onboarding.PLACEHOLDER_TITLES
+    ):
+        added.append('title')
+    for field in added:
+        transaction.on_commit(
+            lambda f=field: activation.track(user, 'profile_field_added', field=f, source='builder')
+        )
+
+
 @transaction.atomic
 def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None):
     personal_data = personal_form.cleaned_data
@@ -654,6 +726,7 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
         if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
     ]
 
+    previous_info = PersonalInfo.objects.filter(user=request.user).first()
     personal_info, created = PersonalInfo.objects.update_or_create(
         user=request.user,
         defaults={
@@ -665,12 +738,16 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
             "booking_url": personal_data.get("booking_url"),
         },
     )
+    _track_profile_fields_added(request.user, previous_info, personal_data)
 
     # Save picture to Profile if provided
     if "picture" in personal_data and personal_data["picture"]:
         profile, p_created = Profile.objects.get_or_create(user=request.user)
+        had_picture = bool(profile.picture)
         profile.picture = personal_data["picture"]
         profile.save()
+        if not had_picture:
+            transaction.on_commit(lambda: activation.track(request.user, 'profile_field_added', field='picture', source='builder'))
 
     # --- Skills ---
     existing_map = {s.id: s for s in Skill.objects.filter(user=request.user)}

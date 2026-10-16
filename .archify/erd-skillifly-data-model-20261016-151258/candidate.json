@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Skillifly data model (core tables)",
+    "locale": "en",
+    "output": ".archify/erd-skillifly-data-model-20261016-151258/skillifly-data-model.html",
+    "quality_profile": "standard"
+  },
+  "layout": { "mode": "grid", "gapX": 80, "gapY": 40, "entityW": 270 },
+  "entities": [
+    {
+      "id": "category", "label": "Category", "tag": "catalog", "row": 0, "col": 0,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "name", "type": "varchar(200)", "key": "uk" }
+      ]
+    },
+    {
+      "id": "theme", "label": "Theme", "tag": "catalog", "row": 1, "col": 0,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "category_id", "type": "bigint", "key": "fk", "references": "category.id" },
+        { "name": "name", "type": "varchar(254)" },
+        { "name": "use_num", "type": "int" },
+        { "name": "preview_image", "type": "varchar(100)" }
+      ]
+    },
+    {
+      "id": "profile", "label": "Profile", "tag": "portfolio", "row": 0, "col": 1,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": ["fk", "uk"], "references": "user.id" },
+        { "name": "theme_id", "type": "bigint", "key": "fk", "references": "theme.id" },
+        { "name": "is_deleted", "type": "bool" },
+        { "name": "bio", "type": "text" },
+        { "name": "picture", "type": "varchar(100)" },
+        { "name": "phone_number", "type": "varchar(20)" },
+        { "name": "visits", "type": "int" },
+        { "name": "is_public", "type": "bool" },
+        { "name": "last_seen", "type": "timestamptz" },
+        { "name": "section_order", "type": "json" },
+        { "name": "section_visibility", "type": "json" },
+        { "name": "section_names", "type": "json" },
+        { "name": "theme_settings", "type": "json" },
+        { "name": "storage_addon_bytes", "type": "bigint" },
+        { "name": "created_at", "type": "timestamptz" },
+        { "name": "updated_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "personal_info", "label": "PersonalInfo", "tag": "portfolio", "row": 1, "col": 1,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": ["fk", "uk"], "references": "user.id" },
+        { "name": "full_name", "type": "varchar(254)" },
+        { "name": "title", "type": "varchar(500)" },
+        { "name": "email", "type": "varchar(254)" },
+        { "name": "phone", "type": "varchar(20)" },
+        { "name": "bio", "type": "text" },
+        { "name": "booking_url", "type": "varchar(500)" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "custom_domain", "label": "CustomDomain", "tag": "portfolio", "row": 2, "col": 1,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": ["fk", "uk"], "references": "user.id" },
+        { "name": "domain", "type": "varchar(255)", "key": "uk" },
+        { "name": "is_active", "type": "bool" },
+        { "name": "dns_verified_at", "type": "timestamptz" },
+        { "name": "created_at", "type": "timestamptz" },
+        { "name": "updated_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "user", "label": "CustomUser", "tag": "accounts", "row": 0, "col": 2,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "username", "type": "varchar(150)", "key": "uk" },
+        { "name": "email", "type": "varchar(254)", "key": "uk" },
+        { "name": "password", "type": "varchar(128)" },
+        { "name": "first_name", "type": "varchar(150)" },
+        { "name": "last_name", "type": "varchar(150)" },
+        { "name": "is_staff", "type": "bool" },
+        { "name": "is_active", "type": "bool" },
+        { "name": "is_superuser", "type": "bool" },
+        { "name": "last_login", "type": "timestamptz" },
+        { "name": "date_joined", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "user_account", "label": "UserAccount", "tag": "accounts", "row": 1, "col": 2,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": ["fk", "uk"], "references": "user.id" },
+        { "name": "school_id", "type": "bigint", "key": "fk", "references": "school.id" },
+        { "name": "account_type", "type": "varchar(15)" },
+        { "name": "signup_lang", "type": "varchar(2)" },
+        { "name": "email_opt_out", "type": "bool" },
+        { "name": "created_at", "type": "timestamptz" },
+        { "name": "updated_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "affiliate_profile", "label": "AffiliateProfile", "tag": "accounts", "row": 2, "col": 2,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": ["fk", "uk"], "references": "user.id" },
+        { "name": "balance", "type": "numeric(10,2)" },
+        { "name": "total_earned", "type": "numeric(10,2)" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "school", "label": "School", "tag": "accounts", "row": 3, "col": 2,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "name", "type": "varchar(254)", "key": "uk" },
+        { "name": "slug", "type": "varchar(254)", "key": "uk" },
+        { "name": "tagline", "type": "varchar(300)" },
+        { "name": "logo", "type": "varchar(100)" },
+        { "name": "discount_code", "type": "varchar(50)", "key": "uk" },
+        { "name": "number_of_students", "type": "int" }
+      ]
+    },
+    {
+      "id": "project_category", "label": "ProjectCategory", "tag": "content", "row": 0, "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "name", "type": "varchar(254)" },
+        { "name": "thumbnail", "type": "varchar(100)" },
+        { "name": "description", "type": "text" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "project", "label": "Project", "tag": "content", "row": 1, "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "category_id", "type": "bigint", "key": "fk", "references": "project_category.id" },
+        { "name": "title", "type": "varchar(500)" },
+        { "name": "url", "type": "varchar(500)" },
+        { "name": "details", "type": "text" },
+        { "name": "image", "type": "varchar(100)" },
+        { "name": "video_type", "type": "varchar(10)" },
+        { "name": "slug", "type": "varchar(550)" },
+        { "name": "media_width", "type": "int" },
+        { "name": "media_height", "type": "int" },
+        { "name": "order", "type": "int" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "video", "label": "Video", "tag": "content", "row": 2, "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "project_id", "type": "bigint", "key": "fk", "references": "project.id" },
+        { "name": "cloudflare_uid", "type": "varchar(64)", "key": "uk" },
+        { "name": "status", "type": "varchar(20)" },
+        { "name": "title", "type": "varchar(255)" },
+        { "name": "duration_seconds", "type": "double" },
+        { "name": "size_bytes", "type": "bigint" },
+        { "name": "thumbnail_url", "type": "varchar(500)" },
+        { "name": "playback_hls_url", "type": "varchar(500)" },
+        { "name": "playback_dash_url", "type": "varchar(500)" },
+        { "name": "error_message", "type": "text" },
+        { "name": "created_at", "type": "timestamptz" },
+        { "name": "updated_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "analytics_visit", "label": "AnalyticsVisit", "tag": "analytics", "row": 3, "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "ip_address", "type": "inet" },
+        { "name": "country", "type": "varchar(100)" },
+        { "name": "city", "type": "varchar(100)" },
+        { "name": "user_agent", "type": "text" },
+        { "name": "referer", "type": "text" },
+        { "name": "session_id", "type": "varchar(255)" },
+        { "name": "duration_seconds", "type": "int" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "analytics_event", "label": "AnalyticsEvent", "tag": "analytics", "row": 4, "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "visit_id", "type": "bigint", "key": "fk", "references": "analytics_visit.id" },
+        { "name": "project_id", "type": "bigint", "key": "fk", "references": "project.id" },
+        { "name": "event_type", "type": "varchar(50)" },
+        { "name": "metadata", "type": "json" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "subscription", "label": "Subscription", "tag": "billing", "row": 0, "col": 4,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "name", "type": "varchar(254)" },
+        { "name": "duration", "type": "int" },
+        { "name": "days", "type": "int" }
+      ]
+    },
+    {
+      "id": "user_payment", "label": "UserPayment", "tag": "billing", "row": 1, "col": 4,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "subscription_id", "type": "bigint", "key": "fk", "references": "subscription.id" },
+        { "name": "amount", "type": "numeric(8,2)" },
+        { "name": "status", "type": "varchar(20)" },
+        { "name": "fawaterk_intent_key", "type": "varchar(255)", "key": "uk" },
+        { "name": "discount_code_used", "type": "varchar(50)" },
+        { "name": "date", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "manual_payment", "label": "ManualPayment", "tag": "billing", "row": 2, "col": 4,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "user_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "plan_type", "type": "varchar(20)" },
+        { "name": "amount_expected", "type": "numeric(8,2)" },
+        { "name": "payment_method", "type": "varchar(20)" },
+        { "name": "sender_identifier", "type": "varchar(500)" },
+        { "name": "receipt_image", "type": "varchar(100)" },
+        { "name": "status", "type": "varchar(20)" },
+        { "name": "rejection_reason", "type": "text" },
+        { "name": "discount_code_used", "type": "varchar(50)" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "discount_code", "label": "DiscountCode", "tag": "billing", "row": 3, "col": 4,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "owner_id", "type": "bigint", "key": "fk", "references": "user.id" },
+        { "name": "code", "type": "varchar(50)", "key": "uk" },
+        { "name": "discount_percentage", "type": "int" },
+        { "name": "usage_count", "type": "int" },
+        { "name": "is_active", "type": "bool" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "theme_category", "from": "theme", "to": "category", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "profile_theme", "from": "profile", "to": "theme", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "profile_user", "from": "profile", "to": "user", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "personal_info_user", "from": "personal_info", "to": "user", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "custom_domain_user", "from": "custom_domain", "to": "user", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "user_account_user", "from": "user_account", "to": "user", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "user_account_school", "from": "user_account", "to": "school", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "affiliate_profile_user", "from": "affiliate_profile", "to": "user", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "project_category_user", "from": "project_category", "to": "user", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "project_user", "from": "project", "to": "user", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "project_category_link", "from": "project", "to": "project_category", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "video_user", "from": "video", "to": "user", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "video_project", "from": "video", "to": "project", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "analytics_visit_user", "from": "analytics_visit", "to": "user", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "analytics_event_visit", "from": "analytics_event", "to": "analytics_visit", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "analytics_event_project", "from": "analytics_event", "to": "project", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "user_payment_user", "from": "user_payment", "to": "user", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "user_payment_subscription", "from": "user_payment", "to": "subscription", "fromCardinality": "many", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" },
+    { "id": "manual_payment_user", "from": "manual_payment", "to": "user", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "discount_code_owner", "from": "discount_code", "to": "user", "fromCardinality": "many", "toCardinality": "one" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Scope",
+      "items": [
+        "Selected tables only: Experience, Education, Skill, Link, Creator, reviews, school ratings, agent chat and tracking logs are left out.",
+        "Every table is a Django model in core.models; column types are the usual SQL mapping, not read from a migration."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Optional links",
+      "items": [
+        "Dashed links are nullable foreign keys: a theme, school, project category, project or payment user can be missing.",
+        "UserPayment keeps its row when the user is deleted (SET NULL); most other children cascade."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One-to-one with the user",
+      "items": [
+        "Profile, PersonalInfo, CustomDomain, UserAccount and AffiliateProfile each hold one unique user_id.",
+        "CustomDomain.domain is unique only when non-empty."
+      ]
+    }
+  ]
+}

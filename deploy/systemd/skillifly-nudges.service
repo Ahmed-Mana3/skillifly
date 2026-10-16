@@ -1,0 +1,11 @@
+[Unit]
+Description=Skillifly onboarding nudge emails
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/skillifly/skillifly
+# settings.py loads .env itself, so no EnvironmentFile is needed.
+ExecStart=/var/www/skillifly/skillifly/venv/bin/python manage.py send_onboarding_nudges

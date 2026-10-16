@@ -1,0 +1,9 @@
+{# Flash messages on launch pages (e.g. "Email verified" after the code step), styled by level. #}
+{% if messages %}
+<div class="lx-messages">
+  {% for message in messages %}
+  <p class="lx-msg lx-msg-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}"
+    role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</p>
+  {% endfor %}
+</div>
+{% endif %}

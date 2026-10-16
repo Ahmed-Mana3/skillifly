@@ -1,0 +1,185 @@
+{% load static %}<!DOCTYPE html>
+{# Full-screen shell for the launch checklist and its step pages: no site nav, no footer. #}
+{# Looks like the dashboard: it reuses the dashboard design system (.sf-card, .sf-chip, .sf-row, .sf-bar, .sf-cap ...). #}
+<html lang="{% if is_arabic_page %}ar{% else %}en{% endif %}" dir="{% if is_arabic_page %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#FAFBFC">
+  <title>{% block title %}{% endblock %} · Skillifly</title>
+  <link rel="icon" type="image/png" href="{% static 'img/bird.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {% if is_arabic_page %}
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+  {% else %}
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+  {% endif %}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="{% static 'js/vendor/lucide.min.js' %}"></script>
+  {% include "dashboard/_dash_system.html" %}
+  <style>
+    /* Phones: iOS must not inflate text in landscape, and dynamic toolbars must not crop the page */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { margin: 0; min-height: 100vh; min-height: 100dvh; font-family: 'DM Sans', sans-serif; color: #0F172A;
+      overflow-x: hidden; overflow-x: clip;  /* clip (not hidden) so sticky bars keep working on iOS Safari */
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-tap-highlight-color: transparent; }
+    .font-display { font-family: 'Syne', sans-serif; }
+    [dir="rtl"] body, [dir="rtl"] .dash, [dir="rtl"] .dash button, [dir="rtl"] .dash input, [dir="rtl"] .dash textarea, [dir="rtl"] .sf-cap { font-family: 'Cairo', sans-serif; }
+    [dir="rtl"] .dash h1, [dir="rtl"] .dash h2, [dir="rtl"] .dash h3, [dir="rtl"] .font-display, [dir="rtl"] .sf-num { font-family: 'Tajawal', 'Syne', sans-serif; letter-spacing: 0 !important; }
+    [dir="rtl"] .sf-cap { letter-spacing: 0; font-size: 12px; }
+    /* Landscape notches / curved corners: keep the content clear of the screen edges */
+    .dash { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+    /* Brand purple: the solid button colour of the landing page (core/index.html) */
+    :root { --lx-purple: #7C3AED; --lx-purple-hover: #6D28D9; --lx-purple-active: #5B21B6; --lx-purple-soft: #F5F3FF; }
+
+    /* Buttons and inputs (site styles, buttons in the landing page's solid purple) */
+    .btn-primary { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 32px;
+      background: var(--lx-purple); color: #fff !important;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem; letter-spacing: .01em; border-radius: 12px; border: none;
+      cursor: pointer; text-decoration: none; text-align: center; transition: transform .25s cubic-bezier(.4, 0, .2, 1), box-shadow .25s ease, background .2s ease;
+      box-shadow: 0 10px 25px -5px rgba(124, 58, 237, .35); }
+    .btn-primary:hover { background: var(--lx-purple-hover); transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(124, 58, 237, .45); }
+    .btn-primary:active { background: var(--lx-purple-active); transform: translateY(0); box-shadow: 0 6px 14px -6px rgba(124, 58, 237, .45); }
+    /* A light sweep across the button on hover */
+    .btn-primary::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
+      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .28), transparent); transform: skewX(-18deg); transition: left .6s ease; }
+    .btn-primary:hover::after { left: 120%; }
+    .btn-primary svg { transition: transform .2s ease; }
+    .btn-primary:hover svg { transform: translateX(3px); }
+    [dir="rtl"] .btn-primary:hover svg.rtl\:rotate-180 { transform: rotate(180deg) translateX(3px); }
+    .btn-primary[disabled], .btn-primary[aria-disabled="true"] { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; background: var(--lx-purple); }
+    .btn-primary[disabled]::after { display: none; }
+    .btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 13px 28px; background: #fff;
+      color: #0F172A !important; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem; border: 1px solid rgba(15, 23, 42, .15);
+      border-radius: 12px; cursor: pointer; text-decoration: none; transition: all .25s ease; }
+    .btn-ghost:hover { background: var(--lx-purple-soft); border-color: rgba(124, 58, 237, .45); color: var(--lx-purple-hover) !important; transform: translateY(-1px); }
+    .dash :is(a, button, input, label):focus-visible { outline-color: var(--lx-purple); }
+    @media (prefers-reduced-motion: reduce) { .btn-primary::after { display: none; } }
+    [dir="rtl"] .btn-primary, [dir="rtl"] .btn-ghost { font-family: 'Cairo', sans-serif; letter-spacing: 0; }
+    .btn-primary svg, .btn-ghost svg { width: 16px; height: 16px; }
+    /* Touch screens: controls react on tap without the 300ms delay or double-tap zoom */
+    .btn-primary, .btn-ghost, .lx-link, .btn-icon, .sf-row, .sf-input, .ls-chip, .lk-chip,
+    .lk-chip-body, .lv-add, .lv-seg button, .lv-thumb-add, .lv-thumb-clear, .lx-inline-link { touch-action: manipulation; }
+    /* Touch screens: no lingering hover state after a tap */
+    @media (hover: none) {
+      .btn-primary:hover, .btn-ghost:hover, .lx-link:hover { transform: none; }
+      .btn-primary:hover::after { display: none; }
+    }
+    .sf-input { width: 100%; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 16px; color: #0F172A;
+      font: inherit; font-size: 1rem; transition: all .2s ease; outline: none; }
+    .sf-input:hover { border-color: #CBD5E1; }
+    .sf-input:focus { border-color: var(--lx-purple); background: #fff; box-shadow: 0 0 0 4px rgba(124, 58, 237, .12); }
+    .dash .sf-input:focus-visible { outline: none; }  /* its own focus ring is enough */
+    .sf-input::placeholder { color: #94A3B8; }
+    .sf-input.is-invalid { border-color: #F87171; background: #FEF2F2; }
+    textarea.sf-input { min-height: 104px; resize: vertical; line-height: 1.55; }
+    .sf-label { display: flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: 8px; letter-spacing: .01em; }
+    /* XP: the dashboard's .sf-pill in amber (to earn), green (earned) or grey (locked); reads "+25 XP" in both languages */
+    .lx-xp { direction: ltr; unicode-bidi: isolate; }
+    .lx-xp svg { width: 11px; height: 11px; }
+    .pill-locked { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; }
+    .lx-btn-xp { direction: ltr; unicode-bidi: isolate; display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px;
+      background: rgba(255, 255, 255, .22); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0; }
+    @media (max-width: 400px) { .lx-btn-xp { display: none; } }  /* keeps the label on one line; the header shows the XP */
+    .lx-optional { font-size: 11px; font-weight: 700; color: #64748B; background: #F1F5F9; padding: 1px 8px; border-radius: 999px; }
+    .lx-hint { font-size: 12.5px; color: #64748B; font-weight: 500; margin-top: 7px; }
+    .lx-error { font-size: 13px; color: #DC2626; font-weight: 700; margin-top: 7px; }
+    /* Buttons are 44px tall at every size: the thumb-sized target, not only on phones */
+    .btn-primary, .btn-ghost { min-height: 44px; }
+    .lx-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 6px; border: 0; background: none;
+      color: #475569; font: inherit; font-size: 13.5px; font-weight: 700; text-decoration: none; cursor: pointer; border-radius: 10px; }
+    .lx-link:hover { color: #0F172A; }
+    .lx-link svg { width: 16px; height: 16px; }
+
+    /* Top bar (like the site nav) */
+    .lx-skip { position: absolute; inset-inline-start: 12px; top: -96px; z-index: 60; background: #fff; padding: 10px 14px;
+      border-radius: 10px; font-weight: 700; box-shadow: 0 6px 20px rgba(15, 23, 42, .15); }
+    .lx-skip:focus { top: 12px; }
+    .lx-top { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, .95); -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px); border-bottom: 1px solid rgba(15, 23, 42, .08);
+      /* Notched phones / installed apps: keep the bar clear of the status bar and curved corners */
+      padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+    .lx-top-inner { max-width: 80rem; margin: 0 auto; height: 64px; padding: 0 16px; display: flex; align-items: center; gap: 16px; }
+    @media (min-width: 640px) { .lx-top-inner { padding: 0 24px; } }
+    .lx-top-inner img { height: 40px; width: auto; display: block; }
+    .lx-top-center { flex: 1; display: flex; justify-content: center; min-width: 0; }
+    .lx-top-end { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .lx-top .btn-icon { width: 44px; height: 44px; }
+    /* Phones: every button, chip and control is at least 44px tall, the size a thumb can reliably hit */
+    @media (max-width: 639px) {
+      .btn-primary, .btn-ghost { min-height: 44px; }
+      .btn-primary.btn-sm, .btn-ghost.btn-sm { padding: 12px 18px !important; }
+      .lx-top-inner { gap: 10px; padding: 0 12px; }
+      .lx-top-center { min-width: 0; }
+      .lx-top .lx-link { min-height: 44px; padding: 0 8px; }
+    }
+    .lx-inline-link { display: inline-flex; align-items: center; min-height: 44px; }
+
+    /* Messages */
+    .lx-messages { display: grid; gap: 8px; margin-bottom: 20px; }
+    .lx-msg { padding: 12px 16px; border-radius: 12px; font-size: .875rem; font-weight: 600; border: 1px solid; }
+    .lx-msg-error { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+    .lx-msg-success { background: #F0FDF4; border-color: #BBF7D0; color: #166534; }
+    .lx-msg-info { background: #EFF6FF; border-color: #BFDBFE; color: #1E40AF; }
+
+    /* Save bar at the bottom of a step form; stays in reach while scrolling */
+    .lx-actions { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+      margin: 28px -24px -24px; padding: 16px 24px calc(16px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, #fff 70%, rgba(255, 255, 255, 0)); border-radius: 0 0 20px 20px; }
+    @media (min-width: 640px) { .lx-actions { margin: 32px -32px -32px; padding: 20px 32px 24px; } }
+    @media (max-width: 639px) {
+      .lx-actions .btn-primary { flex: 1 1 auto; padding: 14px 20px; }
+      .lx-actions .lx-link { display: none; }  /* the top bar's close button does the same */
+    }
+
+    /* Progress bars in brand purple, with a soft moving shine */
+    :is(.dash, .lx-top) .sf-bar > span { position: relative; overflow: hidden; background: linear-gradient(90deg, var(--lx-purple), #A78BFA); }
+    [dir="rtl"] :is(.dash, .lx-top) .sf-bar > span { background: linear-gradient(270deg, var(--lx-purple), #A78BFA); }
+    :is(.dash, .lx-top) .sf-bar > span::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); animation: lxShine 2.6s ease-in-out 1s infinite; }
+    @keyframes lxShine { 60%, 100% { transform: translateX(100%); } }
+    .dash .sf-card { transition: box-shadow .25s ease; }
+    @media (prefers-reduced-motion: reduce) { :is(.dash, .lx-top) .sf-bar > span::after { animation: none; } }
+
+    .lx-head-chip { box-shadow: 0 10px 22px -10px rgba(124, 58, 237, .55); animation: lxPopIn .5s cubic-bezier(.2, 1.4, .4, 1) both; }
+    @keyframes lxPopIn { from { transform: scale(.6) rotate(-10deg); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .lx-head-chip { animation: none; } }
+
+    /* Step progress in the top bar */
+    .lx-progress { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .lx-progress .sf-cap, .lx-progress .lx-xp { white-space: nowrap; }
+    .lx-progress .sf-bar { width: 120px; }
+    /* Phones: the bar shrinks first, then the "Step n of 4" caption drops (the page header still shows it) */
+    @media (max-width: 639px) { .lx-progress .sf-bar { width: 96px; } }
+    @media (max-width: 480px) { .lx-progress .sf-cap { display: none; } .lx-progress .sf-bar { width: 84px; } }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a href="#lx-main" class="lx-skip">{% if is_arabic_page %}تخطَّ إلى المحتوى{% else %}Skip to content{% endif %}</a>
+
+  <header class="lx-top">
+    <div class="lx-top-inner">
+      <img src="{% static 'img/logo.png' %}" alt="Skillifly" width="80" height="40">
+      <div class="lx-top-center">{% block top_center %}{% endblock %}</div>
+      <div class="lx-top-end">{% block top_end %}{% endblock %}</div>
+    </div>
+  </header>
+
+  <main id="lx-main" class="dash">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "launch/_confetti.html" %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.lucide) return;
+      try { window.lucide.createIcons({ attrs: { 'stroke-width': 1.75 } }); } catch (e) { window.lucide.createIcons(); }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -9,6 +9,7 @@ const BX_I18N = Object.assign({
   secReviews: 'Client reviews',
   kickerPrefix: 'Section {n}',
   progressOf: '{done} of {total} sections complete',
+  clientReadyOf: 'Client-ready {done}/3',
   charsCount: '{n} characters',
   msgStepAttention: 'Some fields in this section need attention — you can keep going, we will flag them before saving.',
   msgFixBeforeLaunch: 'Please fix the highlighted fields before launching.',
@@ -86,7 +87,9 @@ const BX = {
 
   ORDERS_BY_CATEGORY: {
     student: ['identity', 'education', 'skills', 'experience', 'projects', 'creators', 'reviews', 'links', 'order'],
-    video_editor: ['identity', 'projects', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'],
+    // Video editors start with their work: the videos are what clients judge, and the
+    // name/title in "identity" are already pre-filled from signup.
+    video_editor: ['projects', 'identity', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'],
     developer: ['identity', 'skills', 'experience', 'projects', 'creators', 'reviews', 'education', 'links', 'order']
   },
 
@@ -221,9 +224,10 @@ const BX = {
       }
     });
 
-    this.form.addEventListener('input', () => this.markDirty());
+    this.form.addEventListener('input', () => { this.markDirty(); this.scheduleProgress(); });
     this.form.addEventListener('change', (e) => {
       this.markDirty();
+      this.scheduleProgress();
       if (e.target.matches('input[type="file"]')) this.handleFileChange(e.target);
     });
 
@@ -298,7 +302,9 @@ const BX = {
     }
   },
 
-  goTo(key) {
+  // `silent` switches panels without touching the URL hash, scroll position or focus.
+  // Used for the initial panel on page load, which must not move the page.
+  goTo(key, { silent = false } = {}) {
     const panel = this.panelByKey[key];
     if (!panel || key === this.currentKey) return;
 
@@ -314,6 +320,7 @@ const BX = {
     });
 
     this.currentKey = key;
+    if (silent) return;
     history.replaceState(null, '', '#' + key);
 
     const mobile = window.matchMedia('(max-width: 1023px)').matches;
@@ -526,6 +533,14 @@ const BX = {
     document.body.classList.add('bx-is-dirty');
   },
 
+  // Keep the progress bar and the sidebar ticks live while the user types.
+  // Batched to one update per animation frame so fast typing stays cheap.
+  scheduleProgress() {
+    if (this._progressFrame) return;
+    const run = () => { this._progressFrame = 0; this.updateNavStates(); };
+    this._progressFrame = window.requestAnimationFrame ? window.requestAnimationFrame(run) : setTimeout(run, 16);
+  },
+
   setupCharCounters() {
     document.querySelectorAll('[data-char-counter]').forEach(ta => {
       const counter = ta.parentElement.querySelector('.bx-char-count');
@@ -723,10 +738,41 @@ const BX = {
     }
   },
 
+  // The three things that make a video editor's portfolio worth sending to a client.
+  // Mirrors core.onboarding.client_ready on the server.
+  PLACEHOLDER_TITLES: ['video editor', 'مونتير فيديو'],
+
+  clientReadyCount() {
+    const value = name => {
+      const el = this.form && this.form.querySelector('[name="' + name + '"]');
+      return el ? el.value.trim() : '';
+    };
+    const container = document.getElementById('projects-container');
+    const videos = container
+      ? Array.from(container.querySelectorAll('[name$="-name"]')).filter(inp => {
+          if (!inp.value.trim()) return false;
+          const item = inp.closest('.bx-item');
+          return !(item && (item.classList.contains('is-removed') || item.style.display === 'none'));
+        }).length
+      : 0;
+    const title = value('title');
+    return [
+      videos >= 3,
+      !!title && this.PLACEHOLDER_TITLES.indexOf(title.toLowerCase()) === -1,
+      !!(value('booking_url') || value('phone'))
+    ].filter(Boolean).length;
+  },
+
   refreshProgress() {
     const fill = document.getElementById('bx-progress-fill');
     const label = document.getElementById('bx-progress-label');
     if (!fill || !label) return;
+    if (this.category === 'video_editor') {
+      const ready = this.clientReadyCount();
+      fill.style.width = Math.round((ready / 3) * 100) + '%';
+      label.textContent = bxt('clientReadyOf', { done: ready });
+      return;
+    }
     const done = this.ACTIONABLE_SECTIONS.filter(k => this.isSectionDone(k)).length;
     const total = this.ACTIONABLE_SECTIONS.length;
     const pct = Math.round((done / total) * 100);
@@ -1148,9 +1194,15 @@ const BX = {
   },
 
   openFromHash() {
-    if (!location.hash) return;
-    const key = location.hash.slice(1);
-    if (this.order.includes(key)) this.goTo(key);
+    if (location.hash) {
+      const key = location.hash.slice(1);
+      if (this.order.includes(key)) this.goTo(key);
+      return;
+    }
+    // No deep link: open the first section of this category's order (Work showcase
+    // for video editors) rather than always "identity".
+    const first = this.order[0];
+    if (first && first !== this.currentKey) this.goTo(first, { silent: true });
   }
 };
 

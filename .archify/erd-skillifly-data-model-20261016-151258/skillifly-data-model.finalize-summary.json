@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "erd",
+  "quality": "standard",
+  "specification": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\candidate.json",
+    "sha256": "7230e198557809f4298092eafcedcfa8d1b43f709646d617b1078b418039747a",
+    "bytes": 15865
+  },
+  "artifact": {
+    "path": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\skillifly-data-model.html",
+    "sha256": "f1c53713ee5d1f09dbd77c73033aaf8267b89c8c67cb976051e8c5418429b0a1",
+    "bytes": 921734
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\skillifly-data-model.finalize.json",
+    "summaryReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\skillifly-data-model.finalize-summary.json",
+    "browserCheckReceipt": "D:\\skillifly_dev\\skillifly\\.archify\\erd-skillifly-data-model-20261016-151258\\skillifly-data-model.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-16T12:14:14.312Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 10592,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 3
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "user_account_school",
+            "from": "user_account",
+            "to": "school",
+            "label": "",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "bends": 3,
+          "stretch": 1.067,
+          "directCorridorBlockers": [
+            {
+              "id": "affiliate_profile",
+              "label": "AffiliateProfile",
+              "box": [
+                732,
+                792,
+                270,
+                136
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "manual_payment_user",
+            "from": "manual_payment",
+            "to": "user",
+            "label": "",
+            "collectionIndex": 18,
+            "artifactIndex": 19
+          },
+          "bends": 4,
+          "stretch": 1.239
+        },
+        {
+          "relationship": {
+            "id": "discount_code_owner",
+            "from": "discount_code",
+            "to": "user",
+            "label": "",
+            "collectionIndex": 19,
+            "artifactIndex": 20
+          },
+          "bends": 4,
+          "stretch": 1.261
+        }
+      ],
+      "truncated": false
+    },
+    "repair": "Advisory only: this mode places or routes these relationships itself. Report them; do not remove relationships or meaning to reduce crossings."
+  }
+}

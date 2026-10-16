@@ -1092,23 +1092,48 @@ def arabic_landing_view(request):
     return render(request, 'core/arabic_landing.html', context)
 
 
+def _record_signup(request, user, account_type, method='email', lang=None):
+    """Stamp the signup language on the UserAccount and record `signup_completed`."""
+    from core import activation
+    activation.record_signup(request, user, account_type, method=method, lang=lang)
+
+
 def _send_otp_email(request, user):
-    """Create an OTP record, email it, and remember the pending verification in the session."""
+    """Create an OTP record, email it, and remember the pending verification in the session.
+
+    Returns True when the email was handed to the mail backend. A mail failure is
+    logged and reported via the return value instead of raising, so the signup
+    never ends in a 500 after the inactive account already exists.
+    """
     otp_code = str(random.randint(100000, 999999))
-    EmailOTP.objects.update_or_create(user=user, defaults={'otp': otp_code, 'created_at': timezone.now()})
-
-    plain_text = f'Your Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
-    html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
-    send_mail(
-        subject='Verify your Skillifly Account',
-        message=plain_text,
-        from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
-        recipient_list=[user.email],
-        html_message=html_message,
-        fail_silently=False,
+    EmailOTP.objects.update_or_create(
+        user=user, defaults={'otp': otp_code, 'created_at': timezone.now(), 'attempts': 0},
     )
-
+    # Remember the pending verification first so the user can reach the verify
+    # page and hit Resend even if this send fails.
     request.session['verification_user_id'] = user.id
+
+    plain_text = (
+        f'Your Skillifly verification code is: {otp_code}\n'
+        f'This code expires in {EmailOTP.LIFETIME_MINUTES} minutes.'
+    )
+    try:
+        html_message = render_to_string(
+            'emails/otp_verification.html',
+            {'OTP_CODE': otp_code, 'LIFETIME_MINUTES': EmailOTP.LIFETIME_MINUTES},
+        )
+        send_mail(
+            subject='Verify your Skillifly Account',
+            message=plain_text,
+            from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
+            recipient_list=[user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception('Could not send verification email to user %s', user.pk)
+        return False
+    return True
 
 
 def _generate_client_username(name, email):
@@ -1119,9 +1144,70 @@ def _generate_client_username(name, email):
     base = (base or (email or '').split('@')[0] or 'client').lower()
     base = (_re.sub(r'[^a-z0-9_.]', '', base)[:20].strip('.') or 'client')
     username = base
-    while CustomUser.objects.filter(username=username).exists():
+    while (CustomUser.objects.filter(username=username).exists()
+           or username in settings.RESERVED_USERNAMES):
         username = f"{base}{random.randint(1000, 9999)}"
     return username
+
+
+def _remember_campaign(request):
+    """Keep utm_source / utm_campaign from the landing visit so signup can record them."""
+    for key in ('utm_source', 'utm_campaign'):
+        value = request.GET.get(key)
+        if value:
+            request.session[key] = value[:40]
+
+
+def _editor_signup(request, arabic):
+    """Shared POST handling for the English and Arabic editor signup forms.
+
+    Returns ``(response, form, message)``; ``response`` is None when the form
+    should be (re)rendered.
+    """
+    from core import onboarding
+
+    form = RegisterForm(request.POST)
+    # Honeypot: real users never see this field, bots fill every input.
+    if request.POST.get('company_website'):
+        return redirect('arabic_signup' if arabic else 'signup'), form, None
+    if onboarding.signup_rate_limited(request):
+        form.add_error(None, 'Too many signups from this network. Please try again in a little while.')
+        return None, form, form.errors
+    if not form.is_valid():
+        return None, form, form.errors
+
+    next_url = _next_url(request, 'arabic_dashboard' if arabic else 'dashboard')
+    defer = onboarding.defer_verification_enabled()
+    user = form.save(commit=False)
+    user.is_active = defer  # without deferral: inactive until the OTP is verified
+    user.save()
+    UserAccount.objects.create(user=user, account_type='editor')
+    _record_signup(request, user, 'editor', lang='ar' if arabic else 'en')
+    from core import launch
+    launch.start(user)  # the dashboard sends them to the launch checklist first
+    sent = _send_otp_email(request, user)
+    if arabic:
+        request.session['is_arabic_flow'] = True
+
+    if defer:
+        from allauth.account.models import EmailAddress
+        EmailAddress.objects.get_or_create(
+            user=user, email=user.email, defaults={'verified': False, 'primary': True},
+        )
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        # `next` comes from the query string: only follow it if it stays on this site.
+        if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            next_url = reverse('arabic_dashboard' if arabic else 'dashboard')
+        return redirect(next_url), form, None
+
+    request.session['next_url'] = next_url
+    if not sent:
+        messages.error(
+            request,
+            'تعذّر إرسال رمز التحقق. اضغط «إعادة الإرسال».' if arabic
+            else "We couldn't send the code. Tap Resend to try again.",
+        )
+    return redirect('verify_otp'), form, None
 
 
 def editor_signup_view(request):
@@ -1129,30 +1215,25 @@ def editor_signup_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     request.session['signup_account_type'] = 'editor'
+    _remember_campaign(request)
 
     next_url = _next_url(request, 'dashboard')
 
     if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False  # Require OTP verification
-            user.save()
-            UserAccount.objects.create(user=user, account_type='editor')
-            _send_otp_email(request, user)
-            request.session['next_url'] = next_url
-            return redirect('verify_otp')
-        else:
-            message = form.errors
+        response, form, message = _editor_signup(request, arabic=False)
+        if response is not None:
+            return response
     else:
         form = RegisterForm()
         message = None
 
+    from core import onboarding
     context = {
         'message': message,
         'form': form,
         'next': next_url,
         'is_arabic_page': False,
+        'short_signup': onboarding.onboarding_enabled(),
     }
     return render(request, 'auth/signup.html', context)
 
@@ -1162,31 +1243,27 @@ def arabic_editor_signup_view(request):
     if request.user.is_authenticated:
         return redirect('arabic_dashboard')
     request.session['signup_account_type'] = 'editor'
+    _remember_campaign(request)
 
     next_url = _next_url(request, 'arabic_dashboard')
 
     if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False
-            user.save()
-            UserAccount.objects.create(user=user, account_type='editor')
-            _send_otp_email(request, user)
-            request.session['next_url'] = next_url
-            request.session['is_arabic_flow'] = True
-            return redirect('verify_otp')
-        else:
-            message = form.errors
+        response, form, message = _editor_signup(request, arabic=True)
+        if response is not None:
+            return response
     else:
         form = RegisterForm()
         message = None
 
+    from core import onboarding
+    # The form's help text is English; localise it for this page.
+    form.fields['username'].help_text = 'سيكون رابط معرضك: skillifly.cloud/yourusername'
     context = {
         'message': message,
         'form': form,
         'next': next_url,
         'is_arabic_page': True,
+        'short_signup': onboarding.onboarding_enabled(),
     }
     return render(request, 'auth/arabic_signup.html', context)
 
@@ -1213,6 +1290,7 @@ def client_signup_view(request):
             user.is_active = True
             user.save()
             UserAccount.objects.create(user=user, account_type='client')
+            _record_signup(request, user, 'client', lang='en')
 
             # Mark the email as verified in allauth too, since clients skip OTP.
             from allauth.account.models import EmailAddress
@@ -1258,6 +1336,7 @@ def arabic_client_signup_view(request):
             user.is_active = True
             user.save()
             UserAccount.objects.create(user=user, account_type='client')
+            _record_signup(request, user, 'client', lang='ar')
 
             from allauth.account.models import EmailAddress
             EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
@@ -1324,6 +1403,7 @@ def school_admin_signup_view(request):
                 account_type='school_admin',
                 school=data['school'],
             )
+            _record_signup(request, user, 'school_admin', lang='en')
             _send_otp_email(request, user)
             request.session['next_url'] = next_url
             return redirect('verify_otp')
@@ -1368,6 +1448,7 @@ def arabic_school_admin_signup_view(request):
                 account_type='school_admin',
                 school=data['school'],
             )
+            _record_signup(request, user, 'school_admin', lang='ar')
             _send_otp_email(request, user)
             request.session['next_url'] = next_url
             request.session['is_arabic_flow'] = True
@@ -1549,13 +1630,28 @@ def arabic_signin_view(request):
     return render(request, 'auth/arabic_signin.html', context)
 
 
-def verify_otp_view(request):
-    is_arabic = request.session.get('is_arabic_flow', False)
-    user_id = request.session.get('verification_user_id')
-    if not user_id:
-        return redirect('arabic_signin' if is_arabic else 'signin')
+def _pending_verification_user(request):
+    """The user whose email is being verified, or None.
 
-    user = get_object_or_404(CustomUser, id=user_id)
+    Normally the id parked in the session at signup/sign-in. When email
+    verification is deferred the user is already signed in, so fall back to them.
+    """
+    user_id = request.session.get('verification_user_id')
+    if user_id:
+        return CustomUser.objects.filter(id=user_id).first()
+    if request.user.is_authenticated:
+        return request.user
+    return None
+
+
+def verify_otp_view(request):
+    from django.db.models import F
+    from core import activation
+
+    is_arabic = request.session.get('is_arabic_flow', False)
+    user = _pending_verification_user(request)
+    if user is None:
+        return redirect('arabic_signin' if is_arabic else 'signin')
 
     if request.method == "POST":
         entered_otp = request.POST.get('otp', '').strip()
@@ -1563,20 +1659,30 @@ def verify_otp_view(request):
             otp_record = EmailOTP.objects.get(user=user)
             if otp_record.is_expired():
                 messages.error(request, 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.' if is_arabic else 'OTP has expired. Please request a new one.')
+            elif otp_record.is_locked:
+                # Too many wrong guesses: even the right code is refused until a new one is sent.
+                messages.error(request, 'محاولات خاطئة كثيرة. اطلب رمزًا جديدًا.' if is_arabic else 'Too many wrong attempts. Please request a new code.')
             elif otp_record.otp == entered_otp:
                 user.is_active = True
                 user.save()
                 otp_record.delete()
 
-                # Also verify in allauth if present
+                # Also verify in allauth
                 from allauth.account.models import EmailAddress
-                EmailAddress.objects.get_or_create(user=user, email=user.email, defaults={'verified': True, 'primary': True})
+                EmailAddress.objects.update_or_create(
+                    user=user, email=user.email, defaults={'verified': True, 'primary': True},
+                )
+                activation.track(
+                    user, 'email_verified',
+                    minutes_since_signup=activation.seconds_since_signup(user) // 60,
+                )
 
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 next_url = request.session.pop('next_url', _next_url(request, 'arabic_dashboard' if is_arabic else 'dashboard'))
                 messages.success(request, 'تم تأكيد بريدك الإلكتروني بنجاح!' if is_arabic else 'Email verified successfully!')
                 return redirect(next_url)
             else:
+                EmailOTP.objects.filter(pk=otp_record.pk).update(attempts=F('attempts') + 1)
                 messages.error(request, 'رمز التحقق غير صحيح.' if is_arabic else 'Invalid OTP code.')
         except EmailOTP.DoesNotExist:
             messages.error(request, 'لم يتم العثور على رمز تحقق. يرجى إعادة الإرسال.' if is_arabic else 'No OTP found. Please resend.')
@@ -1586,32 +1692,23 @@ def verify_otp_view(request):
 
 
 def resend_otp_view(request):
+    from core import onboarding
+
     is_arabic = request.session.get('is_arabic_flow', False)
-    user_id = request.session.get('verification_user_id')
-    if not user_id:
+    user = _pending_verification_user(request)
+    if user is None:
         return redirect('arabic_signin' if is_arabic else 'signin')
 
-    user = get_object_or_404(CustomUser, id=user_id)
-
-    if user.is_active:
+    # An active account only needs a code while its email is still unverified
+    # (the deferred-verification flow); otherwise there is nothing to verify.
+    if user.is_active and not onboarding.needs_email_verification(user):
         return redirect('arabic_signin' if is_arabic else 'signin')
 
-    # Generate new OTP
-    otp_code = str(random.randint(100000, 999999))
-    EmailOTP.objects.update_or_create(user=user, defaults={'otp': otp_code, 'created_at': timezone.now()})
-
-    plain_text = f'Your new Skillifly verification code is: {otp_code}\nThis code expires in 10 minutes.'
-    html_message = render_to_string('emails/otp_verification.html', {'OTP_CODE': otp_code})
-    send_mail(
-        subject='Verify your Skillifly Account',
-        message=plain_text,
-        from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@skillifly.cloud',
-        recipient_list=[user.email],
-        html_message=html_message,
-        fail_silently=False,
-    )
-
-    messages.success(request, 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.' if is_arabic else 'A new OTP has been sent to your email.')
+    # _send_otp_email stores a fresh code (attempts reset to 0) and emails it.
+    if _send_otp_email(request, user):
+        messages.success(request, 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.' if is_arabic else 'A new OTP has been sent to your email.')
+    else:
+        messages.error(request, 'تعذّر إرسال رمز التحقق. حاول مرة أخرى بعد قليل.' if is_arabic else "We couldn't send the code. Please try again in a moment.")
     return redirect('verify_otp')
 
 
@@ -1644,6 +1741,8 @@ def profile_view(request):
                 errors['username'] = 'This username is already taken.'
             elif len(username) < 3:
                 errors['username'] = 'Username must be at least 3 characters.'
+            elif username.lower() in settings.RESERVED_USERNAMES:
+                errors['username'] = 'This username is reserved. Please choose another.'
 
         if errors:
             error_msg = ' '.join(errors.values())
@@ -1722,6 +1821,8 @@ def arabic_profile_view(request):
                 errors['username'] = 'اسم المستخدم هذا محجوز بالفعل.'
             elif len(username) < 3:
                 errors['username'] = 'يجب ألا يقل اسم المستخدم عن 3 أحرف.'
+            elif username.lower() in settings.RESERVED_USERNAMES:
+                errors['username'] = 'اسم المستخدم هذا محجوز. اختر اسمًا آخر.'
 
         if errors:
             error_msg = ' '.join(errors.values())
@@ -1780,26 +1881,528 @@ def arabic_profile_view(request):
     return render(request, 'dashboard/arabic_profile.html', context)
 
 
+def _track_nudge_click(request):
+    """Record a click-through from an onboarding nudge email (links carry utm_source=nudge)."""
+    if request.GET.get('utm_source') == 'nudge':
+        from core import activation
+        activation.track(request.user, 'nudge_clicked', key=(request.GET.get('utm_campaign') or '')[:40])
+
+
+def _route_to_welcome(request, arabic=False):
+    """Send an editor with no projects to the welcome page, once per session.
+
+    Returns a redirect, or None when the user should see the dashboard. The
+    once-per-session flag means this can never trap anyone in a loop.
+    """
+    from core import activation, launch, onboarding
+    if request.session.get('welcome_routed') or not onboarding.onboarding_enabled():
+        return None
+    user = request.user
+    if not activation.is_editor(user) or user.projects.exists():
+        return None
+    if launch.is_active(user):
+        return None  # still working through the launch checklist instead
+    request.session['welcome_routed'] = True
+    return redirect(onboarding.welcome_url(arabic, **{'from': 'dashboard'}))
+
+
+def _route_to_launch(request, arabic=False):
+    """Send an editor who is still in the launch flow to the checklist.
+
+    On every dashboard visit until they finish it. "Skip for now" lets them out for
+    the rest of the session, so it never traps anyone.
+    """
+    from core import launch
+    if launch.skipped(request) or not launch.is_active(request.user):
+        return None
+    return redirect(launch.checklist_url(arabic))
+
+
 @login_required
 def dashboard_view(request):
     """Render the dashboard page"""
+    from core import onboarding
     if _is_client_account(request.user):
         return redirect('client_dashboard')
     if _is_school_admin_account(request.user):
         return redirect('school_admin_dashboard')
+    _track_nudge_click(request)
+    response = _route_to_launch(request) or _route_to_welcome(request)
+    if response:
+        return response
+    onboarding.ensure_default_theme(request.user)
     return render(request, 'dashboard/dashboard.html', _dashboard_context(request))
 
 
 @login_required(login_url='arabic_signin')
 def arabic_dashboard_view(request):
     """Render the Arabic dashboard page variant for the language toggle."""
+    from core import onboarding
     if _is_client_account(request.user):
         return redirect('arabic_client_dashboard')
     if _is_school_admin_account(request.user):
         return redirect('arabic_school_admin_dashboard')
+    _track_nudge_click(request)
+    response = _route_to_launch(request, arabic=True) or _route_to_welcome(request, arabic=True)
+    if response:
+        return response
+    onboarding.ensure_default_theme(request.user)
     context = _dashboard_context(request)
     context['is_arabic_page'] = True
     return render(request, 'dashboard/arabic_dashboard.html', context)
+
+
+# ---------------------------------------------------------------------------
+# Editor onboarding v2: welcome page (paste a video link, get a portfolio)
+# ---------------------------------------------------------------------------
+
+def _posted_link_rows(request, row_errors, arabic=False):
+    """The video-link rows as posted (welcome / launch pages), each with its friendly error."""
+    from core import onboarding
+    urls = request.POST.getlist('url')
+    titles = request.POST.getlist('title')
+    types = request.POST.getlist('video_type')
+    return [
+        {
+            'url': url,
+            'title': titles[i] if i < len(titles) else '',
+            'video_type': types[i] if i < len(types) else 'long',
+            'error': onboarding.error_message(row_errors[i], arabic) if i in row_errors else '',
+        }
+        for i, url in enumerate(urls[:onboarding.MAX_LINKS])
+    ]
+
+
+def _welcome_flow(request, arabic=False):
+    from core import activation, onboarding
+
+    user = request.user
+    dashboard = 'arabic_dashboard' if arabic else 'dashboard'
+
+    if not onboarding.onboarding_enabled():
+        return redirect('arabic_update_portfolio' if arabic else 'update_portfolio')
+    if not activation.is_editor(user):
+        return redirect(dashboard)  # the dashboard forwards clients / school admins
+
+    adding = (request.GET.get('add') or request.POST.get('add')) == '1'
+    if user.projects.exists() and not adding:
+        return redirect(dashboard)
+
+    onboarding.ensure_default_theme(user)
+    row_errors = {}
+
+    if request.method == 'POST':
+        created, row_errors = onboarding.create_projects_from_links(user, request.POST, arabic=arabic)
+        if created:
+            onboarding.ensure_personal_info(user, arabic=arabic)
+            activation.track(user, 'welcome_submitted', links=len(created), adding=adding)
+            return redirect(onboarding.reveal_url(user, arabic))
+    else:
+        _track_nudge_click(request)
+        activation.track_reveal_action(request)
+        activation.track(
+            user, 'welcome_viewed',
+            entry=(request.GET.get('from') or 'direct')[:30], adding=adding,
+            nudge=(request.GET.get('utm_campaign') or '')[:40],
+        )
+
+    posted_rows = []
+    if request.method == 'POST':
+        posted_rows = _posted_link_rows(request, row_errors, arabic)
+        if not posted_rows or (not any(r['url'].strip() for r in posted_rows) and not row_errors):
+            posted_rows = []
+            row_errors = {}
+            messages.error(request, 'الصق رابط فيديو واحدًا على الأقل.' if arabic else 'Paste at least one video link.')
+
+    return render(
+        request,
+        'onboarding/arabic_welcome.html' if arabic else 'onboarding/welcome.html',
+        {
+            'is_arabic_page': arabic,
+            'adding': adding,
+            'rows': posted_rows,
+            'max_links': onboarding.MAX_LINKS,
+            'demo_preview_url': onboarding.demo_preview_url(),
+            'skip_url': reverse('welcome_skip'),
+            'preview_link_url': reverse('welcome_preview_link'),
+        },
+    )
+
+
+@login_required
+def welcome_view(request):
+    return _welcome_flow(request, arabic=False)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_welcome_view(request):
+    return _welcome_flow(request, arabic=True)
+
+
+@login_required
+@require_POST
+def welcome_preview_link(request):
+    """Live preview of one pasted link: title, thumbnail, reel/long guess or a friendly error."""
+    from core import activation, oembed, onboarding
+
+    if not onboarding.allow_preview(request):
+        return JsonResponse({'ok': False, 'error': 'rate_limited'}, status=429)
+    try:
+        data = json.loads(request.body or b'{}')
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'invalid'}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({'ok': False, 'error': 'invalid'}, status=400)
+
+    arabic = data.get('lang') == 'ar'
+    url = oembed.normalize_url(data.get('url'))
+    if not url:
+        return JsonResponse({
+            'ok': False, 'error': 'invalid', 'message': onboarding.error_message('invalid', arabic),
+        })
+
+    meta = oembed.fetch(url)
+    activation.track(request.user, 'link_previewed', provider=meta.provider, ok=meta.ok, error=meta.error)
+    return JsonResponse({
+        'ok': meta.ok,
+        'url': meta.url,
+        'provider': meta.provider,
+        'title': meta.title,
+        'thumbnail_url': meta.thumbnail_url,
+        'video_type': meta.video_type,
+        'error': meta.error,
+        'hard': oembed.is_hard_failure(meta),  # the row must be fixed before it can be added
+        'message': onboarding.error_message(meta.error or 'lookup_failed', arabic) if (meta.error or not meta.ok) else '',
+        'duplicate': request.user.projects.filter(url=meta.url).exists(),
+    })
+
+
+@login_required
+@require_POST
+def welcome_skip(request):
+    from core import activation
+    activation.track(request.user, 'welcome_skipped')
+    request.session['welcome_routed'] = True
+    return redirect('arabic_dashboard' if request.POST.get('lang') == 'ar' else 'dashboard')
+
+
+@login_required
+@require_POST
+def ai_bio_draft(request):
+    """One-click bio: draft it from the portfolio, save it only if the bio is still empty."""
+    from core import activation, ai, onboarding
+
+    arabic = request.POST.get('lang') == 'ar'
+    target = 'arabic_dashboard' if arabic else 'dashboard'
+    if not activation.is_editor(request.user):
+        return redirect(target)
+
+    info = PersonalInfo.objects.filter(user=request.user).first()
+    if info and (info.bio or '').strip():
+        messages.info(request, 'لديك نبذة شخصية بالفعل. يمكنك تعديلها من المحرر.' if arabic
+                      else 'You already have a bio. You can edit it in the builder.')
+        return redirect(target)
+
+    # write_bio calls a paid LLM provider: allow one draft per user every 30 seconds.
+    from django.core.cache import cache
+    cooldown_key = f'ai-bio:{request.user.pk}'
+    if cache.get(cooldown_key):
+        messages.info(request, 'انتظر لحظات ثم حاول مرة أخرى.' if arabic
+                      else 'Please wait a few seconds before trying again.')
+        return redirect(target)
+    cache.set(cooldown_key, 1, 30)
+
+    try:
+        bio = (ai.write_bio(request.user, language='ar' if arabic else 'en') or '').strip()
+    except Exception:
+        logger.exception('write_bio failed for user %s', request.user.pk)
+        bio = ''
+    if not bio:
+        messages.error(request, 'تعذّر كتابة النبذة الآن. حاول مرة أخرى بعد قليل.' if arabic
+                       else "We couldn't write your bio just now. Please try again in a moment.")
+        return redirect(target)
+
+    info = onboarding.ensure_personal_info(request.user, arabic=arabic)
+    info.bio = bio[:1500]
+    info.save(update_fields=['bio'])
+    activation.track(request.user, 'profile_field_added', field='bio', source='ai')
+    messages.success(request, 'أضفنا نبذتك الشخصية. يمكنك تعديلها في أي وقت من المحرر.' if arabic
+                     else 'Bio added. You can edit it anytime in the builder.')
+    return redirect(target)
+
+
+@login_required
+@require_POST
+def welcome_set_theme(request):
+    """Switch look from the reveal bar. Only the curated, photo-free themes are allowed."""
+    from core import activation, onboarding
+
+    arabic = request.POST.get('lang') == 'ar'
+    if not activation.is_editor(request.user):
+        return redirect('arabic_dashboard' if arabic else 'dashboard')
+
+    try:
+        theme_id = int(request.POST.get('theme') or 0)
+    except (TypeError, ValueError):
+        theme_id = 0
+    theme = onboarding.look_choices().filter(pk=theme_id).first()
+    if theme is None:
+        return redirect(onboarding.reveal_url(request.user, arabic))
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    previous = profile.theme.name if profile.theme else ''
+    if profile.theme_id != theme.pk:
+        profile.theme = theme
+        profile.save(update_fields=['theme', 'updated_at'])
+        activation.track(request.user, 'theme_switched', **{'from': previous, 'to': theme.name, 'via': 'reveal_bar'})
+    return redirect(onboarding.reveal_url(request.user, arabic))
+
+
+# ---------------------------------------------------------------------------
+# Launch checklist: full-screen guided setup right after signup (core/launch.py)
+# ---------------------------------------------------------------------------
+
+def _launch_gate(request, arabic):
+    """None when the user may use the launch pages, else a redirect to the dashboard."""
+    from core import launch
+    if launch.in_flow(request.user):
+        return None
+    return redirect('arabic_dashboard' if arabic else 'dashboard')
+
+
+def _launch_checklist(request, arabic=False):
+    from core import activation, launch, onboarding
+
+    gate = _launch_gate(request, arabic)
+    if gate:
+        return gate
+    user = request.user
+    onboarding.ensure_default_theme(user)  # the portfolio always has a look to show
+
+    account = getattr(user, 'user_account', None)
+    was_done = bool(account and account.launch_status == 'done')
+    launch.is_active(user)  # brings older accounts in, and finishes any that already have 100 XP
+    state = launch.progress(user, arabic)
+    just_finished = state['ready'] and not was_done  # reached 100 XP since the last visit (steps done elsewhere count)
+
+    celebrate = None
+    done_key = request.GET.get('done')
+    if done_key in launch.STEPS and state['done'][done_key]:
+        celebrate = next(step for step in state['steps'] if step['key'] == done_key)
+    activation.track(user, 'launch_viewed', done=state['done_count'], xp=state['xp'],
+                     celebrate=done_key if celebrate else '')
+    # After a step the XP bar grows from where it was.
+    start_xp = state['xp'] - celebrate['xp'] if celebrate else state['xp']
+
+    return render(request, 'launch/checklist.html', {
+        'is_arabic_page': arabic,
+        'launch': state,
+        'celebrate': celebrate,
+        # The 100 XP moment: the step that got them there, or finishing it elsewhere.
+        'celebrate_ready': state['ready'] and bool(celebrate or just_finished),
+        'start_xp': start_xp,
+        'start_percent': launch.percent(start_xp),
+        'first_name': user.first_name or user.username,
+        'portfolio_host': request.get_host().split(':')[0].replace('www.', ''),
+        'launched_url': launch.launched_url(user, arabic),
+        'dashboard_url': reverse('arabic_dashboard' if arabic else 'dashboard'),
+        'publish_url': reverse('arabic_payment' if arabic else 'payment') + '?ra=live',
+        'skip_url': reverse('launch_skip'),
+    })
+
+
+@login_required
+def launch_view(request):
+    return _launch_checklist(request, arabic=False)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_launch_view(request):
+    return _launch_checklist(request, arabic=True)
+
+
+@login_required
+@require_POST
+def launch_skip(request):
+    """"Skip for now": the dashboard stops sending them to the checklist for this session."""
+    from core import activation, launch
+    launch.skip_now(request)
+    activation.track(request.user, 'launch_skipped', done=sum(launch.step_status(request.user).values()))
+    return redirect('arabic_dashboard' if request.POST.get('lang') == 'ar' else 'dashboard')
+
+
+def _launch_personal(request, arabic=False):
+    from builder.forms import PersonalInfoForm
+    from core import launch, onboarding
+
+    gate = _launch_gate(request, arabic)
+    if gate:
+        return gate
+    user = request.user
+    info = PersonalInfo.objects.filter(user=user).first()
+    profile, _ = Profile.objects.get_or_create(user=user)
+    errors = {}
+
+    if request.method == 'POST':
+        was_done = launch.step_status(user)['personal']
+        form = PersonalInfoForm(request.POST, request.FILES)
+        picture = request.FILES.get('picture')
+        if picture and picture.size > launch.MAX_PHOTO_BYTES:
+            form.add_error('picture', 'too large')
+        if form.is_valid():
+            data = form.cleaned_data
+            fields = {
+                'full_name': data['fullname'].strip()[:254],
+                'title': data['title'].strip()[:500],
+                'bio': (data.get('bio') or '').strip()[:1500],
+                'booking_url': (data.get('booking_url') or '')[:500],
+            }
+            if info:
+                for name, value in fields.items():
+                    setattr(info, name, value)
+                info.save(update_fields=list(fields))
+            else:
+                # The public contact email / phone are left for the builder: not asked here.
+                PersonalInfo.objects.create(user=user, email='', phone='', **fields)
+            if data.get('picture'):
+                profile.picture = data['picture']
+                profile.save(update_fields=['picture', 'updated_at'])
+            return redirect(launch.complete_step(user, 'personal', arabic, was_done=was_done))
+        errors = {field: launch.field_error(field, arabic)
+                  for field in form.errors if field in launch.FIELD_ERRORS}
+        values = {key: request.POST.get(key, '') for key in ('fullname', 'title', 'bio', 'booking_url')}
+    else:
+        initial = onboarding.personal_initial(user, info, arabic)
+        values = {key: initial.get(key) or '' for key in ('fullname', 'title', 'bio', 'booking_url')}
+
+    return render(request, 'launch/personal.html', {
+        'is_arabic_page': arabic,
+        'step': launch.step_header('personal', arabic, user),
+        'values': values,
+        'errors': errors,
+        'photo_url': profile.picture.url if profile.picture else '',
+        'title_suggestions': launch.TITLE_SUGGESTIONS['ar' if arabic else 'en'],
+    })
+
+
+@login_required
+def launch_personal_view(request):
+    return _launch_personal(request, arabic=False)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_launch_personal_view(request):
+    return _launch_personal(request, arabic=True)
+
+
+def _launch_project(request, arabic=False):
+    from core import launch, onboarding
+
+    gate = _launch_gate(request, arabic)
+    if gate:
+        return gate
+    user = request.user
+    onboarding.ensure_default_theme(user)
+    existing = list(Project.objects.filter(user=user).order_by('order', 'id')[:6])
+    rows = []
+
+    if request.method == 'POST':
+        has_links = any((url or '').strip() for url in request.POST.getlist('url'))
+        if existing and not has_links:
+            return redirect(launch.complete_step(user, 'project', arabic, was_done=True))
+        thumbnails, bad_thumbnails = launch.posted_thumbnails(request.FILES, onboarding.MAX_LINKS)
+        if bad_thumbnails:
+            # Save nothing: a refused image would otherwise be dropped without the user noticing.
+            rows = _posted_link_rows(request, {}, arabic)
+            for i in bad_thumbnails:
+                if i < len(rows):
+                    rows[i]['error'] = launch.field_error('thumbnail', arabic)
+        else:
+            created, row_errors = onboarding.create_projects_from_links(
+                user, request.POST, arabic=arabic, source='launch', thumbnails=thumbnails,
+            )
+            if created or (existing and has_links and not row_errors):  # nothing new: all were already added
+                return redirect(launch.complete_step(user, 'project', arabic, was_done=bool(existing)))
+            rows = _posted_link_rows(request, row_errors, arabic)
+            if not has_links:
+                rows = []
+                messages.error(request, 'الصق رابط فيديو واحدًا على الأقل.' if arabic else 'Paste at least one video link.')
+
+    return render(request, 'launch/project.html', {
+        'is_arabic_page': arabic,
+        'step': launch.step_header('project', arabic, user),
+        'rows': rows,
+        'existing': existing,
+        'max_links': onboarding.MAX_LINKS,
+        'preview_link_url': reverse('welcome_preview_link'),
+    })
+
+
+@login_required
+def launch_project_view(request):
+    return _launch_project(request, arabic=False)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_launch_project_view(request):
+    return _launch_project(request, arabic=True)
+
+
+def _launch_skills(request, arabic=False):
+    from core import launch
+
+    gate = _launch_gate(request, arabic)
+    if gate:
+        return gate
+    user = request.user
+    selected = [skill.name for skill in Skill.objects.filter(user=user).order_by('id')]
+    error = ''
+
+    if request.method == 'POST':
+        was_done = bool(selected)
+        custom = request.POST.get('custom_skills', '').split(',')
+        names = launch.clean_skill_names(request.POST.getlist('skills') + custom)
+        if names:
+            launch.save_skills(user, names)
+            return redirect(launch.complete_step(user, 'skills', arabic, was_done=was_done))
+        selected = []
+        error = launch.field_error('skills', arabic)
+
+    groups, extras = launch.skill_groups(selected, arabic)
+    return render(request, 'launch/skills.html', {
+        'is_arabic_page': arabic,
+        'step': launch.step_header('skills', arabic, user),
+        'groups': groups,
+        'extras': extras,
+        'error': error,
+        'max_skills': launch.MAX_SKILLS,
+        'max_length': launch.MAX_SKILL_LENGTH,
+    })
+
+
+@login_required
+def launch_skills_view(request):
+    return _launch_skills(request, arabic=False)
+
+
+@login_required(login_url='arabic_signin')
+def arabic_launch_skills_view(request):
+    return _launch_skills(request, arabic=True)
+
+
+def email_unsubscribe(request, token):
+    """One-click unsubscribe from onboarding nudge emails (signed link, no login)."""
+    from django.core import signing
+    from django.http import Http404
+    try:
+        user_id = signing.loads(token, salt='nudge-unsub')
+    except signing.BadSignature:
+        raise Http404
+    user = get_object_or_404(CustomUser, pk=user_id)
+    if request.method == 'POST':
+        UserAccount.objects.update_or_create(user=user, defaults={'email_opt_out': True})
+        return render(request, 'onboarding/unsubscribe.html', {'done': True})
+    return render(request, 'onboarding/unsubscribe.html', {'done': False, 'token': token})
 
 
 @login_required
@@ -2345,11 +2948,32 @@ def _dashboard_context(request):
         min(100, round((days_left / subscription_days) * 100)) if subscription_days else 0
     )
 
+    # First-run state: the onboarding switch is on, the editor has no project yet and
+    # is on the free plan (an expired payer must still see billing).
+    from core import activation, launch, onboarding
+    arabic_ctx = request.path.startswith('/ar/')
+    is_first_run = (
+        onboarding.onboarding_enabled() and projects_count == 0 and plan_state == 'free'
+        and activation.is_editor(request.user)
+    )
+    if launch.in_flow(request.user):
+        welcome_url = launch.step_url('project', arabic_ctx)  # launch users add videos on its page
+    else:
+        welcome_url = onboarding.welcome_url(arabic_ctx, **{'from': 'dashboard_card'})
+
+    if (timezone.now() - request.user.date_joined).days < 14:
+        activation.track(request.user, 'dashboard_viewed', projects=projects_count, first_run=is_first_run)
+
+    next_step = None
+    if activation.is_editor(request.user) and not is_first_run:
+        next_step = onboarding.next_step(request.user, projects_count, arabic=arabic_ctx)
+
+    # Projects first: the video is the one thing that makes the portfolio real.
     checklist_items = [
-        {'key': 'personal', 'done': has_personal_info},
         {'key': 'projects', 'done': projects_count > 0},
-        {'key': 'skills', 'done': skills_count > 0},
+        {'key': 'personal', 'done': has_personal_info},
         {'key': 'theme', 'done': bool(profile.theme)},
+        {'key': 'skills', 'done': skills_count > 0},
         {'key': 'publish', 'done': bool(has_active_payment and profile.is_public)},
     ]
     checklist_done = sum(1 for item in checklist_items if item['done'])
@@ -2378,7 +3002,32 @@ def _dashboard_context(request):
         'checklist_done': checklist_done,
         'checklist_total': len(checklist_items),
         'checklist_progress': int(round(100.0 * checklist_done / len(checklist_items))),
+        'is_first_run': is_first_run,
+        'welcome_url': welcome_url,
+        'next_step': next_step,
     }
+
+def _require_verified_email(request, next_url, arabic=False):
+    """Redirect an unverified account to the verify page, remembering where to return.
+
+    Only accounts let in before verifying (deferred-verification flow) are gated;
+    legacy and Google users have no unverified EmailAddress row.
+    """
+    from core import onboarding
+    user = request.user
+    if not onboarding.needs_email_verification(user):
+        return None
+    request.session['verification_user_id'] = user.id
+    request.session['next_url'] = next_url if isinstance(next_url, str) and next_url.startswith('/') else reverse('dashboard')
+    if arabic:
+        request.session['is_arabic_flow'] = True
+    messages.error(
+        request,
+        'أكّد بريدك الإلكتروني أولًا لتتمكن من النشر أو الدفع.' if arabic
+        else 'Verify your email first to publish or pay.',
+    )
+    return redirect('verify_otp')
+
 
 @login_required
 def activate_portfolio(request):
@@ -2391,6 +3040,12 @@ def activate_portfolio(request):
         redirect_to = 'dashboard'
 
     arabic_flow = redirect_to.startswith('/ar/')
+
+    # Publishing needs a verified email (only accounts let in before verifying are gated).
+    if not profile.is_public:
+        gate = _require_verified_email(request, redirect_to, arabic_flow)
+        if gate:
+            return gate
 
     # Check if user is trying to make it public
     if not profile.is_public:
@@ -2424,6 +3079,7 @@ def themes(request):
         # Ensure profile exists and check if user had a theme already
         profile, created = Profile.objects.get_or_create(user=request.user)
         had_theme = profile.theme is not None
+        previous_theme_name = profile.theme.name if profile.theme else ''
         profile.theme = theme
         profile.save()
 
@@ -2431,15 +3087,25 @@ def themes(request):
         theme.use_num += 1
         theme.save()
 
+        from core import activation, launch, onboarding
+        activation.track(request.user, 'theme_switched', **{'from': previous_theme_name, 'to': theme.name})
+
         # Check if it's a category theme
         if 'categories' in theme.name.lower() or 'category' in theme.name.lower():
             request.session['show_category_notification'] = True
 
-        # If user has no portfolio data yet, send them to the builder first
-        has_data = PersonalInfo.objects.filter(user=request.user).exists()
-        if not has_data:
+        # Step 3 of the launch checklist: straight back to it.
+        if launch.is_active(request.user):
+            was_done = launch.mark_theme_picked(request.user)
+            return redirect(launch.complete_step(request.user, 'theme', arabic=False, was_done=was_done))
+
+        # Editors get a default theme at signup, so "has a theme" no longer means
+        # "has content". With no project yet, send them to add one first.
+        if not Project.objects.filter(user=request.user).exists():
+            if onboarding.onboarding_enabled():
+                return redirect('welcome')
             return redirect('builder')
-            
+
         from django.urls import reverse
         preview_url = reverse('preview', kwargs={'username': request.user.username})
         if had_theme:
@@ -2448,6 +3114,8 @@ def themes(request):
             
         return redirect('preview', username=request.user.username)
     
+    from core import activation, launch
+    activation.track_reveal_action(request)
     themes = Theme.objects.select_related('category')
     categories = Category.objects.annotate(theme_count=Count('theme'))
     profile = Profile.objects.filter(user=request.user).first()
@@ -2457,6 +3125,7 @@ def themes(request):
         'categories': categories,
         'current_theme_id': profile.theme_id if profile else None,
         'popular_ids': popular_ids,
+        'launch_step': launch.step_header('theme') if launch.is_active(request.user) else None,
     })
 
 
@@ -2474,6 +3143,7 @@ def arabic_themes(request):
         # Ensure profile exists and check if user had a theme already
         profile, created = Profile.objects.get_or_create(user=request.user)
         had_theme = profile.theme is not None
+        previous_theme_name = profile.theme.name if profile.theme else ''
         profile.theme = theme
         profile.save()
 
@@ -2481,13 +3151,23 @@ def arabic_themes(request):
         theme.use_num += 1
         theme.save()
 
+        from core import activation, launch, onboarding
+        activation.track(request.user, 'theme_switched', **{'from': previous_theme_name, 'to': theme.name})
+
         # Check if it's a category theme
         if 'categories' in theme.name.lower() or 'category' in theme.name.lower():
             request.session['show_category_notification'] = True
 
-        # If user has no portfolio data yet, send them to the builder first
-        has_data = PersonalInfo.objects.filter(user=request.user).exists()
-        if not has_data:
+        # Step 3 of the launch checklist: straight back to it.
+        if launch.is_active(request.user):
+            was_done = launch.mark_theme_picked(request.user)
+            return redirect(launch.complete_step(request.user, 'theme', arabic=True, was_done=was_done))
+
+        # Editors get a default theme at signup, so "has a theme" no longer means
+        # "has content". With no project yet, send them to add one first.
+        if not Project.objects.filter(user=request.user).exists():
+            if onboarding.onboarding_enabled():
+                return redirect('arabic_welcome')
             return redirect('arabic_update_portfolio')
 
         preview_url = reverse('preview', kwargs={'username': request.user.username})
@@ -2497,9 +3177,14 @@ def arabic_themes(request):
 
         return redirect('preview', username=request.user.username)
 
+    from core import activation, launch
+    activation.track_reveal_action(request)
     themes = Theme.objects.all()
     categories = Category.objects.all()
-    return render(request, 'dashboard/arabic_themes.html', {'themes': themes, 'categories': categories, 'is_arabic_page': True})
+    return render(request, 'dashboard/arabic_themes.html', {
+        'themes': themes, 'categories': categories, 'is_arabic_page': True,
+        'launch_step': launch.step_header('theme', arabic=True) if launch.is_active(request.user) else None,
+    })
 
 
 

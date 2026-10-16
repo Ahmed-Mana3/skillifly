@@ -137,6 +137,14 @@
     border-radius: 12px;
   }
 </style>
+{% if launch_step %}
+<style>
+  /* Launch checklist step: buttons in the landing page's solid brand purple, like the rest of the launch flow */
+  .btn-primary { background: #7C3AED !important; background-image: none !important; box-shadow: 0 10px 25px -5px rgba(124, 58, 237, .35) !important; }
+  .btn-primary:hover { background: #6D28D9 !important; box-shadow: 0 20px 40px -10px rgba(124, 58, 237, .45) !important; }
+  .btn-primary:active { background: #5B21B6 !important; }
+</style>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -144,7 +152,21 @@
 
   <!-- Header -->
   <div class="mb-10 animate-fadeInUp">
+    {% if launch_step %}
+    {# الخطوة 3 من قائمة الإطلاق: تطبيق التصميم يعيد المستخدم إليها مباشرة. #}
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+      <a href="{{ launch_step.back_url }}" class="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-black min-h-[44px]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+        العودة إلى القائمة
+      </a>
+      <span class="inline-flex items-center rounded-full bg-violet-50 border border-violet-100 px-3 py-1.5 text-xs font-bold text-violet-700">
+        الخطوة {{ launch_step.number }} من {{ launch_step.total }}
+      </span>
+      <span class="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-bold text-amber-700" dir="ltr">+{{ launch_step.xp }} XP</span>
+    </div>
+    {% else %}
     <p class="text-sm text-blue-600 font-bold mb-2">الخطوة 1 من 2</p>
+    {% endif %}
     <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black">
       اختر <span class="gradient-text">تصميمك</span>
     </h1>

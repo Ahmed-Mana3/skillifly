@@ -46,7 +46,7 @@
 
   <div class="bx-progress" role="group" aria-label="Completion progress">
     <div class="bx-progress-track"><div class="bx-progress-fill" id="bx-progress-fill"></div></div>
-    <span class="bx-progress-label" id="bx-progress-label">0 of 7 sections</span>
+    <span class="bx-progress-label" id="bx-progress-label">{% if category == 'video_editor' %}Client-ready 0/3{% else %}0 of 7 sections{% endif %}</span>
   </div>
 
   <div class="bx-layout">
@@ -490,8 +490,8 @@
 
                   <div class="bx-field">
                     <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
-                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="YouTube, Vimeo or TikTok URL">
-                    <p class="bx-hint">YouTube, Vimeo and TikTok links are embedded automatically.</p>
+                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="YouTube, Vimeo, TikTok, Instagram Reel or Drive link">
+                    <p class="bx-hint">YouTube, Vimeo, TikTok, Instagram Reels and Google Drive links play right on your portfolio. Drive: set sharing to &quot;Anyone with the link&quot;.</p>
                     <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
                   </div>
                   <div class="bx-field">
@@ -1006,8 +1006,8 @@
 
     <div class="bx-field">
       <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
-      <input type="text" name="projects-__prefix__-url" class="bx-input" placeholder="YouTube, Vimeo or TikTok URL">
-      <p class="bx-hint">YouTube, Vimeo and TikTok links are embedded automatically.</p>
+      <input type="text" name="projects-__prefix__-url" class="bx-input" placeholder="YouTube, Vimeo, TikTok, Instagram Reel or Drive link">
+      <p class="bx-hint">YouTube, Vimeo, TikTok, Instagram Reels and Google Drive links play right on your portfolio. Drive: set sharing to &quot;Anyone with the link&quot;.</p>
       <p class="bx-field-error" role="alert"></p>
     </div>
     <div class="bx-field">
