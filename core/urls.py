@@ -37,6 +37,8 @@ urlpatterns = [
     path('launch/skills/', views.launch_skills_view, name='launch_skills'),
     path('ar/launch/skills/', views.arabic_launch_skills_view, name='arabic_launch_skills'),
     path('launch/skip/', views.launch_skip, name='launch_skip'),
+    # Arabic-only on purpose (no EN twin, no ROUTE_MAP entry): reached from the manage hub.
+    path('ar/survey/heard-about/', views.heard_about_view, name='arabic_heard_about'),
     path('dashboard/bio/draft/', views.ai_bio_draft, name='ai_bio_draft'),
     path('email/unsubscribe/<str:token>/', views.email_unsubscribe, name='email_unsubscribe'),
     path('ar/builder/', builder_views.arabic_builder_view, name='arabic_builder'),
@@ -113,6 +115,8 @@ urlpatterns = [
     path('manage/blog/', include('blog.dashboard_urls')),
     path('manage/experiences/', views.manage_experience_order, name='manage_experience_order'),
     path('manage/experiences/save/', views.manage_experience_order_save, name='manage_experience_order_save'),
+    path('manage/themes/', views.manage_theme_order, name='manage_theme_order'),
+    path('manage/themes/save/', views.manage_theme_order_save, name='manage_theme_order_save'),
     path('manage/payment-tracking/', views.manage_payment_tracking, name='manage_payment_tracking'),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
     path('affiliate/', views.affiliate_view, name='affiliate'),

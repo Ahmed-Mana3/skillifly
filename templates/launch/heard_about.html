@@ -1,0 +1,139 @@
+{% extends "launch/base.html" %}
+
+{% block title %}كيف عرفت Skillifly؟{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ha-card { padding: 24px; }
+  @media (min-width: 640px) { .ha-card { padding: 32px; } }
+  .ha-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+  @media (min-width: 640px) { .ha-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } }
+  .ha-opt { position: relative; display: block; cursor: pointer; touch-action: manipulation; }
+  .ha-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .ha-body { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border-radius: 16px; border: 1.5px solid #E2E8F0;
+    background: #fff; font-weight: 700; font-size: 15px; color: #0F172A; user-select: none;
+    transition: border-color .18s, background .18s, box-shadow .18s, transform .18s; }
+  .ha-body .sf-chip { flex-shrink: 0; }
+  .ha-opt:hover .ha-body { border-color: rgba(124, 58, 237, .5); transform: translateY(-1px); }
+  .ha-opt:active .ha-body { transform: scale(.97); }
+  .ha-opt input:checked + .ha-body { border-color: var(--lx-purple); background: #F5F3FF; box-shadow: 0 0 0 3px rgba(124, 58, 237, .14);
+    animation: haPop .28s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes haPop { 50% { transform: scale(1.03); } }
+  .ha-opt input:focus-visible + .ha-body { outline: 2px solid var(--lx-purple); outline-offset: 2px; }
+  .ha-tick { margin-inline-start: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+    border: 1.5px solid #CBD5E1; color: transparent; transition: all .18s; }
+  .ha-tick svg { width: 13px; height: 13px; }
+  .ha-opt input:checked + .ha-body .ha-tick { background: var(--lx-purple); border-color: var(--lx-purple); color: #fff; }
+  .ha-detail { margin-top: 16px; }
+  .ha-detail[hidden] { display: none; }
+  .ha-done { text-align: center; padding: 40px 24px; }
+  .ha-done .sf-chip { margin: 0 auto 18px; }
+  .ha-big { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 10px 18px; border-radius: 999px; background: #ECFDF5;
+    border: 1px solid #A7F3D0; color: #047857; font-weight: 800; font-size: 18px; direction: ltr; unicode-bidi: isolate; }
+  .ha-big svg { width: 18px; height: 18px; }
+  .ha-pop { animation: lxPopIn .5s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @media (prefers-reduced-motion: reduce) { .ha-pop, .ha-opt input:checked + .ha-body { animation: none; } }
+</style>
+{% endblock %}
+
+{% block top_end %}
+<a class="btn-icon" href="{{ close_url }}" aria-label="إغلاق"><i data-lucide="x"></i></a>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-8 sm:pt-10 pb-16">
+  {% include "launch/_messages.html" %}
+
+  {% if response %}
+  <section class="sf-card ha-card ha-done reveal" style="--d:0ms">
+    <div class="sf-chip sf-chip-lg tint-emerald ha-pop"><i data-lucide="{% if celebrate %}party-popper{% else %}check{% endif %}"></i></div>
+    <h1 class="text-[26px] sm:text-[30px] font-bold text-black leading-tight font-display">{% if celebrate %}شكرًا لك!{% else %}شكرًا، وصلتنا إجابتك{% endif %}</h1>
+    <p class="text-slate-700 font-medium mt-2 text-[15px]">
+      {% if celebrate %}أضفنا لك مكافأة على مشاركتك.{% else %}سبق أن أجبت: <b>{{ answer_label }}</b>. حصلت على مكافأتك من قبل.{% endif %}
+    </p>
+    <div><span class="ha-big"><i data-lucide="zap"></i>+{{ response.xp_awarded }} XP</span></div>
+    <div class="mt-8">
+      <a class="btn-primary" href="{{ close_url }}">الذهاب إلى لوحة التحكم<i data-lucide="arrow-left"></i></a>
+    </div>
+  </section>
+
+  {% else %}
+  <header class="mb-6 reveal" style="--d:0ms">
+    <div class="flex items-center gap-4">
+      <div class="sf-chip sf-chip-lg tint-violet lx-head-chip"><i data-lucide="megaphone"></i></div>
+      <div class="min-w-0">
+        <span class="sf-pill pill-warn lx-xp mb-1"><i data-lucide="zap"></i>+{{ xp }} XP</span>
+        <h1 class="text-[26px] sm:text-[32px] font-bold text-black leading-tight font-display">كيف عرفت Skillifly؟</h1>
+      </div>
+    </div>
+    <p class="text-slate-700 font-medium mt-3 text-[15px]">اضغط على إجابة واحدة، وخذ <bdi dir="ltr">{{ xp }} XP</bdi> هدية. تستغرق 5 ثوانٍ.</p>
+  </header>
+
+  <form method="POST" class="sf-card ha-card reveal" id="ha-form" novalidate style="--d:70ms">
+    {% csrf_token %}
+    <div class="ha-grid" role="radiogroup" aria-label="كيف عرفت Skillifly؟">
+      {% for o in options %}
+      <label class="ha-opt">
+        <input type="radio" name="source" value="{{ o.key }}" data-ask="{% if o.ask %}1{% endif %}" data-prompt="{{ o.prompt }}" data-placeholder="{{ o.placeholder }}" required>
+        <span class="ha-body">
+          <span class="sf-chip tint-{{ o.tint }}"><i data-lucide="{{ o.icon }}"></i></span>
+          <span>{{ o.label }}</span>
+          <span class="ha-tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="ha-detail" id="ha-detail" hidden>
+      <label class="sf-label" for="ha-detail-input"><span id="ha-detail-label">تفاصيل</span> <span class="lx-optional">اختياري</span></label>
+      <input type="text" class="sf-input" id="ha-detail-input" name="detail" maxlength="{{ max_detail }}" autocomplete="off" placeholder="مثال: اسم الصديق أو الموقع">
+    </div>
+
+    <div class="lx-actions">
+      <button type="submit" class="btn-primary" id="ha-submit" disabled>
+        <span data-label>أرسل واحصل على المكافأة</span>
+        <span class="lx-btn-xp">+{{ xp }} XP</span>
+      </button>
+      <a class="lx-link" href="{{ close_url }}">ليس الآن</a>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if celebrate %}
+<script>
+  window.addEventListener('load', function () { if (window.sfConfetti) window.sfConfetti({ y: 0.3, count: 160 }); });
+</script>
+{% endif %}
+{% if not response %}
+<script>
+(function () {
+  var form = document.getElementById('ha-form');
+  var submit = document.getElementById('ha-submit');
+  var detail = document.getElementById('ha-detail');
+  var detailInput = document.getElementById('ha-detail-input');
+  var detailLabel = document.getElementById('ha-detail-label');
+
+  form.addEventListener('change', function (e) {
+    if (e.target.name !== 'source') return;
+    submit.disabled = false;
+    var ask = e.target.dataset.ask === '1';
+    detail.hidden = !ask;
+    if (ask) {
+      detailLabel.textContent = e.target.dataset.prompt;
+      detailInput.placeholder = e.target.dataset.placeholder;
+      detailInput.focus({ preventScroll: true });
+    } else detailInput.value = '';
+  });
+
+  form.addEventListener('submit', function (e) {
+    if (form.dataset.busy || !form.querySelector('input[name="source"]:checked')) { e.preventDefault(); return; }
+    form.dataset.busy = '1';
+    submit.querySelector('[data-label]').textContent = 'جارٍ الإرسال…';
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #050509;
+            --surface: #0d0d15;
+            --glass: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --accent: #7dd3fc;
+            --accent-rgb: 125, 211, 252;
+            --text: #f5f5f7;
+            --dim: rgba(245, 245, 247, 0.6);
+            --dimmer: rgba(245, 245, 247, 0.35);
+            --ink-on-accent: #051019;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: inline-flex;
+            gap: 4px;
+            padding: 6px;
+            border-radius: 100px;
+            background: rgba(3, 3, 6, 0.86);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .top-nav a {
+            padding: 10px 22px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .top-nav a:hover { color: var(--text); background: rgba(255, 255, 255, 0.07); }
+        .top-nav a.active { color: var(--ink-on-accent); background: var(--text); }
+
+        .back-home {
+            position: fixed;
+            top: 22px;
+            left: 22px;
+            z-index: 60;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--text);
+            text-decoration: none;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+
+        .back-home:hover { background: var(--text); color: var(--ink-on-accent); transform: rotate(90deg); }
+
+        .detail {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 130px 24px 70px;
+        }
+
+        .player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid var(--border);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+        }
+
+        .player iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+        .player-cover { position: absolute; inset: 0; cursor: pointer; border: 0; background: transparent; padding: 0; }
+        .player-cover img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
+        .player-cover span {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(var(--accent-rgb), 0.94); color: var(--ink-on-accent);
+            transition: transform 0.3s ease;
+        }
+        .player-cover span svg { width: 30px; height: 30px; margin-left: 4px; }
+        .player-cover:hover span { transform: translate(-50%, -50%) scale(1.1); }
+
+        .meta { margin-top: 34px; }
+        .meta h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 600; margin-bottom: 14px; }
+        .meta p { color: var(--dim); line-height: 1.75; font-size: 1rem; max-width: 760px; }
+
+        .source {
+            display: inline-flex; align-items: center; gap: 10px;
+            margin-top: 24px; padding: 13px 26px; border-radius: 100px;
+            border: 1px solid var(--border-strong); background: var(--glass);
+            color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.88rem;
+            transition: all 0.35s ease;
+        }
+        .source:hover { border-color: rgba(var(--accent-rgb), 0.7); background: rgba(var(--accent-rgb), 0.14); transform: translateY(-3px); }
+
+        .more { margin-top: 80px; }
+        .more h2 { font-size: 1.4rem; font-weight: 600; margin-bottom: 24px; }
+        .more-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .more-card { display: block; text-decoration: none; color: inherit; border-radius: 14px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); transition: transform 0.35s ease, border-color 0.35s ease; }
+        .more-card:hover { transform: translateY(-6px); border-color: rgba(var(--accent-rgb), 0.4); }
+        .more-thumb { aspect-ratio: 16 / 9; background: #000; }
+        .more-thumb img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.75); }
+        .more-title { padding: 14px 16px 18px; font-size: 0.95rem; font-weight: 600; }
+
+        @media (max-width: 640px) {
+            .top-nav { top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; right: auto; transform: translateX(-50%); padding: 5px; max-width: calc(100vw - 120px); }
+            .top-nav a { display: inline-flex; align-items: center; height: 40px; padding: 0 11px; font-size: 0.82rem; white-space: nowrap; }
+            .back-home { top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; width: 52px; height: 52px; }
+            @media (max-width: 380px) { .back-home { width: 44px; height: 44px; font-size: 1rem; } }
+        }
+    </style>
+    {% include "portfolios/common/theme_background_css.html" %}
+</head>
+
+<body>
+    <a href="/{{ username }}/" class="back-home" aria-label="Back to portfolio">✕</a>
+
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/">Reels</a>
+        <a href="/{{ username }}/long-videos/" class="active">Work</a>
+        <a href="/{{ username }}/#contact">Contact</a>
+    </nav>
+
+    <main class="detail">
+        <div class="player">
+            {% if project.uploaded_video %}
+            <button class="player-cover" type="button" data-embed="{{ project.uploaded_video.embed_url }}" aria-label="Play {{ project.title }}">
+                {% if project.image %}
+                <img src="{% url 'image_thumb' project.image.name 1200 %}" alt="{{ project.title }}" width="1200" height="675" decoding="async">
+                {% elif project.uploaded_video.thumbnail_url %}
+                <img src="{{ project.uploaded_video.thumbnail_url }}" alt="{{ project.title }}" decoding="async">
+                {% else %}
+                <img src="" alt="">
+                {% endif %}
+                <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+            </button>
+            {% elif project.embed_url %}
+            <button class="player-cover" type="button" data-embed="{{ project.embed_url }}" aria-label="Play {{ project.title }}">
+                {% if project.image %}
+                <img src="{% url 'image_thumb' project.image.name 1200 %}" alt="{{ project.title }}" width="1200" height="675" decoding="async">
+                {% elif project.youtube_id %}
+                <img src="https://img.youtube.com/vi/{{ project.youtube_id }}/maxresdefault.jpg" alt="{{ project.title }}" decoding="async">
+                {% else %}
+                <img src="" alt="">
+                {% endif %}
+                <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+            </button>
+            {% elif project.image %}
+            <img src="{% url 'image_thumb' project.image.name 1200 %}" alt="{{ project.title }}" width="1200" height="675" decoding="async">
+            {% endif %}
+        </div>
+
+        <div class="meta">
+            <h1>{{ project.title }}</h1>
+            {% if project.details %}<p>{{ project.details }}</p>{% endif %}
+            {% if project.url %}
+            <a class="source" href="{{ project.url }}" target="_blank" rel="noopener">
+                Watch on the original platform
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+            </a>
+            {% endif %}
+        </div>
+
+        {% if other_videos %}
+        <section class="more">
+            <h2>More work</h2>
+            <div class="more-grid">
+                {% for other in other_videos %}
+                <a class="more-card" href="/{{ username }}/long-videos/{{ other.slug }}/">
+                    <div class="more-thumb">
+                        {% if other.image %}
+                        <img src="{% url 'image_thumb' other.image.name 480 %}" alt="{{ other.title }}" loading="lazy" decoding="async" width="480" height="270">
+                        {% elif other.youtube_id %}
+                        <img src="https://img.youtube.com/vi/{{ other.youtube_id }}/mqdefault.jpg" alt="{{ other.title }}" loading="lazy" decoding="async">
+                        {% endif %}
+                    </div>
+                    <div class="more-title">{{ other.title }}</div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    <script>
+        (function () {
+            document.querySelectorAll('.player-cover').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var src = btn.getAttribute('data-embed');
+                    if (!src) return;
+                    var wrap = btn.parentElement;
+                    wrap.innerHTML = '<iframe src="' + src + '" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>';
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

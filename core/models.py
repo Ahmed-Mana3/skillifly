@@ -123,6 +123,23 @@ class UserAccount(models.Model):
         extra = f" @ {self.school}" if self.school else ""
         return f"{self.user.username} ({self.account_type}{extra})"
 
+class HeardAboutResponse(models.Model):
+    """One answer per user to "how did you hear about Skillifly?" (core/survey.py). Worth bonus XP."""
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='heard_about_response')
+    source = models.CharField(max_length=20)
+    detail = models.CharField(max_length=200, blank=True, default='', help_text="Free text, used for 'Other' and 'A friend'.")
+    xp_awarded = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "How-they-heard answer"
+        verbose_name_plural = "How-they-heard answers"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username}: {self.source}"
+
+
 class EmailOTP(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_otp')
     otp = models.CharField(max_length=6)
@@ -159,6 +176,9 @@ class Theme(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=254)
     use_num = models.IntegerField(default=0)
+    # Manual position in the themes gallery (set from /manage/themes/).
+    # NULL = not placed yet; those fall back to "Video Editor first, most used first".
+    display_order = models.PositiveIntegerField(null=True, blank=True)
     preview_image = models.ImageField(upload_to='themes/', blank=True, null=True)
 
     def __str__(self):

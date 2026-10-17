@@ -1,0 +1,332 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #050509;
+            --surface: #0d0d15;
+            --glass: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --accent: #7dd3fc;
+            --accent-rgb: 125, 211, 252;
+            --text: #f5f5f7;
+            --dim: rgba(245, 245, 247, 0.6);
+            --dimmer: rgba(245, 245, 247, 0.35);
+            --ink-on-accent: #051019;
+        }
+
+        /* Looks like the browser zoomed out to 90%: the whole page scales, not just the cards. */
+        html { zoom: 0.9; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: inline-flex;
+            gap: 4px;
+            padding: 6px;
+            border-radius: 100px;
+            background: rgba(3, 3, 6, 0.86);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .top-nav a {
+            padding: 10px 22px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .top-nav a:hover { color: var(--text); background: rgba(255, 255, 255, 0.07); }
+        .top-nav a.active { color: var(--ink-on-accent); background: var(--text); }
+
+        .back-home {
+            position: fixed;
+            top: 22px;
+            left: 22px;
+            z-index: 60;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--text);
+            text-decoration: none;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+
+        .back-home:hover { background: var(--text); color: var(--ink-on-accent); transform: rotate(90deg); }
+
+        .reels-wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 110px 24px 90px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .reel {
+            flex: 0 0 330px;
+            width: 330px;
+            max-width: 100%;
+            scroll-margin-top: 100px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .reel:hover {
+            transform: translateY(-8px);
+            border-color: rgba(var(--accent-rgb), 0.4);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .reel.is-target {
+            border-color: rgba(var(--accent-rgb), 0.6);
+            box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.35), 0 24px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .reel-stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .reel-stage {
+            background: linear-gradient(160deg, #0d1424, #050509);
+        }
+
+        .reel-stage img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.72);
+            transition: filter 0.4s ease, transform 0.6s ease;
+        }
+
+        /* The thumbnail fills the stage; the play badge sits on top of it
+           (as flex siblings the badge used to squeeze the image narrower). */
+        .reel-play img {
+            position: absolute;
+            inset: 0;
+        }
+
+        .reel:hover .reel-play img { filter: brightness(0.9); transform: scale(1.03); }
+
+        .reel-stage iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        .reel-play {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .reel-play span {
+            position: relative;
+            z-index: 1;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(var(--accent-rgb), 0.92);
+            color: var(--ink-on-accent);
+            transition: transform 0.3s ease;
+        }
+
+        .reel-play svg { width: 24px; height: 24px; margin-left: 3px; }
+        .reel-play:hover span { transform: scale(1.12); }
+
+        .reel-meta { padding: 20px 22px 22px; }
+
+        .reel-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; }
+
+        .reel-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .reel-link:hover { gap: 14px; }
+
+        .empty {
+            width: 100%;
+            text-align: center;
+            padding: 120px 20px;
+            color: var(--dim);
+        }
+
+        .empty a { color: var(--accent); }
+
+        @media (max-width: 640px) {
+            .reels-wrap { padding: 96px 16px 60px; gap: 20px; }
+            .top-nav { top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; right: auto; transform: translateX(-50%); padding: 5px; max-width: calc(100vw - 120px); }
+            .top-nav a { display: inline-flex; align-items: center; height: 40px; padding: 0 11px; font-size: 0.82rem; white-space: nowrap; }
+            .back-home { top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; width: 52px; height: 52px; }
+            @media (max-width: 380px) { .back-home { width: 44px; height: 44px; font-size: 1rem; } }
+            .reel:hover { transform: none; }
+        }
+    </style>
+    {% include "portfolios/common/theme_background_css.html" %}
+</head>
+
+<body>
+    <a href="/{{ username }}/" class="back-home" aria-label="Back to portfolio">✕</a>
+
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/" class="active">Reels</a>
+        <a href="/{{ username }}/long-videos/">Work</a>
+        <a href="/{{ username }}/#contact">Contact</a>
+    </nav>
+
+    <div class="reels-wrap">
+        {% for project in projects %}
+        <article class="reel" id="reel-{{ project.id }}" data-project-id="{{ project.id }}">
+            <div class="reel-stage">
+                {% if project.uploaded_video %}
+                <button class="reel-play" type="button" data-embed="{{ project.uploaded_video.embed_url }}" aria-label="Play {{ project.title }}">
+                    {% if project.image %}
+                    <img src="{% url 'image_thumb' project.image.name 700 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="700" height="1244">
+                    {% elif project.uploaded_video.thumbnail_url %}
+                    <img src="{{ project.uploaded_video.thumbnail_url }}" alt="{{ project.title }}" loading="lazy" decoding="async">
+                    {% endif %}
+                    <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                </button>
+                {% elif project.embed_url %}
+                <button class="reel-play" type="button" data-embed="{{ project.embed_url }}" aria-label="Play {{ project.title }}">
+                    {% if project.image %}
+                    <img src="{% url 'image_thumb' project.image.name 700 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="700" height="1244">
+                    {% elif project.youtube_id %}
+                    <img src="https://img.youtube.com/vi/{{ project.youtube_id }}/hqdefault.jpg" alt="{{ project.title }}" loading="lazy" decoding="async">
+                    {% endif %}
+                    <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                </button>
+                {% else %}
+                {% if project.image %}
+                <img src="{% url 'image_thumb' project.image.name 700 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="700" height="1244">
+                {% endif %}
+                {% endif %}
+            </div>
+            <div class="reel-meta">
+                <h3 class="reel-title">{{ project.title }}</h3>
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty">
+            <p>No reels yet. <a href="/{{ username }}/">Back to the portfolio.</a></p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        (function () {
+            var thumbs = new WeakMap();
+
+            /* Put a playing reel back to its poster so only one plays at a time. */
+            function restore(stage) {
+                var saved = thumbs.get(stage);
+                if (!saved) return;
+                stage.replaceChildren(saved);
+                thumbs.delete(stage);
+            }
+
+            function withAutoplay(src) {
+                try {
+                    var u = new URL(src, location.href);
+                    u.searchParams.set('autoplay', '1');
+                    if (/youtube\.com$/.test(u.hostname)) u.searchParams.set('playsinline', '1');
+                    return u.toString();
+                } catch (e) { return src; }
+            }
+
+            function bind(btn) {
+                btn.addEventListener('click', function () {
+                    var src = btn.getAttribute('data-embed');
+                    if (!src) return;
+                    var stage = btn.parentElement;
+                    document.querySelectorAll('.reel-stage').forEach(function (s) {
+                        if (s !== stage) restore(s);
+                    });
+                    var frame = document.createElement('iframe');
+                    frame.src = withAutoplay(src);
+                    frame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+                    frame.allowFullscreen = true;
+                    frame.title = btn.getAttribute('aria-label') || 'Reel';
+                    thumbs.set(stage, btn);
+                    stage.replaceChildren(frame);
+                });
+            }
+
+            document.querySelectorAll('.reel-play').forEach(bind);
+
+            /* A thumbnail that fails to load falls back to the gradient stage. */
+            document.querySelectorAll('.reel-stage img').forEach(function (img) {
+                img.addEventListener('error', function () { img.style.display = 'none'; });
+            });
+
+            /* Deep link from the portfolio (#reel-<id>): highlight the target reel. */
+            if (location.hash) {
+                var t = document.querySelector(location.hash.replace(/[^#\w-]/g, ''));
+                if (t && t.classList.contains('reel')) {
+                    t.classList.add('is-target');
+                    t.scrollIntoView({ block: 'center' });
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

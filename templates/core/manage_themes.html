@@ -1,0 +1,201 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Themes Order Manager | Skillifly{% endblock %}
+
+{% block extra_head %}
+<style>
+    .gradient-text{background:linear-gradient(135deg,#0ea5e9 0%,#3b82f6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .animate-fadeInUp{animation:fadeInUp .5s ease-out forwards;opacity:0;}
+    @keyframes fadeInUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    .theme-row{transition:background .15s,box-shadow .15s,transform .12s;cursor:grab;user-select:none;}
+    .theme-row:active{cursor:grabbing;}
+    .theme-row.dragging{opacity:.45;transform:scale(.98);}
+    .theme-row.drag-over{background:#f0f7ff;box-shadow:0 0 0 2px #3b82f6;}
+    .badge-order{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;background:linear-gradient(135deg,#0ea5e9,#3b82f6);color:#fff;flex-shrink:0;}
+    .drag-handle{color:#cbd5e1;font-size:1.25rem;line-height:1;font-weight:900;cursor:grab;padding:0 4px;flex-shrink:0;}
+    .busy{opacity:.6;pointer-events:none;}
+    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);padding:.75rem 2rem;border-radius:999px;font-size:.875rem;font-weight:700;z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.14);}
+    #toast.success{background:#10b981;color:#fff;}
+    #toast.error{background:#ef4444;color:#fff;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="toast"></div>
+<div class="max-w-5xl mx-auto px-4 md:px-6 py-12 md:py-16">
+
+    <div class="mb-12 animate-fadeInUp">
+        <a href="{% url 'manage_dashboard' %}" class="inline-flex items-center text-slate-400 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors mb-6">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Dashboard
+        </a>
+        <h1 class="text-4xl md:text-5xl font-bold mb-3 text-black leading-tight" style="font-family:'Syne',sans-serif;">
+            Themes <span class="gradient-text">Order Manager</span>
+        </h1>
+        <p class="text-slate-500 text-base max-w-2xl">Drag themes (or use the arrows) into the order users see on the themes page, then press Save. "Reset to automatic" clears the manual order: Video Editor themes first, then most used. Themes added later appear after the manually ordered ones until you save again.</p>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm animate-fadeInUp" style="animation-delay:.1s">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-black" style="font-family:'Syne',sans-serif;">{{ themes|length }} theme{{ themes|length|pluralize }}</h2>
+                <p class="text-slate-500 text-sm mt-1">
+                    {% if has_manual_order %}Using a manual order.{% else %}Using the automatic order (Video Editor first, by uses).{% endif %}
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button id="resetBtn" type="button"
+                    class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all">
+                    Reset to automatic
+                </button>
+                <button id="saveBtn" type="button"
+                    class="px-7 py-2.5 bg-black text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all">
+                    Save Order
+                </button>
+            </div>
+        </div>
+
+        {% if themes %}
+        <ul id="themeList" class="space-y-3">
+            {% for theme in themes %}
+            <li class="theme-row flex items-center gap-4 bg-slate-50 rounded-2xl px-5 py-4 border border-transparent"
+                data-id="{{ theme.id }}" draggable="true">
+                <span class="drag-handle select-none" title="Drag to reorder">&#8942;&#8942;</span>
+                <span class="badge-order">{{ forloop.counter }}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-black text-sm leading-tight truncate">{{ theme.name }}</div>
+                    <div class="text-slate-500 text-xs mt-0.5">{{ theme.category.name|default:"No category" }} &middot; {{ theme.use_num }} use{{ theme.use_num|pluralize }}</div>
+                </div>
+                <div class="flex flex-col gap-1 flex-shrink-0">
+                    <button type="button" data-action="up"
+                        class="p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 text-slate-400 hover:text-black transition-all" title="Move up">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+                    </button>
+                    <button type="button" data-action="down"
+                        class="p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 text-slate-400 hover:text-black transition-all" title="Move down">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="py-16 text-center text-slate-400 text-sm italic">No themes yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    var list     = document.getElementById("themeList");
+    var saveBtn  = document.getElementById("saveBtn");
+    var resetBtn = document.getElementById("resetBtn");
+    var toast    = document.getElementById("toast");
+    if (!list) return;
+
+    var saveUrl = "{% url 'manage_theme_order_save' %}";
+    var csrf    = "{{ csrf_token }}";
+
+    function showToast(msg, type) {
+        toast.textContent = msg;
+        toast.className = type;
+        toast.style.display = "block";
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { toast.style.display = "none"; }, 3200);
+    }
+
+    function refreshBadges() {
+        list.querySelectorAll("li.theme-row").forEach(function (li, idx) {
+            var badge = li.querySelector(".badge-order");
+            if (badge) badge.textContent = idx + 1;
+        });
+    }
+
+    list.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-action]");
+        if (!btn) return;
+        var li = btn.closest("li.theme-row");
+        if (btn.dataset.action === "up" && li.previousElementSibling) {
+            list.insertBefore(li, li.previousElementSibling);
+        } else if (btn.dataset.action === "down" && li.nextElementSibling) {
+            list.insertBefore(li.nextElementSibling, li);
+        }
+        refreshBadges();
+    });
+
+    var dragged = null;
+    list.addEventListener("dragstart", function (e) {
+        dragged = e.target.closest("li.theme-row");
+        if (!dragged) return;
+        setTimeout(function () { dragged.classList.add("dragging"); }, 0);
+        e.dataTransfer.effectAllowed = "move";
+    });
+    list.addEventListener("dragend", function () {
+        if (dragged) dragged.classList.remove("dragging");
+        list.querySelectorAll("li.theme-row").forEach(function (li) { li.classList.remove("drag-over"); });
+        dragged = null;
+    });
+    list.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        var target = e.target.closest("li.theme-row");
+        if (!target || target === dragged) return;
+        list.querySelectorAll("li.theme-row").forEach(function (li) { li.classList.remove("drag-over"); });
+        target.classList.add("drag-over");
+    });
+    list.addEventListener("dragleave", function (e) {
+        var target = e.target.closest("li.theme-row");
+        if (target) target.classList.remove("drag-over");
+    });
+    list.addEventListener("drop", function (e) {
+        e.preventDefault();
+        var target = e.target.closest("li.theme-row");
+        if (!target || !dragged || target === dragged) return;
+        target.classList.remove("drag-over");
+        var items = Array.from(list.querySelectorAll("li.theme-row"));
+        if (items.indexOf(dragged) < items.indexOf(target)) {
+            list.insertBefore(dragged, target.nextElementSibling);
+        } else {
+            list.insertBefore(dragged, target);
+        }
+        refreshBadges();
+    });
+
+    function post(payload, btn, okMsg, onOk) {
+        btn.classList.add("busy");
+        fetch(saveUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+            body: JSON.stringify(payload)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                showToast("✓ " + okMsg, "success");
+                if (onOk) onOk();
+            } else {
+                showToast("Error: " + (data.error || "Unknown"), "error");
+            }
+        })
+        .catch(function () { showToast("Network error. Please retry.", "error"); })
+        .finally(function () { btn.classList.remove("busy"); });
+    }
+
+    saveBtn.addEventListener("click", function () {
+        var ids = Array.from(list.querySelectorAll("li.theme-row"))
+            .map(function (li) { return parseInt(li.dataset.id, 10); });
+        post({ order: ids }, saveBtn, "Themes order saved!");
+    });
+
+    resetBtn.addEventListener("click", function () {
+        if (!confirm("Clear the manual order and sort automatically (Video Editor first, then most used)?")) return;
+        post({ reset: true }, resetBtn, "Reset to automatic order.", function () {
+            setTimeout(function () { window.location.reload(); }, 600);
+        });
+    });
+})();
+</script>
+{% endblock %}

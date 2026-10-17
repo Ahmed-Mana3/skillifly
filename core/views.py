@@ -10,7 +10,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Sum, Count, Avg, Q
+from django.db.models import Sum, Count, Avg, Q, F
 from datetime import timedelta
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth import login, logout
@@ -2390,6 +2390,32 @@ def arabic_launch_skills_view(request):
     return _launch_skills(request, arabic=True)
 
 
+@login_required(login_url='arabic_signin')
+def heard_about_view(request):
+    """Arabic-only, one-question survey ("how did you hear about us?") worth 25 XP. Linked from /manage/."""
+    from core import survey
+
+    done_url = reverse('arabic_heard_about')
+    if request.method == 'POST':
+        response, awarded = survey.save(request.user, request.POST.get('source', ''), request.POST.get('detail', ''))
+        if response is None:
+            messages.error(request, 'اختر إجابة من القائمة.')
+            return redirect(done_url)
+        return redirect(done_url + ('?done=1' if awarded else ''))
+
+    response = survey.existing(request.user)
+    return render(request, 'launch/heard_about.html', {
+        'is_arabic_page': True,
+        'options': survey.options(),
+        'response': response,
+        'answer_label': survey.LABELS.get(response.source, '') if response else '',
+        'celebrate': bool(response) and request.GET.get('done') == '1',
+        'xp': survey.XP,
+        'max_detail': survey.MAX_DETAIL,
+        'close_url': reverse('arabic_dashboard'),
+    })
+
+
 def email_unsubscribe(request, token):
     """One-click unsubscribe from onboarding nudge emails (signed link, no login)."""
     from django.core import signing
@@ -3066,6 +3092,39 @@ def activate_portfolio(request):
 
     return redirect(redirect_to)
 
+_VIDEO_EDITOR_NAME_RE = r'^video[\s_-]*editor$'
+
+
+def _ordered_themes():
+    """Themes in gallery order.
+
+    Themes the admin placed by hand (`display_order`) come first in that order.
+    Unplaced ones follow: Video Editor first, then most used.
+    """
+    from django.db.models import Case, IntegerField, Value, When
+    video_first = Case(
+        When(category__name__iregex=_VIDEO_EDITOR_NAME_RE, then=Value(0)),
+        default=Value(1), output_field=IntegerField(),
+    )
+    return (Theme.objects.select_related('category')
+            .annotate(_group=video_first)
+            .order_by(F('display_order').asc(nulls_last=True), '_group', '-use_num', 'name'))
+
+
+def _themes_gallery_querysets():
+    """Themes and categories for the gallery."""
+    from django.db.models import Case, IntegerField, Value, When
+    themes_qs = _ordered_themes()
+    category_first = Case(
+        When(name__iregex=_VIDEO_EDITOR_NAME_RE, then=Value(0)),
+        default=Value(1), output_field=IntegerField(),
+    )
+    categories_qs = (Category.objects.annotate(theme_count=Count('theme'))
+                     .annotate(_group=category_first)
+                     .order_by('_group', 'name'))
+    return themes_qs, categories_qs
+
+
 @login_required
 def themes(request):
     request.session.pop('preview_theme', None)
@@ -3116,8 +3175,7 @@ def themes(request):
     
     from core import activation, launch
     activation.track_reveal_action(request)
-    themes = Theme.objects.select_related('category')
-    categories = Category.objects.annotate(theme_count=Count('theme'))
+    themes, categories = _themes_gallery_querysets()
     profile = Profile.objects.filter(user=request.user).first()
     popular_ids = set(Theme.objects.order_by('-use_num').values_list('id', flat=True)[:3])
     return render(request, 'dashboard/themes.html', {
@@ -3179,8 +3237,7 @@ def arabic_themes(request):
 
     from core import activation, launch
     activation.track_reveal_action(request)
-    themes = Theme.objects.all()
-    categories = Category.objects.all()
+    themes, categories = _themes_gallery_querysets()
     return render(request, 'dashboard/arabic_themes.html', {
         'themes': themes, 'categories': categories, 'is_arabic_page': True,
         'launch_step': launch.step_header('theme', arabic=True) if launch.is_active(request.user) else None,
@@ -3672,7 +3729,8 @@ def manage_dashboard(request):
     """Admin hub for superusers to access all management pages."""
     from .models import DiscountCode, SiteSettings, Theme as ThemeModel
     from .forms import DiscountCodeForm, SiteSettingsForm, ShowcaseSettingsForm
-    
+    from core import survey
+
     discount_codes = DiscountCode.objects.all().order_by('-created_at')
     site_settings = SiteSettings.objects.first()
     if not site_settings:
@@ -3753,6 +3811,7 @@ def manage_dashboard(request):
         # Made with Skillifly section
         'showcases': showcases,
         'showcase_candidates': showcase_candidates,
+        'heard_about': survey.summary(),
     }
     return render(request, 'core/manage.html', context)
 
@@ -4185,6 +4244,59 @@ def manage_experience_order_save(request):
     with transaction.atomic():
         for position, exp_id in enumerate(submitted_ids):
             Experience.objects.filter(pk=exp_id, user=target_user).update(order=position)
+
+    return JsonResponse({'success': True, 'saved': len(submitted_ids)})
+
+
+# ---------------------------------------------------------------------------
+# Admin Theme Ordering
+# ---------------------------------------------------------------------------
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_theme_order(request):
+    """Exclusive admin page: drag themes into the order the gallery shows them."""
+    return render(request, 'core/manage_themes.html', {
+        'themes': list(_ordered_themes()),
+        'has_manual_order': Theme.objects.filter(display_order__isnull=False).exists(),
+    })
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def manage_theme_order_save(request):
+    """Save the gallery order.
+
+    JSON body: {"order": [theme_id, ...]} to set it, or {"reset": true} to go back
+    to the automatic order (Video Editor first, most used first).
+    """
+    import json as _json
+
+    try:
+        data = _json.loads(request.body)
+    except (ValueError, AttributeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    if data.get('reset'):
+        Theme.objects.update(display_order=None)
+        return JsonResponse({'success': True, 'reset': True})
+
+    ordered_ids = data.get('order')
+    if not isinstance(ordered_ids, list):
+        return JsonResponse({'success': False, 'error': 'Missing order'}, status=400)
+    try:
+        submitted_ids = [int(i) for i in ordered_ids]
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Invalid id in order'}, status=400)
+    if len(set(submitted_ids)) != len(submitted_ids):
+        return JsonResponse({'success': False, 'error': 'Duplicate ids'}, status=400)
+
+    valid_ids = set(Theme.objects.values_list('id', flat=True))
+    if any(i not in valid_ids for i in submitted_ids):
+        return JsonResponse({'success': False, 'error': 'Unknown theme id'}, status=404)
+
+    with transaction.atomic():
+        for position, theme_id in enumerate(submitted_ids):
+            Theme.objects.filter(pk=theme_id).update(display_order=position)
 
     return JsonResponse({'success': True, 'saved': len(submitted_ids)})
 

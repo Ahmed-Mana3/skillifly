@@ -1,0 +1,220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #050509;
+            --surface: #0d0d15;
+            --glass: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --accent: #7dd3fc;
+            --accent-rgb: 125, 211, 252;
+            --text: #f5f5f7;
+            --dim: rgba(245, 245, 247, 0.6);
+            --dimmer: rgba(245, 245, 247, 0.35);
+            --ink-on-accent: #051019;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: inline-flex;
+            gap: 4px;
+            padding: 6px;
+            border-radius: 100px;
+            background: rgba(3, 3, 6, 0.86);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .top-nav a {
+            padding: 10px 22px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .top-nav a:hover { color: var(--text); background: rgba(255, 255, 255, 0.07); }
+        .top-nav a.active { color: var(--ink-on-accent); background: var(--text); }
+
+        .back-home {
+            position: fixed;
+            top: 22px;
+            left: 22px;
+            z-index: 60;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--text);
+            text-decoration: none;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+
+        .back-home:hover { background: var(--text); color: var(--ink-on-accent); transform: rotate(90deg); }
+
+        .page {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 130px 24px 90px;
+        }
+
+        .page-head { margin-bottom: 48px; }
+
+        .cursive {
+            font-family: 'Satisfy', cursive;
+            font-weight: 400;
+            color: #9cb4c4;
+        }
+
+        .page-head h1 {
+            font-size: clamp(2.4rem, 7vw, 4rem);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            background: linear-gradient(135deg, #ffffff 0%, #8a8a92 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-head p { color: var(--dim); margin-top: 12px; font-size: 1rem; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 26px;
+        }
+
+        .card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            border-radius: 18px;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(var(--accent-rgb), 0.4);
+            box-shadow: 0 26px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .thumb img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.78); transition: transform 0.7s ease; }
+        .card:hover .thumb img { transform: scale(1.06); }
+        .thumb-ph { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 2.4rem; color: rgba(var(--accent-rgb), 0.3); }
+
+        .badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 0.62rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-strong);
+            backdrop-filter: blur(8px);
+        }
+
+        .card-body { padding: 22px 24px 26px; }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+        .card-desc { font-size: 0.88rem; color: var(--dim); line-height: 1.6; }
+        .empty { text-align: center; padding: 100px 20px; color: var(--dim); }
+        .empty a { color: var(--accent); }
+
+        @media (max-width: 640px) {
+            .top-nav { top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; right: auto; transform: translateX(-50%); padding: 5px; max-width: calc(100vw - 120px); }
+            .top-nav a { display: inline-flex; align-items: center; height: 40px; padding: 0 11px; font-size: 0.82rem; white-space: nowrap; }
+            .back-home { top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; width: 52px; height: 52px; }
+            @media (max-width: 380px) { .back-home { width: 44px; height: 44px; font-size: 1rem; } }
+        }
+    </style>
+    {% include "portfolios/common/theme_background_css.html" %}
+</head>
+
+<body>
+    <a href="/{{ username }}/" class="back-home" aria-label="Back to portfolio">✕</a>
+
+    <nav class="top-nav">
+        <a href="/{{ username }}/reels/">Reels</a>
+        <a href="/{{ username }}/long-videos/" class="active">Work</a>
+        <a href="/{{ username }}/#contact">Contact</a>
+    </nav>
+
+    <main class="page">
+        <div class="page-head">
+            <h1>Long-form <span class="cursive">Work</span></h1>
+            <p>Feature edits, brand films and cinematic productions.</p>
+        </div>
+
+        <div class="grid">
+            {% for project in projects %}
+            <a class="card" href="/{{ username }}/long-videos/{{ project.slug }}/" data-project-id="{{ project.id }}">
+                <div class="thumb">
+                    {% if project.image %}
+                    <img src="{% url 'image_thumb' project.image.name 800 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="800" height="450">
+                    {% elif project.youtube_id %}
+                    <img src="https://img.youtube.com/vi/{{ project.youtube_id }}/hqdefault.jpg" alt="{{ project.title }}" loading="lazy" decoding="async">
+                    {% else %}
+                    <span class="thumb-ph">▶</span>
+                    {% endif %}
+                    <span class="badge">Long form</span>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title">{{ project.title }}</h2>
+                    {% if project.details %}<p class="card-desc">{{ project.details|truncatechars:110 }}</p>{% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty" style="grid-column:1/-1;">
+                <p>No long-form videos yet. <a href="/{{ username }}/reels/">Browse the reels instead.</a></p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+
+</html>

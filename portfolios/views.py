@@ -34,6 +34,41 @@ from core.theme_colors import resolve_background_palette
 # ------------------------------------------------------------------
 
 
+_MOCK_VIDEO_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+_MOCK_REEL_URL = "https://drive.google.com/file/d/1L65bwWPYhSfLHWCMWF9LM_Truoa1qtm9/preview"
+# (title, slug, video_type, category name, url) - previews show no project descriptions.
+_MOCK_PROJECTS = [
+    ("Nike - Urban Run", "nike-urban-run", "long", "Commercials", _MOCK_VIDEO_URL),
+    ("Tech Startup Promo", "tech-startup-promo", "long", "Commercials", _MOCK_VIDEO_URL),
+    ("Fashion Brand Film", "fashion-brand-film", "long", "Commercials", _MOCK_VIDEO_URL),
+    ("Fitness Reel", "fitness-reel", "reel", "Social Media", _MOCK_REEL_URL),
+    ("Travel Vlog Teaser", "travel-vlog-teaser", "reel", "Social Media", _MOCK_REEL_URL),
+    ("Product Launch Reel", "product-launch-reel", "reel", "Social Media", _MOCK_REEL_URL),
+]
+
+
+def _sync_mock_projects(user):
+    """Make the demo user's projects match _MOCK_PROJECTS, also on databases seeded earlier."""
+    slugs = [spec[1] for spec in _MOCK_PROJECTS]
+    existing = Project.objects.filter(user=user)
+    if (existing.filter(slug__in=slugs).count() == len(slugs)
+            and not existing.exclude(details__isnull=True).exclude(details='').exists()):
+        return
+    categories = {
+        name: ProjectCategory.objects.get_or_create(user=user, name=name)[0]
+        for name in {spec[3] for spec in _MOCK_PROJECTS}
+    }
+    for order, (title, slug, video_type, category, url) in enumerate(_MOCK_PROJECTS):
+        Project.objects.update_or_create(
+            user=user, slug=slug,
+            defaults={
+                'title': title, 'video_type': video_type, 'category': categories[category],
+                'url': url, 'image': "projects/preview_thumbnail.png", 'details': '', 'order': order,
+            },
+        )
+    existing.exclude(details__isnull=True).exclude(details='').update(details='')
+
+
 def get_or_create_mock_user():
     from datetime import date
     user, created = CustomUser.objects.get_or_create(
@@ -73,15 +108,12 @@ def get_or_create_mock_user():
         cat1 = ProjectCategory.objects.create(user=user, name="Commercials", description="High-end commercials for brands")
         cat2 = ProjectCategory.objects.create(user=user, name="Social Media", description="Fast-paced social media content")
 
-        Project.objects.create(user=user, title="Nike - Urban Run", video_type="long", category=cat1, url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", slug="nike-urban-run", image="projects/preview_thumbnail.png", details="A fast-paced energetic commercial showcasing high-intensity urban running and brand aesthetic.")
-        Project.objects.create(user=user, title="Tech Startup Promo", video_type="long", category=cat1, url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", slug="tech-startup-promo", image="projects/preview_thumbnail.png", details="Sleek motion graphics and clean cuts introducing a revolutionary SaaS platform.")
-        Project.objects.create(user=user, title="Fitness Reel", video_type="reel", category=cat2, url="https://drive.google.com/file/d/1L65bwWPYhSfLHWCMWF9LM_Truoa1qtm9/preview", slug="fitness-reel", image="projects/preview_thumbnail.png", details="Dynamic vertical short-form reel designed for high retention and engagement.")
-        Project.objects.create(user=user, title="Travel Vlog Teaser", video_type="reel", category=cat2, url="https://drive.google.com/file/d/1L65bwWPYhSfLHWCMWF9LM_Truoa1qtm9/preview", slug="travel-vlog-teaser", image="projects/preview_thumbnail.png", details="Cinematic color-graded teaser featuring breathtaking drone shots and sound design.")
-
         Creator.objects.create(user=user, name="MrBeast", url="https://youtube.com/@mrbeast", image="creators/creator_mrbeast.png")
         Creator.objects.create(user=user, name="Ali Abdaal", url="https://youtube.com/@aliabdaal", image="creators/creator_aliabdaal.png")
         Creator.objects.create(user=user, name="MKBHD", url="https://youtube.com/@mkbhd", image="creators/creator_mkbhd.png")
         Creator.objects.create(user=user, name="Peter McKinnon", url="https://youtube.com/@petermckinnon", image="creators/creator_petermckinnon.png")
+
+    _sync_mock_projects(user)
 
     if not ClientReview.objects.filter(user=user).exists():
         ClientReview.objects.create(user=user, user_name="Sarah Mitchell", user_title="Content Strategist", content="Alex transformed our raw footage into a stunning brand story. The pacing, color grading, and attention to detail exceeded every expectation.", rating=5, order=0)

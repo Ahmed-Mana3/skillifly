@@ -1,0 +1,2175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Satisfy&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           SPACE — a cinematic single-page portfolio theme.
+
+           Dark, full-bleed and motion-led: a drifting particle field,
+           a screen-height hero, two 3D coverflow reels, a clients
+           marquee and a soft glass contact grid. Everything fades its
+           brand colour, so the accent travels as both a token
+           (--accent) and bare channels (--accent-rgb) for the colour
+           editor in core/theme_colors.py.
+           ============================================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #050509;
+            --bg-deep: #020204;
+            --surface: #0d0d15;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-strong: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --accent: #7dd3fc;
+            --accent-rgb: 125, 211, 252;
+            --steel: #79a1b8;
+            --steel-soft: #9cb4c4;
+            --text: #f5f5f7;
+            --dim: rgba(245, 245, 247, 0.6);
+            --dimmer: rgba(245, 245, 247, 0.35);
+            --ink-on-accent: #051019;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(var(--accent-rgb), 0.6);
+            border-radius: 4px;
+        }
+
+        /* ─── Particle field ─── */
+        #bz-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.85;
+        }
+
+        /* ─── Hero ─── */
+        .bz-hero {
+            position: relative;
+            z-index: 50;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 0 20px;
+        }
+
+        .bz-logo {
+            position: absolute;
+            top: 34px;
+            left: 40px;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            animation: bzFloat 4s ease-in-out infinite;
+        }
+
+        .bz-logo-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-strong);
+            background: var(--surface);
+        }
+
+        .bz-logo-initials {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-rgb), 0.2));
+            color: var(--ink-on-accent);
+        }
+
+        .bz-logo-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            color: var(--text);
+        }
+
+        @keyframes bzFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-9px); }
+        }
+
+        /* Decorative geometry */
+        .bz-geometry {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .bz-ring {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: bzSpin 24s linear infinite;
+        }
+
+        .bz-ring-lg { width: min(80vw, 740px); height: min(80vw, 740px); }
+        .bz-ring-sm {
+            width: min(46vw, 420px);
+            height: min(46vw, 420px);
+            animation-duration: 16s;
+            animation-direction: reverse;
+        }
+
+        .bz-arc {
+            position: absolute;
+            top: 14%;
+            left: 34%;
+            width: 380px;
+            height: 190px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 50%;
+            border-bottom: none;
+            transform: rotate(-15deg);
+            animation: bzPulse 5s ease-in-out infinite;
+        }
+
+        .bz-cross {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            animation: bzTwinkle 3s ease-in-out infinite;
+        }
+
+        .bz-cross::before,
+        .bz-cross::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .bz-cross::before { width: 1px; height: 20px; left: 50%; transform: translateX(-50%); }
+        .bz-cross::after { width: 20px; height: 1px; top: 50%; transform: translateY(-50%); }
+        .bz-cross-1 { top: 26%; left: 22%; }
+        .bz-cross-2 { bottom: 30%; right: 24%; animation-delay: 1.2s; }
+
+        .bz-tag {
+            position: absolute;
+            top: 24%;
+            right: 12%;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: var(--dim);
+            padding: 4px 9px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            backdrop-filter: blur(6px);
+        }
+
+        @keyframes bzSpin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes bzPulse {
+            0%, 100% { opacity: 1; transform: rotate(-15deg) scale(1); }
+            50% { opacity: 0.55; transform: rotate(-15deg) scale(1.04); }
+        }
+
+        @keyframes bzTwinkle {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
+        }
+
+        .bz-hero-main {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bz-hero-name {
+            font-family: 'Satisfy', cursive;
+            font-size: clamp(3rem, 12vw, 9.5rem);
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            background: linear-gradient(180deg, #ffffff 0%, #b9c6d2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 34px rgba(255, 255, 255, 0.22));
+            animation: bzGlow 5s ease-in-out infinite;
+            max-width: 100%;
+            word-break: break-word;
+        }
+
+        @keyframes bzGlow {
+            0%, 100% { filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.16)); }
+            50% { filter: drop-shadow(0 0 42px rgba(var(--accent-rgb), 0.4)); }
+        }
+
+        .bz-owner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            margin: 22px auto 30px;
+        }
+
+        .bz-owner-avatar-wrap {
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.08));
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.6), 0 0 26px rgba(var(--accent-rgb), 0.22);
+        }
+
+        .bz-owner-avatar {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .bz-owner-avatar-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            font-family: 'Satisfy', cursive;
+            font-size: 2.6rem;
+            color: var(--ink-on-accent);
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-rgb), 0.25));
+        }
+
+        .bz-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--dim);
+            text-transform: lowercase;
+        }
+
+        .bz-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #17ff4f;
+            box-shadow: 0 0 12px rgba(23, 255, 79, 0.9);
+        }
+
+        .bz-hero-role {
+            font-size: 0.72rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .bz-hero-desc {
+            max-width: 620px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--dim);
+            margin-bottom: 34px;
+        }
+
+        /* Pill navigation */
+        .bz-nav {
+            display: inline-flex;
+            gap: 4px;
+            padding: 6px;
+            border-radius: 100px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            transition: all 0.35s ease;
+        }
+
+        .bz-nav.sticky {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 900;
+            background: rgba(3, 3, 6, 0.9);
+            border-color: var(--border-strong);
+            box-shadow: 0 14px 44px rgba(0, 0, 0, 0.65), 0 0 20px rgba(var(--accent-rgb), 0.12);
+            animation: bzDrop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes bzDrop {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-46px) scale(0.85); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+
+        .bz-nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            border-radius: 100px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: var(--dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .bz-nav-link svg {
+            width: 16px;
+            height: 16px;
+            display: none;
+        }
+
+        .bz-nav-link:hover {
+            color: var(--text);
+            background: var(--glass-strong);
+        }
+
+        .bz-nav-link.active {
+            color: var(--ink-on-accent);
+            background: var(--text);
+            box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+        }
+
+        .bz-scroll-hint {
+            position: absolute;
+            bottom: 26px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            font-size: 0.68rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--dimmer);
+            animation: bzBob 2.4s ease-in-out infinite;
+        }
+
+        @keyframes bzBob {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(7px); }
+        }
+
+        /* ─── Section chrome ─── */
+        section {
+            position: relative;
+            z-index: 2;
+        }
+
+        .bz-inner {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 110px 6vw;
+        }
+
+        .bz-eyebrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .bz-eyebrow-line {
+            height: 1px;
+            width: 60px;
+            background: var(--border-strong);
+        }
+
+        .bz-eyebrow-text {
+            color: var(--steel);
+            font-size: 0.78rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .bz-heading {
+            font-size: clamp(2.2rem, 6vw, 3.6rem);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            text-align: center;
+            margin-bottom: 46px;
+            background: linear-gradient(135deg, #ffffff 0%, #8a8a92 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bz-heading .bz-cursive {
+            font-family: 'Satisfy', cursive;
+            font-weight: 400;
+            -webkit-text-fill-color: var(--steel-soft);
+            color: var(--steel-soft);
+        }
+
+        .bz-section-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .bz-subheading {
+            font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 34px;
+        }
+
+        .bz-subheading .bz-cursive {
+            font-family: 'Satisfy', cursive;
+            font-weight: 400;
+            color: var(--steel-soft);
+        }
+
+        /* ─── Coverflow carousel ─── */
+        .bz-carousel {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* 16:9 cards match video thumbnails (no heavy cropping); the carousel
+           is the card height plus room for the centre card's scale and shadow. */
+        .bz-feat-carousel {
+            height: calc(min(60vw, 620px) * 9 / 16 + 80px);
+            margin-top: 10px;
+        }
+
+        .bz-track {
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .bz-feat-track {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            width: max-content;
+            height: 100%;
+        }
+
+        .bz-card {
+            position: relative;
+            flex: 0 0 min(60vw, 620px);
+            width: min(60vw, 620px);
+            height: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 18px 54px rgba(0, 0, 0, 0.7);
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1),
+                        opacity 0.6s ease, filter 0.6s ease;
+            opacity: 0;
+            pointer-events: none;
+            text-decoration: none;
+        }
+
+        .bz-card img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .bz-feat-card {
+            height: auto;
+            aspect-ratio: 16 / 9;
+        }
+
+        .bz-card-ph {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 3rem;
+            color: rgba(var(--accent-rgb), 0.35);
+            background: linear-gradient(135deg, #0a1020, #050509);
+        }
+
+        .bz-card-info {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 46px 34px 26px;
+            background: linear-gradient(to top, rgba(2, 2, 4, 0.94), transparent);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .bz-card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .bz-card-desc {
+            font-size: 0.85rem;
+            color: var(--dim);
+            margin-top: 4px;
+        }
+
+        .bz-card-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 66px;
+            height: 66px;
+            margin: -33px 0 0 -33px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(var(--accent-rgb), 0.92);
+            color: var(--ink-on-accent);
+            opacity: 0;
+            transform: scale(0.75);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .bz-card-play svg {
+            width: 24px;
+            height: 24px;
+            margin-left: 3px;
+        }
+
+        .bz-feat-card.is-center {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1.02);
+            z-index: 4;
+        }
+
+        .bz-feat-card.is-center img { filter: grayscale(0) brightness(1); }
+        .bz-feat-card.is-center .bz-card-info { opacity: 1; transform: none; }
+        .bz-feat-card.is-center .bz-card-play { opacity: 1; transform: scale(1); }
+        .bz-feat-card.is-center:hover .bz-card-play { transform: scale(1.12); }
+
+        .bz-feat-card.is-left {
+            opacity: 0.55;
+            transform: scale(0.92);
+            z-index: 2;
+            pointer-events: auto;
+        }
+
+        .bz-feat-card.is-right {
+            opacity: 0.55;
+            transform: scale(0.92);
+            z-index: 2;
+            pointer-events: auto;
+        }
+
+        .bz-card img {
+            filter: grayscale(1) brightness(0.6);
+            transition: filter 0.6s ease;
+        }
+
+        .bz-feat-card.is-left img,
+        .bz-feat-card.is-right img { filter: grayscale(1) brightness(0.55); }
+        .bz-feat-card:hover img { filter: grayscale(0) brightness(1); }
+
+        .bz-carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 1px solid var(--border-strong);
+            background: var(--glass-strong);
+            color: #fff;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 12;
+            transition: all 0.3s ease;
+        }
+
+        .bz-carousel-btn:hover {
+            background: rgba(var(--accent-rgb), 0.25);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .bz-carousel-btn svg { width: 22px; height: 22px; }
+
+        .bz-carousel:focus { outline: none; }
+        .bz-carousel:focus-visible .is-center,
+        .bz-card:focus-visible,
+        .bz-short-card:focus-visible,
+        .bz-carousel-btn:focus-visible,
+        .bz-dot:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+        .bz-prev { left: max(2%, 12px); }
+        .bz-next { right: max(2%, 12px); }
+
+        /* ─── Short-form (vertical) reel row ─── */
+        .bz-short-carousel {
+            height: 620px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .bz-short-track {
+            display: flex;
+            align-items: center;
+            gap: 26px;
+            width: max-content;
+            height: 534px;
+        }
+
+        .bz-short-card {
+            position: relative;
+            flex: 0 0 300px;
+            width: 300px;
+            height: 534px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1),
+                        opacity 0.6s ease, filter 0.6s ease;
+            opacity: 0.4;
+            pointer-events: auto;
+            text-decoration: none;
+        }
+
+        .bz-short-card img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(1) brightness(0.5);
+            transition: filter 0.5s ease;
+        }
+
+        .bz-short-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bz-short-play {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .bz-short-play svg { width: 22px; height: 22px; margin-left: 2px; }
+
+        .bz-short-card.is-center {
+            transform: scale(1.04);
+            opacity: 1;
+            z-index: 5;
+            pointer-events: auto;
+        }
+
+        .bz-short-card.is-center img { filter: grayscale(0) brightness(1) contrast(1.05); }
+        .bz-short-card.is-center .bz-short-play { opacity: 1; transform: scale(1); }
+        .bz-short-card.is-center:hover .bz-short-play { transform: scale(1.15); }
+
+        .bz-short-card.is-left-1,
+        .bz-short-card.is-right-1 { opacity: 0.55; }
+        .bz-short-card.is-left-2,
+        .bz-short-card.is-right-2 { opacity: 0.25; }
+
+        .bz-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 26px;
+        }
+
+        .bz-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--dimmer);
+            transition: all 0.3s ease;
+            padding: 0;
+            border: 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* Enlarge the tap target without changing the dot's look */
+        .bz-dot::after {
+            content: "";
+            position: absolute;
+            inset: -10px -4px;
+        }
+
+        .bz-dot.is-active {
+            width: 22px;
+            border-radius: 4px;
+            background: var(--accent);
+        }
+
+        /* ─── All-works card ─── */
+        .bz-more {
+            max-width: 820px;
+            margin: 90px auto 0;
+            padding: 48px 56px;
+            text-align: center;
+            border-radius: 22px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+            transition: all 0.4s ease;
+        }
+
+        .bz-more:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.6);
+            border-color: rgba(var(--accent-rgb), 0.35);
+        }
+
+        .bz-more-title {
+            font-size: clamp(1.4rem, 3.5vw, 2rem);
+            font-weight: 600;
+        }
+
+        .bz-more-text {
+            color: var(--dim);
+            margin: 12px 0 26px;
+            font-size: 0.95rem;
+        }
+
+        .bz-more-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 34px;
+            border-radius: 100px;
+            border: 1px solid var(--border-strong);
+            background: var(--glass);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.4s ease;
+        }
+
+        .bz-more-link:hover {
+            border-color: rgba(var(--accent-rgb), 0.7);
+            background: rgba(var(--accent-rgb), 0.14);
+            transform: translateY(-4px);
+        }
+
+        .bz-more-link svg { width: 20px; height: 20px; }
+
+        /* ─── Skills ─── */
+        .bz-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .bz-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 22px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            font-size: 0.86rem;
+            font-weight: 500;
+            color: var(--text);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .bz-pill::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .bz-pill:hover {
+            border-color: rgba(var(--accent-rgb), 0.6);
+            background: rgba(var(--accent-rgb), 0.1);
+            transform: translateY(-3px);
+        }
+
+        /* ─── Timeline ─── */
+        .bz-timeline {
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .bz-tl-item {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 36px;
+            padding: 34px 0;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .bz-tl-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -1px;
+            height: 1px;
+            width: 0;
+            background: var(--accent);
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .bz-tl-item:hover::after { width: 100%; }
+
+        .bz-tl-year {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--dimmer);
+        }
+
+        .bz-tl-period {
+            margin-top: 6px;
+            font-size: 0.68rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .bz-tl-role {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .bz-tl-company {
+            font-size: 0.85rem;
+            color: var(--dim);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .bz-tl-desc {
+            font-size: 0.9rem;
+            color: var(--dimmer);
+            line-height: 1.7;
+        }
+
+        /* ─── Education ─── */
+        .bz-grid {
+            display: grid;
+            gap: 22px;
+        }
+
+        .bz-edu-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+        .bz-card-panel {
+            padding: 36px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.35s ease;
+        }
+
+        .bz-card-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: var(--accent);
+            transition: height 0.5s ease;
+        }
+
+        .bz-card-panel:hover {
+            transform: translateY(-6px);
+            border-color: rgba(var(--accent-rgb), 0.35);
+        }
+
+        .bz-card-panel:hover::before { height: 100%; }
+
+        .bz-edu-year {
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .bz-edu-degree {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .bz-edu-field {
+            font-size: 0.86rem;
+            color: var(--dim);
+            margin-bottom: 14px;
+        }
+
+        .bz-edu-school {
+            font-size: 0.74rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--dimmer);
+            font-weight: 600;
+        }
+
+        /* ─── Reviews ─── */
+        .bz-reviews-grid { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+
+        .bz-review-card {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .bz-stars {
+            display: flex;
+            gap: 4px;
+        }
+
+        .bz-stars svg {
+            width: 16px;
+            height: 16px;
+            fill: #ffd166;
+        }
+
+        .bz-stars svg.empty { fill: var(--dimmer); }
+
+        .bz-review-text {
+            font-size: 0.94rem;
+            color: var(--dim);
+            line-height: 1.75;
+            flex: 1;
+        }
+
+        .bz-review-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .bz-review-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-strong);
+            flex-shrink: 0;
+        }
+
+        .bz-review-avatar-ph {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            font-weight: 700;
+            color: var(--ink-on-accent);
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-rgb), 0.3));
+            flex-shrink: 0;
+        }
+
+        .bz-review-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .bz-review-title {
+            font-size: 0.78rem;
+            color: var(--dimmer);
+        }
+
+        /* ─── Clients marquee ─── */
+        .bz-clients {
+            width: 100%;
+            overflow: hidden;
+            padding: 26px 0;
+            -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+            mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+        }
+
+        .bz-clients-track {
+            display: flex;
+            width: max-content;
+            animation: bzScroll 34s linear infinite;
+        }
+
+        .bz-clients:hover .bz-clients-track { animation-play-state: paused; }
+
+        @keyframes bzScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .bz-client {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0 22px;
+            padding: 12px 22px 12px 12px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            transition: all 0.35s ease;
+            flex-shrink: 0;
+        }
+
+        .bz-client:hover {
+            border-color: rgba(var(--accent-rgb), 0.55);
+            background: rgba(var(--accent-rgb), 0.1);
+            transform: translateY(-3px);
+        }
+
+        .bz-client-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-strong);
+        }
+
+        .bz-client-avatar-ph {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--ink-on-accent);
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-rgb), 0.3));
+        }
+
+        .bz-client-name {
+            font-size: 0.92rem;
+            font-weight: 600;
+            white-space: nowrap;
+            color: var(--text);
+        }
+
+        /* ─── Contact ─── */
+        .bz-contact-grid {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .bz-contact-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+            padding: 40px 26px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: rgba(8, 12, 20, 0.62);
+            backdrop-filter: blur(14px);
+            text-decoration: none;
+            transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .bz-contact-card:hover {
+            transform: translateY(-12px);
+            border-color: var(--border-strong);
+            background: rgba(12, 18, 30, 0.82);
+            box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7), 0 0 30px rgba(var(--accent-rgb), 0.14);
+        }
+
+        .bz-contact-icon {
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass-strong);
+            border: 1px solid var(--border-strong);
+            transition: all 0.45s ease;
+        }
+
+        .bz-contact-icon svg { width: 32px; height: 32px; color: #fff; }
+
+        .bz-contact-card:hover .bz-contact-icon {
+            transform: scale(1.1) translateY(-4px);
+            border-color: rgba(var(--accent-rgb), 0.7);
+            background: rgba(var(--accent-rgb), 0.16);
+        }
+
+        .bz-contact-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--dim);
+        }
+
+        .bz-contact-value {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .bz-cta-wrap {
+            text-align: center;
+            margin-top: 56px;
+        }
+
+        .bz-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            padding: 20px 46px;
+            border-radius: 100px;
+            background: var(--text);
+            color: var(--ink-on-accent);
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.03em;
+            text-decoration: none;
+            transition: all 0.35s ease;
+        }
+
+        .bz-cta:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 24px 60px rgba(var(--accent-rgb), 0.35);
+        }
+
+        .bz-cta svg { width: 18px; height: 18px; }
+
+        /* ─── Background bands ─── */
+        .bz-band-featured {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #04141d 42%, #062130 60%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .bz-band-clients {
+            background: linear-gradient(180deg, #062130 0%, #030309 100%);
+        }
+
+        .bz-band-about {
+            background: linear-gradient(180deg, rgba(12, 12, 18, 0.4) 0%, rgba(0, 0, 0, 0) 60%);
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            position: relative;
+            z-index: 2;
+            padding: 48px 6vw;
+            border-top: 1px solid var(--border);
+            background: rgba(3, 3, 6, 0.7);
+        }
+
+        .bz-footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 22px;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .bz-footer-inner { flex-direction: row; text-align: left; }
+        }
+
+        .bz-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 26px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            transition: all 0.4s ease;
+        }
+
+        .bz-badge:hover {
+            border-color: rgba(var(--accent-rgb), 0.45);
+            transform: translateY(-3px);
+        }
+
+        .bz-badge .powered {
+            font-size: 0.64rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--dim);
+        }
+
+        .bz-badge img { width: 22px; height: 22px; object-fit: contain; }
+
+        .bz-badge .brand {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+        }
+
+        .bz-footer-copy {
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--dimmer);
+        }
+
+        /* ─── Reveal ─── */
+        .bz-reveal {
+            opacity: 0;
+            transform: translateY(38px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .bz-reveal.is-visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 900px) {
+            .bz-tl-item { grid-template-columns: 1fr; gap: 10px; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding-bottom: 84px; }
+
+            .bz-logo { display: none; }
+
+            .bz-nav {
+                flex-wrap: nowrap;
+                justify-content: center;
+                width: min(360px, calc(100vw - 32px));
+                gap: 4px;
+            }
+
+            /* Phone: the bar starts inline in the hero and, once scrolling
+               starts, pins to the bottom. The slot reserves its height so
+               the hero doesn't jump when the bar leaves the flow. */
+            .bz-nav-slot { display: flex; justify-content: center; min-height: 58px; }
+
+            .bz-nav.sticky {
+                top: auto;
+                bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+                animation-name: bzRise;
+            }
+
+            @keyframes bzRise {
+                0% { opacity: 0; transform: translateX(-50%) translateY(46px) scale(0.85); }
+                100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            }
+
+            .bz-nav-link {
+                flex: 1;
+                justify-content: center;
+                padding: 0;
+                height: 44px;
+                font-size: 0.95rem;
+            }
+
+            /* Slightly narrower, centred contact cards */
+            .bz-contact-grid { grid-template-columns: 1fr; width: min(100%, 300px); }
+
+            .bz-nav-link { -webkit-tap-highlight-color: transparent; }
+            .bz-nav-link span { display: none; }
+            .bz-nav-link svg { display: block; }
+
+            /* Phone: 16:9 cards so video thumbnails are not cropped to a square */
+            .bz-feat-carousel { height: calc(min(74vw, 420px) * 9 / 16 + 44px); }
+            .bz-feat-track { height: 100%; }
+            .bz-feat-card {
+                flex-basis: min(74vw, 420px);
+                width: min(74vw, 420px);
+                height: auto;
+                aspect-ratio: 16 / 9;
+            }
+            .bz-card-info { padding: 30px 18px 14px; }
+            .bz-card-title { font-size: 1rem; }
+            .bz-card-play { width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+            .bz-feat-card.is-left,
+            .bz-feat-card.is-right { opacity: 0.45; }
+
+            /* Full-bleed on phones (past .bz-inner's side padding) so the
+               neighbouring cards peek in on both sides of the centred one. */
+            .bz-carousel { width: calc(100% + 12vw); margin-left: -6vw; }
+            .bz-prev { left: 2%; }
+            .bz-next { right: 2%; }
+
+            .bz-short-carousel { height: 540px; }
+            .bz-short-track { height: min(99.6vw, 462px); }
+            .bz-short-card {
+                flex-basis: min(56vw, 260px);
+                width: min(56vw, 260px);
+                height: min(99.6vw, 462px);
+            }
+            .bz-short-card.is-left-2,
+            .bz-short-card.is-right-2 { opacity: 0.15; }
+
+            .bz-inner { padding: 76px 6vw; }
+            .bz-more { padding: 34px 24px; }
+            .bz-tag { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .bz-hero-name { font-size: 3.4rem; }
+            .bz-hero-desc { font-size: 0.95rem; }
+            .bz-owner-avatar-wrap { width: 96px; height: 96px; }
+            .bz-short-carousel { height: 480px; }
+            .bz-short-track { height: min(117.4vw, 416px); }
+            .bz-short-card {
+                flex-basis: min(66vw, 234px);
+                width: min(66vw, 234px);
+                height: min(117.4vw, 416px);
+            }
+            .bz-carousel-btn { width: 42px; height: 42px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+    </style>
+    {% include "portfolios/common/section_layout_css.html" %}
+    {% include "portfolios/common/theme_background_css.html" %}
+</head>
+
+<body>
+    <canvas id="bz-canvas" aria-hidden="true"></canvas>
+
+    <!-- ─── HERO ─── -->
+    <div class="bz-hero" id="home">
+        <a href="#home" class="bz-logo">
+            {% if personal_info.user.profile.picture %}
+            <img class="bz-logo-mark" src="{% url 'image_thumb' personal_info.user.profile.picture.name 120 %}" alt="{{ personal_info.full_name }}" width="120" height="120" decoding="async">
+            {% else %}
+            <span class="bz-logo-initials">{{ personal_info.full_name|slice:":2"|upper }}</span>
+            {% endif %}
+            <span class="bz-logo-text">{{ personal_info.full_name }}</span>
+        </a>
+
+        <div class="bz-geometry" aria-hidden="true">
+            <div class="bz-ring bz-ring-lg"></div>
+            <div class="bz-ring bz-ring-sm"></div>
+            <div class="bz-arc"></div>
+            <div class="bz-cross bz-cross-1"></div>
+            <div class="bz-cross bz-cross-2"></div>
+            <div class="bz-tag">{{ personal_info.title|default:"Video Editor"|truncatechars:22 }}</div>
+        </div>
+
+        <main class="bz-hero-main">
+            <h1 class="bz-hero-name">{{ personal_info.full_name|default:"Portfolio" }}</h1>
+
+            <div class="bz-owner">
+                <div class="bz-owner-avatar-wrap">
+                    {% if personal_info.user.profile.picture %}
+                    <img class="bz-owner-avatar" src="{% url 'image_thumb' personal_info.user.profile.picture.name 240 %}" alt="{{ personal_info.full_name }}" width="240" height="240" decoding="async">
+                    {% else %}
+                    <span class="bz-owner-avatar-fallback">{{ personal_info.full_name|slice:":1"|upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="bz-status">
+                    <span class="bz-status-dot" aria-hidden="true"></span>
+                    <span>available for work</span>
+                </div>
+            </div>
+
+            <div class="bz-hero-role">{{ personal_info.title|default:"Video Editor &amp; Motion Designer" }}</div>
+
+            {% if personal_info.bio %}
+            <p class="bz-hero-desc">{{ personal_info.bio|truncatechars:220 }}</p>
+            {% endif %}
+
+            <div class="bz-nav-slot">
+            <nav class="bz-nav" id="bz-nav" aria-label="Portfolio sections">
+                <a href="#home" class="bz-nav-link active" data-spy="home" aria-label="Home">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                    <span>Home</span>
+                </a>
+                <a href="#projects" class="bz-nav-link" data-spy="projects" aria-label="Work">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 9 4-3 4 3 4-3 4 3"/></svg>
+                    <span>Work</span>
+                </a>
+                <a href="#experience" class="bz-nav-link" data-spy="experience" aria-label="About">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+                    <span>About</span>
+                </a>
+                <a href="#contact" class="bz-nav-link" data-spy="contact" aria-label="Contact">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+                    <span>Contact</span>
+                </a>
+            </nav>
+            </div>
+        </main>
+
+        <div class="bz-scroll-hint">scroll</div>
+    </div>
+
+    <!-- ─── REORDERABLE BODY ─── -->
+    <div class="portfolio-body">
+
+        <!-- ─── PROJECTS ─── -->
+        {% if projects %}
+        <section class="bz-band-featured" id="projects">
+            <div class="bz-inner">
+                <div class="bz-eyebrow bz-reveal">
+                    <span class="bz-eyebrow-line"></span>
+                    <span class="bz-eyebrow-text">{% if section_names.projects %}{{ section_names.projects }}{% else %}Projects{% endif %}</span>
+                    <span class="bz-eyebrow-line"></span>
+                </div>
+                <h2 class="bz-heading bz-reveal">My <span class="bz-cursive">Work</span></h2>
+
+                {% if long_count %}
+                <div class="bz-carousel bz-feat-carousel bz-reveal" data-carousel="feat" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Long-form projects">
+                    {% if long_count > 1 %}
+                    <button class="bz-carousel-btn bz-prev" type="button" aria-label="Previous project">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    {% endif %}
+                    <div class="bz-track bz-feat-track" data-track>
+                        {% for project in projects %}
+                        {% if project.video_type == 'long' %}
+                        <a class="bz-card bz-feat-card" data-item data-project-id="{{ project.id }}" aria-label="{{ project.title }}"
+                           href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/">
+                            {% if project.image %}
+                            <img src="{% url 'image_thumb' project.image.name 900 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="620" height="540">
+                            {% else %}
+                            <span class="bz-card-ph">▶</span>
+                            {% endif %}
+                            <span class="bz-card-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                            <span class="bz-card-info">
+                                <span class="bz-card-title">{{ project.title }}</span>
+                                {% if project.details %}<span class="bz-card-desc">{{ project.details|truncatechars:90 }}</span>{% endif %}
+                            </span>
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if long_count > 1 %}
+                    <button class="bz-carousel-btn bz-next" type="button" aria-label="Next project">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                    {% endif %}
+                </div>
+                {% if long_count > 1 %}
+                <div class="bz-dots" data-dots="feat">
+                    {% for project in projects %}{% if project.video_type == 'long' %}<button class="bz-dot" type="button" aria-label="Go to project"></button>{% endif %}{% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+
+                {% if reel_count %}
+                <h2 class="bz-subheading bz-reveal" style="text-align:center; margin-top:80px;">
+                    Short form <span class="bz-cursive">Content</span>
+                </h2>
+                <div class="bz-carousel bz-short-carousel bz-reveal" data-carousel="short" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Short-form reels">
+                    {% if reel_count > 1 %}
+                    <button class="bz-carousel-btn bz-prev" type="button" aria-label="Previous reel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    {% endif %}
+                    <div class="bz-track bz-short-track" data-track>
+                        {% for project in projects %}
+                        {% if project.video_type == 'reel' %}
+                        <a class="bz-short-card" data-item data-project-id="{{ project.id }}" aria-label="{{ project.title }}"
+                           href="/{{ personal_info.user.username }}/reels/#reel-{{ project.id }}">
+                            {% if project.image %}
+                            <img src="{% url 'image_thumb' project.image.name 700 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="300" height="534">
+                            {% else %}
+                            <span class="bz-card-ph">▶</span>
+                            {% endif %}
+                            <span class="bz-short-overlay">
+                                <span class="bz-short-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                            </span>
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if reel_count > 1 %}
+                    <button class="bz-carousel-btn bz-next" type="button" aria-label="Next reel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                    {% endif %}
+                </div>
+                {% if reel_count > 1 %}
+                <div class="bz-dots" data-dots="short">
+                    {% for project in projects %}{% if project.video_type == 'reel' %}<button class="bz-dot" type="button" aria-label="Go to reel"></button>{% endif %}{% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <div class="bz-more bz-reveal">
+                    <h3 class="bz-more-title">See every project in one place</h3>
+                    <p class="bz-more-text">The full archive — long-form films and vertical reels, all in one library.</p>
+                    <a class="bz-more-link" href="/{{ personal_info.user.username }}/{% if long_count %}long-videos{% else %}reels{% endif %}/">
+                        <span>View All Projects</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── SKILLS ─── -->
+        {% if skills %}
+        <section id="skills">
+            <div class="bz-inner">
+                <div class="bz-section-label bz-reveal" style="text-align:center;">Arsenal</div>
+                <h2 class="bz-subheading bz-reveal" style="text-align:center;">
+                    {% if section_names.skills %}{{ section_names.skills }}{% else %}My <span class="bz-cursive">Toolkit</span>{% endif %}
+                </h2>
+                <div class="bz-pills bz-reveal">
+                    {% for skill in skills %}
+                    <span class="bz-pill">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── EXPERIENCE ─── -->
+        {% if experiences %}
+        <section class="bz-band-about" id="experience">
+            <div class="bz-inner">
+                <div class="bz-section-label bz-reveal">Experience</div>
+                <h2 class="bz-subheading bz-reveal">
+                    {% if section_names.experience %}{{ section_names.experience }}{% else %}Where I've <span class="bz-cursive">worked</span>{% endif %}
+                </h2>
+                <div class="bz-timeline">
+                    {% for exp in experiences %}
+                    <div class="bz-tl-item bz-reveal">
+                        <div>
+                            <div class="bz-tl-year">{{ exp.start_date|date:"Y" }}</div>
+                            <div class="bz-tl-period">
+                                {{ exp.start_date|date:"M Y" }} —
+                                {% if exp.still_working %}Now
+                                {% elif exp.end_date %}{{ exp.end_date|date:"M Y" }}
+                                {% else %}Present{% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bz-tl-role">{{ exp.title }}</div>
+                            <div class="bz-tl-company">@ {{ exp.company }}</div>
+                            {% if exp.details %}<p class="bz-tl-desc">{{ exp.details }}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── EDUCATION ─── -->
+        {% if education %}
+        <section id="education">
+            <div class="bz-inner">
+                <div class="bz-section-label bz-reveal">Education</div>
+                <h2 class="bz-subheading bz-reveal">
+                    {% if section_names.education %}{{ section_names.education }}{% else %}Where it <span class="bz-cursive">started</span>{% endif %}
+                </h2>
+                <div class="bz-grid bz-edu-grid">
+                    {% for edu in education %}
+                    <div class="bz-card-panel bz-reveal">
+                        <div class="bz-edu-year">{{ edu.grade_year|date:"Y" }}</div>
+                        <div class="bz-edu-degree">{{ edu.degree }}</div>
+                        {% if edu.field %}<div class="bz-edu-field">{{ edu.field }}</div>{% endif %}
+                        <div class="bz-edu-school">{{ edu.school }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── CLIENTS / CREATORS ─── -->
+        {% if creators %}
+        <section class="bz-band-clients" id="creators">
+            <div class="bz-inner" style="padding-bottom:20px;">
+                <div class="bz-section-label bz-reveal" style="text-align:center;">Trusted by</div>
+                <h2 class="bz-subheading bz-reveal" style="text-align:center;">
+                    {% if section_names.creators %}{{ section_names.creators }}{% else %}Creators I've <span class="bz-cursive">worked with</span>{% endif %}
+                </h2>
+            </div>
+            <div class="bz-clients">
+                <div class="bz-clients-track">
+                    {% for i in "12" %}
+                    <div style="display:flex;" {% if not forloop.first %}aria-hidden="true"{% endif %}>
+                        {% for creator in creators %}
+                        <{% if creator.url %}a href="{{ creator.url }}" target="_blank"{% else %}span{% endif %} class="bz-client">
+                            {% if creator.image %}
+                            <img class="bz-client-avatar" src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" loading="lazy" decoding="async" width="100" height="100">
+                            {% else %}
+                            <span class="bz-client-avatar-ph">{{ creator.name|slice:":1"|upper }}</span>
+                            {% endif %}
+                            <span class="bz-client-name">{{ creator.name }}</span>
+                        </{% if creator.url %}a{% else %}span{% endif %}>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── REVIEWS ─── -->
+        {% if reviews %}
+        <section id="reviews">
+            <div class="bz-inner">
+                <div class="bz-section-label bz-reveal">Testimonials</div>
+                <h2 class="bz-subheading bz-reveal">
+                    {% if section_names.reviews %}{{ section_names.reviews }}{% else %}Client <span class="bz-cursive">reviews</span>{% endif %}
+                </h2>
+                <div class="bz-grid bz-reviews-grid">
+                    {% for review in reviews %}
+                    <div class="bz-card-panel bz-review-card bz-reveal">
+                        <div class="bz-stars" aria-label="{{ review.rating }} out of 5 stars">
+                            {% for i in "12345" %}
+                            <svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">
+                                <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.07 3.29a1 1 0 0 0 .95.69h3.46c.97 0 1.37 1.24.59 1.81l-2.8 2.03a1 1 0 0 0-.36 1.12l1.07 3.29c.3.92-.76 1.69-1.54 1.12l-2.8-2.03a1 1 0 0 0-1.18 0l-2.8 2.03c-.78.57-1.84-.2-1.54-1.12l1.07-3.29a1 1 0 0 0-.36-1.12L2.98 8.72c-.78-.57-.38-1.81.59-1.81h3.46a1 1 0 0 0 .95-.69l1.07-3.29z"/>
+                            </svg>
+                            {% endfor %}
+                        </div>
+                        <p class="bz-review-text">"{{ review.content }}"</p>
+                        <div class="bz-review-author">
+                            {% if review.image_name %}
+                            <img class="bz-review-avatar" src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" loading="lazy" decoding="async" width="96" height="96">
+                            {% else %}
+                            <span class="bz-review-avatar-ph">{{ review.initials }}</span>
+                            {% endif %}
+                            <div>
+                                <div class="bz-review-name">{{ review.user_name }}</div>
+                                {% if review.user_title %}<div class="bz-review-title">{{ review.user_title }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── CONTACT ─── -->
+        <section id="contact">
+            <div class="bz-inner">
+                <h2 class="bz-heading bz-reveal">Get in <span class="bz-cursive">touch</span></h2>
+                <div class="bz-grid bz-contact-grid">
+                    {% if personal_info.phone %}
+                    <a class="bz-contact-card bz-reveal" href="tel:{{ personal_info.phone }}">
+                        <span class="bz-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </span>
+                        <span class="bz-contact-label">Phone</span>
+                        <span class="bz-contact-value">{{ personal_info.phone }}</span>
+                    </a>
+                    {% endif %}
+                    {% if personal_info.email %}
+                    <a class="bz-contact-card bz-reveal" href="mailto:{{ personal_info.email }}">
+                        <span class="bz-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </span>
+                        <span class="bz-contact-label">Email</span>
+                        <span class="bz-contact-value">{{ personal_info.email }}</span>
+                    </a>
+                    {% endif %}
+                    {% for link in links %}
+                    <a class="bz-contact-card bz-reveal" href="{{ link.url }}" target="_blank" rel="noopener">
+                        <span class="bz-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+                        </span>
+                        <span class="bz-contact-label">Social</span>
+                        <span class="bz-contact-value">{{ link.platform }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <div class="bz-cta-wrap bz-reveal">
+                    {% if personal_info.booking_url %}
+                    <a class="bz-cta" href="{{ personal_info.booking_url }}" target="_blank" rel="noopener">
+                        Start a project
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    {% elif personal_info.email %}
+                    <a class="bz-cta" href="mailto:{{ personal_info.email }}">
+                        Start a project
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── FOOTER ─── -->
+        <footer>
+            <div class="bz-footer-inner">
+                <a href="/" class="bz-badge" target="_blank" rel="noopener">
+                    <span class="powered">Powered by</span>
+                    <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                    <span class="brand">Skillifly</span>
+                </a>
+                <p class="bz-footer-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
+            </div>
+        </footer>
+
+    </div><!-- /.portfolio-body -->
+
+    <script>
+        (function () {
+            'use strict';
+
+            var reduceMotion = window.matchMedia &&
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            /* ─── Particle field ─── */
+            var canvas = document.getElementById('bz-canvas');
+            if (canvas && !reduceMotion) {
+                var ctx = canvas.getContext('2d');
+                var width, height, points;
+                var accent = [125, 211, 252];
+
+                function readAccent() {
+                    try {
+                        var raw = getComputedStyle(document.documentElement)
+                            .getPropertyValue('--accent-rgb').trim();
+                        var parts = raw.split(',').map(function (n) { return parseInt(n, 10); });
+                        if (parts.length === 3 && parts.every(function (n) { return !isNaN(n); })) {
+                            accent = parts;
+                        }
+                    } catch (e) { /* keep default */ }
+                }
+
+                function resize() {
+                    width = canvas.width = window.innerWidth;
+                    height = canvas.height = window.innerHeight;
+                    var count = Math.min(90, Math.round(width * height / 22000));
+                    points = [];
+                    for (var i = 0; i < count; i++) {
+                        points.push({
+                            x: Math.random() * width,
+                            y: Math.random() * height,
+                            vx: (Math.random() - 0.5) * 0.35,
+                            vy: (Math.random() - 0.5) * 0.35,
+                            r: Math.random() * 1.6 + 0.6
+                        });
+                    }
+                }
+
+                function tick() {
+                    ctx.clearRect(0, 0, width, height);
+                    for (var i = 0; i < points.length; i++) {
+                        var p = points[i];
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        if (p.x < 0 || p.x > width) p.vx *= -1;
+                        if (p.y < 0 || p.y > height) p.vy *= -1;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(' + accent.join(',') + ',0.55)';
+                        ctx.fill();
+                    }
+                    for (var a = 0; a < points.length; a++) {
+                        for (var b = a + 1; b < points.length; b++) {
+                            var dx = points[a].x - points[b].x;
+                            var dy = points[a].y - points[b].y;
+                            var dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < 120) {
+                                ctx.beginPath();
+                                ctx.moveTo(points[a].x, points[a].y);
+                                ctx.lineTo(points[b].x, points[b].y);
+                                ctx.strokeStyle = 'rgba(' + accent.join(',') + ',' + (0.12 * (1 - dist / 120)) + ')';
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                    requestAnimationFrame(tick);
+                }
+
+                readAccent();
+                resize();
+                window.addEventListener('resize', resize);
+                requestAnimationFrame(tick);
+            }
+
+            /* ─── Sticky nav ─── */
+            var nav = document.getElementById('bz-nav');
+            var hero = document.getElementById('home');
+            window.addEventListener('scroll', function () {
+                if (!nav) return;
+                if (window.matchMedia('(max-width: 768px)').matches) {
+                    /* Pin to the bottom only once the inline nav starts to leave the screen. */
+                    var slot = nav.parentElement;
+                    nav.classList.toggle('sticky', slot.getBoundingClientRect().top < 0);
+                    return;
+                }
+                var trigger = hero ? hero.offsetHeight - 120 : 400;
+                nav.classList.toggle('sticky', window.scrollY > trigger);
+            }, { passive: true });
+            window.dispatchEvent(new Event('scroll'));
+
+            /* ─── Scrollspy ─── */
+            var spyLinks = document.querySelectorAll('.bz-nav-link[data-spy]');
+            var allSections = ['home', 'projects', 'experience', 'contact'];
+            if (spyLinks.length && 'IntersectionObserver' in window) {
+                var spy = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) return;
+                        var id = entry.target.id;
+                        spyLinks.forEach(function (l) {
+                            l.classList.toggle('active', l.getAttribute('data-spy') === id);
+                        });
+                    });
+                }, { rootMargin: '-45% 0px -45% 0px' });
+                allSections.forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) spy.observe(el);
+                });
+            }
+
+            /* ─── Reveal ─── */
+            if ('IntersectionObserver' in window) {
+                var revealObs = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            revealObs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('.bz-reveal').forEach(function (el) {
+                    revealObs.observe(el);
+                });
+            } else {
+                document.querySelectorAll('.bz-reveal').forEach(function (el) {
+                    el.classList.add('is-visible');
+                });
+            }
+
+            /* ─── Coverflow carousels ─── */
+            function ready(fn) {
+                if (document.readyState !== 'loading') fn();
+                else document.addEventListener('DOMContentLoaded', fn);
+            }
+
+            ready(function () {
+                var layouts = {
+                    feat: {
+                        center: 'is-center',
+                        left: ['is-left'], right: ['is-right'],
+                        window: 1
+                    },
+                    short: {
+                        center: 'is-center',
+                        left: ['is-left-1', 'is-left-2'],
+                        right: ['is-right-1', 'is-right-2'],
+                        window: 2
+                    }
+                };
+
+                document.querySelectorAll('[data-carousel]').forEach(function (root) {
+                    var kind = root.getAttribute('data-carousel');
+                    var cfg = layouts[kind] || layouts.feat;
+                    var items = Array.prototype.slice.call(root.querySelectorAll('[data-item]'));
+                    if (items.length === 0) return;
+                    var trackEl = root.querySelector('[data-track]');
+
+                    /* With only two projects there is nothing to loop through, so each
+                       card gets a decorative twin; the dots still count real projects. */
+                    var real = items.length;
+                    if (real === 2 && trackEl) {
+                        items.slice().forEach(function (item) {
+                            var twin = item.cloneNode(true);
+                            twin.removeAttribute('aria-label');
+                            twin.setAttribute('aria-hidden', 'true');
+                            twin.tabIndex = -1;
+                            trackEl.appendChild(twin);
+                            items.push(twin);
+                        });
+                    }
+
+                    var dotsWrap = document.querySelector('[data-dots="' + kind + '"]');
+                    var dots = dotsWrap ? Array.prototype.slice.call(dotsWrap.querySelectorAll('.bz-dot')) : [];
+                    /* Start on the newest project (highest id) so it is centred first. */
+                    var index = 0;
+                    var newest = -1;
+                    items.forEach(function (item, i) {
+                        var id = parseInt(item.getAttribute('data-project-id'), 10);
+                        if (id > newest) { newest = id; index = i; }
+                    });
+
+                    /* The cards sit in normal flow, so the active one is
+                       centred by sliding the whole track (offsetLeft ignores
+                       transforms, which keeps this stable mid-animation). */
+                    function centerActive() {
+                        if (!trackEl) return;
+                        var active = items[index];
+                        if (!active || !active.offsetWidth) return;
+                        var target = root.clientWidth / 2 -
+                            (trackEl.offsetLeft + active.offsetLeft + active.offsetWidth / 2);
+                        trackEl.style.transform = 'translateX(' + target + 'px)';
+                    }
+
+                    function layout(first) {
+                        var n = items.length;
+                        items.forEach(function (item, i) {
+                            item.classList.remove('is-center', 'is-left', 'is-right',
+                                'is-left-1', 'is-left-2', 'is-right-1', 'is-right-2');
+                            var offset = i - index;
+                            if (offset > n / 2) offset -= n;
+                            if (offset < -n / 2) offset += n;
+
+                            if (cfg.center && offset === 0) {
+                                item.classList.add(cfg.center);
+                            } else if (offset >= 1 && offset <= cfg.window) {
+                                item.classList.add(cfg.right[offset - 1]);
+                            } else if (offset <= -1 && offset >= -cfg.window) {
+                                item.classList.add(cfg.left[-offset - 1]);
+                            }
+                        });
+                        dots.forEach(function (d, i) {
+                            d.classList.toggle('is-active', i === index % real);
+                        });
+                        if (first) {
+                            recentre();
+                        } else {
+                            centerActive();
+                            clearTimeout(recentreTimer);
+                            recentreTimer = setTimeout(recentre, 650);
+                        }
+                    }
+
+                    /* The track is linear, so to make the carousel loop in both
+                       directions the cards are re-ordered once a move has settled:
+                       the active card always ends up in the middle slot with a real
+                       neighbour on each side (the newest project therefore opens
+                       with cards to its left and right). */
+                    var recentreTimer = null;
+                    function recentre() {
+                        recentreTimer = null;
+                        var n = items.length;
+                        if (n >= 3 && trackEl) {
+                            var mid = Math.floor(n / 2);
+                            for (var k = 0; k < n; k++) {
+                                trackEl.appendChild(items[(index - mid + k + n) % n]);
+                            }
+                        }
+                        if (!trackEl) return;
+                        trackEl.style.transition = 'none';
+                        centerActive();
+                        void trackEl.offsetWidth;
+                        trackEl.style.transition = '';
+                    }
+
+                    /* Every move first finishes any pending re-order, so the target is
+                       always the physical neighbour (or at most half the cards away) and
+                       rapid clicks keep gliding in one direction instead of rewinding. */
+                    function moveTo(i) {
+                        if (recentreTimer) {
+                            clearTimeout(recentreTimer);
+                            recentreTimer = null;
+                            recentre();
+                        }
+                        index = i;
+                        layout();
+                    }
+
+                    function go(step) {
+                        moveTo((index + step + items.length) % items.length);
+                    }
+
+                    var prev = root.querySelector('.bz-prev');
+                    var next = root.querySelector('.bz-next');
+                    if (prev) prev.addEventListener('click', function () { go(-1); });
+                    if (next) next.addEventListener('click', function () { go(1); });
+
+                    dots.forEach(function (d, i) {
+                        d.addEventListener('click', function () {
+                            if (i === index % real) return;
+                            /* pick whichever copy is closer so the slide stays short */
+                            var n = items.length, a = (i - index + n) % n, b = (i + real - index + n) % n;
+                            var da = Math.min(a, n - a), db = Math.min(b, n - b);
+                            moveTo(db < da ? i + real : i);
+                        });
+                    });
+
+                    /* Click a side card to bring it to the centre. */
+                    items.forEach(function (item, i) {
+                        item.addEventListener('click', function (ev) {
+                            if (i !== index) {
+                                ev.preventDefault();
+                                moveTo(i);
+                            }
+                        });
+                    });
+
+                    /* Touch swipe */
+                    var startX = null;
+                    root.addEventListener('touchstart', function (e) {
+                        startX = e.touches[0].clientX;
+                    }, { passive: true });
+                    root.addEventListener('touchend', function (e) {
+                        if (startX === null) return;
+                        var dx = e.changedTouches[0].clientX - startX;
+                        if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+                        startX = null;
+                    }, { passive: true });
+
+                    root.addEventListener('keydown', function (e) {
+                        if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+                        else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+                    });
+
+                    /* Autoplay only while the carousel is on screen and the user is not
+                       hovering, touching or focusing it. */
+                    var timer = null;
+                    var inView = false;
+                    var held = false;
+                    function stop() { clearInterval(timer); timer = null; }
+                    function start() {
+                        stop();
+                        if (reduceMotion || items.length < 2 || !inView || held || document.hidden) return;
+                        timer = setInterval(function () { go(1); }, 5200);
+                    }
+                    if (items.length > 1) {
+                        root.addEventListener('mouseenter', function () { held = true; stop(); });
+                        root.addEventListener('mouseleave', function () { held = false; start(); });
+                        root.addEventListener('focusin', function () { held = true; stop(); });
+                        root.addEventListener('focusout', function () { held = false; start(); });
+                        root.addEventListener('touchstart', function () { stop(); }, { passive: true });
+                        root.addEventListener('touchend', function () { start(); }, { passive: true });
+                        document.addEventListener('visibilitychange', start);
+                        if ('IntersectionObserver' in window) {
+                            new IntersectionObserver(function (entries) {
+                                inView = entries[0].isIntersecting;
+                                start();
+                            }, { threshold: 0.4 }).observe(root);
+                        }
+                    }
+
+                    layout(true);
+                    window.addEventListener('resize', centerActive);
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

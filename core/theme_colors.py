@@ -295,6 +295,22 @@ THEME_BACKGROUND_SPECS = {
             SLOT_TRIO: ('--accent3-rgb',),
         },
     },
+    ('video_editor', 'space'): {
+        'default': '#050509',
+        'family': FAMILY_SURFACE,
+        'accent': '#7DD3FC',
+        'gradient': ('#7DD3FC', '#FFFFFF', '#79A1B8'),
+        # Space is a near-monochrome cinematic theme: the accent is the ice-blue
+        # glow behind the focal cards, so a recolour moves every glow, ring and
+        # hover wash at once. Those washes are written as rgba(var(--accent-rgb)),
+        # hence the channel bridge.
+        'accent_tokens': {
+            SLOT_PRIMARY: ('--accent',),
+        },
+        'accent_channels': {
+            SLOT_PRIMARY: ('--accent-rgb',),
+        },
+    },
     ('video_editor', 'cyan'): {
         'default': '#00E5FF',
         'family': FAMILY_BRUTAL,
