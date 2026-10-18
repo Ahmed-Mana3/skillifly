@@ -311,6 +311,21 @@ THEME_BACKGROUND_SPECS = {
             SLOT_PRIMARY: ('--accent-rgb',),
         },
     },
+    ('video_editor', 'minimal_gallery'): {
+        'default': '#EEEBE5',
+        'family': FAMILY_SURFACE,
+        'accent': '#2438D6',
+        'gradient': ('#2438D6', '#1C1B19', '#B8B1A5'),
+        # Minimal Gallery is warm plaster and graphite ink, and spends its one
+        # accent, Klein blue, on markers: section dots, the active filter, link
+        # underlines, review stars and button hovers.
+        'accent_tokens': {
+            SLOT_PRIMARY: ('--accent',),
+        },
+        'accent_channels': {
+            SLOT_PRIMARY: ('--accent-rgb',),
+        },
+    },
     ('video_editor', 'cyan'): {
         'default': '#00E5FF',
         'family': FAMILY_BRUTAL,

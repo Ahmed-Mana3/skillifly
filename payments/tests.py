@@ -329,3 +329,88 @@ class PaymentTrackingReportTests(TestCase):
         response = self.client.get(reverse('manage_payment_tracking') + '?days=7')
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['has_data'])
+
+
+class SubscriptionStackingTests(TestCase):
+    """Paying while a plan is still running adds the new days on top of it."""
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(username='stacker', email='stacker@example.com')
+        self.monthly = Subscription.objects.create(name='Monthly', duration=30, days=30)
+        self.annual = Subscription.objects.create(name='Annual', duration=365, days=365)
+
+    def _paid(self, sub, days_ago=0, **extra):
+        payment = UserPayment.objects.create(user=self.user, subscription=sub, status='paid', **extra)
+        if days_ago:
+            UserPayment.objects.filter(pk=payment.pk).update(date=timezone.now() - timedelta(days=days_ago))
+            payment.refresh_from_db()
+        return payment
+
+    def _days_left(self, payment):
+        return (payment.expiration_date - timezone.now()).days
+
+    def test_first_payment_carries_nothing(self):
+        payment = self._paid(self.monthly)
+        self.assertIsNone(payment.carried_over)
+        self.assertEqual(self._days_left(payment), 29)
+
+    def test_renewing_early_adds_the_remaining_days(self):
+        self._paid(self.monthly, days_ago=10)  # 20 days left
+        renewal = self._paid(self.monthly)
+        self.assertEqual(renewal.carried_over.days, 19)  # 19 days + some hours
+        self.assertEqual(self._days_left(renewal), 49)
+        self.assertEqual(renewal.total_days, 49)
+        self.assertTrue(renewal.is_active)
+
+    def test_upgrading_to_annual_keeps_the_monthly_days(self):
+        self._paid(self.monthly, days_ago=5)  # 25 days left
+        upgrade = self._paid(self.annual)
+        self.assertEqual(self._days_left(upgrade), 365 + 24)
+
+    def test_renewing_after_expiry_starts_fresh(self):
+        self._paid(self.monthly, days_ago=40)
+        renewal = self._paid(self.monthly)
+        self.assertIsNone(renewal.carried_over)
+        self.assertEqual(self._days_left(renewal), 29)
+
+    def test_three_stacked_payments_chain(self):
+        self._paid(self.monthly)
+        self._paid(self.monthly)
+        third = self._paid(self.monthly)
+        self.assertEqual(self._days_left(third), 89)
+
+    def test_pending_payment_stacks_when_it_flips_to_paid(self):
+        self._paid(self.monthly, days_ago=10)
+        pending = UserPayment.objects.create(
+            user=self.user, subscription=self.monthly, status='pending', fawaterk_intent_key='INTENT-1'
+        )
+        self.assertIsNone(pending.carried_over)
+        from payments.views import _activate_subscription_by_intent
+        _activate_subscription_by_intent('INTENT-1', self.user)
+        pending.refresh_from_db()
+        self.assertEqual(self._days_left(pending), 49)
+        self.assertTrue(self.user.has_active_subscription)
+
+    def test_resaving_a_paid_payment_does_not_stack_again(self):
+        self._paid(self.monthly, days_ago=10)
+        renewal = self._paid(self.monthly)
+        carried = renewal.carried_over
+        renewal.amount = 50
+        renewal.save()
+        renewal.refresh_from_db()
+        self.assertEqual(renewal.carried_over, carried)
+
+    def test_other_users_plans_are_ignored(self):
+        other = CustomUser.objects.create_user(username='other', email='other@example.com')
+        UserPayment.objects.create(user=other, subscription=self.annual, status='paid')
+        payment = self._paid(self.monthly)
+        self.assertIsNone(payment.carried_over)
+
+    def test_dashboard_shows_the_stacked_window(self):
+        self._paid(self.monthly, days_ago=10)
+        self._paid(self.monthly)
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.context['days_left'], 49)
+        self.assertEqual(response.context['subscription_days'], 49)
+        self.assertEqual(response.context['plan_name'], 'Monthly Pro')

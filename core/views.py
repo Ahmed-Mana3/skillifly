@@ -2918,8 +2918,7 @@ def _dashboard_context(request):
     days_left = 0
     
     if payment and payment.subscription:
-        expiration_date = payment.date + timedelta(days=payment.subscription.days)
-        remaining = expiration_date - timezone.now()
+        remaining = payment.expiration_date - timezone.now()
         days_left = max(0, remaining.days)
         
     portfolio_url = request.build_absolute_uri(f'/{request.user.username}/')
@@ -2970,8 +2969,11 @@ def _dashboard_context(request):
         plan_name_ar = 'مجاني'
 
     plan_state = 'active' if has_active_payment else ('expired' if payment else 'free')
+    # The bar and "X of Y days" cover the whole window, including days carried over
+    # from a plan that was still running when this one was bought.
+    window_days = payment.total_days if (payment and payment.subscription) else 0
     plan_progress = (
-        min(100, round((days_left / subscription_days) * 100)) if subscription_days else 0
+        min(100, round((days_left / window_days) * 100)) if window_days else 0
     )
 
     # First-run state: the onboarding switch is on, the editor has no project yet and
@@ -3022,7 +3024,7 @@ def _dashboard_context(request):
         'plan_name': plan_name,
         'plan_name_ar': plan_name_ar,
         'plan_state': plan_state,
-        'subscription_days': subscription_days,
+        'subscription_days': window_days,
         'plan_progress': plan_progress,
         'checklist_items': checklist_items,
         'checklist_done': checklist_done,

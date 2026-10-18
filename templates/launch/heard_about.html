@@ -7,12 +7,16 @@
   .ha-card { padding: 24px; }
   @media (min-width: 640px) { .ha-card { padding: 32px; } }
   .ha-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+  /* Phones: one column of full-width rows, so labels never wrap one word per line and the tick always fits */
+  @media (max-width: 479px) { .ha-grid { grid-template-columns: minmax(0, 1fr); } .ha-card { padding: 20px 16px; } .ha-card .lx-actions { margin: 24px -16px -20px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); } .ha-body { min-height: 60px; } }
   @media (min-width: 640px) { .ha-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } }
-  .ha-opt { position: relative; display: block; cursor: pointer; touch-action: manipulation; }
+  .ha-opt { position: relative; display: block; min-width: 0; cursor: pointer; touch-action: manipulation; }
   .ha-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
   .ha-body { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border-radius: 16px; border: 1.5px solid #E2E8F0;
     background: #fff; font-weight: 700; font-size: 15px; color: #0F172A; user-select: none;
     transition: border-color .18s, background .18s, box-shadow .18s, transform .18s; }
+  .ha-body { min-width: 0; }
+  .ha-body > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
   .ha-body .sf-chip { flex-shrink: 0; }
   .ha-opt:hover .ha-body { border-color: rgba(124, 58, 237, .5); transform: translateY(-1px); }
   .ha-opt:active .ha-body { transform: scale(.97); }
@@ -26,6 +30,7 @@
   .ha-opt input:checked + .ha-body .ha-tick { background: var(--lx-purple); border-color: var(--lx-purple); color: #fff; }
   .ha-detail { margin-top: 16px; }
   .ha-detail[hidden] { display: none; }
+  .ha-detail .sf-input { scroll-margin-bottom: 120px; }
   .ha-done { text-align: center; padding: 40px 24px; }
   .ha-done .sf-chip { margin: 0 auto 18px; }
   .ha-big { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 10px 18px; border-radius: 999px; background: #ECFDF5;
@@ -124,7 +129,7 @@
     if (ask) {
       detailLabel.textContent = e.target.dataset.prompt;
       detailInput.placeholder = e.target.dataset.placeholder;
-      detailInput.focus({ preventScroll: true });
+      detailInput.focus();  // scrolls it into view (scroll-margin keeps it clear of the sticky submit bar)
     } else detailInput.value = '';
   });
 

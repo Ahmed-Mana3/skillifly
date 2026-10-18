@@ -1,0 +1,759 @@
+{% load static %}{% static 'img/themes/minimal_gallery/still-01.webp' as still1 %}{% static 'img/themes/minimal_gallery/still-02.webp' as still2 %}{% static 'img/themes/minimal_gallery/still-03.webp' as still3 %}{% static 'img/themes/minimal_gallery/still-04.webp' as still4 %}{% static 'img/themes/minimal_gallery/still-05.webp' as still5 %}{% static 'img/themes/minimal_gallery/still-06.webp' as still6 %}{% static 'img/themes/minimal_gallery/still-07.webp' as still7 %}{% static 'img/themes/minimal_gallery/still-08.webp' as still8 %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#EEEBE5">
+    <script>document.documentElement.classList.add('js');</script>
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════════════════════════
+           MINIMAL GALLERY — the portfolio as an exhibition.
+           Plaster-wall calm: the work is the only colour on the page,
+           metadata is set like wall labels, and a single Klein-blue dot
+           marks what matters (section markers, the active filter, link
+           underlines, ratings, button hovers). The hero is a curved
+           row of the editor's own thumbnails (static/js/tilted_gallery.js).
+           Every colour is a token in the 'surface' family vocabulary so
+           Customize → Colours can repaint it (core/theme_colors.py).
+        ═══════════════════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #EEEBE5;
+            --surface: #F8F6F2;
+            --surface-hover: #E6E2DA;
+            --surface-solid: #E0DBD1;
+            --glass: rgba(28, 27, 25, 0.04);
+            --border: rgba(28, 27, 25, 0.11);
+            --border-hover: rgba(28, 27, 25, 0.26);
+            --text: #1C1B19;
+            --text-muted: rgba(28, 27, 25, 0.64);
+            --dim: rgba(28, 27, 25, 0.64);
+            --dimmer: rgba(28, 27, 25, 0.42);
+
+            /* Klein blue: 6.8:1 on the plaster, 8:1 under white text.
+               Keep the channels in step with the hex. */
+            --accent: #2438D6;
+            --accent-rgb: 36, 56, 214;
+
+            --font-display: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+            --font-body: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --gutter: clamp(20px, 5vw, 72px);
+            --nav-h: 72px;
+        }
+
+        html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); -webkit-text-size-adjust: 100%; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        img { display: block; max-width: 100%; }
+        a { color: inherit; }
+        ::selection { background: var(--accent); color: var(--sf-accent-ink, #FFFFFF); }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+        .skip { position: absolute; left: 16px; top: -60px; z-index: 100; padding: 10px 16px; background: var(--text); color: var(--bg); text-decoration: none; font-size: 0.85rem; border-radius: 6px; }
+        .skip:focus { top: 16px; }
+
+        /* Wall-label type: the small mono metadata used everywhere. */
+        .mg-label { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+        .mg-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+
+        /* ─── Nav ─── */
+        .mg-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: var(--nav-h); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 var(--gutter); border-bottom: 1px solid transparent; transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s; }
+        .mg-nav.is-scrolled { background: var(--sf-nav, rgba(238, 235, 229, 0.86)); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom-color: var(--border); }
+        .mg-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--font-display); font-weight: 600; font-size: 0.98rem; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mg-nav-links { display: flex; align-items: center; gap: 28px; }
+        .mg-nav-links a { text-decoration: none; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); transition: color 0.25s, border-color 0.25s; }
+        .mg-nav-links a:hover { color: var(--text); }
+        .mg-nav-links .mg-nav-cta { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid var(--border-hover); border-radius: 100px; color: var(--text); }
+        .mg-nav-links .mg-nav-cta:hover { border-color: var(--text); }
+
+        /* ─── Hero: name above, curved row through the middle, bio below ─── */
+        .mg-hero { position: relative; height: 100vh; height: 100svh; min-height: 600px; max-height: 1100px; overflow: hidden; }
+        .mg-curve { position: absolute; inset: 0 0 var(--mg-bar, 0px) 0; --tg-radius: 4px; }
+        .mg-curve .tg-slice { background: var(--surface-solid); }
+        /* --mg-bar is the height of an injected bottom bar (theme preview,
+           "your portfolio is live", welcome), measured in JS, so the hero's
+           buttons and the footer never sit underneath it. */
+        .mg-hero-copy { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; padding: calc(var(--nav-h) + clamp(16px, 4vh, 48px)) var(--gutter) calc(clamp(28px, 5vh, 56px) + var(--mg-bar, 0px)); pointer-events: none; }
+        .mg-hero-copy a { pointer-events: auto; }
+        .mg-hero-top, .mg-hero-bottom { display: flex; flex-direction: column; align-items: center; }
+        .mg-hero-top { gap: 16px; }
+        .mg-now { display: inline-flex; align-items: center; gap: 10px; }
+        .mg-name { font-family: var(--font-display); font-weight: 500; font-size: clamp(2.6rem, 7.2vw, 6.4rem); line-height: 0.95; letter-spacing: -0.045em; text-wrap: balance; max-width: 14ch; }
+        .mg-role { font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+        .mg-hero-bottom { gap: 22px; max-width: 560px; }
+        .mg-bio { color: var(--dim); font-size: 1rem; line-height: 1.6; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .mg-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+        /* Without thumbnails (or without 3D support) the hero is pure type. */
+        .mg-hero.is-flat { height: auto; min-height: 78vh; min-height: 78svh; max-height: none; }
+        .mg-hero.is-flat .mg-curve { display: none; }
+        .mg-hero.is-flat .mg-hero-copy { min-height: 78vh; min-height: 78svh; justify-content: center; gap: 44px; }
+
+        .mg-btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 100px; font-size: 0.88rem; font-weight: 500; text-decoration: none; transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.3s var(--ease); }
+        .mg-btn svg { width: 14px; height: 14px; flex: none; }
+        .mg-btn-ink { background: var(--text); color: var(--bg); }
+        .mg-btn-ink:hover { background: var(--accent); color: var(--sf-accent-ink, #FFFFFF); }
+        .mg-btn-line { border: 1px solid var(--border-hover); color: var(--text); background: var(--sf-nav, rgba(238, 235, 229, 0.7)); }
+        .mg-btn-line:hover { border-color: var(--text); }
+
+        /* ─── Sections ─── */
+        .mg-section { padding: clamp(64px, 8vw, 112px) var(--gutter); border-top: 1px solid var(--border); }
+        /* The skills line is a single row of type; full section padding would leave it floating. */
+        .mg-section#skills { padding-top: clamp(48px, 6vw, 80px); padding-bottom: clamp(48px, 6vw, 80px); }
+        .mg-inner { max-width: 1320px; margin: 0 auto; }
+        .mg-head { display: flex; align-items: center; justify-content: space-between; gap: 18px 32px; flex-wrap: wrap; margin-bottom: clamp(28px, 4vw, 48px); }
+        .mg-head h2 { display: inline-flex; align-items: center; gap: 12px; }
+
+        /* Work: two rooms, long-form and reels */
+        .mg-filters { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+        .mg-chip { position: relative; background: none; border: 0; cursor: pointer; padding: 6px 0; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); transition: color 0.25s; }
+        .mg-chip sup { margin-left: 4px; font-size: 0.6rem; color: var(--dimmer); }
+        .mg-chip::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform 0.35s var(--ease); }
+        .mg-chip:hover, .mg-chip.is-active { color: var(--text); }
+        .mg-chip.is-active::after { transform: scaleX(1); }
+
+        .mg-room + .mg-room { margin-top: clamp(56px, 8vw, 104px); }
+        .mg-room.is-empty { display: none; }
+        .mg-room-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 16px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+        .mg-room-title { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; letter-spacing: -0.01em; }
+        .mg-room-title .mg-label { margin-left: 10px; }
+        .mg-more { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; white-space: nowrap; transition: color 0.25s; }
+        .mg-more svg { width: 13px; height: 13px; transition: transform 0.3s var(--ease); }
+        .mg-more:hover { color: var(--text); }
+        .mg-more:hover svg { transform: translateX(4px); }
+
+        .mg-grid { display: grid; gap: clamp(32px, 4vw, 56px) clamp(16px, 2.4vw, 32px); }
+        .mg-grid-long { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        /* An odd number of films would leave the last one hanging beside an empty
+           wall, so the first is hung full width instead, as the show's lead piece. */
+        .mg-grid-long .mg-work:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+        .mg-grid-long .mg-work:first-child:nth-last-child(odd) .mg-frame { aspect-ratio: 21 / 9; }
+        .mg-grid-reel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .mg-work { display: block; text-decoration: none; color: inherit; }
+        .mg-work.is-hidden { display: none; }
+        .mg-frame { position: relative; overflow: hidden; aspect-ratio: 16 / 9; background: var(--surface-solid); border-radius: 3px; }
+        .mg-grid-reel .mg-frame { aspect-ratio: 9 / 16; }
+        .mg-frame img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+        .mg-work:hover .mg-frame img { transform: scale(1.035); }
+        .mg-ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dimmer); }
+        .mg-ph svg { width: 34px; height: 34px; stroke: currentColor; }
+        .mg-play { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 10px; border-radius: 100px; background: var(--sf-nav, rgba(238, 235, 229, 0.92)); color: var(--text); font-family: var(--font-mono); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0; transform: translateY(6px); transition: opacity 0.35s, transform 0.35s var(--ease); }
+        .mg-play i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+        .mg-work:hover .mg-play, .mg-work:focus-visible .mg-play { opacity: 1; transform: none; }
+        .mg-caption { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 14px; padding-top: 14px; }
+        .mg-num { font-family: var(--font-mono); font-size: 0.68rem; color: var(--dimmer); padding-top: 0.32em; }
+        .mg-title { font-family: var(--font-display); font-weight: 500; font-size: 1.06rem; line-height: 1.3; letter-spacing: -0.01em; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; text-decoration-thickness: 1px; transition: text-decoration-color 0.3s; }
+        .mg-work:hover .mg-title { text-decoration-color: var(--accent); }
+        .mg-meta { grid-column: 2; font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+        .mg-empty { display: none; padding: 48px 0; text-align: center; }
+
+        /* Skills: an endless marquee, set like an artwork's medium line.
+           Static (wrapped) until JS adds .is-running. */
+        .mg-marquee { margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter); overflow: hidden; }
+        .mg-marquee-group { list-style: none; display: flex; flex-wrap: wrap; align-items: center; row-gap: 6px; max-width: 1320px; margin: 0 auto; }
+        .mg-skill { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.3rem, 2.8vw, 2.3rem); line-height: 1.25; letter-spacing: -0.025em; white-space: nowrap; }
+        /* Every skill ends with the accent dot, so the loop seam looks like any other gap. */
+        .mg-skill::after { content: ''; display: inline-block; width: 0.16em; height: 0.16em; margin: 0 0.6em; border-radius: 50%; background: var(--accent); vertical-align: middle; }
+        .mg-marquee.is-running { padding: 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+        .mg-marquee.is-running .mg-marquee-track { display: flex; width: max-content; animation: mg-marquee var(--mg-marquee-dur, 40s) linear infinite; }
+        .mg-marquee.is-running .mg-marquee-group { flex: none; flex-wrap: nowrap; max-width: none; margin: 0; }
+        .mg-marquee.is-running:hover .mg-marquee-track, .mg-marquee.is-paused .mg-marquee-track { animation-play-state: paused; }
+        @keyframes mg-marquee { to { transform: translateX(-50%); } }
+
+        /* Experience / education: catalogue rows */
+        .mg-rows { border-top: 1px solid var(--border); }
+        .mg-row { display: grid; grid-template-columns: minmax(130px, 1fr) 2fr 1.4fr; gap: 6px 32px; padding: 26px 0; border-bottom: 1px solid var(--border); }
+        .mg-row-years { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.06em; color: var(--dim); padding-top: 0.3em; font-variant-numeric: tabular-nums; }
+        .mg-row-main { font-family: var(--font-display); font-weight: 500; font-size: 1.18rem; line-height: 1.35; letter-spacing: -0.012em; }
+        .mg-row-side { color: var(--dim); padding-top: 0.1em; }
+        .mg-row-note { grid-column: 2 / -1; color: var(--dim); font-size: 0.95rem; max-width: 64ch; white-space: pre-line; margin-top: 6px; }
+
+        /* Collaborators */
+        .mg-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 28px 24px; }
+        .mg-person { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; min-width: 0; }
+        .mg-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex: none; background: var(--surface-solid); filter: grayscale(1); transition: filter 0.5s; }
+        .mg-person:hover .mg-avatar { filter: none; }
+        .mg-avatar-ph { display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--border-hover); font-family: var(--font-mono); font-size: 0.8rem; color: var(--dim); filter: none; }
+        .mg-person-name { font-weight: 500; font-size: 0.98rem; line-height: 1.3; overflow-wrap: anywhere; }
+        a.mg-person .mg-person-name::after { content: ' \2197'; color: var(--dimmer); font-size: 0.8em; }
+
+        /* Notes (reviews) */
+        .mg-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(40px, 5vw, 72px) clamp(32px, 5vw, 80px); }
+        .mg-note { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; padding-top: 24px; border-top: 1px solid var(--text); }
+        .mg-note-text { font-family: var(--font-display); font-size: clamp(1.15rem, 1.7vw, 1.42rem); line-height: 1.45; letter-spacing: -0.014em; white-space: pre-line; }
+        .mg-note-body { display: flex; flex-direction: column; gap: 16px; }
+        .mg-note-foot { display: flex; align-items: center; gap: 14px; }
+        .mg-note-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; background: var(--surface-solid); }
+        .mg-note-ph { display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-hover); background: transparent; font-family: var(--font-mono); font-size: 0.7rem; color: var(--dim); }
+        .mg-note-name { font-weight: 500; font-size: 0.94rem; line-height: 1.3; }
+        .mg-note-role { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+        .mg-stars { display: flex; gap: 3px; }
+        .mg-stars svg { width: 12px; height: 12px; fill: var(--border-hover); }
+        .mg-stars svg.filled { fill: var(--accent); }
+
+        /* Enquiries */
+        .mg-contact-big { display: inline-block; max-width: 100%; padding-bottom: 6px; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 4vw, 3.5rem); line-height: 1.1; letter-spacing: -0.035em; text-decoration: none; overflow-wrap: anywhere; background: linear-gradient(var(--accent), var(--accent)) 0 100% / 0 2px no-repeat; transition: background-size 0.6s var(--ease); }
+        /* An address reads as one unit: keep it on one line (JS shrinks it to fit)
+           and only let it wrap if it still overflows at the smallest size. */
+        a.mg-contact-big { white-space: nowrap; }
+        a.mg-contact-big.is-wrapping { white-space: normal; text-wrap: balance; }
+        .mg-contact-big:hover { background-size: 100% 2px; }
+        .mg-contact-lede { margin-top: 22px; color: var(--dim); max-width: 46ch; }
+        .mg-contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 32px; margin-top: clamp(40px, 6vw, 72px); border-top: 1px solid var(--border); }
+        .mg-contact-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; min-width: 0; }
+        .mg-contact-item .v { font-weight: 500; overflow-wrap: anywhere; text-align: right; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color 0.3s; }
+        .mg-contact-item:hover .v { text-decoration-color: var(--accent); }
+        .mg-contact-cta { margin-top: 36px; }
+
+        /* Footer */
+        .mg-footer { padding: 32px var(--gutter) calc(32px + var(--mg-bar, 0px)); border-top: 1px solid var(--border); }
+        .mg-footer-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .sf-badge { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+        .sf-badge img { width: 16px; height: 16px; object-fit: contain; }
+        .sf-badge .br { font-family: var(--font-display); font-weight: 600; font-size: 0.86rem; letter-spacing: -0.01em; text-transform: none; color: var(--text); }
+
+        /* One-time reveals (only when JS is running, so no-JS shows everything) */
+        .js .mg-reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); transition-delay: var(--d, 0ms); }
+        .js .mg-reveal.is-in { opacity: 1; transform: none; }
+
+        @media (max-width: 900px) {
+            .mg-grid-reel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .mg-notes { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            :root { --nav-h: 64px; }
+            .mg-nav-links { gap: 0; }
+            .mg-nav-links a:not(.mg-nav-cta) { display: none; }
+            .mg-bio { font-size: 0.95rem; }
+            .mg-grid-long { grid-template-columns: 1fr; }
+            .mg-grid-long .mg-work:first-child:nth-last-child(odd) .mg-frame { aspect-ratio: 16 / 9; }
+            /* Reels become a swipeable row on phones */
+            .mg-grid-reel { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 62%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter); }
+            .mg-grid-reel::-webkit-scrollbar { display: none; }
+            .mg-grid-reel .mg-work { scroll-snap-align: start; }
+            .mg-grid-reel .mg-work.is-hidden { display: none; }
+            /* Collaborators swipe sideways too, as portrait cards */
+            .mg-people { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 34%; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter); }
+            .mg-people::-webkit-scrollbar { display: none; }
+            .mg-person { flex-direction: column; text-align: center; gap: 12px; scroll-snap-align: start; }
+            .mg-person .mg-avatar { width: 72px; height: 72px; }
+            .mg-person-name { font-size: 0.9rem; }
+            .mg-row { grid-template-columns: 1fr; }
+            .mg-row-note { grid-column: 1; }
+            .mg-play { opacity: 1; transform: none; }
+        }
+        @media (hover: none) { .mg-play { opacity: 1; transform: none; } }
+
+        /* Reduced motion: no reveals or hover drift. The hero band pauses as a
+           finished still (handled inside tilted_gallery.js), so this list is
+           scoped on purpose — a blanket `animation-duration` override would
+           run the band's keyframes to their hidden end state. */
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .js .mg-reveal { opacity: 1; transform: none; transition: none; }
+            .mg-frame img, .mg-chip::after, .mg-contact-big, .mg-play, .mg-more svg, .mg-btn { transition: none; }
+            .mg-work:hover .mg-frame img { transform: none; }
+            .mg-marquee-track { animation: none !important; }
+        }
+    </style>
+    {% include "portfolios/common/section_layout_css.html" %}
+    {% include "portfolios/common/theme_background_css.html" %}
+</head>
+
+<body>
+    <a href="#main" class="skip">Skip to the work</a>
+
+    <!-- ═══════════════ NAV ═══════════════ -->
+    <nav class="mg-nav" id="mgNav" aria-label="Portfolio">
+        <a href="#top" class="mg-brand">{{ personal_info.full_name|default:username }}</a>
+        <div class="mg-nav-links">
+            {% if projects %}<a href="#projects">Work</a>{% endif %}
+            {% if experiences %}<a href="#experience">Experience</a>{% endif %}
+            {% if reviews %}<a href="#reviews">Notes</a>{% endif %}
+            <a href="#contact" class="mg-nav-cta"><i class="mg-dot"></i>Enquire</a>
+        </div>
+    </nav>
+
+    <!-- ═══════════════ HERO ═══════════════
+         The curved row shows the editor's own thumbnails (up to 12): the
+         uploaded image, else the YouTube poster. The demo portfolio used by
+         theme previews shows the theme's stock stills instead, because its
+         projects all share one placeholder image. -->
+    <header class="mg-hero{% if not projects and portfolio_user.username != 'alex_mercer' %} is-flat{% endif %}" id="top">
+        {% if projects or portfolio_user.username == 'alex_mercer' %}
+        <div class="mg-curve" id="mgCurve" data-speed="4" data-tile-height="26" data-gap="6" data-axis="56" data-curve="80" data-fade="12">
+            <ul id="mgHeroSrc" hidden>
+                {% if portfolio_user.username == 'alex_mercer' %}
+                <li data-src="{{ still1 }}"></li><li data-src="{{ still2 }}"></li><li data-src="{{ still3 }}"></li><li data-src="{{ still4 }}"></li>
+                <li data-src="{{ still5 }}"></li><li data-src="{{ still6 }}"></li><li data-src="{{ still7 }}"></li><li data-src="{{ still8 }}"></li>
+                {% else %}
+                {% for project in projects|slice:":12" %}
+                {% if project.image %}<li data-src="{% url 'image_thumb' project.image.name 960 %}"></li>
+                {% elif project.youtube_id %}<li data-src="https://img.youtube.com/vi/{{ project.youtube_id }}/hqdefault.jpg"></li>{% endif %}
+                {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="mg-hero-copy">
+            <div class="mg-hero-top">
+                <div class="mg-now mg-label mg-reveal"><i class="mg-dot"></i>{% if project_count %}Now showing{% else %}Portfolio{% endif %}</div>
+                <h1 class="mg-name mg-reveal" style="--d:80ms">{{ personal_info.full_name|default:username }}</h1>
+                <div class="mg-role mg-reveal" style="--d:160ms">{{ personal_info.title|default:"Video Editor" }}{% if project_count %} — {{ project_count }} {% if project_count == 1 %}work{% else %}works{% endif %} on view{% endif %}</div>
+            </div>
+            <div class="mg-hero-bottom">
+                {% if personal_info.bio %}<p class="mg-bio mg-reveal" style="--d:240ms">{{ personal_info.bio|truncatewords:40 }}</p>{% endif %}
+                <div class="mg-actions mg-reveal" style="--d:320ms">
+                    {% if projects %}
+                    <a href="#projects" class="mg-btn mg-btn-ink">View the work <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+                    {% endif %}
+                    {% if personal_info.booking_url %}
+                    <a href="{{ personal_info.booking_url }}" target="_blank" rel="noopener" class="mg-btn mg-btn-line">Book a call</a>
+                    {% elif personal_info.email %}
+                    <a href="mailto:{{ personal_info.email }}" class="mg-btn mg-btn-line">Get in touch</a>
+                    {% else %}
+                    <a href="#contact" class="mg-btn mg-btn-line">Get in touch</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Reorderable sections live inside .portfolio-body (see section_layout_css.html). -->
+    <div class="portfolio-body" id="main">
+
+    <!-- ═══════════════ WORK ═══════════════ -->
+    {% if projects %}
+    <section id="projects" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.projects %}{{ section_names.projects }}{% else %}Selected Works{% endif %}</h2>
+                {% if project_categories_count > 1 %}
+                <div class="mg-filters mg-reveal" id="mgFilters" role="group" aria-label="Filter by collection">
+                    <button class="mg-chip is-active" type="button" data-filter="all" aria-pressed="true">All<sup>{{ project_count }}</sup></button>
+                    {% for cat in project_categories %}{% if cat.project_count %}
+                    <button class="mg-chip" type="button" data-filter="{{ cat.id }}" aria-pressed="false">{{ cat.name }}<sup>{{ cat.project_count }}</sup></button>
+                    {% endif %}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if long_count %}
+            <div class="mg-room" data-room="long">
+                <div class="mg-room-head mg-reveal">
+                    <h3 class="mg-room-title">Long-form<span class="mg-label">{{ long_count|stringformat:"02d" }}</span></h3>
+                    <a href="/{{ username }}/long-videos/" class="mg-more mg-label">All films <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                </div>
+                <div class="mg-grid mg-grid-long">
+                    {% for project in projects %}{% if project.video_type == 'long' %}
+                    <a href="/{{ username }}/long-videos/{{ project.slug }}/" class="mg-work mg-reveal" style="--d:{% cycle '0' '90' %}ms" data-cat="{{ project.category_id|default:'0' }}" data-project-id="{{ project.id }}">
+                        <div class="mg-frame" data-url="{{ project.url|default:'' }}">
+                            {% if portfolio_user.username == 'alex_mercer' %}
+                            <img src="{% cycle still1 still3 still5 still7 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="1280" height="720">
+                            {% elif project.image %}
+                            <img src="{% url 'image_thumb' project.image.name 1280 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="1280" height="720">
+                            {% else %}
+                            <img class="auto-thumb" src="" alt="{{ project.title }}" loading="lazy" decoding="async" width="960" height="540" hidden>
+                            <div class="mg-ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></div>
+                            {% endif %}
+                            <span class="mg-play"><i></i>Watch</span>
+                        </div>
+                        <div class="mg-caption">
+                            <span class="mg-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                            <span class="mg-title">{{ project.title }}</span>
+                            <span class="mg-meta">{% if project.category %}{{ project.category.name }} · {% endif %}Long-form</span>
+                        </div>
+                    </a>
+                    {% endif %}{% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if reel_count %}
+            <div class="mg-room" data-room="reel">
+                <div class="mg-room-head mg-reveal">
+                    <h3 class="mg-room-title">Reels<span class="mg-label">{{ reel_count|stringformat:"02d" }}</span></h3>
+                    <a href="/{{ username }}/reels/" class="mg-more mg-label">Play all <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                </div>
+                <div class="mg-grid mg-grid-reel">
+                    {% for project in projects %}{% if project.video_type == 'reel' %}
+                    <a href="/{{ username }}/reels/#reel-{{ project.id }}" class="mg-work mg-reveal" style="--d:{% cycle '0' '70' '140' '210' %}ms" data-cat="{{ project.category_id|default:'0' }}" data-project-id="{{ project.id }}">
+                        <div class="mg-frame" data-url="{{ project.url|default:'' }}">
+                            {% if portfolio_user.username == 'alex_mercer' %}
+                            <img src="{% cycle still2 still4 still6 still8 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="1280" height="720">
+                            {% elif project.image %}
+                            <img src="{% url 'image_thumb' project.image.name 720 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="405" height="720">
+                            {% else %}
+                            <img class="auto-thumb" src="" alt="{{ project.title }}" loading="lazy" decoding="async" width="405" height="720" hidden>
+                            <div class="mg-ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10.5 9.5l4 2.5-4 2.5z" fill="currentColor" stroke="none"/></svg></div>
+                            {% endif %}
+                            <span class="mg-play"><i></i>Play</span>
+                        </div>
+                        <div class="mg-caption">
+                            <span class="mg-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                            <span class="mg-title">{{ project.title }}</span>
+                            <span class="mg-meta">{% if project.category %}{{ project.category.name }} · {% endif %}Reel</span>
+                        </div>
+                    </a>
+                    {% endif %}{% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <p class="mg-empty mg-label" id="mgEmpty">Nothing in this collection yet</p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══════════════ SKILLS ═══════════════ -->
+    {% if skills %}
+    <section id="skills" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.skills %}{{ section_names.skills }}{% else %}Medium{% endif %}</h2>
+            </div>
+        </div>
+        <!-- Skills drift right to left in an endless row. JS repeats the list until
+             it spans the screen and appends one hidden copy so the loop is seamless;
+             without JS (or with reduced motion) this is a static wrapped list. -->
+        <div class="mg-marquee mg-reveal" style="--d:80ms" id="mgMarquee">
+            <div class="mg-marquee-track">
+                <ul class="mg-marquee-group">
+                    {% for skill in skills %}<li class="mg-skill">{{ skill.name }}</li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══════════════ EXPERIENCE ═══════════════ -->
+    {% if experiences %}
+    <section id="experience" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.experience %}{{ section_names.experience }}{% else %}Experience{% endif %}</h2>
+            </div>
+            <div class="mg-rows">
+                {% for exp in experiences %}
+                <div class="mg-row mg-reveal">
+                    <div class="mg-row-years">{{ exp.start_date|date:"Y" }} — {% if exp.still_working %}Now{% elif exp.end_date %}{{ exp.end_date|date:"Y" }}{% else %}Now{% endif %}</div>
+                    <div class="mg-row-main">{{ exp.title }}</div>
+                    <div class="mg-row-side">{{ exp.company }}</div>
+                    {% if exp.details %}<p class="mg-row-note">{{ exp.details }}</p>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══════════════ EDUCATION ═══════════════ -->
+    {% if education %}
+    <section id="education" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.education %}{{ section_names.education }}{% else %}Education{% endif %}</h2>
+            </div>
+            <div class="mg-rows">
+                {% for edu in education %}
+                <div class="mg-row mg-reveal">
+                    <div class="mg-row-years">{{ edu.grade_year|date:"Y" }}</div>
+                    <div class="mg-row-main">{{ edu.degree }}{% if edu.field %}, {{ edu.field }}{% endif %}</div>
+                    <div class="mg-row-side">{{ edu.school }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══════════════ COLLABORATORS ═══════════════ -->
+    {% if creators %}
+    <section id="creators" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.creators %}{{ section_names.creators }}{% else %}Collaborators{% endif %}</h2>
+            </div>
+            <div class="mg-people">
+                {% for creator in creators %}
+                <{% if creator.url %}a href="{{ creator.url }}" target="_blank" rel="noopener"{% else %}div{% endif %} class="mg-person mg-reveal" style="--d:{% cycle '0' '60' '120' '180' %}ms">
+                    {% if creator.image %}
+                    <img src="{% url 'image_thumb' creator.image.name 104 %}" alt="" class="mg-avatar" loading="lazy" decoding="async" width="52" height="52">
+                    {% else %}
+                    <span class="mg-avatar mg-avatar-ph" aria-hidden="true">{{ creator.name|slice:":1"|upper }}</span>
+                    {% endif %}
+                    <span class="mg-person-name">{{ creator.name }}</span>
+                </{% if creator.url %}a{% else %}div{% endif %}>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══════════════ NOTES (REVIEWS) ═══════════════ -->
+    {% if reviews %}
+    <section id="reviews" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.reviews %}{{ section_names.reviews }}{% else %}Notes from clients{% endif %}</h2>
+            </div>
+            <div class="mg-notes">
+                {% for review in reviews %}
+                <figure class="mg-note mg-reveal" style="--d:{% cycle '0' '90' %}ms">
+                    <div class="mg-note-body">
+                        <span class="mg-stars" role="img" aria-label="{{ review.rating }} out of 5 stars">
+                            {% for i in "12345" %}<svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% endif %}" aria-hidden="true"><path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.07 3.29a1 1 0 00.95.69h3.46c.97 0 1.37 1.24.59 1.81l-2.8 2.03a1 1 0 00-.36 1.12l1.07 3.29c.3.92-.76 1.69-1.54 1.12l-2.8-2.03a1 1 0 00-1.18 0l-2.8 2.03c-.78.57-1.84-.2-1.54-1.12l1.07-3.29a1 1 0 00-.36-1.12L2.98 8.72c-.78-.57-.38-1.81.59-1.81h3.46a1 1 0 00.95-.69l1.07-3.29z"/></svg>{% endfor %}
+                        </span>
+                        <blockquote class="mg-note-text">“{{ review.content }}”</blockquote>
+                    </div>
+                    <figcaption class="mg-note-foot">
+                        {% if review.image_name %}
+                        <img src="{% url 'image_thumb' review.image_name 80 %}" alt="" class="mg-note-avatar" loading="lazy" decoding="async" width="40" height="40">
+                        {% else %}
+                        <span class="mg-note-avatar mg-note-ph" aria-hidden="true">{{ review.initials }}</span>
+                        {% endif %}
+                        <span>
+                            <span class="mg-note-name">{{ review.user_name }}</span>
+                            {% if review.user_title %}<br><span class="mg-note-role">{{ review.user_title }}</span>{% endif %}
+                        </span>
+                    </figcaption>
+                </figure>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══════════════ ENQUIRIES ═══════════════ -->
+    <section id="contact" class="mg-section">
+        <div class="mg-inner">
+            <div class="mg-head">
+                <h2 class="mg-label mg-reveal"><i class="mg-dot"></i>{% if section_names.contact %}{{ section_names.contact }}{% else %}Enquiries{% endif %}</h2>
+            </div>
+            {% if personal_info.email %}
+            <a href="mailto:{{ personal_info.email }}" class="mg-contact-big mg-reveal" style="--d:60ms">{{ personal_info.email }}</a>
+            {% elif personal_info.phone %}
+            <a href="tel:{{ personal_info.phone }}" class="mg-contact-big mg-reveal" style="--d:60ms">{{ personal_info.phone }}</a>
+            {% else %}
+            <p class="mg-contact-big mg-reveal" style="--d:60ms">Let's make something.</p>
+            {% endif %}
+            <p class="mg-contact-lede mg-reveal" style="--d:120ms">Films, reels, campaigns or a whole channel. Send the brief and get a clear plan, a timeline and a first cut to react to.</p>
+
+            {% if personal_info.phone and personal_info.email or personal_info.booking_url or links %}
+            <div class="mg-contact-grid mg-reveal" style="--d:160ms">
+                {% if personal_info.phone and personal_info.email %}
+                <a href="tel:{{ personal_info.phone }}" class="mg-contact-item"><span class="mg-label">Phone</span><span class="v">{{ personal_info.phone }}</span></a>
+                {% endif %}
+                {% if personal_info.booking_url %}
+                <a href="{{ personal_info.booking_url }}" target="_blank" rel="noopener" class="mg-contact-item"><span class="mg-label">Calendar</span><span class="v">Book a call ↗</span></a>
+                {% endif %}
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener" class="mg-contact-item"><span class="mg-label">{{ link.platform }}</span><span class="v">{{ link.url|cut:"https://"|cut:"http://"|cut:"www."|truncatechars:30 }} ↗</span></a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- ═══════════════ FOOTER ═══════════════ -->
+    <footer class="mg-footer">
+        <div class="mg-footer-inner">
+            <p class="mg-label">© {% now "Y" %} {{ personal_info.full_name|default:username }}</p>
+            <a href="/" class="sf-badge mg-label" target="_blank" rel="noopener">
+                Powered by
+                <img src="{% static 'img/bird.png' %}" alt="">
+                <span class="br">Skillifly</span>
+            </a>
+        </div>
+    </footer>
+
+    </div><!-- /.portfolio-body -->
+
+    <script src="{% static 'js/tilted_gallery.js' %}"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        /* ─── Hero: the curved row of thumbnails ─── */
+        var hero = document.getElementById('top');
+        var curve = document.getElementById('mgCurve');
+        if (curve) {
+            var images = Array.prototype.map.call(curve.querySelectorAll('#mgHeroSrc [data-src]'), function (li) {
+                return { src: li.getAttribute('data-src') };
+            });
+            // On phones the name block is short and the bio is clamped, so a
+            // slightly higher row sits midway between the two.
+            if (window.matchMedia('(max-width: 720px)').matches) curve.setAttribute('data-axis', '52');
+            var band = window.TiltedGallery ? window.TiltedGallery.mount(curve, images) : null;
+            if (!band) hero.classList.add('is-flat');
+        }
+
+        /* ─── Nav gains a backdrop once the page moves ─── */
+        var nav = document.getElementById('mgNav');
+        function onScroll() { nav.classList.toggle('is-scrolled', window.scrollY > 24); }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
+        /* ─── One-time reveals ─── */
+        var reveals = document.querySelectorAll('.mg-reveal');
+        if ('IntersectionObserver' in window) {
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (en) {
+                    if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            reveals.forEach(function (el) { io.observe(el); });
+        } else {
+            reveals.forEach(function (el) { el.classList.add('is-in'); });
+        }
+
+        /* ─── Collection filter: hides cards, then any room left empty ─── */
+        var filters = document.getElementById('mgFilters');
+        if (filters) {
+            var rooms = document.querySelectorAll('.mg-room');
+            var empty = document.getElementById('mgEmpty');
+            filters.addEventListener('click', function (e) {
+                var chip = e.target.closest('.mg-chip');
+                if (!chip) return;
+                filters.querySelectorAll('.mg-chip').forEach(function (c) {
+                    c.classList.toggle('is-active', c === chip);
+                    c.setAttribute('aria-pressed', c === chip ? 'true' : 'false');
+                });
+                var f = chip.getAttribute('data-filter'), total = 0;
+                rooms.forEach(function (room) {
+                    var shown = 0;
+                    room.querySelectorAll('.mg-work').forEach(function (card) {
+                        var ok = f === 'all' || card.getAttribute('data-cat') === f;
+                        card.classList.toggle('is-hidden', !ok);
+                        if (ok) { shown++; card.classList.add('is-in'); }
+                    });
+                    room.classList.toggle('is-empty', shown === 0);
+                    total += shown;
+                });
+                if (empty) empty.style.display = total ? 'none' : 'block';
+            });
+        }
+
+        /* ─── Skills marquee: fill the row, then loop two identical halves ─── */
+        var marquee = document.getElementById('mgMarquee');
+        if (marquee && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            var track = marquee.querySelector('.mg-marquee-track');
+            var group = track.querySelector('.mg-marquee-group');
+            var skills = Array.prototype.slice.call(group.children);
+            var builtFor = 0;
+            var buildMarquee = function () {
+                var width = marquee.clientWidth;
+                if (!width || width === builtFor) return;
+                builtFor = width;
+                while (track.children.length > 1) track.removeChild(track.lastChild);
+                group.querySelectorAll('[data-fill]').forEach(function (n) { n.remove(); });
+                marquee.classList.add('is-running');
+                // A short list is repeated until one half spans the row, so no gap
+                // ever scrolls into view.
+                for (var guard = 0; group.getBoundingClientRect().width < width && guard < 30; guard++) {
+                    skills.forEach(function (li) {
+                        var copy = li.cloneNode(true);
+                        copy.setAttribute('aria-hidden', 'true');
+                        copy.setAttribute('data-fill', '');
+                        group.appendChild(copy);
+                    });
+                }
+                var twin = group.cloneNode(true);
+                twin.setAttribute('aria-hidden', 'true');
+                track.appendChild(twin);
+                // Constant speed (~60px/s) whatever the number of skills.
+                track.style.setProperty('--mg-marquee-dur', (group.getBoundingClientRect().width / 60).toFixed(2) + 's');
+            };
+            buildMarquee();
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { builtFor = 0; buildMarquee(); });
+            var marqueeTimer;
+            window.addEventListener('resize', function () {
+                clearTimeout(marqueeTimer);
+                marqueeTimer = setTimeout(buildMarquee, 200);
+            });
+            if ('IntersectionObserver' in window) {
+                new IntersectionObserver(function (entries) {
+                    marquee.classList.toggle('is-paused', !entries[0].isIntersecting);
+                }).observe(marquee);
+            }
+        }
+
+        /* ─── Enquiries: fit the email (or phone) to one line ─── */
+        var big = document.querySelector('a.mg-contact-big');
+        var bigText = big ? big.textContent : '';
+        function shrinkUntilFits(min) {
+            var room = big.parentNode.clientWidth;
+            var size = parseFloat(getComputedStyle(big).fontSize);
+            while (big.scrollWidth > room && size > min) {
+                size -= 1;
+                big.style.fontSize = size + 'px';
+            }
+            return big.scrollWidth <= room;
+        }
+        function fitContact() {
+            if (!big) return;
+            // One line first, shrinking a little if needed…
+            big.textContent = bigText;
+            big.style.fontSize = '';
+            big.classList.remove('is-wrapping');
+            if (shrinkUntilFits(22)) return;
+            // …otherwise two lines at full size, broken at the "@" rather than mid-word.
+            var at = bigText.indexOf('@');
+            big.style.fontSize = '';
+            big.classList.add('is-wrapping');
+            if (at > 0) {
+                big.textContent = '';
+                big.appendChild(document.createTextNode(bigText.slice(0, at)));
+                big.appendChild(document.createElement('wbr'));
+                big.appendChild(document.createTextNode(bigText.slice(at)));
+            }
+            shrinkUntilFits(16);
+        }
+        fitContact();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitContact);
+        var fitTimer;
+        window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer = setTimeout(fitContact, 150); });
+
+        /* ─── Make room for a bar injected at the bottom of the page ─── */
+        function measureBar() {
+            var bar = document.querySelector('.preview-bar-container, #sfl-bar, #sfw-bar');
+            var covered = bar ? Math.max(0, window.innerHeight - bar.getBoundingClientRect().top) : 0;
+            document.documentElement.style.setProperty('--mg-bar', Math.round(covered) + 'px');
+        }
+        document.addEventListener('DOMContentLoaded', measureBar);
+        window.addEventListener('resize', measureBar);
+
+        /* ─── YouTube posters for projects without an uploaded thumbnail ─── */
+        function ytId(url) {
+            var m = (url || '').match(/^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        document.querySelectorAll('.mg-frame .auto-thumb').forEach(function (img) {
+            var frame = img.closest('.mg-frame');
+            var id = ytId(frame.getAttribute('data-url'));
+            if (!id) return;
+            img.onload = function () {
+                if (img.naturalWidth > 200) {
+                    img.hidden = false;
+                    var ph = frame.querySelector('.mg-ph');
+                    if (ph) ph.remove();
+                }
+            };
+            img.onerror = function () { img.onerror = null; img.src = 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg'; };
+            img.src = 'https://img.youtube.com/vi/' + id + '/maxresdefault.jpg';
+        });
+    })();
+    </script>
+</body>
+
+</html>

@@ -87,9 +87,7 @@ const BX = {
 
   ORDERS_BY_CATEGORY: {
     student: ['identity', 'education', 'skills', 'experience', 'projects', 'creators', 'reviews', 'links', 'order'],
-    // Video editors start with their work: the videos are what clients judge, and the
-    // name/title in "identity" are already pre-filled from signup.
-    video_editor: ['projects', 'identity', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'],
+    video_editor: ['identity', 'projects', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'],
     developer: ['identity', 'skills', 'experience', 'projects', 'creators', 'reviews', 'education', 'links', 'order']
   },
 

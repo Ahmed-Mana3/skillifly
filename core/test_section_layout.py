@@ -1018,7 +1018,8 @@ class MonochromeThemeLayoutTests(TestCase):
 
 class RemainingVideoEditorThemeLayoutTests(TestCase):
     """Data-driven coverage for the remaining video_editor themes wired for
-    section ordering: animated, cinematic, pro, yellow, cyan, editorial_studio.
+    section ordering: animated, cinematic, pro, yellow, cyan, editorial_studio,
+    minimal_gallery.
 
     Each theme's expected order mirrors its hard-coded DOM. Narrower themes
     simply ship a shorter panel — cinematic has no reviews section, pro is a
@@ -1033,6 +1034,7 @@ class RemainingVideoEditorThemeLayoutTests(TestCase):
         'yellow': ['creators', 'projects', 'skills', 'experience', 'education', 'reviews', 'contact'],
         'cyan': ['creators', 'projects', 'skills', 'experience', 'education', 'reviews', 'contact'],
         'editorial_studio': ['projects', 'experience', 'education', 'creators', 'reviews', 'contact'],
+        'minimal_gallery': ['projects', 'skills', 'experience', 'education', 'creators', 'reviews', 'contact'],
     }
 
     # (promoted key, its selector, demoted key, its selector) for the preview
@@ -1044,6 +1046,7 @@ class RemainingVideoEditorThemeLayoutTests(TestCase):
         'yellow': ('projects', '#projects', 'creators', '#creators'),
         'cyan': ('projects', '#projects', 'creators', '#creators'),
         'editorial_studio': ('experience', '#experience', 'projects', '#projects'),
+        'minimal_gallery': ('skills', '#skills', 'projects', '#projects'),
     }
 
     def setUp(self):
@@ -1131,7 +1134,7 @@ class RemainingVideoEditorThemeLayoutTests(TestCase):
 
     def test_preview_renders_custom_section_names_every_theme(self):
         themes = ['minimal', 'animated', 'animated_dark', 'monochrome', 'yellow', 'cyan',
-                  'cinematic', 'pro', 'editorial_studio']
+                  'cinematic', 'pro', 'editorial_studio', 'minimal_gallery']
         for theme in themes:
             with self.subTest(theme=theme):
                 profile = self._user_and_profile(theme, is_public=True)

@@ -135,6 +135,11 @@ THEME_SECTION_DEFAULTS = {
     ('video_editor', 'space'): [
         'projects', 'skills', 'experience', 'education', 'creators', 'reviews', 'contact',
     ],
+    # minimal_gallery: creative's sequence; social links are rows in its
+    # enquiries section, so there is no standalone links section.
+    ('video_editor', 'minimal_gallery'): [
+        'projects', 'skills', 'experience', 'education', 'creators', 'reviews', 'contact',
+    ],
 }
 
 # (category, theme) pairs whose public template ships the section-layout
@@ -155,6 +160,7 @@ LAYOUT_ENABLED_THEMES = {
     ('video_editor', 'editorial_studio'),
     ('video_editor', 'kinetic'),
     ('video_editor', 'space'),
+    ('video_editor', 'minimal_gallery'),
 }
 
 DEFAULT_SECTION_ORDER = list(SECTION_ORDER_DEFAULTS['video_editor'])

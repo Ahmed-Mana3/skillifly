@@ -466,6 +466,9 @@ class UserPayment(models.Model):
     fawaterk_intent_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
     discount_code_used = models.CharField(max_length=50, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
+    # Time left on the user's running plan when this payment became paid.
+    # Renewing early adds the new plan on top instead of restarting from today.
+    carried_over = models.DurationField(null=True, blank=True)
 
     def __str__(self):
         user_name = self.user.username if self.user else "Unknown User"
@@ -473,13 +476,53 @@ class UserPayment(models.Model):
         return f"{user_name} - {sub_duration} - {self.status}"
 
     @property
+    def expiration_date(self):
+        from datetime import timedelta
+        if not (self.subscription and self.date):
+            return None
+        return self.date + timedelta(days=self.subscription.days) + (self.carried_over or timedelta(0))
+
+    @property
     def is_active(self):
         from django.utils import timezone
-        from datetime import timedelta
         if self.status == 'paid' and self.subscription:
-            expiration_date = self.date + timedelta(days=self.subscription.days)
-            return expiration_date > timezone.now()
+            return self.expiration_date > timezone.now()
         return False
+
+    @property
+    def total_days(self):
+        """Length of this payment's whole window, carried-over time included."""
+        if not self.subscription:
+            return 0
+        return self.subscription.days + (self.carried_over.days if self.carried_over else 0)
+
+    def save(self, *args, **kwargs):
+        if self.status == 'paid' and self.user_id and self._becoming_paid():
+            self.carried_over = self._remaining_on_running_plan()
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = {*kwargs['update_fields'], 'carried_over'}
+        super().save(*args, **kwargs)
+
+    def _becoming_paid(self):
+        if self._state.adding:
+            return True
+        previous = UserPayment.objects.filter(pk=self.pk).values_list('status', flat=True).first()
+        return previous != 'paid'
+
+    def _remaining_on_running_plan(self):
+        """Time between this payment's start and the latest end of the user's other paid plans."""
+        from django.utils import timezone
+        start = self.date or timezone.now()
+        latest_end = None
+        others = (UserPayment.objects.filter(user_id=self.user_id, status='paid')
+                  .exclude(pk=self.pk).select_related('subscription'))
+        for payment in others:
+            end = payment.expiration_date
+            if end and (latest_end is None or end > latest_end):
+                latest_end = end
+        if latest_end and latest_end > start:
+            return latest_end - start
+        return None
         
 class DiscountCode(models.Model):
     code = models.CharField(max_length=50, unique=True)

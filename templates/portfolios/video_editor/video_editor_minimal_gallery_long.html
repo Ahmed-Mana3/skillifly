@@ -1,0 +1,207 @@
+{% load static %}{% static 'img/themes/minimal_gallery/still-01.webp' as still1 %}{% static 'img/themes/minimal_gallery/still-03.webp' as still3 %}{% static 'img/themes/minimal_gallery/still-05.webp' as still5 %}{% static 'img/themes/minimal_gallery/still-07.webp' as still7 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#EEEBE5">
+    <script>document.documentElement.classList.add('js');</script>
+    {% include "seo/portfolio_seo.html" %}
+    <title>{{ personal_info.full_name }} — Films</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* MINIMAL GALLERY — the long-form room. */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #EEEBE5;
+            --surface: #F8F6F2;
+            --surface-hover: #E6E2DA;
+            --surface-solid: #E0DBD1;
+            --glass: rgba(28, 27, 25, 0.04);
+            --border: rgba(28, 27, 25, 0.11);
+            --border-hover: rgba(28, 27, 25, 0.26);
+            --text: #1C1B19;
+            --text-muted: rgba(28, 27, 25, 0.64);
+            --dim: rgba(28, 27, 25, 0.64);
+            --dimmer: rgba(28, 27, 25, 0.42);
+            --accent: #2438D6;
+            --accent-rgb: 36, 56, 214;
+            --font-display: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --gutter: clamp(20px, 5vw, 72px);
+        }
+        html { scroll-behavior: smooth; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-display); line-height: 1.6; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        img { display: block; max-width: 100%; }
+        ::selection { background: var(--accent); color: var(--sf-accent-ink, #FFFFFF); }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+        .mono { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+        .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+
+        .top-nav { position: sticky; top: 0; z-index: 50; height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 var(--gutter); background: var(--sf-nav, rgba(238, 235, 229, 0.86)); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--border); }
+        .brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.98rem; letter-spacing: -0.01em; }
+        .brand span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brand svg { width: 16px; height: 16px; flex: none; transition: transform 0.3s var(--ease); }
+        .brand:hover svg { transform: translateX(-4px); }
+        .nav { display: flex; gap: 22px; }
+        .nav a { text-decoration: none; color: var(--dim); transition: color 0.25s; }
+        .nav a:hover, .nav a.active { color: var(--text); }
+        .nav a.active { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 6px; }
+
+        main { max-width: calc(1320px + 2 * var(--gutter)); margin: 0 auto; padding: clamp(48px, 7vw, 104px) var(--gutter) clamp(64px, 8vw, 112px); }
+        .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 24px; margin-bottom: clamp(36px, 5vw, 56px); border-bottom: 1px solid var(--border); }
+        .eyebrow { display: flex; align-items: center; gap: 12px; color: var(--dim); margin-bottom: 18px; }
+        .h1 { font-weight: 500; font-size: clamp(2.6rem, 7vw, 6rem); line-height: 0.95; letter-spacing: -0.05em; }
+        .count { color: var(--dim); }
+
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(36px, 4.5vw, 64px) clamp(16px, 2.4vw, 32px); }
+        .card { display: block; text-decoration: none; color: inherit; }
+        /* Odd count: the first film is hung full width so none is left beside an empty wall. */
+        .card:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+        .card:first-child:nth-last-child(odd) .frame { aspect-ratio: 21 / 9; }
+        .frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface-solid); border-radius: 3px; }
+        .frame img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+        .card:hover .frame img { transform: scale(1.035); }
+        .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dimmer); }
+        .ph svg { width: 34px; height: 34px; stroke: currentColor; }
+        .play { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 10px; border-radius: 100px; background: var(--sf-nav, rgba(238, 235, 229, 0.92)); color: var(--text); opacity: 0; transform: translateY(6px); transition: opacity 0.35s, transform 0.35s var(--ease); }
+        .card:hover .play, .card:focus-visible .play { opacity: 1; transform: none; }
+        .caption { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 14px; padding-top: 14px; }
+        .num { font-family: var(--font-mono); font-size: 0.68rem; color: var(--dimmer); padding-top: 0.32em; }
+        .title { font-weight: 500; font-size: 1.1rem; line-height: 1.3; letter-spacing: -0.01em; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color 0.3s; }
+        .card:hover .title { text-decoration-color: var(--accent); }
+        .meta { grid-column: 2; color: var(--dim); }
+        .desc { grid-column: 2; color: var(--dim); font-size: 0.92rem; margin-top: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .empty { grid-column: 1 / -1; padding: 56px 0; text-align: center; color: var(--dim); }
+
+        .cta { border-top: 1px solid var(--border); padding: clamp(64px, 9vw, 120px) var(--gutter); }
+        .cta-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 48px; flex-wrap: wrap; }
+        .cta h2 { font-weight: 500; font-size: clamp(1.9rem, 4.4vw, 3.6rem); line-height: 1.02; letter-spacing: -0.04em; max-width: 16ch; }
+        .btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 100px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 500; font-size: 0.88rem; transition: background 0.3s, color 0.3s; }
+        .btn:hover { background: var(--accent); color: var(--sf-accent-ink, #FFFFFF); }
+        .btn svg { width: 14px; height: 14px; }
+
+        footer { padding: 32px var(--gutter); border-top: 1px solid var(--border); }
+        .footer-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--dim); }
+        .sf-badge { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--dim); }
+        .sf-badge img { width: 16px; height: 16px; object-fit: contain; }
+        .sf-badge .br { font-family: var(--font-display); font-weight: 600; font-size: 0.86rem; letter-spacing: -0.01em; text-transform: none; color: var(--text); }
+
+        .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); transition-delay: var(--d, 0ms); }
+        .js .reveal.is-in { opacity: 1; transform: none; }
+
+        @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } .card:first-child:nth-last-child(odd) .frame { aspect-ratio: 16 / 9; } .play { opacity: 1; transform: none; } .nav { gap: 14px; } }
+        @media (hover: none) { .play { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+            .js .reveal { opacity: 1; transform: none; }
+        }
+    </style>
+{% include "portfolios/common/theme_background_css.html" %}
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="/{{ personal_info.user.username }}/" class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>{{ personal_info.full_name }}</span>
+        </a>
+        <div class="nav mono">
+            <a href="/{{ personal_info.user.username }}/reels/">Reels</a>
+            <a href="/{{ personal_info.user.username }}/long-videos/" class="active">Films</a>
+            <a href="/{{ personal_info.user.username }}/#contact">Contact</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="page-head">
+            <div>
+                <div class="eyebrow mono reveal"><i class="dot"></i>Room — Long-form</div>
+                <h1 class="h1 reveal" style="--d:60ms">Films</h1>
+            </div>
+            <div class="count mono reveal" style="--d:120ms">{{ projects|length|stringformat:"02d" }} {% if projects|length == 1 %}work{% else %}works{% endif %} on view</div>
+        </div>
+
+        <div class="grid">
+            {% for project in projects %}
+            <a href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/{% if category_id %}?category_id={{ category_id }}{% endif %}" class="card reveal" style="--d:{% cycle '0' '90' %}ms" data-project-id="{{ project.id }}">
+                <div class="frame" data-url="{{ project.url|default:'' }}">
+                    {% if personal_info.user.username == 'alex_mercer' %}
+                    <img src="{% cycle still1 still3 still5 still7 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="1280" height="720">
+                    {% elif project.image %}
+                    <img src="{% url 'image_thumb' project.image.name 1280 %}" alt="{{ project.title }}" loading="lazy" decoding="async" width="1280" height="720">
+                    {% else %}
+                    <img class="auto-thumb" src="" alt="{{ project.title }}" loading="lazy" decoding="async" width="960" height="540" hidden>
+                    <div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></div>
+                    {% endif %}
+                    <span class="play mono"><i class="dot"></i>Watch</span>
+                </div>
+                <div class="caption">
+                    <span class="num">{{ forloop.counter|stringformat:"02d" }}</span>
+                    <span class="title">{{ project.title }}</span>
+                    <span class="meta mono">{% if project.category %}{{ project.category.name }} · {% endif %}Long-form</span>
+                    {% if project.details %}<p class="desc">{{ project.details }}</p>{% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <p class="empty mono">No long-form films added yet</p>
+            {% endfor %}
+        </div>
+    </main>
+
+    {% if personal_info.booking_url or personal_info.email %}
+    <section class="cta">
+        <div class="cta-inner">
+            <h2 class="reveal">Have a film that needs a cut like these?</h2>
+            {% if personal_info.booking_url %}
+            <a href="{{ personal_info.booking_url }}" class="btn reveal" style="--d:80ms" target="_blank" rel="noopener">Book a call <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            {% else %}
+            <a href="mailto:{{ personal_info.email }}" class="btn reveal" style="--d:80ms">Send the brief <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    <footer>
+        <div class="footer-inner mono">
+            <span>© {% now "Y" %} {{ personal_info.full_name }}</span>
+            <a href="/" class="sf-badge" target="_blank" rel="noopener">Powered by <img src="{% static 'img/bird.png' %}" alt=""> <span class="br">Skillifly</span></a>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        'use strict';
+        var reveals = document.querySelectorAll('.reveal');
+        if ('IntersectionObserver' in window) {
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } });
+            }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+            reveals.forEach(function (el) { io.observe(el); });
+        } else {
+            reveals.forEach(function (el) { el.classList.add('is-in'); });
+        }
+
+        /* YouTube posters for films without an uploaded thumbnail */
+        function ytId(url) {
+            var m = (url || '').match(/^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        document.querySelectorAll('.frame .auto-thumb').forEach(function (img) {
+            var frame = img.closest('.frame');
+            var id = ytId(frame.getAttribute('data-url'));
+            if (!id) return;
+            img.onload = function () {
+                if (img.naturalWidth > 200) { img.hidden = false; var ph = frame.querySelector('.ph'); if (ph) ph.remove(); }
+            };
+            img.onerror = function () { img.onerror = null; img.src = 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg'; };
+            img.src = 'https://img.youtube.com/vi/' + id + '/maxresdefault.jpg';
+        });
+    })();
+    </script>
+</body>
+</html>

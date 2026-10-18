@@ -1,0 +1,225 @@
+{% load static %}{% static 'img/themes/minimal_gallery/still-01.webp' as still1 %}{% static 'img/themes/minimal_gallery/still-03.webp' as still3 %}{% static 'img/themes/minimal_gallery/still-05.webp' as still5 %}{% static 'img/themes/minimal_gallery/still-07.webp' as still7 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#EEEBE5">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    {% include "seo/portfolio_seo.html" %}
+    <title>{{ project.title }} — {{ personal_info.full_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* MINIMAL GALLERY — one film on the wall, its details on a label beside it. */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #EEEBE5;
+            --surface: #F8F6F2;
+            --surface-hover: #E6E2DA;
+            --surface-solid: #E0DBD1;
+            --glass: rgba(28, 27, 25, 0.04);
+            --border: rgba(28, 27, 25, 0.11);
+            --border-hover: rgba(28, 27, 25, 0.26);
+            --text: #1C1B19;
+            --text-muted: rgba(28, 27, 25, 0.64);
+            --dim: rgba(28, 27, 25, 0.64);
+            --dimmer: rgba(28, 27, 25, 0.42);
+            --accent: #2438D6;
+            --accent-rgb: 36, 56, 214;
+            --font-display: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --gutter: clamp(20px, 5vw, 72px);
+        }
+        html { scroll-behavior: smooth; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-display); line-height: 1.6; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        img { display: block; max-width: 100%; }
+        ::selection { background: var(--accent); color: var(--sf-accent-ink, #FFFFFF); }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+        .mono { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+        .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+
+        /* ─── Nav ─── */
+        .top-nav { position: sticky; top: 0; z-index: 50; height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 var(--gutter); background: var(--sf-nav, rgba(238, 235, 229, 0.86)); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--border); }
+        .brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.98rem; letter-spacing: -0.01em; }
+        .brand span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brand svg { width: 16px; height: 16px; flex: none; transition: transform 0.3s var(--ease); }
+        .brand:hover svg { transform: translateX(-4px); }
+        .nav { display: flex; gap: 22px; }
+        .nav a { text-decoration: none; color: var(--dim); transition: color 0.25s; }
+        .nav a:hover, .nav a.active { color: var(--text); }
+        .nav a.active { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 6px; }
+
+        /* ─── The film ─── */
+        .wrap { max-width: calc(1320px + 2 * var(--gutter)); margin: 0 auto; padding: clamp(28px, 4vw, 56px) var(--gutter) clamp(64px, 8vw, 112px); }
+        .player-box { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 3px; overflow: hidden; animation: rise 0.9s var(--ease) both; }
+        .player-box iframe { width: 100%; height: 100%; border: none; display: block; }
+        .player-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--surface-solid); }
+        .player-fallback a { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 100px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 500; }
+        @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+        .info { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); gap: 40px clamp(32px, 6vw, 96px); margin-top: clamp(32px, 4vw, 56px); animation: rise 0.9s var(--ease) 0.1s both; }
+        .title { font-weight: 500; font-size: clamp(1.9rem, 4vw, 3.4rem); line-height: 1.04; letter-spacing: -0.04em; overflow-wrap: anywhere; }
+        .desc { margin-top: 22px; color: var(--dim); font-size: 1.02rem; line-height: 1.75; max-width: 62ch; white-space: pre-line; }
+
+        /* Wall label */
+        .label { align-self: start; border-top: 1px solid var(--text); }
+        .label-row { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .label-row dt { color: var(--dim); }
+        .label-row dd { font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+        .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 100px; text-decoration: none; font-size: 0.86rem; font-weight: 500; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+        .btn svg { width: 13px; height: 13px; }
+        .btn-ink { background: var(--text); color: var(--bg); }
+        .btn-ink:hover { background: var(--accent); color: var(--sf-accent-ink, #FFFFFF); }
+        .btn-line { border: 1px solid var(--border-hover); color: var(--text); }
+        .btn-line:hover { border-color: var(--text); }
+
+        /* ─── More from the collection ─── */
+        .more { margin-top: clamp(64px, 8vw, 112px); }
+        .more-head { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; margin-bottom: 28px; border-bottom: 1px solid var(--border); color: var(--dim); }
+        .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 24px; }
+        .card { display: block; text-decoration: none; color: inherit; }
+        .frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface-solid); border-radius: 3px; }
+        .frame img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+        .card:hover .frame img { transform: scale(1.035); }
+        .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dimmer); }
+        .ph svg { width: 30px; height: 30px; stroke: currentColor; }
+        .caption { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; padding-top: 12px; }
+        .num { font-family: var(--font-mono); font-size: 0.66rem; color: var(--dimmer); padding-top: 0.3em; }
+        .card-title { font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color 0.3s; }
+        .card:hover .card-title { text-decoration-color: var(--accent); }
+        .card-meta { grid-column: 2; color: var(--dim); }
+        .none { padding: 36px 0; color: var(--dim); }
+
+        footer { padding: 32px var(--gutter); border-top: 1px solid var(--border); }
+        .footer-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--dim); }
+        .sf-badge { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--dim); }
+        .sf-badge img { width: 16px; height: 16px; object-fit: contain; }
+        .sf-badge .br { font-family: var(--font-display); font-weight: 600; font-size: 0.86rem; letter-spacing: -0.01em; text-transform: none; color: var(--text); }
+
+        @media (max-width: 900px) { .info { grid-template-columns: 1fr; } .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) { .nav { gap: 14px; } .nav a:not(.active):not(:last-child) { display: none; } .grid { grid-template-columns: 1fr; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+    </style>
+{% include "portfolios/common/theme_background_css.html" %}
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="/{{ personal_info.user.username }}/" class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>{{ personal_info.full_name }}</span>
+        </a>
+        <div class="nav mono">
+            <a href="/{{ personal_info.user.username }}/reels/">Reels</a>
+            <a href="/{{ personal_info.user.username }}/long-videos/" class="active">Films</a>
+            <a href="/{{ personal_info.user.username }}/#contact">Contact</a>
+        </div>
+    </nav>
+
+    <main class="wrap">
+        <div class="player-box">
+            <iframe id="mainPlayer" src="" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="{{ project.title }}"></iframe>
+        </div>
+
+        <div class="info">
+            <div>
+                <h1 class="title">{{ project.title }}</h1>
+                {% if project.details %}<p class="desc">{{ project.details }}</p>{% endif %}
+            </div>
+            <div>
+                <dl class="label mono">
+                    <div class="label-row"><dt>Editor</dt><dd>{{ personal_info.full_name }}</dd></div>
+                    <div class="label-row"><dt>Collection</dt><dd>{% if project.category %}{{ project.category.name }}{% else %}—{% endif %}</dd></div>
+                    <div class="label-row"><dt>Format</dt><dd>{% if project.video_type == 'reel' %}Reel{% else %}Long-form{% endif %}</dd></div>
+                </dl>
+                <div class="actions">
+                    {% if personal_info.booking_url %}
+                    <a href="{{ personal_info.booking_url }}" class="btn btn-ink" target="_blank" rel="noopener">Request similar work <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                    {% elif personal_info.email %}
+                    <a href="mailto:{{ personal_info.email }}" class="btn btn-ink">Request similar work <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                    {% endif %}
+                    {% if project.url %}<a href="{{ project.url }}" target="_blank" rel="noopener" class="btn btn-line">View original <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M8 7h9v9"/></svg></a>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <section class="more" aria-labelledby="moreHead">
+            <h2 class="more-head mono" id="moreHead"><i class="dot"></i>More from the collection</h2>
+            {% if other_videos %}
+            <div class="grid">
+                {% for other in other_videos %}
+                <a href="/{{ personal_info.user.username }}/long-videos/{{ other.slug }}/{% if category_id %}?category_id={{ category_id }}{% endif %}" class="card" data-project-id="{{ other.id }}">
+                    <div class="frame">
+                        {% if personal_info.user.username == 'alex_mercer' %}
+                        <img src="{% cycle still3 still5 still7 still1 %}" alt="{{ other.title }}" loading="lazy" decoding="async" width="1280" height="720">
+                        {% elif other.image %}
+                        <img src="{% url 'image_thumb' other.image.name 640 %}" alt="{{ other.title }}" loading="lazy" decoding="async" width="640" height="360">
+                        {% elif other.youtube_id %}
+                        <img src="https://img.youtube.com/vi/{{ other.youtube_id }}/hqdefault.jpg" alt="{{ other.title }}" loading="lazy" decoding="async" width="480" height="360">
+                        {% else %}
+                        <div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></div>
+                        {% endif %}
+                    </div>
+                    <div class="caption">
+                        <span class="num">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="card-title">{{ other.title }}</span>
+                        <span class="card-meta mono">{% if other.category %}{{ other.category.name }}{% else %}Long-form{% endif %}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="none mono">No other films in this collection yet</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-inner mono">
+            <span>© {% now "Y" %} {{ personal_info.full_name }}</span>
+            <a href="/" class="sf-badge" target="_blank" rel="noopener">Powered by <img src="{% static 'img/bird.png' %}" alt=""> <span class="br">Skillifly</span></a>
+        </div>
+    </footer>
+
+    <script>
+        const videoUrl = "{{ project.url|default:''|escapejs }}";
+        const player = document.getElementById('mainPlayer');
+        /* skillifly:cloudflare-player: videos uploaded straight to Cloudflare Stream */
+        function getCloudflareSrc(url) {
+            if (!url || url.indexOf('cloudflarestream.com') === -1) return null;
+            return url.replace(/\/watch(\?.*)?$/, '/iframe');
+        }
+        function ytIdOf(url) {
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        function ttIdOf(url) { const m = url.match(/tiktok\.com\/.*\/video\/(\d+)/); return m ? m[1] : null; }
+        function igIdOf(url) { const m = url.match(/instagram.com\/(?:reels|p|reel)\/([^\/?#&]+)/); return m ? m[1] : null; }
+        function driveIdOf(url) { const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([-\w]+)/); return m ? m[1] : null; }
+        function vimeoIdOf(url) { const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/); return m ? m[1] : null; }
+
+        const yt = ytIdOf(videoUrl), tt = ttIdOf(videoUrl), ig = igIdOf(videoUrl), dr = driveIdOf(videoUrl), vm = vimeoIdOf(videoUrl);
+        if (yt) {
+            player.src = 'https://www.youtube.com/embed/' + yt + '?autoplay=1&rel=0&modestbranding=1&origin=' + window.location.origin;
+        } else if (vm) {
+            player.src = 'https://player.vimeo.com/video/' + vm + '?autoplay=1';
+        } else if (tt) {
+            player.src = 'https://www.tiktok.com/embed/v2/' + tt;
+        } else if (ig) {
+            player.src = 'https://www.instagram.com/reels/' + ig + '/embed/';
+        } else if (getCloudflareSrc(videoUrl)) {
+            player.src = getCloudflareSrc(videoUrl);
+        } else if (dr) {
+            player.src = 'https://drive.google.com/file/d/' + dr + '/preview';
+        } else if (videoUrl) {
+            const a = document.createElement('a'); a.href = videoUrl; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Watch on source';
+            const box = document.createElement('div'); box.className = 'player-fallback'; box.appendChild(a);
+            player.replaceWith(box);
+        }
+    </script>
+</body>
+</html>
