@@ -3819,6 +3819,47 @@ def manage_dashboard(request):
 
 
 @user_passes_test(lambda u: u.is_superuser)
+def manage_heard_about(request):
+    """Tracks the "how did you hear about Skillifly?" answers: counts per source + every individual answer."""
+    from core import survey
+    from core.models import HeardAboutResponse
+
+    source = request.GET.get('source', '')
+    if source not in survey.KEYS:
+        source = ''
+    q = request.GET.get('q', '').strip()
+
+    responses = HeardAboutResponse.objects.select_related('user')
+    if source:
+        responses = responses.filter(source=source)
+    if q:
+        responses = responses.filter(
+            Q(detail__icontains=q) | Q(user__username__icontains=q) | Q(user__email__icontains=q))
+
+    # Instagram answers carry the creator's handle: rank them so you can see which creators bring users.
+    creators = {}
+    for detail in HeardAboutResponse.objects.filter(source='instagram').exclude(detail='').values_list('detail', flat=True):
+        key = detail.strip().lstrip('@').lower()
+        if key:
+            creators[key] = creators.get(key, 0) + 1
+    top_creators = sorted(creators.items(), key=lambda kv: (-kv[1], kv[0]))[:10]
+
+    summary = survey.summary()
+    shown = list(responses[:500])
+    for r in shown:
+        r.source_label = survey.LABELS.get(r.source, r.source)
+    return render(request, 'core/manage_heard_about.html', {
+        'summary': summary,
+        'responses': shown,
+        'result_count': responses.count(),
+        'options': [{'key': k, 'label': v} for k, v in survey.LABELS.items()],
+        'selected_source': source,
+        'q': q,
+        'top_creators': top_creators,
+    })
+
+
+@user_passes_test(lambda u: u.is_superuser)
 def manage_payment_tracking(request):
     """Payment-funnel analytics: how often each payment page opens + which buttons were clicked."""
     from core.models import PaymentTrackingEvent  # noqa: F401

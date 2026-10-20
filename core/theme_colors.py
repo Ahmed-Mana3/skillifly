@@ -311,6 +311,25 @@ THEME_BACKGROUND_SPECS = {
             SLOT_PRIMARY: ('--accent-rgb',),
         },
     },
+    ('video_editor', 'crimson'): {
+        'default': '#000000',
+        'family': FAMILY_SURFACE,
+        'accent': '#FF0000',
+        'gradient': ('#FF0000', '#BC0202', '#830000'),
+        # Crimson is pure black with three reds. Auroras, glows, the wheel's
+        # front-card halo and every hover wash fade the reds with
+        # rgba(var(--accent*-rgb), a), so the channels travel with the tokens.
+        'accent_tokens': {
+            SLOT_PRIMARY: ('--accent',),
+            SLOT_PARTNER: ('--accent2',),
+            SLOT_TRIO: ('--accent3',),
+        },
+        'accent_channels': {
+            SLOT_PRIMARY: ('--accent-rgb',),
+            SLOT_PARTNER: ('--accent2-rgb',),
+            SLOT_TRIO: ('--accent3-rgb',),
+        },
+    },
     ('video_editor', 'minimal_gallery'): {
         'default': '#EEEBE5',
         'family': FAMILY_SURFACE,

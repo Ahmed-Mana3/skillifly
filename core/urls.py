@@ -117,6 +117,7 @@ urlpatterns = [
     path('manage/experiences/save/', views.manage_experience_order_save, name='manage_experience_order_save'),
     path('manage/themes/', views.manage_theme_order, name='manage_theme_order'),
     path('manage/themes/save/', views.manage_theme_order_save, name='manage_theme_order_save'),
+    path('manage/heard-about/', views.manage_heard_about, name='manage_heard_about'),
     path('manage/payment-tracking/', views.manage_payment_tracking, name='manage_payment_tracking'),
     path('manage/', views.manage_dashboard, name='manage_dashboard'),
     path('affiliate/', views.affiliate_view, name='affiliate'),

@@ -1,0 +1,1047 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "seo/portfolio_seo.html" %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           CRIMSON — a premium, motion-led video-editor theme.
+
+           Pure black stage, three reds (#830000 / #BC0202 / #FF0000).
+           The work is presented on "the wheel": a ring of covers that
+           blows open into a vertical drum as you scroll, drag or use
+           the arrow keys (a vanilla port of the WorksWheel component).
+           Brand reds travel as tokens AND bare channels so the colour
+           editor in core/theme_colors.py can recolour every glow.
+           ============================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #000000;
+            --surface: #0b0304;
+            --glass: rgba(255, 255, 255, 0.035);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #fff4f4;
+            --dim: rgba(255, 244, 244, 0.64);
+            --dimmer: rgba(255, 244, 244, 0.36);
+            --accent: #FF0000;
+            --accent-rgb: 255, 0, 0;
+            --accent2: #BC0202;
+            --accent2-rgb: 188, 2, 2;
+            --accent3: #830000;
+            --accent3-rgb: 131, 0, 0;
+            --display: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--body);
+            overflow-x: hidden;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: inherit; }
+        ::selection { background: var(--accent2); color: #fff; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent3)); border-radius: 4px; }
+
+        /* ─── Ambient layers ─── */
+        .cr-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 100%;
+            transform: scaleX(0); transform-origin: 0 50%;
+            background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2));
+            box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.8);
+            z-index: 300; pointer-events: none;
+        }
+
+        .cr-grain {
+            position: fixed; inset: -50%; z-index: 250; pointer-events: none; opacity: 0.07;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+            animation: crGrain 0.9s steps(6) infinite;
+        }
+        @keyframes crGrain {
+            0% { transform: translate(0, 0); } 20% { transform: translate(-3%, 2%); }
+            40% { transform: translate(2%, -3%); } 60% { transform: translate(-2%, -1%); }
+            80% { transform: translate(3%, 3%); } 100% { transform: translate(0, 0); }
+        }
+
+        .cr-cursor {
+            position: fixed; top: 0; left: 0; width: 560px; height: 560px; margin: -280px 0 0 -280px;
+            border-radius: 50%; pointer-events: none; z-index: 1; opacity: 0;
+            background: radial-gradient(circle, rgba(var(--accent-rgb), 0.13), transparent 62%);
+            transition: opacity 0.6s ease; will-change: transform;
+        }
+        .cr-cursor.is-on { opacity: 1; }
+
+        /* ─── Top bar ─── */
+        .cr-bar {
+            position: fixed; top: 18px; left: 50%; transform: translate(-50%, -140%);
+            z-index: 200; display: flex; align-items: center; gap: 6px;
+            padding: 8px 10px 8px 8px; border-radius: 999px;
+            background: rgba(8, 2, 3, 0.72); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(var(--accent-rgb), 0.22);
+            box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(var(--accent-rgb), 0.35);
+            transition: transform 0.7s var(--ease);
+        }
+        .cr-bar.is-in { transform: translate(-50%, 0); }
+        .cr-bar-mark {
+            width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+            font: 700 0.72rem var(--display); letter-spacing: 0.04em; color: #fff; text-decoration: none; overflow: hidden;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+        }
+        .cr-bar-mark img { width: 100%; height: 100%; object-fit: cover; }
+        .cr-bar a.cr-link {
+            padding: 9px 16px; border-radius: 999px; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.04em;
+            color: var(--dim); text-decoration: none; transition: color 0.3s, background 0.3s;
+        }
+        .cr-bar a.cr-link:hover { color: #fff; }
+        .cr-bar a.cr-link.is-active { color: #fff; background: rgba(var(--accent-rgb), 0.18); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4); }
+        .cr-bar a.cr-link-cta { background: var(--accent2); color: #fff; margin-left: 4px; }
+        .cr-bar a.cr-link-cta:hover { background: var(--accent); }
+
+        /* ─── Hero ─── */
+        .cr-hero {
+            position: relative; min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            padding: 120px 6vw 90px; overflow: hidden; isolation: isolate;
+        }
+        .cr-aurora { position: absolute; inset: 0; z-index: -3; overflow: hidden; }
+        .cr-blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; will-change: transform; }
+        .cr-blob-a { width: 52vw; height: 52vw; left: -14vw; top: -22vw; background: var(--accent3); animation: crDrift 18s ease-in-out infinite alternate; }
+        .cr-blob-b { width: 40vw; height: 40vw; right: -10vw; top: 10vh; background: var(--accent2); opacity: 0.4; animation: crDrift 22s ease-in-out -6s infinite alternate-reverse; }
+        .cr-blob-c { width: 30vw; height: 30vw; left: 36vw; bottom: -18vw; background: var(--accent); opacity: 0.28; animation: crDrift 26s ease-in-out -12s infinite alternate; }
+        @keyframes crDrift { to { transform: translate3d(7vw, 6vh, 0) scale(1.18); } }
+
+        .cr-floor {
+            position: absolute; left: -50%; right: -50%; bottom: -6%; height: 58%; z-index: -2;
+            transform: perspective(520px) rotateX(64deg); transform-origin: 50% 100%;
+            background-image:
+                linear-gradient(rgba(var(--accent-rgb), 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(var(--accent-rgb), 0.4) 1px, transparent 1px);
+            background-size: 64px 64px;
+            -webkit-mask-image: linear-gradient(to top, #000, transparent 88%);
+            mask-image: linear-gradient(to top, #000, transparent 88%);
+            animation: crFloor 3.2s linear infinite;
+        }
+        @keyframes crFloor { to { background-position: 0 64px, 0 0; } }
+
+        .cr-vignette { position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.85) 100%); }
+
+        .cr-roll { position: absolute; left: 0; top: 50%; z-index: -1; width: 100%; overflow: hidden; transform: translateY(-50%) rotate(-4deg); opacity: 0.9; pointer-events: none; }
+        .cr-roll-track { display: flex; width: max-content; animation: crRoll 38s linear infinite; }
+        .cr-roll-track span {
+            font: 800 clamp(3.5rem, 10vw, 9rem)/1 var(--display); text-transform: uppercase; white-space: nowrap; padding-right: 0.5em;
+            color: transparent; -webkit-text-stroke: 1px rgba(var(--accent-rgb), 0.2);
+        }
+        @keyframes crRoll { to { transform: translateX(-50%); } }
+
+        .cr-status {
+            display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px;
+            font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim);
+            background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(10px);
+            animation: crUp 1s var(--ease) both;
+        }
+        .cr-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.8); animation: crPulse 1.8s ease-out infinite; }
+        @keyframes crPulse { to { box-shadow: 0 0 0 12px rgba(var(--accent-rgb), 0); } }
+        @keyframes crUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+
+        .cr-avatar { position: relative; width: 112px; height: 112px; margin: 34px 0 26px; animation: crUp 1s 0.1s var(--ease) both; }
+        .cr-avatar::before {
+            content: ''; position: absolute; inset: -5px; border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--accent), var(--accent3), transparent 40%, var(--accent2), var(--accent));
+            animation: crSpin 5s linear infinite;
+        }
+        .cr-avatar::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; filter: blur(16px); background: inherit; opacity: 0.6; }
+        @keyframes crSpin { to { transform: rotate(360deg); } }
+        .cr-avatar img, .cr-avatar span {
+            position: relative; z-index: 1; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 4px solid var(--bg); background: var(--surface);
+            display: grid; place-items: center; font: 800 2.4rem var(--display);
+        }
+
+        .cr-name {
+            font: 800 clamp(2.2rem, 6.6vw, 5.2rem)/1.05 var(--display); letter-spacing: -0.03em;
+            text-shadow: 0 0 60px rgba(var(--accent-rgb), 0.35); max-width: 16ch; text-wrap: balance;
+        }
+        .cr-ch { display: inline-block; opacity: 0; transform: translateY(0.9em) rotateX(-70deg); transform-origin: 50% 100%; animation: crChar 0.9s var(--ease) forwards; animation-delay: calc(0.25s + var(--i) * 0.035s); }
+        @keyframes crChar { to { opacity: 1; transform: none; } }
+
+        .cr-role {
+            margin-top: 22px; font: 600 clamp(0.72rem, 1.2vw, 0.9rem) var(--display); letter-spacing: 0.28em; text-transform: uppercase;
+            background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2), var(--accent));
+            background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: crUp 1s 0.5s var(--ease) both, crShine 6s linear infinite;
+        }
+        @keyframes crShine { to { background-position: 220% 0; } }
+        .cr-bio { margin-top: 20px; max-width: 58ch; color: var(--dim); font-size: 0.95rem; line-height: 1.75; animation: crUp 1s 0.65s var(--ease) both; }
+
+        .cr-cta-row { margin-top: 38px; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; animation: crUp 1s 0.8s var(--ease) both; }
+        .cr-btn {
+            position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 16px 30px; border-radius: 999px; overflow: hidden;
+            font: 600 0.86rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: #fff;
+            border: 1px solid rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.06);
+            transition: transform 0.35s var(--ease), box-shadow 0.35s, border-color 0.35s;
+        }
+        .cr-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%); transform: translateX(-130%); transition: transform 0.8s var(--ease); }
+        .cr-btn:hover::before { transform: translateX(130%); }
+        .cr-btn:hover { box-shadow: 0 0 40px -6px rgba(var(--accent-rgb), 0.75); border-color: var(--accent); }
+        .cr-btn-solid { background: linear-gradient(120deg, var(--accent3), var(--accent2) 55%, var(--accent)); border-color: transparent; box-shadow: 0 14px 40px -14px rgba(var(--accent-rgb), 0.85); }
+        .cr-btn svg { width: 16px; height: 16px; transition: transform 0.35s var(--ease); }
+        .cr-btn:hover svg { transform: translateX(4px); }
+
+        .cr-scroll { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); display: grid; justify-items: center; gap: 10px; font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dimmer); }
+        .cr-scroll i { width: 1px; height: 46px; background: linear-gradient(var(--accent), transparent); animation: crLine 2s ease-in-out infinite; transform-origin: top; }
+        @keyframes crLine { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+
+        /* ─── Shared section chrome ─── */
+        .portfolio-body { position: relative; z-index: 2; background: var(--bg); }
+        .cr-section { position: relative; padding: clamp(80px, 11vw, 150px) 6vw; }
+        .cr-inner { max-width: 1180px; margin: 0 auto; }
+        .cr-eyebrow { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; font-size: 0.72rem; letter-spacing: 0.34em; text-transform: uppercase; color: var(--accent); }
+        .cr-eyebrow::before { content: ''; width: 44px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent)); }
+        .cr-heading { font: 700 clamp(1.6rem, 3.8vw, 2.8rem)/1.1 var(--display); letter-spacing: -0.025em; margin-bottom: clamp(36px, 5vw, 64px); }
+        .cr-heading em { font-style: normal; background: linear-gradient(100deg, var(--accent), var(--accent2) 50%, var(--accent3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .cr-reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); transition-delay: var(--d, 0s); }
+        .cr-reveal.is-visible { opacity: 1; transform: none; }
+
+        /* spotlight cards share one hover recipe */
+        [data-spot] { position: relative; --mx: 50%; --my: 50%; }
+        [data-spot]::before {
+            content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.4s;
+            background: radial-gradient(360px circle at var(--mx) var(--my), rgba(var(--accent-rgb), 0.2), transparent 60%);
+        }
+        [data-spot]:hover::before { opacity: 1; }
+
+        /* ─── THE WHEEL ─── */
+        .cr-works { position: relative; padding: clamp(80px, 10vw, 130px) 0 0; background: radial-gradient(ellipse at 50% 0%, rgba(var(--accent3-rgb), 0.35), transparent 60%); }
+        .cr-works-head { padding: 0 6vw; max-width: 1180px; margin: 0 auto; }
+        .cr-works-head .cr-heading { margin-bottom: 30px; }
+
+        .cr-stage-wrap { position: relative; width: 100%; }
+        .cr-stage-wrap.is-live {
+            height: 100vh; min-height: 560px; overflow: hidden;
+            background:
+                radial-gradient(ellipse 55% 60% at 38% 52%, rgba(var(--accent3-rgb), 0.42), transparent 70%),
+                radial-gradient(ellipse 40% 50% at 72% 60%, rgba(var(--accent2-rgb), 0.16), transparent 70%);
+            border-top: 1px solid rgba(var(--accent-rgb), 0.14); border-bottom: 1px solid rgba(var(--accent-rgb), 0.14);
+            user-select: none; -webkit-user-select: none;
+        }
+        .cr-stage-wrap.is-live::before, .cr-stage-wrap.is-live::after { content: ''; position: absolute; left: 0; right: 0; height: 22%; z-index: 5; pointer-events: none; }
+        .cr-stage-wrap.is-live::before { top: 0; background: linear-gradient(var(--bg), transparent); }
+        .cr-stage-wrap.is-live::after { bottom: 0; background: linear-gradient(transparent, var(--bg)); }
+
+        .cr-stage { position: relative; outline: none; }
+        .is-live .cr-stage { position: absolute; inset: 0; cursor: grab; touch-action: pan-x; }
+        .cr-stage-wrap.is-dragging .cr-stage { cursor: grabbing; }
+        .cr-stage:focus-visible { box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.7); }
+
+        /* no-JS / pre-JS fallback: a plain responsive grid */
+        .cr-wheel { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; padding: 10px 6vw 0; }
+        .cr-card { position: relative; display: block; aspect-ratio: 1.45; text-decoration: none; color: inherit; -webkit-user-drag: none; }
+        .is-live .cr-wheel { display: block; position: absolute; top: 50%; left: 50%; padding: 0; transform-style: preserve-3d; }
+        .is-live .cr-card { position: absolute; aspect-ratio: auto; backface-visibility: hidden; -webkit-backface-visibility: hidden; will-change: transform; }
+
+        .cr-face {
+            position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 12px; background: #140506;
+            border: 1px solid rgba(var(--accent-rgb), 0.2); box-shadow: 0 22px 46px -22px rgba(var(--accent-rgb), 0.5);
+            transition: box-shadow 0.6s, border-color 0.6s;
+        }
+        .cr-face img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); pointer-events: none; }
+        .cr-card:hover .cr-face img { transform: scale(1.06); }
+        .cr-face::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), transparent 32%, transparent 58%, rgba(60, 0, 0, 0.7)); }
+        .cr-face::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; transform: translateX(-130%); background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.16) 50%, transparent 62%); }
+        .cr-card.is-front .cr-face { border-color: rgba(var(--accent-rgb), 0.6); box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.25), 0 34px 90px -22px rgba(var(--accent-rgb), 0.7); }
+        .cr-card.is-front .cr-face::before { animation: crSheen 4.8s ease-in-out 0.6s infinite; }
+        @keyframes crSheen { 0% { transform: translateX(-130%); } 38%, 100% { transform: translateX(130%); } }
+
+        .cr-ph { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 30% 20%, var(--accent2), var(--accent3) 55%, #1a0000); }
+        .cr-ph svg { width: 18%; max-width: 64px; min-width: 28px; fill: rgba(255, 255, 255, 0.85); }
+        .cr-chip { position: absolute; top: 10px; left: 10px; z-index: 3; padding: 4px 10px; border-radius: 999px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(var(--accent-rgb), 0.5); backdrop-filter: blur(6px); }
+        .cr-view {
+            position: absolute; right: 10px; bottom: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+            font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: var(--accent2);
+            opacity: 0; transform: translateY(6px); transition: 0.35s var(--ease); pointer-events: none;
+        }
+        .cr-view svg { width: 10px; height: 10px; }
+        .cr-card:hover .cr-view, .cr-card.is-front:focus-visible .cr-view { opacity: 1; transform: none; }
+
+        .cr-label, .cr-title, .cr-index, .cr-hint { display: none; }
+        .is-live .cr-title, .is-live .cr-index, .is-live .cr-hint { display: block; }
+        .is-live .cr-label { display: grid; }
+        .cr-label { position: absolute; inset: 0; z-index: 6; place-items: center; pointer-events: none; font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; text-align: center; text-shadow: 0 0 50px rgba(var(--accent-rgb), 0.6); }
+        .cr-label span { display: block; max-width: 70%; }
+        .cr-title { position: absolute; z-index: 6; left: 6%; top: 50%; transform: translateY(-50%); max-width: 26%; opacity: 0; pointer-events: none; }
+        .cr-title-kicker { display: block; margin-bottom: 14px; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); }
+        .cr-title-text { display: block; font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 1.04; text-shadow: 0 0 40px rgba(var(--accent-rgb), 0.45); overflow-wrap: anywhere; }
+        .cr-title-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; padding: 10px 18px; border-radius: 999px; pointer-events: auto; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; color: #fff; border: 1px solid rgba(var(--accent-rgb), 0.5); background: rgba(var(--accent-rgb), 0.08); transition: 0.3s; }
+        .cr-title-link:hover { background: var(--accent2); border-color: var(--accent2); }
+        .cr-title-link svg { width: 12px; height: 12px; }
+        .cr-title.is-swap .cr-title-text, .cr-title.is-swap .cr-title-kicker { animation: crSwap 0.7s var(--ease); }
+        @keyframes crSwap { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+
+        .cr-index { position: absolute; z-index: 6; top: 50%; right: 3%; transform: translateY(-50%); list-style: none; text-align: right; line-height: 1.9; max-width: 22%; }
+        .cr-index li { display: none; }
+        .cr-index li.is-near { display: block; }
+        .cr-index button { all: unset; cursor: pointer; font-size: 0.8rem; color: var(--dimmer); transition: color 0.3s, transform 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; }
+        .cr-index button:hover { color: var(--text); }
+        .cr-index button:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+        .cr-index li.is-active button { color: #fff; font-weight: 600; transform: translateX(-8px); }
+        .cr-index li.is-active button::before { content: ''; display: inline-block; width: 18px; height: 2px; margin-right: 10px; vertical-align: middle; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        .cr-hint { position: absolute; z-index: 6; left: 50%; bottom: 7%; transform: translateX(-50%); font-size: 0.66rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); pointer-events: none; text-align: center; transition: opacity 0.6s; }
+        .cr-hint i { display: block; width: 22px; height: 36px; margin: 0 auto 12px; border: 1.5px solid rgba(var(--accent-rgb), 0.7); border-radius: 12px; position: relative; }
+        .cr-hint i::after { content: ''; position: absolute; left: 50%; top: 7px; width: 3px; height: 7px; margin-left: -1.5px; border-radius: 2px; background: var(--accent); animation: crWheel 1.6s ease-in-out infinite; }
+        @keyframes crWheel { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(14px); } }
+        .cr-hint.is-gone { opacity: 0; }
+
+        /* on-screen controls: touch + small screens only */
+        .cr-ctrl { display: none; }
+        .cr-ctrl button { all: unset; box-sizing: border-box; cursor: pointer; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: rgba(var(--accent2-rgb), 0.9); box-shadow: 0 8px 24px -8px rgba(var(--accent-rgb), 0.8); -webkit-tap-highlight-color: transparent; transition: transform 0.25s var(--ease), background 0.25s; }
+        .cr-ctrl button:active { transform: scale(0.9); background: var(--accent); }
+        .cr-ctrl button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .cr-ctrl svg { width: 20px; height: 20px; }
+        .cr-ctrl span { min-width: 96px; text-align: center; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+        .cr-works-foot { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; padding: 44px 6vw 0; }
+
+        /* ─── Skills ─── */
+        .cr-pills { display: flex; flex-wrap: wrap; gap: 12px; }
+        .cr-pill { padding: 14px 24px; border-radius: 999px; font-weight: 500; font-size: 0.95rem; background: var(--glass); border: 1px solid var(--border); overflow: hidden; transition: transform 0.4s var(--ease), border-color 0.4s, box-shadow 0.4s; }
+        .cr-pill:hover { transform: translateY(-5px) scale(1.04); border-color: rgba(var(--accent-rgb), 0.6); box-shadow: 0 12px 40px -12px rgba(var(--accent-rgb), 0.6); }
+
+        /* ─── Timeline ─── */
+        .cr-timeline { position: relative; display: grid; gap: 34px; padding-left: 44px; --p: 0; }
+        .cr-timeline::before, .cr-timeline::after { content: ''; position: absolute; left: 9px; top: 6px; width: 2px; border-radius: 2px; }
+        .cr-timeline::before { bottom: 6px; background: var(--border); }
+        .cr-timeline::after { height: calc((100% - 12px) * var(--p)); background: linear-gradient(var(--accent3), var(--accent)); box-shadow: 0 0 16px var(--accent); }
+        .cr-tl { position: relative; padding: 26px 28px; border-radius: 18px; background: var(--glass); border: 1px solid var(--border); transition: border-color 0.4s, transform 0.4s var(--ease); }
+        .cr-tl:hover { border-color: rgba(var(--accent-rgb), 0.45); transform: translateX(6px); }
+        .cr-tl::after { content: ''; position: absolute; left: -43px; top: 32px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); box-shadow: 0 0 14px var(--accent); }
+        .cr-tl-date { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+        .cr-tl-role { margin-top: 8px; font: 700 1.35rem var(--display); letter-spacing: -0.01em; }
+        .cr-tl-co { margin-top: 4px; color: var(--dim); }
+        .cr-tl-desc { margin-top: 12px; color: var(--dim); line-height: 1.7; font-size: 0.96rem; }
+
+        /* ─── Education ─── */
+        .cr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+        .cr-edu { padding: 30px; border-radius: 18px; background: var(--glass); border: 1px solid var(--border); transition: border-color 0.4s, transform 0.4s var(--ease); }
+        .cr-edu:hover { border-color: rgba(var(--accent-rgb), 0.45); transform: translateY(-6px); }
+        .cr-edu-year { font: 800 2.4rem var(--display); color: transparent; -webkit-text-stroke: 1px var(--accent); }
+        .cr-edu-degree { margin-top: 10px; font: 700 1.15rem var(--display); }
+        .cr-edu-field, .cr-edu-school { margin-top: 4px; color: var(--dim); font-size: 0.92rem; }
+
+        /* ─── Creators marquee ─── */
+        .cr-marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+        .cr-marquee-track { display: flex; width: max-content; animation: crRoll 40s linear infinite; }
+        .cr-marquee:hover .cr-marquee-track { animation-play-state: paused; }
+        .cr-client { display: flex; align-items: center; gap: 14px; margin-right: 18px; padding: 12px 26px 12px 12px; border-radius: 999px; background: var(--glass); border: 1px solid var(--border); text-decoration: none; transition: border-color 0.3s, box-shadow 0.3s; white-space: nowrap; }
+        a.cr-client:hover { border-color: var(--accent); box-shadow: 0 0 30px -8px rgba(var(--accent-rgb), 0.7); }
+        .cr-client img, .cr-client .ph { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent2), var(--accent3)); font: 700 1rem var(--display); }
+        .cr-client-name { font-weight: 500; }
+
+        /* ─── Reviews ─── */
+        .cr-review { padding: 32px; border-radius: 20px; background: var(--glass); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; transition: border-color 0.4s, transform 0.4s var(--ease); }
+        .cr-review:hover { border-color: rgba(var(--accent-rgb), 0.45); transform: translateY(-6px); }
+        .cr-stars { display: flex; gap: 3px; }
+        .cr-stars svg { width: 17px; height: 17px; }
+        .cr-stars .filled { fill: var(--accent); filter: drop-shadow(0 0 5px rgba(var(--accent-rgb), 0.7)); }
+        .cr-stars .empty { fill: rgba(255, 255, 255, 0.14); }
+        .cr-review p { color: var(--dim); line-height: 1.75; font-size: 0.98rem; flex: 1; }
+        .cr-who { display: flex; align-items: center; gap: 12px; }
+        .cr-who img, .cr-who .ph { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent2), var(--accent3)); font: 700 0.9rem var(--display); }
+        .cr-who b { display: block; font-weight: 600; }
+        .cr-who small { color: var(--dimmer); }
+
+        /* ─── Contact ─── */
+        .cr-contact { text-align: center; overflow: hidden; }
+        .cr-contact::before { content: ''; position: absolute; left: 50%; top: 50%; width: 80vw; height: 80vw; max-width: 900px; max-height: 900px; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(var(--accent3-rgb), 0.55), transparent 65%); filter: blur(30px); animation: crBreath 7s ease-in-out infinite; }
+        @keyframes crBreath { 50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.7; } }
+        .cr-contact .cr-inner { position: relative; }
+        .cr-contact .cr-eyebrow { justify-content: center; }
+        .cr-contact .cr-eyebrow::after { content: ''; width: 44px; height: 1px; background: linear-gradient(270deg, transparent, var(--accent)); }
+        .cr-big { font: 800 clamp(1.9rem, 5.4vw, 4rem)/1.05 var(--display); letter-spacing: -0.03em; margin-bottom: 54px; }
+        .cr-big em { font-style: normal; background: linear-gradient(100deg, var(--accent), var(--accent2) 50%, var(--accent3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .cr-contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; text-align: left; }
+        .cr-contact-card { display: flex; flex-direction: column; gap: 6px; padding: 26px; border-radius: 18px; text-decoration: none; background: rgba(8, 2, 3, 0.7); border: 1px solid var(--border); backdrop-filter: blur(8px); transition: border-color 0.4s, transform 0.4s var(--ease); overflow: hidden; }
+        .cr-contact-card:hover { border-color: rgba(var(--accent-rgb), 0.55); transform: translateY(-6px); }
+        .cr-contact-card svg { width: 22px; height: 22px; stroke: var(--accent); margin-bottom: 10px; }
+        .cr-contact-card small { font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dimmer); }
+        .cr-contact-card b { font-weight: 500; font-size: 1rem; overflow-wrap: anywhere; }
+        .cr-contact .cr-cta-row { margin-top: 50px; animation: none; }
+
+        /* ─── Footer ─── */
+        footer { position: relative; z-index: 2; padding: 46px 6vw; border-top: 1px solid rgba(var(--accent-rgb), 0.16); background: rgba(0, 0, 0, 0.9); }
+        .cr-foot { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+        @media (min-width: 768px) { .cr-foot { flex-direction: row; justify-content: space-between; text-align: left; } }
+        .cr-badge { display: inline-flex; align-items: center; gap: 12px; padding: 11px 24px; border-radius: 999px; text-decoration: none; background: var(--glass); border: 1px solid var(--border); transition: 0.4s; }
+        .cr-badge:hover { border-color: rgba(var(--accent-rgb), 0.55); transform: translateY(-3px); }
+        .cr-badge .powered { font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+        .cr-badge img { width: 22px; height: 22px; object-fit: contain; }
+        .cr-badge .brand { font: 700 1rem var(--display); }
+        .cr-copy { font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dimmer); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 900px) {
+            .cr-index { display: none !important; }
+            .is-live .cr-ctrl { position: absolute; z-index: 8; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 999px; background: rgba(8, 2, 3, 0.7); border: 1px solid rgba(var(--accent-rgb), 0.25); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+            .cr-title { left: 50%; top: auto; bottom: 86px; transform: translateX(-50%); width: min(86%, 380px); max-width: none; text-align: center; padding: 14px 18px 16px; border-radius: 18px; background: rgba(0, 0, 0, 0.62); border: 1px solid rgba(var(--accent-rgb), 0.22); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+            .cr-title-kicker { margin-bottom: 8px; font-size: 0.62rem; }
+            .cr-title-link { margin-top: 12px; padding: 9px 16px; }
+            .cr-hint { display: none !important; }
+            .cr-stage-wrap.is-live { height: 80vh; height: 80svh; min-height: 540px; }
+            .cr-stage-wrap.is-live::before, .cr-stage-wrap.is-live::after { height: 10%; }
+            .cr-stage-wrap.is-live { background:
+                radial-gradient(ellipse 90% 45% at 50% 42%, rgba(var(--accent3-rgb), 0.5), transparent 72%); }
+            .cr-works { padding-top: 72px; }
+            .cr-works-foot { flex-direction: column; align-items: stretch; padding: 32px 6vw 0; }
+            .cr-works-foot .cr-btn { justify-content: center; }
+        }
+        @media (pointer: coarse) { .is-live .cr-stage { touch-action: pan-y; cursor: default; } }
+        @media (max-width: 720px) {
+            .cr-bar a.cr-link:not(.cr-link-cta) { display: none; }
+            .cr-bar { top: 12px; }
+            .cr-hero { padding-top: 110px; }
+            .cr-timeline { padding-left: 34px; }
+            .cr-tl::after { left: -33px; }
+        }
+        @media (hover: none) { .cr-cursor { display: none; } }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+            .cr-ch, .cr-reveal { opacity: 1; transform: none; }
+        }
+    </style>
+    {% include "portfolios/common/section_layout_css.html" %}
+    {% include "portfolios/common/theme_background_css.html" %}
+</head>
+
+<body>
+    <div class="cr-progress" id="cr-progress" aria-hidden="true"></div>
+    <div class="cr-grain" aria-hidden="true"></div>
+    <div class="cr-cursor" id="cr-cursor" aria-hidden="true"></div>
+
+    <!-- ─── TOP BAR ─── -->
+    <nav class="cr-bar" id="cr-bar" aria-label="Portfolio sections">
+        <a href="#home" class="cr-bar-mark" aria-label="Back to top">
+            {% if personal_info.user.profile.picture %}<img src="{% url 'image_thumb' personal_info.user.profile.picture.name 120 %}" alt="" width="34" height="34" decoding="async">{% else %}{{ personal_info.full_name|slice:":2"|upper }}{% endif %}
+        </a>
+        {% if projects %}<a href="#projects" class="cr-link" data-spy="projects">Work</a>{% endif %}
+        {% if skills %}<a href="#skills" class="cr-link" data-spy="skills">About</a>{% elif experiences %}<a href="#experience" class="cr-link" data-spy="experience">About</a>{% endif %}
+        <a href="#contact" class="cr-link cr-link-cta" data-spy="contact">Contact</a>
+    </nav>
+
+    <!-- ─── HERO ─── -->
+    <header class="cr-hero" id="home">
+        <div class="cr-aurora" aria-hidden="true">
+            <span class="cr-blob cr-blob-a"></span><span class="cr-blob cr-blob-b"></span><span class="cr-blob cr-blob-c"></span>
+        </div>
+        <div class="cr-roll" aria-hidden="true">
+            <div class="cr-roll-track">{% for i in "1234" %}<span>{{ personal_info.title|default:"Video Editor" }} &nbsp;/&nbsp;</span>{% endfor %}</div>
+        </div>
+        <div class="cr-floor" aria-hidden="true"></div>
+        <div class="cr-vignette" aria-hidden="true"></div>
+
+        <div class="cr-status"><i aria-hidden="true"></i><span>Available for work</span></div>
+
+        <div class="cr-avatar">
+            {% if personal_info.user.profile.picture %}
+            <img src="{% url 'image_thumb' personal_info.user.profile.picture.name 240 %}" alt="{{ personal_info.full_name }}" width="240" height="240" decoding="async">
+            {% else %}
+            <span>{{ personal_info.full_name|slice:":1"|upper }}</span>
+            {% endif %}
+        </div>
+
+        <h1 class="cr-name" data-split>{{ personal_info.full_name|default:"Portfolio" }}</h1>
+        <div class="cr-role">{{ personal_info.title|default:"Video Editor &amp; Motion Designer" }}</div>
+        {% if personal_info.bio %}<p class="cr-bio">{{ personal_info.bio|truncatechars:220 }}</p>{% endif %}
+
+        <div class="cr-cta-row">
+            <a class="cr-btn cr-btn-solid" href="#projects" data-magnet>View my work
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a class="cr-btn" href="#contact" data-magnet>Get in touch</a>
+        </div>
+
+        <div class="cr-scroll" aria-hidden="true"><i></i></div>
+    </header>
+
+    <!-- ─── REORDERABLE BODY ─── -->
+    <div class="portfolio-body">
+
+        <!-- ─── PROJECTS — the wheel ─── -->
+        {% if projects %}
+        <section class="cr-works" id="projects">
+            <div class="cr-works-head">
+                <div class="cr-eyebrow cr-reveal">{% firstof section_names.projects "Projects" %}</div>
+                <h2 class="cr-heading cr-reveal">Selected <em>work</em></h2>
+            </div>
+
+            <div class="cr-stage-wrap" data-wheel-wrap>
+                <div class="cr-stage" data-stage tabindex="0" role="listbox" aria-label="Projects. Scroll, drag or use the arrow keys to turn the wheel.">
+                    <div class="cr-wheel" data-wheel>
+                        {% for project in projects %}
+                        <a class="cr-card" data-card id="cr-card-{{ forloop.counter0 }}" role="option" draggable="false"
+                           data-title="{{ project.title }}" data-kind="{% if project.video_type == 'reel' %}Reel{% else %}Film{% endif %}"
+                           {% if project.video_type == 'reel' %}href="/{{ personal_info.user.username }}/reels/#reel-{{ project.id }}"{% else %}href="/{{ personal_info.user.username }}/long-videos/{{ project.slug }}/"{% endif %}>
+                            <span class="cr-face">
+                                {% if project.image %}
+                                <img src="{% url 'image_thumb' project.image.name 900 %}" alt="{{ project.title }}" {% if forloop.counter0 < 3 %}decoding="async"{% else %}loading="lazy" decoding="async"{% endif %} draggable="false">
+                                {% else %}
+                                <span class="cr-ph"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+                                {% endif %}
+                                <span class="cr-chip">{% if project.video_type == 'reel' %}Reel{% else %}Film{% endif %}</span>
+                                <span class="cr-view">Open
+                                    <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="cr-label" data-label aria-hidden="true"><span>{% firstof section_names.projects "Selected Work" %}</span></div>
+
+                <div class="cr-title" data-title-box aria-live="polite">
+                    <span class="cr-title-kicker" data-kicker></span>
+                    <span class="cr-title-text" data-title-text></span>
+                    <a class="cr-title-link" data-title-link href="#">Watch project
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                </div>
+
+                <ol class="cr-index" data-index>
+                    {% for project in projects %}<li><button type="button" data-i="{{ forloop.counter0 }}">{{ project.title }}</button></li>{% endfor %}
+                </ol>
+
+                <div class="cr-hint" data-hint aria-hidden="true"><i></i>Scroll or drag to turn</div>
+
+                <div class="cr-ctrl" aria-label="Browse projects">
+                    <button type="button" data-prev aria-label="Previous project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+                    <span data-counter>Swipe</span>
+                    <button type="button" data-next aria-label="Next project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                </div>
+            </div>
+
+            <div class="cr-works-foot">
+                {% if long_count %}<a class="cr-btn" href="/{{ personal_info.user.username }}/long-videos/" data-magnet>All films</a>{% endif %}
+                {% if reel_count %}<a class="cr-btn" href="/{{ personal_info.user.username }}/reels/" data-magnet>All reels</a>{% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── SKILLS ─── -->
+        {% if skills %}
+        <section class="cr-section" id="skills">
+            <div class="cr-inner">
+                <div class="cr-eyebrow cr-reveal">Skills</div>
+                <h2 class="cr-heading cr-reveal">{% if section_names.skills %}{{ section_names.skills }}{% else %}My <em>toolkit</em>{% endif %}</h2>
+                <div class="cr-pills">
+                    {% for skill in skills %}<span class="cr-pill cr-reveal" data-spot style="--d: {{ forloop.counter0 }}0ms">{{ skill.name }}</span>{% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── EXPERIENCE ─── -->
+        {% if experiences %}
+        <section class="cr-section" id="experience">
+            <div class="cr-inner">
+                <div class="cr-eyebrow cr-reveal">Experience</div>
+                <h2 class="cr-heading cr-reveal">{% if section_names.experience %}{{ section_names.experience }}{% else %}Where I've <em>worked</em>{% endif %}</h2>
+                <div class="cr-timeline" data-timeline>
+                    {% for exp in experiences %}
+                    <article class="cr-tl cr-reveal" data-spot>
+                        <div class="cr-tl-date">{{ exp.start_date|date:"M Y" }} — {% if exp.still_working %}Now{% elif exp.end_date %}{{ exp.end_date|date:"M Y" }}{% else %}Present{% endif %}</div>
+                        <div class="cr-tl-role">{{ exp.title }}</div>
+                        <div class="cr-tl-co">@ {{ exp.company }}</div>
+                        {% if exp.details %}<p class="cr-tl-desc">{{ exp.details }}</p>{% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── EDUCATION ─── -->
+        {% if education %}
+        <section class="cr-section" id="education">
+            <div class="cr-inner">
+                <div class="cr-eyebrow cr-reveal">Education</div>
+                <h2 class="cr-heading cr-reveal">{% if section_names.education %}{{ section_names.education }}{% else %}Where it <em>started</em>{% endif %}</h2>
+                <div class="cr-grid">
+                    {% for edu in education %}
+                    <div class="cr-edu cr-reveal" data-spot>
+                        <div class="cr-edu-year">{{ edu.grade_year|date:"Y" }}</div>
+                        <div class="cr-edu-degree">{{ edu.degree }}</div>
+                        {% if edu.field %}<div class="cr-edu-field">{{ edu.field }}</div>{% endif %}
+                        <div class="cr-edu-school">{{ edu.school }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── CREATORS ─── -->
+        {% if creators %}
+        <section class="cr-section" id="creators">
+            <div class="cr-inner">
+                <div class="cr-eyebrow cr-reveal">Collaborations</div>
+                <h2 class="cr-heading cr-reveal">{% if section_names.creators %}{{ section_names.creators }}{% else %}Creators I've <em>worked with</em>{% endif %}</h2>
+            </div>
+            <div class="cr-marquee cr-reveal">
+                <div class="cr-marquee-track">
+                    {% for i in "1234" %}
+                    <div style="display:flex;" {% if not forloop.first %}aria-hidden="true"{% endif %}>
+                        {% for creator in creators %}
+                        <{% if creator.url %}a href="{{ creator.url }}" target="_blank" rel="noopener"{% else %}span{% endif %} class="cr-client">
+                            {% if creator.image %}<img src="{% url 'image_thumb' creator.image.name 100 %}" alt="{{ creator.name }}" loading="lazy" decoding="async" width="46" height="46">{% else %}<span class="ph">{{ creator.name|slice:":1"|upper }}</span>{% endif %}
+                            <span class="cr-client-name">{{ creator.name }}</span>
+                        </{% if creator.url %}a{% else %}span{% endif %}>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── REVIEWS ─── -->
+        {% if reviews %}
+        <section class="cr-section" id="reviews">
+            <div class="cr-inner">
+                <div class="cr-eyebrow cr-reveal">Testimonials</div>
+                <h2 class="cr-heading cr-reveal">{% if section_names.reviews %}{{ section_names.reviews }}{% else %}Client <em>reviews</em>{% endif %}</h2>
+                <div class="cr-grid">
+                    {% for review in reviews %}
+                    <div class="cr-review cr-reveal" data-spot>
+                        <div class="cr-stars" aria-label="{{ review.rating }} out of 5 stars">
+                            {% for i in "12345" %}<svg viewBox="0 0 20 20" class="{% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}"><path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6L10 15l-5.4 3 1.2-6L1.3 7.8l6.1-.7z"/></svg>{% endfor %}
+                        </div>
+                        <p>"{{ review.content }}"</p>
+                        <div class="cr-who">
+                            {% if review.image_name %}<img src="{% url 'image_thumb' review.image_name 96 %}" alt="{{ review.user_name }}" loading="lazy" decoding="async" width="44" height="44">{% else %}<span class="ph">{{ review.initials }}</span>{% endif %}
+                            <div><b>{{ review.user_name }}</b>{% if review.user_title %}<small>{{ review.user_title }}</small>{% endif %}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ─── CONTACT ─── -->
+        <section class="cr-section cr-contact" id="contact">
+            <div class="cr-inner">
+                <div class="cr-eyebrow cr-reveal">Contact</div>
+                <h2 class="cr-big cr-reveal">Let's make something <em>unforgettable</em></h2>
+                <div class="cr-contact-grid">
+                    {% if personal_info.phone %}
+                    <a class="cr-contact-card cr-reveal" data-spot href="tel:{{ personal_info.phone }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <small>Phone</small><b>{{ personal_info.phone }}</b>
+                    </a>
+                    {% endif %}
+                    {% if personal_info.email %}
+                    <a class="cr-contact-card cr-reveal" data-spot href="mailto:{{ personal_info.email }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <small>Email</small><b>{{ personal_info.email }}</b>
+                    </a>
+                    {% endif %}
+                    {% for link in links %}
+                    <a class="cr-contact-card cr-reveal" data-spot href="{{ link.url }}" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+                        <small>Social</small><b>{{ link.platform }}</b>
+                    </a>
+                    {% endfor %}
+                </div>
+                <div class="cr-cta-row cr-reveal">
+                    {% if personal_info.booking_url %}
+                    <a class="cr-btn cr-btn-solid" href="{{ personal_info.booking_url }}" target="_blank" rel="noopener" data-magnet>Start a project
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    {% elif personal_info.email %}
+                    <a class="cr-btn cr-btn-solid" href="mailto:{{ personal_info.email }}" data-magnet>Start a project
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── FOOTER ─── -->
+        <footer>
+            <div class="cr-foot">
+                <a href="/" class="cr-badge" target="_blank" rel="noopener">
+                    <span class="powered">Powered by</span>
+                    <img src="{% static 'img/bird.png' %}" alt="Skillifly">
+                    <span class="brand">Skillifly</span>
+                </a>
+                <p class="cr-copy">© {% now "Y" %} {{ personal_info.full_name }}. All rights reserved.</p>
+            </div>
+        </footer>
+
+    </div><!-- /.portfolio-body -->
+
+    <script>
+        (function () {
+            'use strict';
+
+            var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            var clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
+            var lerp = function (a, b, t) { return a + (b - a) * t; };
+
+            /* ─── Hero name: split into letters for the staggered rise ─── */
+            document.querySelectorAll('[data-split]').forEach(function (el) {
+                var text = el.textContent.trim();
+                el.setAttribute('aria-label', text);
+                el.textContent = '';
+                var i = 0;
+                text.split(/(\s+)/).forEach(function (part) {
+                    if (!part) return;
+                    if (/^\s+$/.test(part)) { el.appendChild(document.createTextNode(' ')); return; }
+                    var word = document.createElement('span');
+                    word.style.display = 'inline-block';
+                    word.setAttribute('aria-hidden', 'true');
+                    Array.prototype.forEach.call(part, function (ch) {
+                        var s = document.createElement('span');
+                        s.className = 'cr-ch';
+                        s.style.setProperty('--i', i++);
+                        s.textContent = ch;
+                        word.appendChild(s);
+                    });
+                    el.appendChild(word);
+                });
+            });
+
+            /* ─── Scroll progress, top bar, scrollspy, timelines ─── */
+            var progress = document.getElementById('cr-progress');
+            var bar = document.getElementById('cr-bar');
+            var hero = document.getElementById('home');
+            var timelines = document.querySelectorAll('[data-timeline]');
+            var ticking = false;
+            function onScroll() {
+                ticking = false;
+                var max = document.documentElement.scrollHeight - window.innerHeight;
+                if (progress) progress.style.transform = 'scaleX(' + (max > 0 ? clamp(window.scrollY / max, 0, 1) : 0) + ')';
+                if (bar) bar.classList.toggle('is-in', window.scrollY > (hero ? hero.offsetHeight * 0.35 : 200));
+                timelines.forEach(function (tl) {
+                    var r = tl.getBoundingClientRect();
+                    tl.style.setProperty('--p', clamp((window.innerHeight * 0.65 - r.top) / r.height, 0, 1).toFixed(3));
+                });
+            }
+            window.addEventListener('scroll', function () {
+                if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+            }, { passive: true });
+            window.addEventListener('resize', onScroll);
+            onScroll();
+
+            var spyLinks = document.querySelectorAll('.cr-link[data-spy]');
+            if (spyLinks.length && 'IntersectionObserver' in window) {
+                var spy = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) return;
+                        var id = entry.target.id;
+                        spyLinks.forEach(function (l) {
+                            var key = l.getAttribute('data-spy');
+                            var about = (key === 'skills' || key === 'experience') && (id === 'skills' || id === 'experience' || id === 'education');
+                            l.classList.toggle('is-active', key === id || about);
+                        });
+                    });
+                }, { rootMargin: '-45% 0px -45% 0px' });
+                ['projects', 'skills', 'experience', 'education', 'contact'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) spy.observe(el);
+                });
+            }
+
+            /* ─── Reveal + count-up ─── */
+            var reveals = document.querySelectorAll('.cr-reveal');
+            if ('IntersectionObserver' in window) {
+                var rio = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) { e.target.classList.add('is-visible'); rio.unobserve(e.target); }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                reveals.forEach(function (el) { rio.observe(el); });
+            } else {
+                reveals.forEach(function (el) { el.classList.add('is-visible'); });
+            }
+
+            /* ─── Pointer effects: cursor glow, card spotlight, magnetic buttons ─── */
+            if (finePointer) {
+                var cursor = document.getElementById('cr-cursor');
+                var cx = 0, cy = 0, tx = 0, ty = 0, cursorRaf = 0;
+                var follow = function () {
+                    cx = lerp(cx, tx, 0.12); cy = lerp(cy, ty, 0.12);
+                    cursor.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0)';
+                    cursorRaf = (Math.abs(tx - cx) + Math.abs(ty - cy) > 0.5) ? requestAnimationFrame(follow) : 0;
+                };
+                document.addEventListener('pointermove', function (e) {
+                    tx = e.clientX; ty = e.clientY;
+                    if (cursor) {
+                        cursor.classList.add('is-on');
+                        if (!cursorRaf) cursorRaf = requestAnimationFrame(follow);
+                    }
+                    var spot = e.target.closest && e.target.closest('[data-spot]');
+                    if (spot) {
+                        var r = spot.getBoundingClientRect();
+                        spot.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+                        spot.style.setProperty('--my', (e.clientY - r.top) + 'px');
+                    }
+                    var mag = e.target.closest && e.target.closest('[data-magnet]');
+                    if (mag && !reduced) {
+                        var b = mag.getBoundingClientRect();
+                        mag.style.transform = 'translate(' + ((e.clientX - b.left - b.width / 2) * 0.22) + 'px,' + ((e.clientY - b.top - b.height / 2) * 0.3) + 'px)';
+                    }
+                }, { passive: true });
+                document.querySelectorAll('[data-magnet]').forEach(function (m) {
+                    m.addEventListener('pointerleave', function () { m.style.transform = ''; });
+                });
+            }
+
+            /* ============================================================
+               THE WHEEL
+               One number — `turn` — drives everything. 0 is the ring, 1 is
+               the drum with item 0 at the front, each whole number after
+               that is one more item turned past. A single rAF pass writes
+               the transforms straight to the DOM (and sleeps once settled).
+               ============================================================ */
+            var CARD_H = 0.38, CARD_MAX_W = 0.34, CARD_RATIO = 1.45;
+            var STEP = 40, DRUM = 2.22, LENS = 2.7, RING_R = 1.14, BOW = 1.82;
+            var TITLE = 0.085, CULL = 1.6;
+            var WHEEL_UNITS = 900, DRAG_UNITS = 420, SETTLE = 140, EASE = 0.12;
+            var rad = function (d) { return d * Math.PI / 180; };
+
+            function place(ringDeg, drumDeg, ringR, drumR, bow, m) {
+                var bx = -bow * (1 - Math.cos(rad(drumDeg)));
+                return 'translateX(' + (m * bx) + 'px)' +
+                    ' rotateZ(' + ((1 - m) * ringDeg) + 'deg) translateY(' + (-(1 - m) * ringR) + 'px)' +
+                    ' rotateX(' + (m * drumDeg) + 'deg) translateZ(' + (m * drumR) + 'px)';
+            }
+
+            function initWheel(wrap) {
+                var stage = wrap.querySelector('[data-stage]');
+                var wheel = wrap.querySelector('[data-wheel]');
+                var cards = Array.prototype.slice.call(wheel.querySelectorAll('[data-card]'));
+                var labelEl = wrap.querySelector('[data-label]');
+                var titleBox = wrap.querySelector('[data-title-box]');
+                var kickerEl = wrap.querySelector('[data-kicker]');
+                var titleText = wrap.querySelector('[data-title-text]');
+                var titleLink = wrap.querySelector('[data-title-link]');
+                var hint = wrap.querySelector('[data-hint]');
+                var counterEl = wrap.querySelector('[data-counter]');
+                var indexItems = Array.prototype.slice.call(wrap.querySelectorAll('[data-index] li'));
+                var count = cards.length, last = Math.max(count - 1, 0);
+                if (!count) return;
+
+                wrap.classList.add('is-live');
+
+                var turn = 0, target = 0, active = -1, wasFront = null;
+                var stageW = 0, stageH = 0, m0 = null, raf = 0, visible = true, settling = 0;
+                var faces = cards.map(function (c) { return c.firstElementChild; });
+
+                function measure() {
+                    stageW = stage.clientWidth; stageH = stage.clientHeight;
+                    if (!stageH) return;
+                    /* Phones: the card is capped by width, so give it most of the
+                       screen, keep the ring inside the frame and ease the bow. */
+                    var narrow = stageW < 700;
+                    var cardW = Math.min(stageH * CARD_H * CARD_RATIO, stageW * (narrow ? 0.72 : CARD_MAX_W));
+                    var cardH = cardW / CARD_RATIO;
+                    var ringR = Math.min(cardH * RING_R, narrow ? stageW * 0.3 : Infinity);
+                    m0 = {
+                        cardW: cardW, cardH: cardH, ringR: ringR, drumR: cardH * DRUM, bow: cardH * BOW * (narrow ? 0.45 : 1),
+                        ringScale: clamp(((2 * Math.PI * ringR / count) * 0.82) / (cardW || 1), 0.16, 1)
+                    };
+                    stage.style.perspective = (cardH * LENS) + 'px';
+                    var fs = (cardH * TITLE * (narrow ? 1.25 : 1)) + 'px';
+                    labelEl.style.fontSize = (cardH * TITLE * (narrow ? 1.9 : 1)) + 'px';
+                    titleText.style.fontSize = fs;
+                    cards.forEach(function (c) {
+                        c.style.width = cardW + 'px'; c.style.height = cardH + 'px';
+                        c.style.marginLeft = (-cardW / 2) + 'px'; c.style.marginTop = (-cardH / 2) + 'px';
+                    });
+                    schedule();
+                }
+
+                function setActive(near, front) {
+                    var changed = near !== active;
+                    active = near; wasFront = front;
+                    cards.forEach(function (c, i) {
+                        c.classList.toggle('is-front', front && i === near);
+                        c.setAttribute('aria-selected', i === near ? 'true' : 'false');
+                    });
+                    stage.setAttribute('aria-activedescendant', cards[near].id);
+                    indexItems.forEach(function (li, i) {
+                        li.classList.toggle('is-active', i === near);
+                        li.classList.toggle('is-near', Math.abs(i - near) <= 4);
+                    });
+                    var n = function (v) { return (v < 10 ? '0' : '') + v; };
+                    if (counterEl) counterEl.textContent = front ? n(near + 1) + ' / ' + n(count) : 'Swipe or tap';
+                    if (changed || !kickerEl.textContent) {
+                        kickerEl.textContent = n(near + 1) + ' / ' + n(count) + '  ·  ' + cards[near].getAttribute('data-kind');
+                        titleText.textContent = cards[near].getAttribute('data-title');
+                        titleLink.setAttribute('href', cards[near].getAttribute('href'));
+                        titleBox.classList.remove('is-swap');
+                        void titleBox.offsetWidth;
+                        titleBox.classList.add('is-swap');
+                    }
+                }
+
+                function draw() {
+                    raf = 0;
+                    if (!m0) return;
+                    var gap = target - turn;
+                    if (Math.abs(gap) < 0.0005) turn = target; else turn += gap * (reduced ? 1 : EASE);
+
+                    var m = clamp(turn, 0, 1), pos = Math.max(0, turn - 1);
+                    wheel.style.transform = 'translateZ(' + (-m * m0.drumR) + 'px)';
+
+                    for (var i = 0; i < count; i++) {
+                        var d = i - pos, card = cards[i];
+                        card.style.transform = place(d * (360 / count), d * STEP, m0.ringR, m0.drumR, m0.bow, m);
+                        card.style.opacity = (m > 0.5 && Math.abs(d) > CULL) ? '0' : '1';
+                        card.style.pointerEvents = (m > 0.5 && Math.abs(d) > CULL) ? 'none' : '';
+                        card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
+                        faces[i].style.transform = 'scale(' + lerp(m0.ringScale, 1, m) + ')';
+                    }
+                    labelEl.style.opacity = String(1 - m);
+                    titleBox.style.opacity = String(m);
+                    titleLink.style.pointerEvents = m > 0.5 ? 'auto' : 'none';
+
+                    var near = clamp(Math.round(pos), 0, last), front = m > 0.5;
+                    if (near !== active || front !== wasFront) setActive(near, front);
+                    if (turn !== target) schedule();
+                }
+
+                function schedule() { if (!raf && visible) raf = requestAnimationFrame(draw); }
+
+                function to(next) { target = clamp(next, 0, last + 1); if (target > 0 && hint) hint.classList.add('is-gone'); schedule(); }
+
+                /* Native listener so the wheel can be cancelled — and it only cancels
+                   while it still has somewhere to go, so the page scrolls on at both
+                   ends instead of trapping the reader. */
+                /* The wheel only starts turning once the stage sits centred in the
+                   viewport. Until then the first scroll glides it into place. */
+                var aligningUntil = 0;
+                function isCentred() {
+                    var r = stage.getBoundingClientRect();
+                    return Math.abs(r.top + r.height / 2 - window.innerHeight / 2) < 12;
+                }
+                function centre() {
+                    aligningUntil = Date.now() + 750;
+                    stage.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+                }
+
+                stage.addEventListener('wheel', function (e) {
+                    var next = target + e.deltaY / WHEEL_UNITS;
+                    var canTurn = next > 0 && next < last + 1;
+                    if (Date.now() < aligningUntil) { e.preventDefault(); return; }
+                    if (canTurn && !isCentred()) { e.preventDefault(); centre(); return; }
+                    if (canTurn) e.preventDefault();
+                    to(next);
+                    clearTimeout(settling);
+                    settling = setTimeout(function () { to(Math.round(target)); }, SETTLE);
+                }, { passive: false });
+
+                /* Dragging only takes over after a few pixels, so a plain tap still
+                   reaches the card link underneath. */
+                var drag = null, moved = false;
+                /* Touch never hijacks vertical swipes (the page keeps scrolling past
+                   the wheel); a horizontal swipe steps one project instead. */
+                var swipe = null;
+                stage.addEventListener('pointerdown', function (e) {
+                    if (e.pointerType === 'touch') { swipe = { x: e.clientX, y: e.clientY }; return; }
+                    if (e.pointerType === 'mouse' && e.button !== 0) return;
+                    if (!isCentred()) { centre(); return; }
+                    drag = { y: e.clientY, start: e.clientY, id: e.pointerId }; moved = false;
+                });
+                stage.addEventListener('pointerup', function (e) {
+                    if (e.pointerType !== 'touch' || !swipe) return;
+                    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+                    swipe = null;
+                    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+                        to(Math.round(target) + (dx < 0 ? 1 : -1));
+                        suppressTap = true;
+                    }
+                });
+                stage.addEventListener('pointercancel', function () { swipe = null; });
+                var suppressTap = false;
+                stage.addEventListener('pointermove', function (e) {
+                    if (e.pointerType === 'touch' || !drag) return;
+                    if (!moved) {
+                        if (Math.abs(e.clientY - drag.start) < 5) return;
+                        moved = true;
+                        try { stage.setPointerCapture(drag.id); } catch (err) { /* ignore */ }
+                        wrap.classList.add('is-dragging');
+                    }
+                    to(target + (drag.y - e.clientY) / DRAG_UNITS);
+                    drag.y = e.clientY;
+                });
+                function endDrag() {
+                    if (!drag) return;
+                    drag = null; wrap.classList.remove('is-dragging');
+                    if (moved && target > 1) to(Math.round(target));
+                }
+                stage.addEventListener('pointerup', endDrag);
+                stage.addEventListener('pointercancel', endDrag);
+                stage.addEventListener('click', function (e) {
+                    if (moved || suppressTap) { e.preventDefault(); e.stopPropagation(); moved = false; suppressTap = false; }
+                }, true);
+
+                var prevBtn = wrap.querySelector('[data-prev]'), nextBtn = wrap.querySelector('[data-next]');
+                if (prevBtn) prevBtn.addEventListener('click', function () { to(Math.round(target) - 1); });
+                if (nextBtn) nextBtn.addEventListener('click', function () { to(Math.round(target) + 1); });
+
+                stage.addEventListener('keydown', function (e) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') to(Math.round(target) + 1);
+                    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') to(Math.round(target) - 1);
+                    else return;
+                    e.preventDefault();
+                });
+
+                /* Clicking a card that isn't at the front brings it there; the front
+                   card follows its link. */
+                cards.forEach(function (card, i) {
+                    card.addEventListener('click', function (e) {
+                        if (turn < 0.5 || i !== active) { e.preventDefault(); to(i + 1); }
+                    });
+                });
+                indexItems.forEach(function (li, i) {
+                    li.querySelector('button').addEventListener('click', function () { to(i + 1); });
+                });
+
+                if ('ResizeObserver' in window) new ResizeObserver(measure).observe(stage);
+                else window.addEventListener('resize', measure);
+                if ('IntersectionObserver' in window) {
+                    new IntersectionObserver(function (entries) {
+                        visible = entries[0].isIntersecting;
+                        if (visible) schedule();
+                    }, { rootMargin: '120px' }).observe(wrap);
+                }
+                measure();
+            }
+
+            document.querySelectorAll('[data-wheel-wrap]').forEach(initWheel);
+        })();
+    </script>
+</body>
+
+</html>

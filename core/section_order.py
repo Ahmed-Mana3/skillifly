@@ -135,6 +135,11 @@ THEME_SECTION_DEFAULTS = {
     ('video_editor', 'space'): [
         'projects', 'skills', 'experience', 'education', 'creators', 'reviews', 'contact',
     ],
+    # crimson: creative's sequence; social links live inside its contact
+    # grid, so there is no standalone links section.
+    ('video_editor', 'crimson'): [
+        'projects', 'skills', 'experience', 'education', 'creators', 'reviews', 'contact',
+    ],
     # minimal_gallery: creative's sequence; social links are rows in its
     # enquiries section, so there is no standalone links section.
     ('video_editor', 'minimal_gallery'): [
@@ -160,6 +165,7 @@ LAYOUT_ENABLED_THEMES = {
     ('video_editor', 'editorial_studio'),
     ('video_editor', 'kinetic'),
     ('video_editor', 'space'),
+    ('video_editor', 'crimson'),
     ('video_editor', 'minimal_gallery'),
 }
 

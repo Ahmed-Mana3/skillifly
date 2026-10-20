@@ -219,6 +219,21 @@
             </div>
         </a>
 
+        <!-- Heard-about answers tracker -->
+        <a href="{% url 'manage_heard_about' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.78s">
+            <div class="icon-box w-16 h-16 rounded-2xl bg-pink-50 flex items-center justify-center mb-8 group-hover:bg-pink-500 transition-colors">
+                <svg class="w-8 h-8 text-pink-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-black" style="font-family: 'Syne', sans-serif;">Heard-About Answers</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-8">Track every answer: counts per source, top Instagram creators, and who said what.</p>
+            <div class="flex items-center text-pink-600 text-xs font-bold uppercase tracking-wider">
+                View Answers
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+        </a>
+
         <!-- Blog Management Hub -->
         <a href="{% url 'blog_dashboard' %}" class="manage-card group bg-white rounded-[2.5rem] p-10 animate-fadeInUp" style="animation-delay: 0.8s">
             <div class="icon-box w-16 h-16 rounded-2xl bg-fuchsia-50 flex items-center justify-center mb-8 group-hover:bg-fuchsia-500 transition-colors">
