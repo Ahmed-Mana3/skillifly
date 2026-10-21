@@ -272,7 +272,7 @@
 
         .cr-ph { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 30% 20%, var(--accent2), var(--accent3) 55%, #1a0000); }
         .cr-ph svg { width: 18%; max-width: 64px; min-width: 28px; fill: rgba(255, 255, 255, 0.85); }
-        .cr-chip { position: absolute; top: 10px; left: 10px; z-index: 3; padding: 4px 10px; border-radius: 999px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(var(--accent-rgb), 0.5); backdrop-filter: blur(6px); }
+        .cr-chip { position: absolute; top: 10px; left: 10px; z-index: 3; padding: 4px 10px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(var(--accent-rgb), 0.5); backdrop-filter: blur(6px); }
         .cr-view {
             position: absolute; right: 10px; bottom: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
             font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: var(--accent2);
@@ -298,7 +298,7 @@
         .cr-index { position: absolute; z-index: 6; top: 50%; right: 3%; transform: translateY(-50%); list-style: none; text-align: right; line-height: 1.9; max-width: 22%; }
         .cr-index li { display: none; }
         .cr-index li.is-near { display: block; }
-        .cr-index button { all: unset; cursor: pointer; font-size: 0.8rem; color: var(--dimmer); transition: color 0.3s, transform 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; }
+        .cr-index button { all: unset; cursor: pointer; font-size: 0.86rem; color: rgba(255, 244, 244, 0.58); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8); transition: color 0.3s, transform 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; }
         .cr-index button:hover { color: var(--text); }
         .cr-index button:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
         .cr-index li.is-active button { color: #fff; font-weight: 600; transform: translateX(-8px); }
@@ -856,6 +856,7 @@
                 var turn = 0, target = 0, active = -1, wasFront = null;
                 var stageW = 0, stageH = 0, m0 = null, raf = 0, visible = true, settling = 0;
                 var faces = cards.map(function (c) { return c.firstElementChild; });
+                var culledNow = cards.map(function () { return false; });
 
                 function measure() {
                     stageW = stage.clientWidth; stageH = stage.clientHeight;
@@ -871,7 +872,7 @@
                         ringScale: clamp(((2 * Math.PI * ringR / count) * 0.82) / (cardW || 1), 0.16, 1)
                     };
                     stage.style.perspective = (cardH * LENS) + 'px';
-                    var fs = (cardH * TITLE * (narrow ? 1.25 : 1)) + 'px';
+                    var fs = Math.max(cardH * TITLE * (narrow ? 1.25 : 1.2), narrow ? 20 : 26) + 'px';
                     labelEl.style.fontSize = (cardH * TITLE * (narrow ? 1.9 : 1)) + 'px';
                     titleText.style.fontSize = fs;
                     cards.forEach(function (c) {
@@ -905,21 +906,29 @@
                     }
                 }
 
-                function draw() {
+                var lastT = 0;
+                function draw(now) {
                     raf = 0;
                     if (!m0) return;
+                    /* Frame-rate independent easing: same feel on 60 and 144 Hz. */
+                    var dt = lastT ? clamp((now - lastT) / 1000, 0.001, 0.05) : 1 / 60;
+                    lastT = now;
                     var gap = target - turn;
-                    if (Math.abs(gap) < 0.0005) turn = target; else turn += gap * (reduced ? 1 : EASE);
+                    if (Math.abs(gap) < 0.0005) turn = target; else turn += gap * (reduced ? 1 : 1 - Math.exp(-dt * 8));
 
                     var m = clamp(turn, 0, 1), pos = Math.max(0, turn - 1);
                     wheel.style.transform = 'translateZ(' + (-m * m0.drumR) + 'px)';
 
                     for (var i = 0; i < count; i++) {
-                        var d = i - pos, card = cards[i];
+                        var d = i - pos, ad = Math.abs(d), card = cards[i];
+                        var culled = m > 0.5 && ad > CULL;
+                        if (culled && culledNow[i]) continue; /* off-screen: skip the work */
+                        culledNow[i] = culled;
                         card.style.transform = place(d * (360 / count), d * STEP, m0.ringR, m0.drumR, m0.bow, m);
-                        card.style.opacity = (m > 0.5 && Math.abs(d) > CULL) ? '0' : '1';
-                        card.style.pointerEvents = (m > 0.5 && Math.abs(d) > CULL) ? 'none' : '';
-                        card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
+                        /* Fade neighbours so the card in focus is always the clearest. */
+                        card.style.opacity = culled ? '0' : String(lerp(1, clamp(1 - ad * 0.3, 0.38, 1), m));
+                        card.style.pointerEvents = culled ? 'none' : '';
+                        card.style.zIndex = String(Math.round(100 - ad * 2));
                         faces[i].style.transform = 'scale(' + lerp(m0.ringScale, 1, m) + ')';
                     }
                     labelEl.style.opacity = String(1 - m);
@@ -946,19 +955,42 @@
                     return Math.abs(r.top + r.height / 2 - window.innerHeight / 2) < 12;
                 }
                 function centre() {
-                    aligningUntil = Date.now() + 750;
+                    aligningUntil = Date.now() + 1200; /* safety cap; ends early once centred */
                     stage.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
                 }
 
+                /* A gesture = a burst of wheel/drag input. When it ends we snap to a
+                   whole project in the direction it travelled, so one mouse-wheel
+                   notch (a tiny fraction of a project) still advances by one. */
+                var gestureFrom = null;
+                function snap() {
+                    if (gestureFrom === null) return;
+                    var delta = target - gestureFrom, settled = Math.round(target);
+                    if (settled === Math.round(gestureFrom) && Math.abs(delta) > 0.05 && target > 0 && target < last + 1) {
+                        settled += delta > 0 ? 1 : -1;
+                    }
+                    gestureFrom = null;
+                    to(settled);
+                }
+                function nudge(amount) {
+                    if (gestureFrom === null) gestureFrom = target;
+                    to(target + amount);
+                }
+
                 stage.addEventListener('wheel', function (e) {
-                    var next = target + e.deltaY / WHEEL_UNITS;
+                    /* Normalise line/page deltas (Firefox, some mice) to pixels. */
+                    var dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+                    var next = target + dy / WHEEL_UNITS;
                     var canTurn = next > 0 && next < last + 1;
-                    if (Date.now() < aligningUntil) { e.preventDefault(); return; }
+                    if (Date.now() < aligningUntil) {
+                        if (!isCentred()) { e.preventDefault(); return; }
+                        aligningUntil = 0;
+                    }
                     if (canTurn && !isCentred()) { e.preventDefault(); centre(); return; }
                     if (canTurn) e.preventDefault();
-                    to(next);
+                    nudge(dy / WHEEL_UNITS);
                     clearTimeout(settling);
-                    settling = setTimeout(function () { to(Math.round(target)); }, SETTLE);
+                    settling = setTimeout(snap, SETTLE);
                 }, { passive: false });
 
                 /* Dragging only takes over after a few pixels, so a plain tap still
@@ -992,13 +1024,13 @@
                         try { stage.setPointerCapture(drag.id); } catch (err) { /* ignore */ }
                         wrap.classList.add('is-dragging');
                     }
-                    to(target + (drag.y - e.clientY) / DRAG_UNITS);
+                    nudge((drag.y - e.clientY) / DRAG_UNITS);
                     drag.y = e.clientY;
                 });
                 function endDrag() {
                     if (!drag) return;
                     drag = null; wrap.classList.remove('is-dragging');
-                    if (moved && target > 1) to(Math.round(target));
+                    if (moved) snap();
                 }
                 stage.addEventListener('pointerup', endDrag);
                 stage.addEventListener('pointercancel', endDrag);
