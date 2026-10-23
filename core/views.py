@@ -2,7 +2,7 @@ import logging
 import os
 import json
 import re
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 from decimal import Decimal
 from django.conf import settings
 from datetime import date
@@ -3861,221 +3861,81 @@ def manage_heard_about(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def manage_payment_tracking(request):
-    """Payment-funnel analytics: how often each payment page opens + which buttons were clicked."""
-    from core.models import PaymentTrackingEvent  # noqa: F401
-    from payments.views import (
-        PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS,
-        PAYMENT_FUNNEL_ORDER, PAYMENT_FUNNEL_EXITS,
-    )
-    from django.db.models import Count, Max, Q as _Q
+    """Payment funnel + revenue report: where buyers drop off, what they pay, who to follow up."""
+    from core import payment_report
+    from payments.views import PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS
 
-    days_param = request.GET.get('days', '30')
-    if days_param == 'all':
-        base_qs = PaymentTrackingEvent.objects.all()
-        days_label = 'All time'
-    else:
-        try:
-            days = int(days_param)
-        except (TypeError, ValueError):
-            days = 30
-        if days not in (7, 30):
-            days = 30
-        base_qs = PaymentTrackingEvent.objects.filter(
-            created_at__gte=timezone.now() - timedelta(days=days))
-        days_label = f'Last {days} days'
+    include_team = request.GET.get('team') == '1'
+    report = payment_report.build_report(request.GET.get('days', payment_report.DEFAULT_PERIOD),
+                                         include_team=include_team)
+    export = request.GET.get('export')
+    if export in ('leads', 'events', 'payments'):
+        return _payment_report_csv(export, report)
 
-    clicks_qs = base_qs.filter(event_type='click')
-
-    total_views = base_qs.filter(event_type='page_view').count()
-    total_clicks = clicks_qs.count()
-    unique_users = base_qs.exclude(user__isnull=True).values('user').distinct().count()
-    unique_visitors = base_qs.exclude(session_id='anon').values('session_id').distinct().count()
-
-    # Per-page breakdown, walked in the real funnel order so "carried on to ..."
-    # is a genuine step-to-step number (ordering by volume made it nonsense).
-    page_by_key = {
-        r['page']: {
-            'views': r['views'],
-            'clicks': r['clicks'],
-        }
-        for r in base_qs.values('page').annotate(
-            views=Count('id', filter=_Q(event_type='page_view')),
-            clicks=Count('id', filter=_Q(event_type='click')),
-        )
+    period = report['period']
+    max_trend = {
+        key: max((pt[key] for pt in report['trend']['points']), default=0)
+        for key in ('visitors', 'checkouts', 'revenue', 'subscriptions')
     }
-
-    # The happy path is a chain; failures and pending states are exits off it,
-    # so they must not be drawn as "the next step" or the funnel reads nonsense.
-    chain = [p for p in PAYMENT_FUNNEL_ORDER if p in page_by_key]
-    exits = [p for p in PAYMENT_FUNNEL_EXITS if p in page_by_key]
-    exits += sorted(
-        (p for p in page_by_key if p not in PAYMENT_FUNNEL_ORDER and p not in PAYMENT_FUNNEL_EXITS),
-        key=lambda p: -page_by_key[p]['views'],
-    )
-
-    # Bars are drawn against the busiest step, not the entry step: visitors can
-    # deep-link straight to a later page, which would push a bar past 100%.
-    max_views = max((s['views'] for s in page_by_key.values()), default=0)
-
-    # The one number the page is really for: of everyone who opened the pricing
-    # page, how many walked out of a confirmed payment?
-    entry_views = page_by_key.get('payment', {}).get('views', 0)
-    success_views = page_by_key.get('payment_success', {}).get('views', 0)
-    conversion_pct = (
-        round(success_views / entry_views * 100, 1) if entry_views else None
-    )
-
-    def _page_label(key):
-        return PAYMENT_PAGE_LABELS.get(key, key.replace('_', ' ').title())
-
-    def _page_row(key, next_key):
-        stats = page_by_key[key]
-        next_views = page_by_key[next_key]['views'] if next_key else 0
-        return {
-            'page': key,
-            'label': _page_label(key),
-            'views': stats['views'],
-            'clicks': stats['clicks'],
-            'next_label': _page_label(next_key) if next_key else None,
-            # % of this page's opens that reached the next step. Can exceed 100
-            # when people land on a later page directly - the template marks it.
-            'continue_pct': (
-                round(next_views / stats['views'] * 100)
-                if stats['views'] and next_views else None
-            ),
-        }
-
-    page_rows = [
-        _page_row(key, chain[i + 1] if i + 1 < len(chain) else None)
-        for i, key in enumerate(chain)
-    ]
-    exit_rows = [_page_row(key, None) for key in exits]
-
-    # Button-click breakdown
-    action_raw = (
-        clicks_qs.values('page', 'action', 'plan_type')
-        .annotate(count=Count('id'))
-        .order_by('-count')[:40]
-    )
-    action_rows = [
-        {
-            'page': r['page'],
-            'page_label': PAYMENT_PAGE_LABELS.get(r['page'], r['page'].replace('_', ' ').title()),
-            'action': r['action'],
-            'action_label': PAYMENT_ACTION_LABELS.get(r['action'], r['action'].replace('_', ' ').title()),
-            'count': r['count'],
-            'plan_type': r['plan_type'],
-        }
-        for r in action_raw
-    ]
-
-    # Per-user / per-visitor totals
-    user_raw = (
-        base_qs.exclude(user__isnull=True)
-        .values('user')
-        .annotate(
-            views=Count('id', filter=_Q(event_type='page_view')),
-            clicks=Count('id', filter=_Q(event_type='click')),
-            last_at=Max('created_at'),
-        )
-        .order_by('-views')
-    )
-    user_ids = [r['user'] for r in user_raw]
-    user_map = {}
-    from .models import CustomUser as _CustomUser
-    if user_ids:
-        for u in _CustomUser.objects.filter(id__in=user_ids).select_related('profile'):
-            user_map[u.id] = u
-
-    # Who among them is already paying? Same check the portfolio visibility uses
-    # (last paid payment, still inside its window) so renewal intent is visible.
-    from .models import UserPayment as _UserPayment
-    paying_ids = set()
-    if user_ids:
-        for p in _UserPayment.objects.filter(
-            user_id__in=user_ids, status='paid'
-        ).select_related('subscription'):
-            if p.is_active:
-                paying_ids.add(p.user_id)
-
-    guest_raw = (
-        base_qs.filter(user__isnull=True)
-        .exclude(session_id='anon')
-        .values('session_id')
-        .annotate(
-            views=Count('id', filter=_Q(event_type='page_view')),
-            clicks=Count('id', filter=_Q(event_type='click')),
-            last_at=Max('created_at'),
-        )
-        .order_by('-views')
-    )
-
-    rows = []
-    for r in user_raw:
-        u = user_map.get(r['user'])
-        rows.append({
-            'display': (u.get_full_name().strip() or u.username) if u else 'Unknown',
-            'identity': (u.username if u else ''),
-            'email': (u.email if u else ''),
-            'kind': 'user',
-            'is_paying': r['user'] in paying_ids,
-            'views': r['views'],
-            'clicks': r['clicks'],
-            'last_at': r['last_at'],
-        })
-    for r in guest_raw[:50]:
-        rows.append({
-            'display': 'Guest',
-            'identity': r['session_id'][:16] + ('…' if len(r['session_id']) > 16 else ''),
-            'email': '',
-            'kind': 'guest',
-            'is_paying': False,
-            'views': r['views'],
-            'clicks': r['clicks'],
-            'last_at': r['last_at'],
-        })
-    # Sort combined: by views desc, names resolved already
-    rows.sort(key=lambda x: (-x['views'], -x['clicks']))
-    user_rows = rows[:100]
-
-    recent = list(
-        base_qs.select_related('user').order_by('-created_at')[:100]
-    )
-    recent_rows = [
-        {
-            'id': e.id,
-            'created': e.created_at,
-            'type': e.event_type,
-            'page_label': PAYMENT_PAGE_LABELS.get(e.page, e.page.replace('_', ' ').title()),
-            'action_label': PAYMENT_ACTION_LABELS.get(e.action, e.action.replace('_', ' ').title()),
-            'action': e.action,
-            'plan_type': e.plan_type,
-            'user': e.user.username if e.user else None,
-            'session': e.session_id,
-        }
-        for e in recent
-    ]
-
+    query = {'days': period.key}
+    if include_team:
+        query['team'] = '1'
     context = {
-        'days': days_param,
-        'days_label': days_label,
-        'total_views': total_views,
-        'total_clicks': total_clicks,
-        'unique_users': unique_users,
-        'unique_visitors': unique_visitors,
-        'paying_users': len(paying_ids),
-        'entry_views': entry_views,
-        'success_views': success_views,
-        'conversion_pct': conversion_pct,
-        'max_views': max_views,
-        'page_rows': page_rows,
-        'exit_rows': exit_rows,
-        'action_rows': action_rows,
-        'user_rows': user_rows,
-        'recent_rows': recent_rows,
-        'has_data': base_qs.exists(),
+        **report,
+        'days': period.key,
+        'days_label': period.label,
+        'compare_label': period.previous.label if period.previous else None,
+        'max_trend': max_trend,
+        'period_options': [('7', '7 days'), ('30', '30 days'), ('90', '90 days'), ('all', 'All time')],
+        'time_zone': settings.TIME_ZONE,
+        'base_query': urlencode(query),
+        'team_toggle_query': urlencode({'days': period.key, **({} if include_team else {'team': '1'})}),
+        'review_url': reverse('admin:core_manualpayment_changelist') + '?status__exact=needs_review',
     }
+    for a in context['actions']:
+        a['page_label'] = PAYMENT_PAGE_LABELS.get(a['page'], a['page'].replace('_', ' ').title())
+        a['action_label'] = PAYMENT_ACTION_LABELS.get(a['action'], a['action'].replace('_', ' ').title())
+    context.pop('core')
     return render(request, 'core/manage_payment_tracking.html', context)
+
+
+def _payment_report_csv(kind, report):
+    """CSV download of the report's leads, payments or raw events for the selected period."""
+    import csv
+    from core import payment_report
+    from payments.views import PAYMENT_PAGE_LABELS, PAYMENT_ACTION_LABELS
+
+    period = report['period']
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = (
+        f'attachment; filename="skillifly-payment-{kind}-{period.key}-{timezone.now():%Y%m%d}.csv"')
+    response.write('\ufeff')  # Excel needs the BOM to read UTF-8 (Arabic names)
+    writer = csv.writer(response)
+
+    def stamp(dt):
+        return timezone.localtime(dt).strftime('%Y-%m-%d %H:%M') if dt else ''
+
+    if kind == 'leads':
+        writer.writerow(['Name', 'Username', 'Email', 'Furthest step', 'Plan interest',
+                         'Pricing opens', 'Card checkout pending', 'Last seen'])
+        for r in report['leads']:
+            writer.writerow([r['name'], r['username'], r['email'], r['stage_label'], r['plan'],
+                             r['pricing_opens'], 'yes' if r['card_pending'] else '', stamp(r['last_seen'])])
+    elif kind == 'payments':
+        writer.writerow(['Date', 'Username', 'Email', 'Status', 'Plan', 'Method', 'Amount (EGP)', 'Coupon'])
+        for p in report['core']['payments']:
+            writer.writerow([stamp(p.date), p.user.username if p.user else '', p.user.email if p.user else '',
+                             p.status, payment_report.PLAN_LABELS[payment_report.payment_plan(p)],
+                             payment_report.METHOD_LABELS[payment_report.payment_method(p)],
+                             p.amount, p.discount_code_used or ''])
+    else:
+        writer.writerow(['Time', 'Type', 'Page', 'Action', 'Plan', 'User id', 'Visitor id'])
+        for sid, uid, etype, page, action, plan, created, _ua in report['core']['rows']:
+            writer.writerow([stamp(created), 'Open' if etype == 'page_view' else 'Click',
+                             PAYMENT_PAGE_LABELS.get(page, page),
+                             PAYMENT_ACTION_LABELS.get(action, action) if action else '',
+                             plan, uid or '', sid])
+    return response
 
 
 @user_passes_test(lambda u: u.is_superuser)

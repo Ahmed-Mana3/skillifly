@@ -34,20 +34,7 @@ PAYMENT_PAGE_LABELS = {
     'fawaterk_pending': 'Payment pending',
 }
 
-# The happy path, in order. Steps a visitor walks through one after another.
-PAYMENT_FUNNEL_ORDER = [
-    'payment',
-    'manual_payment',
-    'fawaterk_checkout',
-    'payment_success',
-]
-
-# States visitors leave the happy path for. Not "the next step" — drawing them
-# in the chain would claim people failed *after* succeeding.
-PAYMENT_FUNNEL_EXITS = [
-    'fawaterk_pending',
-    'payment_failure',
-]
+# Funnel stages and their rules live in core/payment_report.py.
 
 PAYMENT_ACTION_LABELS = {
     'plan_monthly': 'Get monthly plan',

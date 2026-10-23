@@ -213,122 +213,225 @@ class PaymentFunnelEndpointTests(TestCase):
 
 
 class PaymentTrackingReportTests(TestCase):
+    """The /manage/payment-tracking/ report: people-based funnel, ledger-based money."""
+
     def setUp(self):
         self.admin = CustomUser.objects.create_superuser(
-            username='root_bo', email='root@example.com', password='Password123!'
+            username='root_bo', email='root@example.com', password=None
         )
         self.client = Client()
         self.client.defaults['HTTP_USER_AGENT'] = UA
         self.client.force_login(self.admin)
+        self.monthly = Subscription.objects.create(name='Monthly', duration=30, days=30)
+        self.annual = Subscription.objects.create(name='Annual', duration=365, days=365)
 
-    def _event(self, page, event_type='page_view', action='', plan_type='', user=None, session_id='pvid_x'):
-        return PaymentTrackingEvent.objects.create(
+    def _user(self, name):
+        return CustomUser.objects.create_user(username=name, email=f'{name}@example.com', password=None)
+
+    def _event(self, page, event_type='page_view', action='', plan_type='', user=None,
+               session_id='pvid_x', days_ago=0):
+        event = PaymentTrackingEvent.objects.create(
             user=user, session_id=session_id, event_type=event_type,
             page=page, action=action, plan_type=plan_type,
         )
+        if days_ago:
+            PaymentTrackingEvent.objects.filter(pk=event.pk).update(
+                created_at=timezone.now() - timedelta(days=days_ago))
+        return event
 
-    def test_report_ranks_pages_in_funnel_order(self):
-        # volume order would be the reverse of the real flow
-        self._event('payment_success', session_id='pvid_a')
-        self._event('fawaterk_checkout', session_id='pvid_b')
-        self._event('payment', session_id='pvid_c')
-        response = self.client.get(reverse('manage_payment_tracking'))
+    def _pay(self, user, sub=None, amount='99.00', status='paid', key='', days_ago=0):
+        payment = UserPayment.objects.create(
+            user=user, subscription=sub or self.monthly, amount=amount, status=status,
+            fawaterk_intent_key=key or None,
+        )
+        if days_ago:
+            UserPayment.objects.filter(pk=payment.pk).update(date=timezone.now() - timedelta(days=days_ago))
+        return payment
+
+    def _report(self, query=''):
+        response = self.client.get(reverse('manage_payment_tracking') + query)
         self.assertEqual(response.status_code, 200)
-        pages = [row['page'] for row in response.context['page_rows']]
-        self.assertEqual(pages, ['payment', 'fawaterk_checkout', 'payment_success'])
+        return response.context
 
-    def test_report_continue_percentage(self):
+    def _counts(self, ctx):
+        return [s['count'] for s in ctx['steps']]
+
+    def test_funnel_counts_people_not_page_loads(self):
         for _ in range(4):
             self._event('payment', session_id='pvid_a')
-        self._event('fawaterk_checkout', session_id='pvid_b')
-        response = self.client.get(reverse('manage_payment_tracking'))
-        rows = {row['page']: row for row in response.context['page_rows']}
-        self.assertEqual(rows['payment']['continue_pct'], 25)
-        self.assertEqual(rows['payment']['next_label'], 'Fawaterk checkout')
-        self.assertIsNone(rows['fawaterk_checkout']['continue_pct'])
-    def test_report_merges_opens_and_clicks_per_visitor(self):
+        self._event('payment', session_id='pvid_b')
+        self.assertEqual(self._counts(self._report()), [2, 0, 0, 0])
+
+    def test_steps_are_cumulative(self):
+        # opened checkout without a tracked plan click: still counts as having picked a plan
         self._event('payment', session_id='pvid_a')
-        self._event('payment', event_type='click', action='plan_monthly', session_id='pvid_a')
+        self._event('payment', 'click', 'plan_annual', 'pro_annual', session_id='pvid_b')
+        self._event('payment', session_id='pvid_b')
+        self._event('manual_payment', session_id='pvid_c')
+        ctx = self._report()
+        self.assertEqual(self._counts(ctx), [3, 2, 1, 0])
+        first = ctx['steps'][0]
+        self.assertEqual((first['lost'], first['lost_pct'], first['continue_pct']), (1, 33, 67))
+
+    def test_guest_who_signs_in_is_one_person(self):
+        user = self._user('merge_me')
+        self._event('payment', session_id='pvid_m')
+        self._event('manual_payment', user=user, session_id='pvid_m')
+        ctx = self._report()
+        self.assertEqual(ctx['steps'][0]['count'], 1)
+        self.assertEqual({r['label']: r['visitors'] for r in ctx['segments']}.get('Signed in'), 1)
+
+    def test_success_page_view_alone_is_not_a_sale(self):
+        user = self._user('refresher')
+        self._event('payment', user=user, session_id='pvid_r')
+        self._event('payment_success', user=user, session_id='pvid_r')
+        self._event('payment_success', user=user, session_id='pvid_r')
+        ctx = self._report()
+        self.assertEqual(ctx['steps'][-1]['count'], 0)
+        self.assertEqual(ctx['revenue_total'], 0)
+
+    def test_confirmed_payment_after_visit_is_a_conversion(self):
+        user = self._user('buyer')
+        self._event('payment', user=user, session_id='pvid_b')
+        self._event('payment', 'click', 'plan_monthly', 'monthly', user=user, session_id='pvid_b')
+        self._event('manual_payment', user=user, session_id='pvid_b')
+        self._pay(user, key='MANUAL-ABCDEF123456')
+        ctx = self._report()
+        self.assertEqual(self._counts(ctx), [1, 1, 1, 1])
+        self.assertEqual(ctx['conversion'], 100.0)
+
+    def test_payment_before_the_visit_is_not_a_conversion(self):
+        payer = self._user('early_payer')
+        self._pay(payer, days_ago=10)
+        self._event('payment', user=payer, session_id='pvid_e')
+        ctx = self._report()
+        self.assertEqual(ctx['steps'][-1]['count'], 0)
+        self.assertEqual(ctx['renewal_visitors'], 1)
+        self.assertEqual(ctx['untracked_subs'], 1)
+
+    def test_revenue_comes_from_paid_payments_only(self):
+        user = self._user('ledger')
+        self._pay(user, amount='99.00', key='MANUAL-AAAAAAAAAAAA')
+        self._pay(user, self.annual, amount='449.00', key='FW-INTENT-1')
+        self._pay(user, amount='99.00', status='pending', key='FW-INTENT-2')
+        self._pay(user, amount='99.00', status='failed', key='FW-INTENT-3')
+        self._pay(user, amount='0', key='MANUAL-COUPON-XYZ')
+        ctx = self._report()
+        self.assertEqual(ctx['revenue_total'], 548)
+        kpis = {k['key']: k for k in ctx['kpis']}
+        self.assertEqual(kpis['revenue']['value'], '548')
+        self.assertEqual(kpis['subs']['value'], '3')
+        self.assertIn('1 free', kpis['subs']['sub'])
+        self.assertEqual(kpis['aov']['value'], '274')
+        methods = {r['key']: r['count'] for r in ctx['method_rows']}
+        self.assertEqual(methods, {'card': 1, 'wallet': 1, 'coupon': 1})
+        plans = {r['key']: r['subscriptions'] for r in ctx['plan_rows']}
+        self.assertEqual(plans, {'monthly': 2, 'annual': 1})
+
+    def test_new_vs_renewal(self):
+        returning = self._user('returning')
+        self._pay(returning, days_ago=60)
+        self._pay(returning)
+        self._pay(self._user('fresh'))
+        kpis = {k['key']: k for k in self._report()['kpis']}
+        self.assertIn('1 new · 1 renewal', kpis['subs']['sub'])
+
+    def test_team_accounts_are_left_out_by_default(self):
+        self._event('payment', user=self.admin, session_id='pvid_admin')
+        self._event('payment', session_id='pvid_admin')  # admin's guest-phase event
+        self._pay(self.admin)
+        self._event('payment', session_id='pvid_real')
+        ctx = self._report()
+        self.assertEqual(ctx['steps'][0]['count'], 1)
+        self.assertEqual(ctx['revenue_total'], 0)
+        ctx = self._report('?team=1')
+        self.assertEqual(ctx['steps'][0]['count'], 2)
+        self.assertEqual(ctx['revenue_total'], 99)
+
+    def test_leads_are_unpaid_signed_in_people_who_went_past_pricing(self):
+        hot = self._user('hot_lead')
+        warm = self._user('warm_lead')
+        browsing = self._user('just_browsing')
+        payer = self._user('already_paying')
+        self._event('manual_payment', user=hot, session_id='pvid_h')
+        self._event('payment', 'click', 'plan_annual', 'pro_annual', user=warm, session_id='pvid_w')
+        self._event('payment', user=browsing, session_id='pvid_br')
+        self._pay(payer, days_ago=40, sub=self.annual)
+        self._event('fawaterk_checkout', user=payer, session_id='pvid_p')
+        self._event('manual_payment', session_id='pvid_guest')
+        leads = self._report()['leads']
+        self.assertEqual([r['username'] for r in leads], ['hot_lead', 'warm_lead'])
+        self.assertEqual(leads[1]['plan'], 'Annual')
+
+    def test_card_checkout_health(self):
+        user = self._user('carder')
+        self._pay(user, key='FW-1')
+        self._pay(user, status='failed', key='FW-2')
+        stale = self._pay(user, status='pending', key='FW-3')
+        UserPayment.objects.filter(pk=stale.pk).update(date=timezone.now() - timedelta(hours=3))
+        self._pay(user, status='pending', key='FW-4')  # still inside the grace window
+        health = self._report()['health']
+        self.assertEqual((health['card_started'], health['card_paid'], health['card_failed'],
+                          health['card_abandoned']), (4, 1, 1, 1))
+        self.assertEqual(health['card_success_pct'], 33.3)
+
+    def test_deltas_compare_with_the_previous_period(self):
+        user = self._user('trend')
+        self._pay(user, amount='100.00', days_ago=40)
+        self._pay(user, amount='150.00', days_ago=2)
+        kpis = {k['key']: k for k in self._report('?days=30')['kpis']}
+        self.assertEqual(kpis['revenue']['delta']['label'], '+50%')
+        self.assertIsNone({k['key']: k for k in self._report('?days=all')['kpis']}['revenue']['delta'])
+
+    def test_period_filter(self):
+        self._event('payment', session_id='pvid_old', days_ago=20)
+        self._event('payment', session_id='pvid_new')
+        self.assertEqual(self._report('?days=7')['steps'][0]['count'], 1)
+        self.assertEqual(self._report('?days=30')['steps'][0]['count'], 2)
+        self.assertEqual(self._report('?days=bogus')['days'], '30')
+
+    def test_insights_flag_the_review_queue(self):
+        from core.models import ManualPayment
+        user = self._user('receipt')
+        ManualPayment.objects.create(user=user, plan_type='monthly', amount_expected='99.00',
+                                     sender_identifier='0100', receipt_image='receipts/x.jpg',
+                                     status='needs_review')
+        ctx = self._report()
+        titles = [i['title'] for i in ctx['insights']]
+        self.assertIn('1 payment receipt waiting for review', titles)
+        self.assertContains(self.client.get(reverse('manage_payment_tracking')), 'status__exact=needs_review')
+
+    def test_page_renders_every_period(self):
+        user = self._user('render')
+        self._event('payment', user=user, session_id='pvid_q')
+        self._event('payment', 'click', 'plan_monthly', 'monthly', user=user, session_id='pvid_q')
+        self._pay(user, days_ago=100)
+        self._pay(user)
+        for days in ('7', '30', '90', 'all'):
+            response = self.client.get(reverse('manage_payment_tracking') + f'?days={days}')
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'Where buyers drop out')
+            self.assertContains(response, 'prTrendData')
+
+    def test_handles_an_empty_period(self):
+        ctx = self._report('?days=7')
+        self.assertFalse(ctx['has_data'])
+
+    def test_csv_exports(self):
+        lead = self._user('csv_lead')
+        self._event('manual_payment', user=lead, session_id='pvid_c')
+        self._pay(self._user('csv_payer'), key='MANUAL-BBBBBBBBBBBB')
+        for kind, expect in (('leads', 'csv_lead'), ('payments', 'csv_payer'), ('events', 'Manual payment')):
+            response = self.client.get(reverse('manage_payment_tracking') + f'?export={kind}')
+            self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+            body = response.content.decode('utf-8')
+            self.assertTrue(body.startswith('\ufeff'))
+            self.assertIn(expect, body)
+
+    def test_requires_superuser(self):
+        self.client.force_login(self._user('nosy'))
         response = self.client.get(reverse('manage_payment_tracking'))
-        self.assertEqual(response.context['unique_visitors'], 1)
-        guest = [r for r in response.context['user_rows'] if r['kind'] == 'guest']
-        self.assertEqual(len(guest), 1)
-        self.assertEqual((guest[0]['views'], guest[0]['clicks']), (1, 1))
-
-    def test_report_flags_users_who_already_pay(self):
-        payer = CustomUser.objects.create_user(
-            username='payer_bo', email='payer@example.com', password='Password123!'
-        )
-        lapsed = CustomUser.objects.create_user(
-            username='lapsed_bo', email='lapsed@example.com', password='Password123!'
-        )
-        sub = Subscription.objects.create(name='Pro', duration=30, days=30)
-        UserPayment.objects.create(user=payer, subscription=sub, status='paid')
-        old = Subscription.objects.create(name='Old', duration=30, days=30)
-        stale = UserPayment.objects.create(user=lapsed, subscription=old, status='paid')
-        UserPayment.objects.filter(pk=stale.pk).update(
-            date=timezone.now() - timedelta(days=90)
-        )
-
-        self._event('payment', user=payer, session_id='pvid_p')
-        self._event('payment', user=lapsed, session_id='pvid_l')
-
-        response = self.client.get(reverse('manage_payment_tracking'))
-        self.assertEqual(response.context['paying_users'], 1)
-        by_identity = {r['identity']: r for r in response.context['user_rows']}
-        self.assertTrue(by_identity['payer_bo']['is_paying'])
-        self.assertFalse(by_identity['lapsed_bo']['is_paying'])
-
-    def test_report_separates_exits_from_the_happy_path(self):
-        self._event('payment', session_id='pvid_a')
-        self._event('payment_failure', session_id='pvid_b')
-        self._event('fawaterk_pending', session_id='pvid_c')
-        response = self.client.get(reverse('manage_payment_tracking'))
-        self.assertEqual([r['page'] for r in response.context['page_rows']], ['payment'])
-        self.assertEqual(
-            sorted(r['page'] for r in response.context['exit_rows']),
-            ['fawaterk_pending', 'payment_failure'],
-        )
-        # an exit has no "next step" to carry on to
-        for row in response.context['exit_rows']:
-            self.assertIsNone(row['next_label'])
-            self.assertIsNone(row['continue_pct'])
-
-    def test_report_conversion_is_pricing_to_confirmed_payment(self):
-        for _ in range(10):
-            self._event('payment', session_id='pvid_a')
-        for _ in range(2):
-            self._event('payment_success', session_id='pvid_b')
-        # pending and failed are not confirmed payments
-        self._event('payment_failure', session_id='pvid_c')
-        self._event('fawaterk_pending', session_id='pvid_d')
-        response = self.client.get(reverse('manage_payment_tracking'))
-        self.assertEqual(response.context['entry_views'], 10)
-        self.assertEqual(response.context['success_views'], 2)
-        self.assertEqual(response.context['conversion_pct'], 20.0)
-
-    def test_report_conversion_is_none_without_pricing_opens(self):
-        self._event('payment_success', session_id='pvid_a')
-        response = self.client.get(reverse('manage_payment_tracking'))
-        self.assertIsNone(response.context['conversion_pct'])
-
-    def test_report_bars_normalise_to_the_busiest_step(self):
-        # deep-linking means a later page can out-draw the entry page
-        for _ in range(3):
-            self._event('payment', session_id='pvid_a')
-        for _ in range(8):
-            self._event('fawaterk_checkout', session_id='pvid_b')
-        response = self.client.get(reverse('manage_payment_tracking'))
-        self.assertEqual(response.context['max_views'], 8)
-        rows = {r['page']: r for r in response.context['page_rows']}
-        # 8/8 = 100%, 3/8 = 38% - nothing overflows the track
-        self.assertEqual(rows['fawaterk_checkout']['continue_pct'], None)
-        self.assertEqual(rows['payment']['continue_pct'], 267)
-
-    def test_report_handles_an_empty_period(self):
-        response = self.client.get(reverse('manage_payment_tracking') + '?days=7')
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['has_data'])
+        self.assertEqual(response.status_code, 302)
 
 
 class SubscriptionStackingTests(TestCase):

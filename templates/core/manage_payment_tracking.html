@@ -1,577 +1,407 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Payment Page Tracking | Skillifly{% endblock %}
+{% block title %}Payment Performance | Skillifly{% endblock %}
 
 {% comment %}
-base.html renders three blurred gradient orbs behind every page. The landing
-page kills them (via a CSS override that, as it happens, misses .orb-pink).
-This is a dense data view, so it takes the cleaner route: drop the nodes.
+Dense data view: drop base.html's decorative gradient orbs.
 {% endcomment %}
 {% block ambient_orbs %}{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* ── Payment Page Tracking ──────────────────────────────
-       Same type system as every other page in the app: Syne for
-       display type, DM Sans for everything else - matching the
-       dashboard, which sets font-family: 'Syne' on its headings
-       inline. base.html already does this for h1-h6, so the only
-       reason to restate it is for the big numerals, which are
-       divs rather than headings.
-
-       Palette is the landing page's: brand purple #6d28d9, slate
-       ink, white cards on a #fafbfc canvas. Every text pair
-       clears WCAG AA for its size and every meaningful non-text
-       element clears the 3:1 floor - the values below were picked
-       from measured contrast ratios, not by eye. Classes are pt-
-       prefixed so they can't collide with base.html or the
-       Tailwind CDN.                                              */
-
-    /* White cards need something to sit on - a flat white canvas
-       washes them out. #fafbfc is the landing page's own section
-       band, and this block loads after base.html's white body. */
+    /* ── Payment performance report ─────────────────────────────
+       Brand purple #6d28d9 on slate ink, white cards on #fafbfc.
+       Numbers use the system sans (proportional on big figures,
+       tabular only in table columns); Syne is kept for headings.
+       Chart colours were run through the dataviz validator against
+       the white card surface. Classes are pr- prefixed so they
+       can't collide with base.html or the Tailwind CDN.          */
     body { background-color: #fafbfc !important; }
 
-    .pt-wrap, .pt-wrap dt, .pt-wrap dd {
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    }
+    .pr { --ink: #0f172a; --ink-2: #475569; --muted: #64748b; --line: #e2e8f0;
+          --grid: #eef2f6; --brand: #6d28d9; --brand-soft: #ede9fe; --brand-mid: #a78bfa;
+          --good: #047857; --good-bg: #ecfdf5; --bad: #b91c1c; --bad-bg: #fef2f2;
+          --warn: #b45309; --warn-bg: #fffbeb;
+          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          color: var(--ink-2); padding: 3rem 0 5rem; }
+    .pr-shell { max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
+    .pr h1, .pr h2, .pr h3 { font-family: 'Syne', sans-serif; color: var(--ink); }
+    .pr-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .pr-num { font-variant-numeric: tabular-nums; }
 
-    /* Display numerals get the dashboard's heading face. */
-    .pt-h1, .pt-card-h h2, .pt-empty h2,
-    .pt-stage-n, .pt-rail dd, .pt-exit-n, .pt-meter-n, .pt-avatar {
-      font-family: 'Syne', sans-serif;
-    }
+    /* Header */
+    .pr-eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: .75rem; font-weight: 700;
+                  letter-spacing: .18em; text-transform: uppercase; color: var(--brand); margin: 0 0 .75rem; }
+    .pr-eyebrow::before { content: ''; width: 1.5rem; height: 1px; background: currentColor; opacity: .4; }
+    .pr-h1 { font-weight: 800; font-size: clamp(1.875rem, 1.25rem + 2.4vw, 2.75rem); line-height: 1.12;
+             letter-spacing: -.025em; margin: 0 0 .75rem; }
+    .pr-h1 em { font-style: normal; color: var(--brand); }
+    .pr-lede { max-width: 40rem; font-size: 1rem; line-height: 1.6; margin: 0; }
 
-    /* Machine keys and timestamps: a real monospace, not Syne. */
-    .pt-mono, .pt-when, .pt-stage-key, .pt-mail, .pt-empty code {
-      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
-    }
+    /* Filter row: one row, scopes everything below it */
+    .pr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 1.75rem 0 .625rem; }
+    .pr-seg { display: inline-flex; gap: .25rem; padding: .25rem; background: #fff; border: 1px solid var(--line);
+              border-radius: 999px; }
+    .pr-seg a { padding: .4375rem .9375rem; border-radius: 999px; font-size: .8125rem; font-weight: 600;
+                color: var(--muted); text-decoration: none; transition: background .15s, color .15s; }
+    .pr-seg a:hover { color: var(--ink); background: #f1f5f9; }
+    .pr-seg a.is-on { background: var(--ink); color: #fff; }
+    .pr-chip { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .875rem; border-radius: 999px;
+               background: #fff; border: 1px solid var(--line); font-size: .8125rem; font-weight: 600;
+               color: var(--ink-2); text-decoration: none; transition: border-color .15s, color .15s; }
+    .pr-chip:hover { border-color: #cbd5e1; color: var(--ink); }
+    .pr-chip .pr-box { width: .875rem; height: .875rem; border-radius: .25rem; border: 1.5px solid #94a3b8;
+                       display: inline-flex; align-items: center; justify-content: center; }
+    .pr-chip.is-on .pr-box { background: var(--brand); border-color: var(--brand); }
+    .pr-chip.is-on .pr-box::after { content: ''; width: .4rem; height: .22rem; border: solid #fff;
+                                    border-width: 0 0 2px 2px; transform: rotate(-45deg) translateY(-1px); }
+    .pr-export { position: relative; margin-left: auto; }
+    .pr-export summary { list-style: none; cursor: pointer; }
+    .pr-export summary::-webkit-details-marker { display: none; }
+    .pr-menu { position: absolute; right: 0; top: calc(100% + .375rem); z-index: 20; min-width: 15rem;
+               background: #fff; border: 1px solid var(--line); border-radius: .875rem; padding: .375rem;
+               box-shadow: 0 12px 32px -12px rgba(15,23,42,.25); }
+    .pr-menu a { display: block; padding: .5rem .75rem; border-radius: .5rem; font-size: .8125rem;
+                 color: var(--ink); text-decoration: none; }
+    .pr-menu a:hover { background: #f5f3ff; }
+    .pr-menu a span { display: block; color: var(--muted); font-size: .75rem; }
+    .pr-meta { font-size: .8125rem; color: var(--muted); margin: 0 0 2rem; }
+    .pr-meta b { color: var(--ink-2); font-weight: 600; }
+    .pr a:focus-visible, .pr summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
-    .pt-wrap { padding: 3.5rem 0 5rem; }
-    .pt-shell { max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
-    .pt-split { display: grid; gap: 1.5rem; }
+    /* Cards */
+    .pr-card { background: #fff; border: 1px solid rgba(15,23,42,.09); border-radius: 18px; padding: 1.75rem;
+               box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 32px -22px rgba(15,23,42,.25); }
+    .pr-card-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+                 flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .pr-card-h h2 { font-size: 1.0625rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+    .pr-card-h p { margin: .3rem 0 0; font-size: .8125rem; color: var(--muted); max-width: 36rem; line-height: 1.5; }
+    .pr-grid { display: grid; gap: 1.25rem; }
+    .pr-grid > *, .pr-kpis > * { min-width: 0; }  /* let wide tables scroll inside their card */
+    .pr-section { margin-top: 1.25rem; }
 
-    /* Eyebrow — the landing page pairs this with every section head */
-    .pt-eyebrow {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.18em;
-      text-transform: uppercase; color: #1e40af; margin-bottom: 1rem;
-    }
-    .pt-eyebrow::before {
-      content: ''; width: 1.5rem; height: 1px; background: currentColor; opacity: 0.4;
-    }
+    /* KPI row */
+    .pr-kpis { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+    .pr-kpi { padding: 1.25rem 1.375rem; }
+    .pr-kpi-l { font-size: .8125rem; font-weight: 600; color: var(--muted); margin: 0 0 .625rem; }
+    .pr-kpi-v { display: flex; align-items: baseline; gap: .375rem; flex-wrap: wrap; }
+    .pr-kpi-v strong { font-size: 2rem; font-weight: 700; color: var(--ink); letter-spacing: -.02em; line-height: 1; }
+    .pr-kpi:first-child .pr-kpi-v strong { color: var(--brand); }
+    .pr-kpi-v small { font-size: .8125rem; font-weight: 600; color: var(--muted); }
+    .pr-kpi-s { font-size: .8125rem; color: var(--muted); margin: .625rem 0 0; line-height: 1.4; }
+    .pr-delta { display: inline-flex; align-items: center; gap: .25rem; padding: .125rem .5rem; border-radius: 999px;
+                font-size: .75rem; font-weight: 700; margin-left: .25rem; white-space: nowrap; }
+    .pr-delta.good { background: var(--good-bg); color: var(--good); }
+    .pr-delta.bad { background: var(--bad-bg); color: var(--bad); }
+    .pr-delta.flat { background: #f1f5f9; color: var(--ink-2); }
+    .pr-delta-note { font-size: .6875rem; color: var(--muted); font-weight: 500; }
 
-    .pt-h1 {
-      font-weight: 800;
-      font-size: clamp(1.875rem, 1.25rem + 2.6vw, 3rem);
-      line-height: 1.15; letter-spacing: -0.025em; color: #0f172a;
-      margin: 0 0 1rem;
-    }
-    .pt-h1 em { font-style: normal; color: #6d28d9; }
-    .pt-lede {
-      max-width: 34rem; color: #475569; font-size: 1.0625rem;
-      line-height: 1.65; font-weight: 400; margin: 0;
-    }
+    /* Insights: icon + text label, never colour alone */
+    .pr-insights { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+    .pr-ins { display: flex; gap: .875rem; padding: 1rem 1.125rem; border-radius: 14px; border: 1px solid var(--line);
+              background: #fff; }
+    .pr-ins-i { width: 2rem; height: 2rem; flex-shrink: 0; border-radius: .625rem; display: flex;
+                align-items: center; justify-content: center; }
+    .pr-ins-i svg { width: 1.0625rem; height: 1.0625rem; }
+    .pr-ins.action { border-color: #ddd6fe; background: #faf8ff; }
+    .pr-ins.action .pr-ins-i { background: var(--brand-soft); color: var(--brand); }
+    .pr-ins.risk { border-color: #fecaca; background: #fffafa; }
+    .pr-ins.risk .pr-ins-i { background: var(--bad-bg); color: var(--bad); }
+    .pr-ins.info .pr-ins-i { background: #f1f5f9; color: var(--ink-2); }
+    .pr-ins-tag { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .pr-ins h3 { font-family: inherit !important; font-size: .9375rem; font-weight: 700; margin: .125rem 0 .25rem; line-height: 1.35; }
+    .pr-ins p { margin: 0; font-size: .8125rem; line-height: 1.55; }
+    .pr-ins a { display: inline-block; margin-top: .5rem; font-size: .8125rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+    .pr-ins a:hover { text-decoration: underline; }
 
-    /* Period switch — mirrors the landing page's billing toggle */
-    .pt-switch {
-      display: inline-flex; gap: 0.25rem; padding: 0.3125rem;
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 999px;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    }
-    .pt-switch a {
-      padding: 0.4375rem 1rem; border-radius: 999px;
-      font-size: 0.8125rem; font-weight: 600;
-      color: #64748b; text-decoration: none;
-      transition: background .2s ease, color .2s ease;
-    }
-    .pt-switch a:hover { color: #0f172a; background: #f1f5f9; }
-    .pt-switch a.is-on { background: #0f172a; color: #fff; }
-    .pt-switch a:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
-
-    
-    /* Cards — updated to match dashboard sf-card but slightly enhanced */
-    .pt-card {
-      position: relative;
-      background: #fff;
-      border: 1px solid rgba(15, 23, 42, 0.10);
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 16px 36px -20px rgba(15, 23, 42, 0.28);
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-    .pt-card::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(170deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.12) 42%, rgba(109, 40, 217, 0.24) 100%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask-composite: exclude;
-      pointer-events: none;
-      transition: background .18s ease;
-    }
-    .pt-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(15, 23, 42, 0.16);
-      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.08), 0 24px 48px -20px rgba(79, 70, 229, 0.35), 0 0 26px -6px rgba(124, 58, 237, 0.22);
-    }
-    .pt-card:hover::after {
-      background: linear-gradient(170deg, #ffffff 0%, rgba(255, 255, 255, 0.25) 42%, rgba(124, 58, 237, 0.45) 100%);
-    }
-
-    /* Horizontal Pipeline */
-    .pt-pipeline {
-      display: flex;
-      align-items: center;
-      padding: 2.5rem 1rem 3rem 1rem;
-      margin: 0 -1.5rem;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .pt-pipeline::-webkit-scrollbar { display: none; }
-    
-    .pt-pipe-node {
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-    }
-    .pt-pipe-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 1.5rem;
-      width: 11rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      position: relative;
-      z-index: 2;
-      transition: transform .2s ease, border-color .2s ease;
-    }
-    .pt-pipe-content:hover {
-      transform: translateY(-4px);
-      border-color: #a78bfa;
-    }
-    .pt-pipe-node.is-done .pt-pipe-content {
-      border-color: #34d399;
-      box-shadow: 0 4px 15px rgba(52, 211, 153, 0.2);
-    }
-    .pt-pipe-name {
-      font-weight: 700;
-      font-size: 0.9375rem;
-      color: #0f172a;
-      text-align: center;
-      margin-bottom: 0.25rem;
-      line-height: 1.2;
-    }
-    .pt-pipe-key { font-size: 0.6875rem; color: #64748b; margin-bottom: 0.75rem; font-family: ui-monospace, monospace; }
-    .pt-pipe-n {
-      font-weight: 800;
-      font-size: 2.25rem;
-      color: #6d28d9;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-      font-family: 'Syne', sans-serif;
-    }
-    .pt-pipe-node.is-done .pt-pipe-n { color: #047857; }
-
-    .pt-pipe-connector {
-      width: 5rem;
-      height: 6px;
-      background: #f1f5f9;
-      border-radius: 3px;
-      position: relative;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-      margin: 0 0.5rem;
-    }
-    .pt-pipe-line {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      background: linear-gradient(90deg, #a78bfa, #6d28d9);
-      border-radius: 3px;
-      width: 0;
-      transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
-      box-shadow: 0 0 10px rgba(109, 40, 217, 0.5);
-    }
-    .pt-pipe-pct {
-      position: absolute;
-      top: -2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #6d28d9;
-      background: #f5f3ff;
-      padding: 0.25rem 0.625rem;
-      border-radius: 999px;
-      white-space: nowrap;
-      border: 1px solid #ede9fe;
-      box-shadow: 0 2px 4px rgba(109, 40, 217, 0.1);
-    }
-
-    .pt-card-h {
-      display: flex; align-items: baseline; justify-content: space-between;
-      gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
-    }
-    .pt-card-h h2 {
-      font-weight: 700; font-size: 1.125rem;
-      color: #0f172a; margin: 0; letter-spacing: -0.01em;
-    }
-    .pt-card-h p { margin: 0.375rem 0 0; font-size: 0.875rem; color: #64748b; }
-
-    
-
-
-    /* Exits sit off the chain, so they read as a footnote, not a step */
-    .pt-exits { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #e2e8f0; }
-    .pt-exits-h {
-      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; color: #64748b; margin: 0 0 0.75rem;
-    }
-    .pt-exit {
-      display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
-      padding: 0.5rem 0;
-    }
-    .pt-exit-name { font-size: 0.875rem; font-weight: 600; color: #475569; }
-    .pt-exit-n {
-      margin-left: auto; font-weight: 700;
-      font-size: 0.9375rem; color: #BE185D; font-variant-numeric: tabular-nums;
-    }
-
-    .pt-carry {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.5rem 0 0 0.25rem;
-      font-size: 0.8125rem; color: #64748b;
-    }
-    .pt-carry b { color: #0f172a; font-weight: 700; }
-    .pt-carry-arrow { color: #64748b; }
-
-    /* Stat rail under the funnel — hairlines, not boxes */
-    .pt-rail {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 1.25rem 1rem; margin-top: 1.75rem; padding-top: 1.5rem;
-      border-top: 1px solid #e2e8f0;
-    }
-    .pt-rail dt {
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; color: #64748b; margin-bottom: 0.375rem;
-    }
-    .pt-rail dd {
-      margin: 0; font-weight: 700;
-      font-size: 1.5rem; color: #0f172a; letter-spacing: -0.02em; line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .pt-rail dd small {
-      display: block; margin-top: 0.375rem;
-      font-size: 0.8125rem; font-weight: 400; color: #64748b; letter-spacing: 0;
-    }
-    .pt-rail dd.is-brand { color: #6d28d9; }
-    .pt-rail dd.is-amber { color: #b45309; }
-
-    /* Pills */
-    .pt-pill {
-      display: inline-flex; align-items: center; gap: 0.3125rem;
-      padding: 0.25rem 0.625rem; border-radius: 999px;
-      font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.04em;
-      text-transform: uppercase; white-space: nowrap;
-    }
-    .pt-pill-slate { background: #f1f5f9; color: #475569; }
-    .pt-pill-amber { background: #fbbf24; color: #000000; }
-    .pt-pill-live { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); color: #334155; border: 1px solid rgba(15, 23, 42, 0.08); }
-    .pt-pill-key {
-      background: #fafbfc; color: #475569; letter-spacing: 0; text-transform: none;
-      border: 1px solid #e2e8f0; font-weight: 500; font-size: 0.75rem;
-    }
+    /* Funnel */
+    .pr-funnel { display: flex; flex-direction: column; }
+    .pr-step { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; align-items: center; }
+    .pr-step-l { font-size: .875rem; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: .625rem; }
+    .pr-step-n { width: 1.5rem; height: 1.5rem; border-radius: 999px; background: #f1f5f9; color: var(--ink-2);
+                 font-size: .75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pr-step-row { display: flex; align-items: center; gap: .75rem; }
+    .pr-bar { flex: 1; height: 1.5rem; background: var(--brand-soft); border-radius: 4px; position: relative; overflow: hidden; }
+    .pr-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--brand); border-radius: 0 4px 4px 0;
+                width: 0; transition: width 1s cubic-bezier(.22,1,.36,1); }
+    .pr-step:last-child .pr-bar i { background: #047857; }
+    .pr-step-v { min-width: 6.5rem; text-align: right; font-size: .875rem; color: var(--muted); white-space: nowrap; }
+    .pr-step-v b { color: var(--ink); font-size: 1rem; font-weight: 700; margin-right: .25rem; }
+    .pr-drop { margin: .375rem 0 .375rem 13.25rem; padding-left: .25rem; font-size: .75rem; color: var(--muted);
+               display: flex; align-items: center; gap: .375rem; min-height: 1.5rem; }
+    .pr-drop svg { width: .875rem; height: .875rem; color: #94a3b8; }
+    .pr-drop b { color: var(--bad); font-weight: 700; }
+    .pr-drop.is-worst { color: var(--ink-2); }
+    .pr-drop.is-worst .pr-worst { padding: .0625rem .4375rem; border-radius: 999px; background: var(--bad-bg);
+                                  color: var(--bad); font-weight: 700; font-size: .6875rem; letter-spacing: .04em; text-transform: uppercase; }
+    .pr-notes { margin: 1.25rem 0 0; padding: 1rem 0 0; border-top: 1px solid var(--line); list-style: none;
+                display: grid; gap: .375rem; font-size: .75rem; color: var(--muted); line-height: 1.5; }
 
     /* Tables */
-    .pt-tbl { width: 100%; border-collapse: collapse; }
-    .pt-tbl th {
-      text-align: left; padding: 0 0.875rem 0.75rem;
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; color: #64748b;
-      border-bottom: 1px solid #e2e8f0; white-space: nowrap;
-    }
-    .pt-tbl td {
-      padding: 0.875rem; font-size: 0.875rem; color: #334155;
-      border-bottom: 1px solid #e2e8f0; vertical-align: middle;
-    }
-    .pt-tbl tbody tr:last-child td { border-bottom: 0; }
-    .pt-tbl tbody tr { transition: background .15s ease; }
-    .pt-tbl tbody tr:hover { background: #fafbfc; }
-    .pt-tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .pt-scroll { overflow-x: auto; margin: 0 -0.25rem; padding: 0 0.25rem; }
+    .pr-tbl { width: 100%; border-collapse: collapse; }
+    .pr-tbl th { text-align: left; padding: 0 .75rem .625rem; font-size: .6875rem; font-weight: 700; letter-spacing: .08em;
+                 text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .pr-tbl td { padding: .75rem; font-size: .875rem; color: var(--ink-2); border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .pr-tbl tbody tr:last-child td { border-bottom: 0; }
+    .pr-tbl tbody tr:hover { background: #fafbfc; }
+    .pr-tbl .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pr-tbl .strong { color: var(--ink); font-weight: 700; }
+    .pr-scroll { overflow-x: auto; }
+    .pr-name { color: var(--ink); font-weight: 600; }
+    .pr-sub { display: block; font-size: .75rem; color: var(--muted); }
+    .pr-empty { padding: 2rem 1rem; text-align: center; color: var(--muted); font-size: .875rem; }
 
-    .pt-who { display: flex; align-items: center; gap: 0.75rem; }
-    .pt-avatar {
-      width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 0.75rem;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 600; font-size: 0.8125rem;
-      color: #ffffff;
-    }
-    .pt-avatar-user { background: linear-gradient(135deg, #6d28d9, #4F46E5); }
-    .pt-avatar-guest { background: #cbd5e1; color: #0f172a; }
-    .pt-name { font-weight: 600; color: #0f172a; font-size: 0.875rem; }
-    .pt-mail { font-size: 0.8125rem; color: #475569; }
+    /* Inline meters (one hue; track is a lighter step of the same ramp) */
+    .pr-meter { display: flex; align-items: center; gap: .625rem; justify-content: flex-end; }
+    .pr-meter-t { width: 5rem; height: .375rem; background: var(--brand-soft); border-radius: 999px; overflow: hidden; flex-shrink: 0; }
+    .pr-meter-t i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
 
-    /* Meter for the button breakdown */
-    .pt-meter { display: flex; align-items: center; gap: 0.75rem; }
-    .pt-meter-track { flex: 1; min-width: 3rem; height: 0.375rem; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
-    .pt-meter-fill { height: 100%; background: #6d28d9; border-radius: 999px; }
-    .pt-meter-n { font-weight: 600; font-size: 0.9375rem; color: #0f172a; min-width: 1.75rem; text-align: right; font-variant-numeric: tabular-nums; }
+    /* Pills */
+    .pr-pill { display: inline-flex; align-items: center; gap: .3rem; padding: .1875rem .5625rem; border-radius: 999px;
+               font-size: .6875rem; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
+    .pr-pill-brand { background: var(--brand-soft); color: #5b21b6; }
+    .pr-pill-slate { background: #f1f5f9; color: var(--ink-2); }
+    .pr-pill-warn { background: var(--warn-bg); color: var(--warn); }
+    .pr-pill-good { background: var(--good-bg); color: var(--good); }
 
-    /* Event log — deliberately the quietest thing on the page */
-    .pt-log { max-height: 27rem; overflow-y: auto; }
-    .pt-log .pt-tbl td { padding: 0.625rem 0.875rem; font-size: 0.8125rem; }
-    .pt-log .pt-tbl tbody tr:hover { background: transparent; }
-    .pt-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; flex-shrink: 0; }
-    .pt-dot-open { background: #6d28d9; }
-    .pt-dot-click { background: #64748b; }
-    .pt-when { font-size: 0.8125rem; color: #475569; white-space: nowrap; }
+    /* Health tiles */
+    .pr-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.25rem; }
+    .pr-stat dt { font-size: .75rem; color: var(--muted); font-weight: 600; margin-bottom: .25rem; }
+    .pr-stat dd { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+    .pr-stat dd small { font-size: .75rem; color: var(--muted); font-weight: 500; margin-left: .25rem; }
+    .pr-callout { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+                  margin-top: 1.25rem; padding: .875rem 1rem; border-radius: 12px; background: var(--warn-bg);
+                  border: 1px solid #fde68a; font-size: .8125rem; color: #78350f; }
+    .pr-callout a { font-weight: 700; color: #78350f; }
+    .pr-callout.ok { background: var(--good-bg); border-color: #a7f3d0; color: #065f46; }
 
-    .pt-empty { text-align: center; padding: 4rem 2rem; }
-    .pt-empty h2 { font-weight: 700; font-size: 1.25rem; color: #0f172a; margin: 0 0 0.75rem; }
-    .pt-empty p { max-width: 30rem; margin: 0 auto 1.5rem; color: #64748b; font-size: 0.9375rem; line-height: 1.7; }
-    .pt-empty code {
-      font-size: 0.8125rem;
-      background: #fafbfc; border: 1px solid #e2e8f0; padding: 0.125rem 0.375rem; border-radius: 0.375rem; color: #0f172a;
-    }
+    /* Trend small multiples */
+    .pr-trend { display: grid; gap: .25rem; }
+    .pr-tm { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; align-items: center; }
+    .pr-tm-l { font-size: .8125rem; font-weight: 600; color: var(--ink); }
+    .pr-tm-l span { display: block; font-size: .75rem; font-weight: 500; color: var(--muted); margin-top: .125rem; }
+    .pr-tm svg, .pr-x svg { display: block; width: 100%; overflow: visible; }
+    .pr-tm .bar { fill: var(--brand); }
+    .pr-tm .bar.rev { fill: #0d9488; }
+    .pr-tm .bar.is-hot { opacity: .65; }
+    .pr-tm .grid { stroke: var(--grid); stroke-width: 1; }
+    .pr-tm .base { stroke: #cbd5e1; stroke-width: 1; }
+    .pr-trend .tick { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+    .pr-tm .hit { fill: transparent; cursor: crosshair; outline: none; }
+    .pr-tm .hit:focus-visible { fill: rgba(109,40,217,.08); }
+    .pr-tm .hair { stroke: #94a3b8; stroke-width: 1; }
+    .pr-tm .untracked { fill: #f1f5f9; }
+    .pr-tm .untracked-l { font-size: 10px; fill: var(--muted); font-style: italic; }
+    .pr-x { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; }
+    .pr-tip { position: fixed; z-index: 50; pointer-events: none; background: #0f172a; color: #e2e8f0; border-radius: 10px;
+              padding: .625rem .75rem; font-size: .75rem; min-width: 11rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,.4);
+              opacity: 0; transition: opacity .1s; }
+    .pr-tip.on { opacity: 1; }
+    .pr-tip-h { font-weight: 700; color: #fff; margin-bottom: .375rem; }
+    .pr-tip-r { display: flex; align-items: center; gap: .5rem; padding: .125rem 0; }
+    .pr-tip-r i { width: .75rem; height: 2px; border-radius: 1px; flex-shrink: 0; }
+    .pr-tip-r b { color: #fff; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 1rem; }
+    .pr-details summary { cursor: pointer; font-size: .8125rem; font-weight: 600; color: var(--brand); margin-top: 1rem; }
+    .pr-details[open] summary { margin-bottom: .75rem; }
 
-    .pt-back {
-      display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; color: #64748b; transition: color .2s ease;
-    }
-    .pt-back:hover { color: #6d28d9; }
-    .pt-back:focus-visible { outline: 2px solid #6d28d9; outline-offset: 3px; border-radius: 4px; }
+    .pr-btn { display: inline-flex; align-items: center; gap: .375rem; padding: .4375rem .8125rem; border-radius: 999px;
+              border: 1px solid var(--line); background: #fff; font-size: .75rem; font-weight: 700; color: var(--ink);
+              text-decoration: none; white-space: nowrap; }
+    .pr-btn:hover { border-color: var(--brand-mid); color: var(--brand); }
+    .pr-back { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; font-size: .75rem;
+               font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .pr-back:hover { color: var(--brand); }
 
-    /* Reveal, on the landing page's timing */
-    .pt-in { animation: ptRise .6s ease-out backwards; }
-    @keyframes ptRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    .pr-in { animation: prRise .5s ease-out backwards; }
+    @keyframes prRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-    @media (min-width: 640px) {
-      .pt-rail { grid-template-columns: repeat(3, 1fr); }
-    }
     @media (min-width: 1024px) {
-      .pt-rail { grid-template-columns: repeat(5, 1fr); }
-      .pt-split { grid-template-columns: 1fr 1fr; align-items: start; }
+      .pr-grid-2 { grid-template-columns: 1fr 1fr; align-items: start; }
+      .pr-grid-funnel { grid-template-columns: 1.55fr 1fr; align-items: start; }
+    }
+    @media (max-width: 640px) {
+      .pr-step { grid-template-columns: 1fr; gap: .375rem; }
+      .pr-drop { margin-left: 0; }
+      .pr-tm, .pr-x { grid-template-columns: 1fr; gap: .25rem; }
+      .pr-export { margin-left: 0; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .pt-in { animation: none; }
-      .pt-stage-fill { transition: none; }
+      .pr-in { animation: none; }
+      .pr-bar i { transition: none; }
+    }
+    @media print {
+      .pr-filters, .pr-back, .pr-details summary, .pr-btn { display: none !important; }
+      .pr-card { box-shadow: none; break-inside: avoid; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="pt-wrap">
-<div class="pt-shell">
+<div class="pr">
+<div class="pr-shell">
 
-    <!-- Header -->
-    <header class="pt-in" style="animation-delay:.05s">
-        <div class="flex flex-wrap items-end justify-between gap-6 mb-8">
-            <div>
-                <p class="pt-eyebrow">Payment funnel</p>
-                <h1 class="pt-h1">Payment page <em>tracking</em></h1>
-                <p class="pt-lede">
-                    Who reaches the pricing page, how far they get through it, and what they press along the way.
-                </p>
-            </div>
-            <div class="flex flex-col items-start gap-2">
-                <nav class="pt-switch" aria-label="Reporting period">
-                    <a href="?days=7"  class="{% if days == '7' %}is-on{% endif %}"  {% if days == '7' %}aria-current="true"{% endif %}>7 days</a>
-                    <a href="?days=30" class="{% if days == '30' %}is-on{% endif %}" {% if days == '30' %}aria-current="true"{% endif %}>30 days</a>
-                    <a href="?days=all" class="{% if days == 'all' %}is-on{% endif %}" {% if days == 'all' %}aria-current="true"{% endif %}>All time</a>
-                </nav>
-                <p class="text-xs font-mono text-slate-400">{{ days_label }}</p>
-            </div>
+    <header class="pr-in">
+        <p class="pr-eyebrow">Revenue &amp; payment funnel</p>
+        <h1 class="pr-h1">Payment <em>performance</em></h1>
+        <p class="pr-lede">How much came in, where buyers drop out of the payment flow, and who to follow up with.
+            Money numbers come from confirmed payments only. Funnel numbers count people, not page loads.</p>
+
+        <div class="pr-filters">
+            <nav class="pr-seg" aria-label="Reporting period">
+                {% for key, label in period_options %}
+                <a href="?days={{ key }}{% if include_team %}&amp;team=1{% endif %}" class="{% if days == key %}is-on{% endif %}" {% if days == key %}aria-current="true"{% endif %}>{{ label }}</a>
+                {% endfor %}
+            </nav>
+            <a href="?{{ team_toggle_query }}" class="pr-chip {% if include_team %}is-on{% endif %}" role="switch" aria-checked="{% if include_team %}true{% else %}false{% endif %}"
+               title="Staff and admin accounts are left out by default so test runs don't count as demand.">
+                <span class="pr-box" aria-hidden="true"></span> Include team accounts
+            </a>
+            <details class="pr-export">
+                <summary class="pr-chip">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export CSV
+                </summary>
+                <div class="pr-menu">
+                    <a href="?{{ base_query }}&amp;export=leads">People to follow up<span>Signed-in people who didn't finish paying</span></a>
+                    <a href="?{{ base_query }}&amp;export=payments">Payments<span>Every payment in the period, with status and method</span></a>
+                    <a href="?{{ base_query }}&amp;export=events">Raw events<span>Every page open and click</span></a>
+                </div>
+            </details>
         </div>
+        <p class="pr-meta">
+            <b>{{ days_label }}</b>{% if compare_label %} · changes compare with the {{ compare_label }}{% endif %}
+            {% if tracking_since %} · funnel tracking since {{ tracking_since|date:"j M Y" }}{% endif %}
+            {% if not include_team and team_excluded %} · {{ team_excluded }} team account{{ team_excluded|pluralize }} left out{% endif %}
+            · times in {{ time_zone }}
+        </p>
     </header>
 
     {% if not has_data %}
-        <!-- Empty state: say what to do, not just that there's nothing -->
-        <section class="pt-card pt-empty pt-in" style="animation-delay:.15s">
-            <h2>Nothing has come through yet</h2>
-            <p>
-                This page fills itself the moment anyone opens the pricing page or
-                clicks through the payment flow. Open <code>/payment/</code> in a
-                private window, then come back — the visit will be on the funnel
-                straight away.
-            </p>
-            <a href="?days=all" class="pt-back">Check all-time history</a>
-        </section>
+    <section class="pr-card pr-in" style="text-align:center;padding:4rem 2rem;">
+        <h2 style="font-size:1.25rem;margin:0 0 .75rem;">Nothing recorded in this period</h2>
+        <p style="max-width:30rem;margin:0 auto 1.5rem;line-height:1.7;">
+            The report fills in when someone opens the pricing page or pays. Pick a longer period,
+            or open <span class="pr-mono">/payment/</span> in a private window to check tracking works.
+        </p>
+        <a href="?days=all{% if include_team %}&amp;team=1{% endif %}" class="pr-btn">See all time</a>
+    </section>
     {% else %}
 
-    <!-- The funnel -->
-    <section class="pt-card pt-in" style="animation-delay:.15s">
-        <div class="pt-card-h">
-            <div>
-                <h2>Where visitors stop</h2>
-                <p>Bar length is the share of visitors still in the flow at that step.</p>
-            </div>
-            {% if conversion_pct is not None %}
-            <span class="pt-pill pt-pill-live">
-                {{ conversion_pct }}% reach a confirmed payment
-            </span>
-            {% endif %}
-        </div>
-
-        
-        <div class="pt-pipeline">
-            {% for row in page_rows %}
-            <div class="pt-pipe-node {% if row.page == 'payment_success' %}is-done{% endif %}">
-                <div class="pt-pipe-content">
-                    <span class="pt-pipe-name">{{ row.label }}</span>
-                    <span class="pt-pipe-key">{{ row.page }}</span>
-                    <span class="pt-pipe-n">{{ row.views }}</span>
-                </div>
-                {% if not forloop.last %}
-                <div class="pt-pipe-connector">
-                    <div class="pt-pipe-line" data-w="{% if row.continue_pct > 100 %}100{% else %}{{ row.continue_pct|default:0 }}{% endif %}"></div>
-                    {% if row.continue_pct %}
-                    <span class="pt-pipe-pct">{% if row.continue_pct > 100 %}{{ row.continue_pct }}%+{% else %}{{ row.continue_pct }}%{% endif %}</span>
-                    {% endif %}
-                </div>
+    <!-- KPI row -->
+    <section class="pr-kpis pr-in" style="animation-delay:.05s" aria-label="Headline numbers">
+        {% for k in kpis %}
+        <div class="pr-card pr-kpi">
+            <p class="pr-kpi-l">{{ k.label }}</p>
+            <div class="pr-kpi-v">
+                <strong>{{ k.value }}</strong>{% if k.unit %}<small>{{ k.unit }}</small>{% endif %}
+                {% if k.delta %}
+                <span class="pr-delta {% if k.delta.dir == 'flat' %}flat{% elif k.delta.dir == 'up' %}good{% else %}bad{% endif %}"
+                      title="Compared with the {{ compare_label }}">
+                    <span aria-hidden="true">{% if k.delta.dir == 'up' %}▲{% elif k.delta.dir == 'down' %}▼{% else %}■{% endif %}</span>
+                    <span class="sr-only">{% if k.delta.dir == 'up' %}Up{% elif k.delta.dir == 'down' %}Down{% else %}No change{% endif %}</span>
+                    {{ k.delta.label }}
+                </span>
                 {% endif %}
             </div>
-            {% empty %}
-            <p class="py-6 text-center text-slate-400 text-sm">No page opens recorded in this period.</p>
-            {% endfor %}
+            <p class="pr-kpi-s">{{ k.sub }}</p>
         </div>
-
-
-        {% if exit_rows %}
-        <div class="pt-exits">
-            <p class="pt-exits-h">Left the flow here</p>
-            {% for row in exit_rows %}
-            <div class="pt-exit">
-                <span class="pt-exit-name">{{ row.label }}</span>
-                <span class="pt-stage-key">{{ row.page }}</span>
-                <span class="pt-exit-n">{{ row.views }}</span>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- Summary rail -->
-        <dl class="pt-rail">
-            <div>
-                <dt>Pricing page opens</dt>
-                <dd>{{ entry_views }}<small>{{ total_clicks }} clicks across the flow</small></dd>
-            </div>
-            <div>
-                <dt>Paid</dt>
-                <dd class="is-brand">{{ success_views }}<small>confirmed payments</small></dd>
-            </div>
-            <div>
-                <dt>Conversion</dt>
-                <dd>{% if conversion_pct is not None %}{{ conversion_pct }}%{% else %}&mdash;{% endif %}<small>pricing to confirmed payment</small></dd>
-            </div>
-            <div>
-                <dt>Visitors</dt>
-                <dd>{{ unique_visitors }}<small>{{ unique_users }} signed in</small></dd>
-            </div>
-            <div>
-                <dt>Already paying</dt>
-                <dd class="is-amber">{{ paying_users }}<small>renewal visits</small></dd>
-            </div>
-        </dl>
+        {% endfor %}
     </section>
 
-    <!-- Breakdown -->
-    <div class="pt-split mt-6">
-
-        <!-- What people press -->
-        <section class="pt-card pt-in" style="animation-delay:.25s">
-            <div class="pt-card-h">
+    <!-- What needs attention -->
+    {% if insights %}
+    <section class="pr-section pr-in" style="animation-delay:.1s" aria-labelledby="pr-ins-h">
+        <h2 id="pr-ins-h" style="font-size:1.0625rem;font-weight:700;margin:1.25rem 0 .875rem;">What needs attention</h2>
+        <div class="pr-insights">
+            {% for i in insights %}
+            <article class="pr-ins {{ i.tone }}">
+                <span class="pr-ins-i" aria-hidden="true">
+                    {% if i.tone == 'action' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% elif i.tone == 'risk' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/></svg>
+                    {% else %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </span>
                 <div>
-                    <h2>What they press</h2>
-                    <p>Buttons and links clicked across the flow.</p>
+                    <span class="pr-ins-tag">{% if i.tone == 'action' %}To do{% elif i.tone == 'risk' %}Problem{% else %}Note{% endif %}</span>
+                    <h3>{{ i.title }}</h3>
+                    <p>{{ i.body }}</p>
+                    {% if i.href == 'review' %}<a href="{{ review_url }}">Review receipts →</a>{% endif %}
+                    {% if i.anchor %}<a href="{{ i.anchor }}">See the list →</a>{% endif %}
                 </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Funnel + segments -->
+    <div class="pr-grid pr-grid-funnel pr-section">
+        <section class="pr-card pr-in" style="animation-delay:.15s" aria-labelledby="pr-funnel-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="pr-funnel-h">Where buyers drop out</h2>
+                    <p>Each step counts the people who got at least that far, so every bar is part of the one above it.</p>
+                </div>
+                {% if conversion is not None %}<span class="pr-pill pr-pill-brand">{{ conversion|floatformat:"-1" }}% subscribe</span>{% endif %}
             </div>
-            <div class="pt-scroll">
-                <table class="pt-tbl">
-                    <thead>
-                        <tr>
-                            <th scope="col">Action</th>
-                            <th scope="col">Where</th>
-                            <th scope="col" class="num">Clicks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in action_rows %}
-                        <tr>
-                            <td>
-                                <div style="font-weight:700;color:#0f172a;">{{ row.action_label }}</div>
-                                <div style="margin-top:.375rem;display:flex;gap:.375rem;flex-wrap:wrap;">
-                                    <span class="pt-pill pt-pill-key">{{ row.action }}</span>
-                                    {% if row.plan_type %}<span class="pt-pill pt-pill-slate">{{ row.plan_type }}</span>{% endif %}
-                                </div>
-                            </td>
-                            <td style="color:#64748b;font-size:.8125rem;">{{ row.page_label }}</td>
-                            <td class="num">
-                                <div class="pt-meter">
-                                    <div class="pt-meter-track">
-                                        <div class="pt-meter-fill" style="width:{% widthratio row.count action_rows.0.count 100 %}%"></div>
-                                    </div>
-                                    <span class="pt-meter-n">{{ row.count }}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="py-8 text-center text-slate-400 text-sm">No clicks in this period.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+            {% if funnel_top %}
+            <div class="pr-funnel" role="list">
+                {% for s in steps %}
+                <div class="pr-step" role="listitem">
+                    <span class="pr-step-l"><span class="pr-step-n">{{ s.n }}</span>{{ s.label }}</span>
+                    <div class="pr-step-row">
+                        <div class="pr-bar" aria-hidden="true"><i data-w="{{ s.pct_of_start|default:0|stringformat:'s' }}"></i></div>
+                        <span class="pr-step-v"><b>{{ s.count }}</b>{{ s.pct_of_start|floatformat:"-1" }}%</span>
+                    </div>
+                </div>
+                {% if s.lost is not None %}
+                <div class="pr-drop {% if s.key == worst_step %}is-worst{% endif %}">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                    {% if s.count %}
+                    <span><b>{{ s.lost_pct }}%</b> left ({{ s.lost }} {{ s.lost|pluralize:"person,people" }}) before they {{ s.next_verb }}</span>
+                    {% if s.key == worst_step %}<span class="pr-worst">Biggest drop</span>{% endif %}
+                    {% else %}<span>No one reached this step</span>{% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
             </div>
+            {% else %}
+            <p class="pr-empty">No one opened the pricing page in this period.</p>
+            {% endif %}
+
+            <ul class="pr-notes">
+                <li><b>Picked a plan</b> means they clicked a plan button on pricing. <b>Started checkout</b> means they opened the card or InstaPay / Vodafone Cash page. <b>Subscribed</b> means a confirmed payment followed their visit.</li>
+                {% if small_sample %}<li><b>Small sample.</b> Only {{ funnel_top }} {{ funnel_top|pluralize:"person,people" }} in this period, so a single visitor moves these rates a lot. Treat them as rough and check a longer period.</li>{% endif %}
+                {% if renewal_visitors %}<li>{{ renewal_visitors }} visitor{{ renewal_visitors|pluralize }} already had an active plan when they came (renewal or upgrade interest).</li>{% endif %}
+                {% if untracked_subs %}<li>{{ untracked_subs }} subscriber{{ untracked_subs|pluralize }} in this period {{ untracked_subs|pluralize:"has,have" }} no tracked visit: added by an admin, signed up with a code, or paid before tracking started. They count in revenue but not in this funnel.</li>{% endif %}
+            </ul>
         </section>
 
-        <!-- Who came -->
-        <section class="pt-card pt-in" style="animation-delay:.3s">
-            <div class="pt-card-h">
+        <section class="pr-card pr-in" style="animation-delay:.2s" aria-labelledby="pr-seg-h">
+            <div class="pr-card-h">
                 <div>
-                    <h2>Who opened it</h2>
-                    <p>The most active visitors, signed-in and guest.</p>
+                    <h2 id="pr-seg-h">Who converts</h2>
+                    <p>Conversion by sign-in state and device. You need an account to check out.</p>
                 </div>
             </div>
-            <div class="pt-scroll" style="max-height:31rem;overflow-y:auto;">
-                <table class="pt-tbl">
-                    <thead>
-                        <tr>
-                            <th scope="col">Visitor</th>
-                            <th scope="col" class="num">Opens</th>
-                            <th scope="col" class="num">Clicks</th>
-                        </tr>
-                    </thead>
+            <div class="pr-scroll">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">Segment</th><th scope="col" class="num">People</th><th scope="col" class="num">Checkout</th><th scope="col" class="num">Subscribed</th></tr></thead>
                     <tbody>
-                        {% for row in user_rows %}
-                        <tr>
-                            <td>
-                                <div class="pt-who">
-                                    <span class="pt-avatar {% if row.kind == 'user' %}pt-avatar-user{% else %}pt-avatar-guest{% endif %}">
-                                        {% if row.kind == 'user' %}{{ row.display|slice:":1"|upper }}{% else %}&middot;{% endif %}
-                                    </span>
-                                    <span>
-                                        <span class="pt-name" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-                                            {{ row.display }}
-                                            {% if row.is_paying %}<span class="pt-pill pt-pill-amber">Active plan</span>{% endif %}
-                                        </span>
-                                        <span class="pt-mail" style="display:block;">{% if row.email %}{{ row.email }}{% else %}{{ row.identity }}{% endif %}</span>
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="num" style="font-weight:700;color:#0f172a;">{{ row.views }}</td>
-                            <td class="num" style="color:#64748b;">{{ row.clicks }}</td>
+                        {% for r in segments %}
+                        <tr {% if forloop.counter == 3 %}style="border-top:2px solid var(--line)"{% endif %}>
+                            <td class="pr-name">{{ r.label }}</td>
+                            <td class="num">{{ r.visitors }}</td>
+                            <td class="num">{% if r.checkout_pct is not None %}{{ r.checkout_pct|floatformat:"-1" }}%{% else %}&mdash;{% endif %}</td>
+                            <td class="num strong">{% if r.paid_pct is not None %}{{ r.paid_pct|floatformat:"-1" }}%{% else %}&mdash;{% endif %}</td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="3" class="py-8 text-center text-slate-400 text-sm">No visitors in this period.</td></tr>
+                        <tr><td colspan="4" class="pr-empty">No visitors in this period.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -579,75 +409,398 @@ This is a dense data view, so it takes the cleaner route: drop the nodes.
         </section>
     </div>
 
-    <!-- Raw log: diagnostic, so kept visually quiet -->
-    <section class="pt-card mt-6 pt-in" style="animation-delay:.35s">
-        <div class="pt-card-h">
+    <!-- Trend -->
+    {% if trend.points %}
+    <section class="pr-card pr-section pr-in" style="animation-delay:.25s" aria-labelledby="pr-trend-h">
+        <div class="pr-card-h">
             <div>
-                <h2>Recent activity</h2>
-                <p>The last 100 opens and clicks, newest first.</p>
+                <h2 id="pr-trend-h">Over time</h2>
+                <p>Per {{ trend.unit }}. Each row has its own scale, so compare shapes, not heights. Hover a column for the numbers.{% if tracking_since %} Visitor numbers start {{ tracking_since|date:"j M Y" }}, when tracking began. Grey means not tracked yet, not zero.{% endif %}</p>
             </div>
         </div>
-        <div class="pt-scroll pt-log">
-            <table class="pt-tbl">
-                <thead>
-                    <tr>
-                        <th scope="col">When</th>
-                        <th scope="col">Type</th>
-                        <th scope="col">Page</th>
-                        <th scope="col">Action</th>
-                        <th scope="col">Who</th>
-                    </tr>
-                </thead>
+        <div class="pr-trend" id="prTrend" data-unit="{{ trend.unit }}">
+            <div class="pr-tm"><div class="pr-tm-l">Pricing visitors<span>people</span></div><svg data-metric="visitors" role="img" aria-label="Pricing visitors per {{ trend.unit }}"></svg></div>
+            <div class="pr-tm"><div class="pr-tm-l">Started checkout<span>people</span></div><svg data-metric="checkouts" role="img" aria-label="People who started checkout per {{ trend.unit }}"></svg></div>
+            <div class="pr-tm"><div class="pr-tm-l">Revenue<span>EGP, confirmed</span></div><svg data-metric="revenue" role="img" aria-label="Revenue per {{ trend.unit }}"></svg></div>
+            <div class="pr-x"><span></span><svg data-axis="x" aria-hidden="true"></svg></div>
+        </div>
+        <div class="pr-tip" id="prTip" role="status" aria-live="polite"></div>
+        <details class="pr-details">
+            <summary>Show as table</summary>
+            <div class="pr-scroll" style="max-height:22rem;overflow-y:auto;">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">{{ trend.unit|capfirst }}</th><th scope="col" class="num">Visitors</th><th scope="col" class="num">Started checkout</th><th scope="col" class="num">Subscriptions</th><th scope="col" class="num">Revenue (EGP)</th></tr></thead>
+                    <tbody>
+                        {% for p in trend.points %}
+                        <tr><td>{{ p.label }}</td><td class="num">{% if p.tracked %}{{ p.visitors }}{% else %}&mdash;{% endif %}</td><td class="num">{% if p.tracked %}{{ p.checkouts }}{% else %}&mdash;{% endif %}</td><td class="num">{{ p.subscriptions }}</td><td class="num">{{ p.revenue|floatformat:"0" }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+    {% endif %}
+
+    <!-- Revenue mix -->
+    <div class="pr-grid pr-grid-2 pr-section">
+        <section class="pr-card pr-in" style="animation-delay:.3s" aria-labelledby="pr-plan-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="pr-plan-h">Plans: interest vs purchases</h2>
+                    <p>Plan picks on pricing compared with what was actually bought. A big gap shows where the price stops people.</p>
+                </div>
+            </div>
+            <div class="pr-scroll">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">Plan</th><th scope="col" class="num">Picks</th><th scope="col" class="num">Bought</th><th scope="col" class="num">Revenue</th></tr></thead>
+                    <tbody>
+                        {% for r in plan_rows %}
+                        <tr>
+                            <td class="pr-name">{{ r.label }}</td>
+                            <td class="num">{{ r.interest }}{% if r.interest_pct is not None %}<span class="pr-sub">{{ r.interest_pct|floatformat:"-1" }}%</span>{% endif %}</td>
+                            <td class="num">{{ r.subscriptions }}{% if r.subs_pct is not None %}<span class="pr-sub">{{ r.subs_pct|floatformat:"-1" }}%</span>{% endif %}</td>
+                            <td class="num">
+                                <div class="pr-meter">
+                                    <span class="strong">{{ r.revenue_label }} <span class="pr-sub" style="display:inline">EGP</span></span>
+                                    <span class="pr-meter-t" aria-hidden="true"><i style="width:{{ r.revenue_pct|default:0|stringformat:'s' }}%"></i></span>
+                                </div>
+                                {% if r.revenue_pct is not None %}<span class="pr-sub">{{ r.revenue_pct|floatformat:"-1" }}% of revenue</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="pr-empty">No plan activity in this period.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="pr-card pr-in" style="animation-delay:.32s" aria-labelledby="pr-method-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="pr-method-h">How people paid</h2>
+                    <p>Confirmed subscriptions by payment route.</p>
+                </div>
+            </div>
+            <div class="pr-scroll">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">Method</th><th scope="col" class="num">Subscriptions</th><th scope="col" class="num">Revenue</th></tr></thead>
+                    <tbody>
+                        {% for r in method_rows %}
+                        <tr>
+                            <td class="pr-name">{{ r.label }}
+                                {% if r.key == 'wallet' and health.instapay|add:health.vodafone %}<span class="pr-sub">InstaPay {{ health.instapay }} · Vodafone Cash {{ health.vodafone }} receipts</span>{% endif %}
+                            </td>
+                            <td class="num">
+                                <div class="pr-meter">
+                                    <span class="strong">{{ r.count }}</span>
+                                    <span class="pr-meter-t" aria-hidden="true"><i style="width:{{ r.pct|stringformat:'s' }}%"></i></span>
+                                </div>
+                                <span class="pr-sub">{{ r.pct|floatformat:"-1" }}%</span>
+                            </td>
+                            <td class="num strong">{{ r.revenue_label }} <span class="pr-sub" style="display:inline">EGP</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="pr-empty">No confirmed payments in this period.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Payment health -->
+    <div class="pr-grid pr-grid-2 pr-section">
+        <section class="pr-card pr-in" style="animation-delay:.34s" aria-labelledby="pr-card-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="pr-card-h">Card checkout (Fawaterk)</h2>
+                    <p>Card checkouts started in the period. Still pending after an hour counts as abandoned.</p>
+                </div>
+                {% if health.card_success_pct is not None %}<span class="pr-pill {% if health.card_success_pct >= 60 %}pr-pill-good{% else %}pr-pill-warn{% endif %}">{{ health.card_success_pct|floatformat:"-1" }}% completed</span>{% endif %}
+            </div>
+            <dl class="pr-stats">
+                <div class="pr-stat"><dt>Started</dt><dd>{{ health.card_started }}</dd></div>
+                <div class="pr-stat"><dt>Completed</dt><dd>{{ health.card_paid }}</dd></div>
+                <div class="pr-stat"><dt>Abandoned</dt><dd>{{ health.card_abandoned }}</dd></div>
+                <div class="pr-stat"><dt>Failed</dt><dd>{{ health.card_failed }}</dd></div>
+            </dl>
+        </section>
+
+        <section class="pr-card pr-in" style="animation-delay:.36s" aria-labelledby="pr-rec-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="pr-rec-h">InstaPay / Vodafone Cash receipts</h2>
+                    <p>Receipts uploaded in the period, by review status.</p>
+                </div>
+            </div>
+            <dl class="pr-stats">
+                <div class="pr-stat"><dt>Accepted</dt><dd>{{ health.receipts_verified }}</dd></div>
+                <div class="pr-stat"><dt>Rejected</dt><dd>{{ health.receipts_rejected }}</dd></div>
+                <div class="pr-stat"><dt>Waiting for review</dt><dd>{{ health.receipts_review_period }}<small>this period</small></dd></div>
+            </dl>
+            {% if health.receipts_review_total %}
+            <div class="pr-callout">
+                <span><b>{{ health.receipts_review_total }}</b> receipt{{ health.receipts_review_total|pluralize }} in total {{ health.receipts_review_total|pluralize:"is,are" }} waiting. These customers have paid and are waiting on us.</span>
+                <a href="{{ review_url }}">Review now →</a>
+            </div>
+            {% else %}
+            <div class="pr-callout ok"><span>No receipts are waiting for review.</span></div>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Leads -->
+    <section class="pr-card pr-section pr-in" id="leads" style="animation-delay:.38s" aria-labelledby="pr-leads-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="pr-leads-h">People to follow up</h2>
+                <p>Signed in, picked a plan or started checkout, and still no active plan. Closest to paying first.</p>
+            </div>
+            {% if leads %}<a class="pr-btn" href="?{{ base_query }}&amp;export=leads">Download CSV</a>{% endif %}
+        </div>
+        <div class="pr-scroll" style="max-height:30rem;overflow-y:auto;">
+            <table class="pr-tbl">
+                <thead><tr><th scope="col">Person</th><th scope="col">Got as far as</th><th scope="col">Plan</th><th scope="col" class="num">Pricing opens</th><th scope="col">Last seen</th><th scope="col"><span class="sr-only">Contact</span></th></tr></thead>
                 <tbody>
-                    {% for row in recent_rows %}
+                    {% for r in leads|slice:":50" %}
                     <tr>
-                        <td class="pt-when">{{ row.created|date:"Y-m-d H:i:s" }}</td>
+                        <td><span class="pr-name">{{ r.name }}</span><span class="pr-sub">{{ r.email|default:r.username }}</span></td>
                         <td>
-                            <span style="display:inline-flex;align-items:center;gap:.5rem;">
-                                <span class="pt-dot {% if row.type == 'page_view' %}pt-dot-open{% else %}pt-dot-click{% endif %}"></span>
-                                <span style="font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#64748b;">{% if row.type == 'page_view' %}Open{% else %}Click{% endif %}</span>
-                            </span>
+                            <span class="pr-pill {% if r.stage == 3 %}pr-pill-brand{% else %}pr-pill-slate{% endif %}">{{ r.stage_label }}</span>
+                            {% if r.card_pending %}<span class="pr-sub" style="margin-top:.25rem">Card payment left pending</span>{% endif %}
                         </td>
-                        <td>{{ row.page_label }}</td>
-                        <td style="color:#64748b;">{% if row.action %}{{ row.action_label }}{% else %}<span style="color:#cbd5e1;">&mdash;</span>{% endif %}</td>
-                        <td style="color:#64748b;font-size:.8125rem;">{% if row.user %}@{{ row.user }}{% else %}<span class="pt-when">{{ row.session }}</span>{% endif %}</td>
+                        <td>{{ r.plan|default:"—" }}</td>
+                        <td class="num">{{ r.pricing_opens }}</td>
+                        <td style="white-space:nowrap;" title="{{ r.last_seen|date:'j M Y, H:i' }}">{{ r.last_seen|timesince }} ago</td>
+                        <td class="num">{% if r.email %}<a class="pr-btn" href="mailto:{{ r.email }}?subject={{ 'Your Skillifly portfolio'|urlencode }}">Email</a>{% endif %}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">Nothing recorded yet.</td></tr>
+                    <tr><td colspan="6" class="pr-empty">No one to follow up in this period. Everyone who started paying either finished or already has a plan.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if leads|length > 50 %}<p class="pr-kpi-s">Showing 50 of {{ leads|length }}. The CSV has everyone.</p>{% endif %}
+    </section>
+
+    <!-- Ledger -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.4s" aria-labelledby="pr-ledger-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="pr-ledger-h">Latest confirmed payments</h2>
+                <p>The 12 most recent in the period.</p>
+            </div>
+            {% if recent_payments %}<a class="pr-btn" href="?{{ base_query }}&amp;export=payments">All payments (CSV)</a>{% endif %}
+        </div>
+        <div class="pr-scroll">
+            <table class="pr-tbl">
+                <thead><tr><th scope="col">Date</th><th scope="col">Customer</th><th scope="col">Plan</th><th scope="col">Method</th><th scope="col" class="num">Amount</th></tr></thead>
+                <tbody>
+                    {% for p in recent_payments %}
+                    <tr>
+                        <td class="pr-num" style="white-space:nowrap;">{{ p.date|date:"j M Y" }}<span class="pr-sub">{{ p.date|date:"H:i" }}</span></td>
+                        <td><span class="pr-name">{{ p.name }}</span><span class="pr-sub">{{ p.email }}</span></td>
+                        <td>{{ p.plan }}</td>
+                        <td>{{ p.method }}</td>
+                        <td class="num strong">{% if p.is_free %}<span class="pr-pill pr-pill-slate">Free</span>{% else %}{{ p.amount }} <span class="pr-sub" style="display:inline">EGP</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="pr-empty">No confirmed payments in this period.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </section>
 
+    <!-- Diagnostics -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.42s">
+        <details class="pr-details" style="margin:0">
+            <summary style="margin:0">Button clicks ({{ actions|length }} kinds)</summary>
+            <p class="pr-kpi-s" style="margin:.5rem 0 1rem;">For checking the tracking and small UI details. The funnel above is the place to make decisions.
+                The full event log is in the <a href="{% url 'admin:core_paymenttrackingevent_changelist' %}" style="color:var(--brand);font-weight:600;">admin</a>.</p>
+            <div class="pr-scroll">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">Button</th><th scope="col">Page</th><th scope="col" class="num">People</th><th scope="col" class="num">Clicks</th></tr></thead>
+                    <tbody>
+                        {% for a in actions %}
+                        <tr>
+                            <td class="pr-name">{{ a.action_label }}<span class="pr-sub pr-mono">{{ a.action }}</span></td>
+                            <td>{{ a.page_label }}</td>
+                            <td class="num strong">{{ a.people }}</td>
+                            <td class="num">{{ a.clicks }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="pr-empty">No clicks in this period.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+
     {% endif %}
 
-    <div class="mt-14">
-        <a href="{% url 'manage_dashboard' %}" class="pt-back">&larr; Back to manage</a>
+    <div style="margin-top:3rem;">
+        <a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Back to manage</a>
     </div>
-
 </div>
 </div>
+{{ trend|json_script:"prTrendData" }}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    
-    // Grow the funnel lines once the browser has painted them at 0
-    (function () {
-        var lines = document.querySelectorAll('.pt-pipe-line[data-w]');
-        if (!lines.length) return;
-        var paint = function () {
-            for (var i = 0; i < lines.length; i++) {
-                lines[i].style.width = lines[i].getAttribute('data-w') + '%';
-            }
-        };
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            paint();
-        } else {
-            requestAnimationFrame(function () { requestAnimationFrame(paint); });
-        }
-    })();
+(function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Funnel bars grow in once painted at 0.
+    var bars = document.querySelectorAll('.pr-bar i[data-w]');
+    var paint = function () { bars.forEach(function (b) { b.style.width = b.getAttribute('data-w') + '%'; }); };
+    if (reduce) paint(); else requestAnimationFrame(function () { requestAnimationFrame(paint); });
+
+    // ── Trend: small multiples, one scale per row, shared hover ──
+    var root = document.getElementById('prTrend');
+    var dataEl = document.getElementById('prTrendData');
+    if (!root || !dataEl) return;
+    var trend = JSON.parse(dataEl.textContent);
+    var pts = trend.points || [];
+    if (!pts.length) return;
+
+    var NS = 'http://www.w3.org/2000/svg';
+    var H = 64, PAD_T = 14, AXIS_H = 18;
+    var tip = document.getElementById('prTip');
+    var rows = [
+        { key: 'visitors', label: 'Pricing visitors', color: '#6d28d9', funnel: true },
+        { key: 'checkouts', label: 'Started checkout', color: '#6d28d9', funnel: true },
+        { key: 'subscriptions', label: 'Subscriptions', color: '#6d28d9', tipOnly: true },
+        { key: 'revenue', label: 'Revenue (EGP)', color: '#0d9488' }
+    ];
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var nice = function (max) {
+        if (max <= 0) return 1;
+        var p = Math.pow(10, Math.floor(Math.log10(max))), m = max / p;
+        return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+    };
+    function el(name, attrs, parent) {
+        var n = document.createElementNS(NS, name);
+        for (var k in attrs) n.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(n);
+        return n;
+    }
+    function colPath(x, y, w, h) {
+        if (h <= 0) return '';
+        var r = Math.min(4, w / 2, h);
+        return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y +
+               'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+    }
+
+    function showTip(i, evt) {
+        var p = pts[i];
+        tip.textContent = '';
+        var h = document.createElement('div'); h.className = 'pr-tip-h'; h.textContent = p.label; tip.appendChild(h);
+        rows.forEach(function (r) {
+            var row = document.createElement('div'); row.className = 'pr-tip-r';
+            var key = document.createElement('i'); key.style.background = r.color; row.appendChild(key);
+            row.appendChild(document.createTextNode(r.label));
+            var b = document.createElement('b');
+            b.textContent = (!p.tracked && r.funnel) ? 'not tracked' : fmt(p[r.key]);
+            row.appendChild(b);
+            tip.appendChild(row);
+        });
+        var x, y;
+        if (evt && evt.clientX != null) { x = evt.clientX; y = evt.clientY; }
+        else { var bb = evt.target.getBoundingClientRect(); x = bb.left + bb.width / 2; y = bb.top; }
+        tip.classList.add('on');
+        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        var left = x + 14; if (left + tw > window.innerWidth - 8) left = x - tw - 14;
+        var top = y - th - 10; if (top < 8) top = y + 16;
+        tip.style.left = left + 'px'; tip.style.top = top + 'px';
+        root.querySelectorAll('.bar').forEach(function (b) { b.classList.toggle('is-hot', +b.dataset.i === i); });
+        root.querySelectorAll('.hair').forEach(function (l) {
+            l.setAttribute('x1', l.dataset['x' + i]); l.setAttribute('x2', l.dataset['x' + i]); l.style.display = '';
+        });
+    }
+    function hideTip() {
+        tip.classList.remove('on');
+        root.querySelectorAll('.bar.is-hot').forEach(function (b) { b.classList.remove('is-hot'); });
+        root.querySelectorAll('.hair').forEach(function (l) { l.style.display = 'none'; });
+    }
+
+    function draw() {
+        var svgs = root.querySelectorAll('svg[data-metric]');
+        var W = svgs[0].getBoundingClientRect().width || 600;
+        var GUTTER = 34;  // y tick labels
+        var plotW = W - GUTTER;
+        var band = plotW / pts.length;
+        var bw = Math.max(2, Math.min(24, band - 2));  // 2px surface gap between neighbours
+
+        svgs.forEach(function (svg, rowIdx) {
+            var key = svg.dataset.metric;
+            svg.textContent = '';
+            svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+            svg.setAttribute('height', H);
+            var max = nice(Math.max.apply(null, pts.map(function (p) { return p[key]; })));
+            var plotH = H - PAD_T;
+            [0, max].forEach(function (v, j) {
+                var y = PAD_T + plotH - (v / max) * plotH;
+                el('line', { x1: GUTTER, x2: W, y1: y, y2: y, 'class': j ? 'grid' : 'base' }, svg);
+                var t = el('text', { x: GUTTER - 6, y: y + 3, 'text-anchor': 'end', 'class': 'tick' }, svg);
+                t.textContent = max >= 1000 && v ? (v / 1000) + 'K' : v;
+            });
+            // Before tracking began, visitor rows are unknown: grey them out instead of drawing zeros.
+            if (key !== 'revenue') {
+                var lastUntracked = -1;
+                pts.forEach(function (p, i) { if (!p.tracked) lastUntracked = i; });
+                if (lastUntracked >= 0) {
+                    var uw = band * (lastUntracked + 1);
+                    el('rect', { x: GUTTER, y: PAD_T, width: uw - 2, height: plotH, rx: 4, 'class': 'untracked' }, svg);
+                    if (rowIdx === 0 && uw > 90) {
+                        var ut = el('text', { x: GUTTER + uw / 2, y: PAD_T + plotH / 2 + 3, 'text-anchor': 'middle', 'class': 'untracked-l' }, svg);
+                        ut.textContent = 'Not tracked yet';
+                    }
+                }
+            }
+            var hair = el('line', { y1: PAD_T - 6, y2: H, 'class': 'hair', style: 'display:none' }, svg);
+            pts.forEach(function (p, i) {
+                var cx = GUTTER + band * i + band / 2;
+                hair.dataset['x' + i] = cx;
+                var h = (p[key] / max) * plotH;
+                if (p[key] > 0) {
+                    el('path', { d: colPath(cx - bw / 2, PAD_T + plotH - h, bw, h),
+                                 'class': 'bar' + (key === 'revenue' ? ' rev' : ''), 'data-i': i }, svg);
+                }
+                var hit = el('rect', { x: GUTTER + band * i, y: 0, width: band, height: H, 'class': 'hit' }, svg);
+                if (rowIdx === 0) {
+                    hit.setAttribute('tabindex', '0');
+                    hit.setAttribute('aria-label', p.label + ': ' +
+                        (p.tracked ? p.visitors + ' visitors, ' + p.checkouts + ' started checkout, ' : 'visitors not tracked yet, ') +
+                        p.subscriptions + ' subscriptions, ' + fmt(p.revenue) + ' EGP');
+                }
+                hit.addEventListener('pointermove', function (e) { showTip(i, e); });
+                hit.addEventListener('pointerleave', hideTip);
+                hit.addEventListener('focus', function (e) { showTip(i, e); });
+                hit.addEventListener('blur', hideTip);
+            });
+        });
+
+        // x axis: thin out labels so they never collide (~44px each)
+        var ax = root.querySelector('svg[data-axis="x"]');
+        ax.textContent = '';
+        ax.setAttribute('viewBox', '0 0 ' + W + ' ' + AXIS_H);
+        ax.setAttribute('height', AXIS_H);
+        var every = Math.max(1, Math.ceil(44 / band));
+        pts.forEach(function (p, i) {
+            if (i % every && i !== pts.length - 1) return;
+            if (i === pts.length - 1 && i % every && (i % every) < every / 2) return;
+            var t = el('text', { x: GUTTER + band * i + band / 2, y: 12, 'text-anchor': 'middle', 'class': 'tick' }, ax);
+            t.textContent = trend.unit === 'month' ? p.label : p.label.replace('Wk of ', '');
+        });
+    }
+
+    draw();
+    var t;
+    window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 120); });
+})();
 </script>
 {% endblock %}
