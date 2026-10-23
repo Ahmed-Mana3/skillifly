@@ -383,6 +383,37 @@ class PaymentTrackingReportTests(TestCase):
         self.assertEqual(kpis['revenue']['delta']['label'], '+50%')
         self.assertIsNone({k['key']: k for k in self._report('?days=all')['kpis']}['revenue']['delta'])
 
+    def _before_report_start(self, obj, field):
+        from core.payment_report import report_start
+        type(obj).objects.filter(pk=obj.pk).update(**{field: report_start() - timedelta(days=1)})
+
+    def test_all_time_starts_on_the_report_start_date(self):
+        user = self._user('veteran')
+        self._before_report_start(self._pay(user, amount='449.00'), 'date')
+        self._before_report_start(self._event('payment', user=user, session_id='pvid_v'), 'created_at')
+        from core.models import ManualPayment
+        old_receipt = ManualPayment.objects.create(
+            user=user, plan_type='monthly', amount_expected='99.00', sender_identifier='0100',
+            receipt_image='receipts/x.jpg', status='needs_review')
+        self._before_report_start(old_receipt, 'created_at')
+        self._pay(user, amount='99.00')
+
+        ctx = self._report('?days=all')
+        self.assertEqual(ctx['revenue_total'], 99)
+        self.assertEqual(ctx['steps'][0]['count'], 0)
+        self.assertEqual(ctx['health']['receipts_review_total'], 0)
+        self.assertIn('since 1 May 2026', ctx['days_label'])
+        # the pre-start payment still makes the new one a renewal
+        self.assertIn('0 new · 1 renewal', {k['key']: k for k in ctx['kpis']}['subs']['sub'])
+        self.assertIn('May', ctx['trend']['points'][0]['label'])
+
+    def test_comparison_window_never_reaches_before_the_report_start(self):
+        from core.payment_report import report_start, resolve_period
+        period = resolve_period('90', now=report_start() + timedelta(days=100))
+        self.assertEqual(period.previous.start, report_start())
+        self.assertIsNone(resolve_period('30', now=report_start() + timedelta(days=10)).previous)
+        self.assertEqual(resolve_period('30', now=report_start() + timedelta(days=10)).start, report_start())
+
     def test_period_filter(self):
         self._event('payment', session_id='pvid_old', days_ago=20)
         self._event('payment', session_id='pvid_new')

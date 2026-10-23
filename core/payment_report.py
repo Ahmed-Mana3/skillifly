@@ -14,7 +14,7 @@ account, so they are not counted twice.
 """
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from django.db.models import Q
@@ -57,29 +57,48 @@ CARD_PENDING_GRACE = timedelta(hours=1)
 PAYMENT_MATCH_SLACK = timedelta(minutes=5)
 
 
+# Nothing before this date counts anywhere on the report ("All time" starts here).
+# Earlier payments are test/launch-era records that would distort the numbers.
+REPORT_START_DATE = date(2026, 5, 1)
+
+
+def report_start():
+    """REPORT_START_DATE at midnight in the project's timezone."""
+    return timezone.make_aware(datetime.combine(REPORT_START_DATE, time.min))
+
+
 @dataclass
 class Period:
     key: str
     days: int | None
-    start: object  # aware datetime or None (all time)
+    start: object  # aware datetime, never before report_start()
     end: object
     label: str
 
     @property
     def previous(self):
+        """The same-length window just before this one, cut at the report start."""
         if not self.days:
             return None
-        return Period(self.key, self.days, self.start - timedelta(days=self.days),
-                      self.start, f'previous {self.days} days')
+        floor = report_start()
+        if self.start <= floor:
+            return None
+        start = max(self.start - timedelta(days=self.days), floor)
+        return Period(self.key, self.days, start, self.start, f'previous {self.days} days')
 
 
 def resolve_period(param, now=None):
     now = now or timezone.now()
     key = param if param in PERIODS else DEFAULT_PERIOD
     days = PERIODS[key]
+    floor = report_start()
+    since = f'{REPORT_START_DATE.day} {REPORT_START_DATE:%b %Y}'
     if days is None:
-        return Period(key, None, None, now, 'All time')
-    return Period(key, days, now - timedelta(days=days), now, f'Last {days} days')
+        return Period(key, None, floor, now, f'All time (since {since})')
+    start = now - timedelta(days=days)
+    if start < floor:
+        return Period(key, days, floor, now, f'Last {days} days (from {since})')
+    return Period(key, days, start, now, f'Last {days} days')
 
 
 def team_user_ids():
@@ -354,9 +373,8 @@ def _buckets(period, first_seen):
             edges.append(d)
             d = (d.replace(day=28) + timedelta(days=4)).replace(day=1)
     else:
+        # Weeks count from the period's first day, so no bucket starts before it.
         d = start.date()
-        if unit == 'week':
-            d -= timedelta(days=d.weekday())
         while d <= end.date():
             edges.append(d)
             d += timedelta(days=size)
@@ -506,7 +524,8 @@ def _health(period, core, now):
         'receipts_rejected': receipt_counts.get('rejected', 0),
         'receipts_review_period': receipt_counts.get('needs_review', 0) + receipt_counts.get('pending', 0),
         # The review queue is a backlog, not a period stat: show all of it.
-        'receipts_review_total': ManualPayment.objects.filter(status__in=('needs_review', 'pending')).count(),
+        'receipts_review_total': ManualPayment.objects.filter(
+            status__in=('needs_review', 'pending'), created_at__gte=report_start()).count(),
         'instapay': wallet_split.get('instapay', 0),
         'vodafone': wallet_split.get('vodafone', 0),
     }
@@ -682,7 +701,8 @@ def build_report(period_param='30', include_team=False, now=None):
 
     paid_users = {p.user_id for p in ledger['paid'] if p.user_id}
     untracked = len(paid_users - core['matched_users'])
-    first_event = PaymentTrackingEvent.objects.order_by('created_at').values_list('created_at', flat=True).first()
+    first_event = (PaymentTrackingEvent.objects.filter(created_at__gte=report_start())
+                   .order_by('created_at').values_list('created_at', flat=True).first())
     trend = _trend(period, core, first_event)
 
     kpis = [
