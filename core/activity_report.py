@@ -13,6 +13,10 @@ start) is exact, while "how many were active in the previous period" can't be kn
 the report never shows a change for it. Last active is the latest of last_seen, last_login
 and the signup itself. Retention is measured the same way: "came back after 7+ days" means
 their last activity is at least 7 days after they signed up.
+
+Like the payment report, nothing before ``REPORT_START_DATE`` (1 May 2026) counts: accounts
+created earlier, and payments and portfolio visits recorded earlier, are launch-era test
+data and are left out everywhere on this page.
 """
 from collections import defaultdict
 from dataclasses import dataclass
@@ -27,7 +31,8 @@ from django.utils import timezone
 from core.launch import STEPS as LAUNCH_STEPS, XP
 from core.models import AnalyticsVisit, CustomUser, Project, Skill, UserPayment
 from core.payment_report import (
-    PLAN_LABELS, _ago, _bucket_index, _buckets, _delta, _money, _rate, payment_plan, team_user_ids,
+    PLAN_LABELS, REPORT_START_DATE, _ago, _bucket_index, _buckets, _delta, _money, _rate, payment_plan,
+    report_start, team_user_ids,
 )
 
 PERIODS = {'7': 7, '30': 30, '90': 90, 'all': None}
@@ -129,31 +134,47 @@ CONTACT_KEYS = [c['key'] for c in CONTACT_LISTS]
 class Period:
     key: str
     days: int | None
-    start: object  # aware datetime, or None for all time
+    start: object  # aware datetime, never before report_start()
     end: object
     label: str
 
     @property
     def previous(self):
+        """The same-length window just before this one. None when it would reach back before
+        the report start: a cut-short window would make every comparison look like growth."""
         if not self.days:
             return None
-        return Period(self.key, self.days, self.start - timedelta(days=self.days), self.start,
-                      f'previous {self.days} days')
+        start = self.start - timedelta(days=self.days)
+        if start < report_start():
+            return None
+        return Period(self.key, self.days, start, self.start, f'previous {self.days} days')
+
+
+def _since_label():
+    return f'{REPORT_START_DATE.day} {REPORT_START_DATE:%b %Y}'
 
 
 def resolve_period(param, now=None):
     now = now or timezone.now()
     key = param if param in PERIODS else DEFAULT_PERIOD
     days = PERIODS[key]
+    floor = report_start()
     if days is None:
-        return Period(key, None, None, now, 'All time')
-    return Period(key, days, now - timedelta(days=days), now, f'Last {days} days')
+        return Period(key, None, floor, now, f'All time (since {_since_label()})')
+    start = now - timedelta(days=days)
+    if start < floor:
+        return Period(key, days, floor, now, f'Last {days} days (from {_since_label()})')
+    return Period(key, days, start, now, f'Last {days} days')
 
 
 def _in_period(qs, field, period):
-    if period.start is not None:
-        qs = qs.filter(**{f'{field}__gte': period.start})
-    return qs.filter(**{f'{field}__lt': period.end})
+    return qs.filter(**{f'{field}__gte': period.start, f'{field}__lt': period.end})
+
+
+def _human_visits():
+    """Portfolio visits by people, not bots, from the report start on."""
+    return (AnalyticsVisit.objects.exclude(user_agent__icontains='bot')
+            .filter(created_at__gte=report_start()))
 
 
 # ── Loading: one record per person ──────────────────────────────────────────
@@ -166,7 +187,7 @@ def _plan_prices():
 
 def _paid_payments():
     by_user = defaultdict(list)
-    for p in (UserPayment.objects.filter(status='paid', user__isnull=False)
+    for p in (UserPayment.objects.filter(status='paid', user__isnull=False, date__gte=report_start())
               .select_related('subscription').order_by('date', 'id')):
         by_user[p.user_id].append(p)
     return by_user
@@ -220,7 +241,7 @@ def _initials(name):
 
 def load_people(audience, exclude_ids, period, now, prices=None):
     prices = prices or _plan_prices()
-    qs = CustomUser.objects.exclude(username__in=MOCK_USERNAMES)
+    qs = CustomUser.objects.filter(date_joined__gte=report_start()).exclude(username__in=MOCK_USERNAMES)
     if exclude_ids:
         qs = qs.exclude(id__in=exclude_ids)
     if audience == 'editors':
@@ -236,7 +257,7 @@ def load_people(audience, exclude_ids, period, now, prices=None):
     videos = dict(Project.objects.order_by().values_list('user_id').annotate(n=Count('id')))
     skill_users = set(Skill.objects.order_by().values_list('user_id', flat=True).distinct())
     payments = _paid_payments()
-    human = AnalyticsVisit.objects.exclude(user_agent__icontains='bot')
+    human = _human_visits()
     period_visits = dict(_in_period(human, 'created_at', period).order_by()
                          .values_list('user_id').annotate(n=Count('id')))
     last_visit = dict(human.order_by().values_list('user_id').annotate(m=Max('created_at')))
@@ -301,7 +322,7 @@ def _milestones_done(p):
 
 
 def cohort_stats(people, start, end, now):
-    members = [p for p in people if (start is None or p['joined'] >= start) and p['joined'] < end]
+    members = [p for p in people if start <= p['joined'] < end]
     n = len(members)
     counts = {key: 0 for key, _ in MILESTONES}
     for p in members:
@@ -411,17 +432,15 @@ def trend(people, period, now):
     signups = [0] * len(edges)
     activated = [0] * len(edges)
     visits = [0] * len(edges)
-    window_start = period.start
     for p in people:
-        if (window_start and p['joined'] < window_start) or p['joined'] >= period.end:
+        if not period.start <= p['joined'] < period.end:
             continue
         i = _bucket_index(edges, timezone.localtime(p['joined']).date())
         if i is not None:
             signups[i] += 1
             activated[i] += p['steps']['project']
     ids = {p['id'] for p in people}
-    human = AnalyticsVisit.objects.exclude(user_agent__icontains='bot')
-    daily = (_in_period(human, 'created_at', period).order_by()
+    daily = (_in_period(_human_visits(), 'created_at', period).order_by()
              .annotate(day=TruncDate('created_at')).values_list('day', 'user_id')
              .annotate(n=Count('id')))
     for day, uid, n in daily:
@@ -599,8 +618,7 @@ def traction(people, period, prev_period):
     prev_total = None
     if prev_period is not None:
         ids = {p['id'] for p in people}
-        per_user = (_in_period(AnalyticsVisit.objects.exclude(user_agent__icontains='bot'),
-                               'created_at', prev_period).order_by()
+        per_user = (_in_period(_human_visits(), 'created_at', prev_period).order_by()
                     .values_list('user_id').annotate(n=Count('id')))
         prev_total = sum(n for uid, n in per_user if uid in ids)
     top = sorted((p for p in people if p['visits']), key=lambda p: (-p['visits'], p['name']))[:8]
@@ -658,15 +676,17 @@ def build_report(period_param=DEFAULT_PERIOD, audience=DEFAULT_AUDIENCE, include
     milestones, weakest = _milestone_rows(cohort)
 
     # "Active" needs a window; all time would count everyone, so it falls back to 30 days.
-    active_start = period.start or now - timedelta(days=30)
-    active_label = 'Active users' if period.start else 'Active, last 30 days'
+    active_start = period.start if period.days else now - timedelta(days=30)
+    active_label = 'Active users' if period.days else 'Active, last 30 days'
     active = sum(1 for p in people if p['last_active'] >= active_start)
     today = sum(1 for p in people if p['recency'] == 'today')
     week = sum(1 for p in people if p['last_active'] >= now - timedelta(days=7))
 
     paying = sum(1 for p in people if p['plan_state'] == 'paying')
+    # Compared with the period start, unless that is the report start (nothing is known before it).
+    has_baseline = bool(period.days) and period.start > report_start()
     paying_delta = None
-    if period.start:
+    if has_baseline:
         then = sum(1 for p in people if p['payments'] and _covered_at(p['payments'], period.start))
         paying_delta = _delta(paying, then)
 
@@ -706,7 +726,7 @@ def build_report(period_param=DEFAULT_PERIOD, audience=DEFAULT_AUDIENCE, include
                 f'{by_key["quiet"]["count"]} gone quiet',
          'delta': paying_delta,
          'delta_note': (f'the start of the period ({timezone.localtime(period.start).day} '
-                        f'{timezone.localtime(period.start):%b})' if period.start else None),
+                        f'{timezone.localtime(period.start):%b})' if has_baseline else None),
          'help': 'Customers with a running plan they paid for. Coupon and school plans are not counted.'},
     ]
 
@@ -732,5 +752,6 @@ def build_report(period_param=DEFAULT_PERIOD, audience=DEFAULT_AUDIENCE, include
         'traction': traction_data,
         'insights': insights(people, lists, cohort, weakest, traction_data),
         'activity_since': ACTIVITY_TRACKING_SINCE,
+        'data_since': REPORT_START_DATE,
         'has_data': bool(people),
     }

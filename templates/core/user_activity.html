@@ -357,7 +357,8 @@ light -> dark, and every colour sits next to a text label or number.
         </div>
         <p class="pr-meta">
             <b>{{ period.label }}</b>{% if compare_label %} · changes compare with the {{ compare_label }}{% endif %}
-            · <b>{{ total_people }}</b> {{ audience_label|lower }}
+            · <b>{{ total_people }}</b> {{ audience_label|lower }} who signed up since {{ data_since|date:"j M Y" }}
+            <span title="Accounts, payments and portfolio visits from before {{ data_since|date:'j M Y' }} are launch-era test data and are left out, as on the payment report.">(earlier data left out)</span>
             {% if not include_team and team_excluded %} · {{ team_excluded }} team account{{ team_excluded|pluralize }} left out{% endif %}
             · as of {{ now|date:"j M Y, H:i" }} {{ time_zone }}
         </p>
@@ -431,7 +432,7 @@ light -> dark, and every colour sits next to a text label or number.
         <div class="pr-card-h">
             <div>
                 <h2 id="ua-eng-h">How recently people used Skillifly</h2>
-                <p>All {{ engagement.total }} {{ audience_label|lower }} by their last visit, split by plan. Not tied to the period above.
+                <p>All {{ engagement.total }} {{ audience_label|lower }} who signed up since {{ data_since|date:"j M Y" }}, by their last visit, split by plan. Not tied to the period above.
                     Click any number to list those people. Paying customers in red have been away 30+ days.</p>
             </div>
         </div>
@@ -566,7 +567,7 @@ light -> dark, and every colour sits next to a text label or number.
         </div>
         <ul class="pr-notes">
             {% if cohorts.has_small %}<li>Faded rows have fewer than {{ cohorts.min_sample }} signups, so a single person swings their rates. Don't read trends from them.</li>{% endif %}
-            <li>A cell marked <b>*</b> counts only the people old enough to measure (hover it for the numbers). Activity has been recorded since {{ activity_since|date:"j M Y" }}; earlier accounts may look less active than they were.</li>
+            <li>A cell marked <b>*</b> counts only the people old enough to measure (hover it for the numbers). Sign-in activity has been recorded since {{ activity_since|date:"j M Y" }}, so people who signed up in the first days of May may look less active than they were.</li>
         </ul>
     </section>
 
@@ -775,6 +776,7 @@ light -> dark, and every colour sits next to a text label or number.
         <details class="pr-details" style="margin:0">
             <summary style="margin:0">How these numbers are worked out</summary>
             <ul class="pr-notes" style="border:0;margin:0;padding:0">
+                <li><b>Only data from {{ data_since|date:"j M Y" }} on.</b> Accounts created before then, and payments and portfolio visits recorded before then, are launch-era test data and are left out everywhere on this page (the payment report uses the same start date). A comparison with the previous period is only shown when that whole period falls after this date.</li>
                 <li><b>Last active</b> is the latest of: any signed-in page view, a login, or the signup itself. Only the latest time is stored, so “active users” is exact for the period, but can't be compared with an earlier period.</li>
                 <li><b>Came back</b> means active again at least a day after signing up. <b>Left on day one</b> means more than 30 days since signup and never back after that first day. <b>Lapsed</b> means they came back at least once, then nothing for 30+ days.</li>
                 <li><b>Paying</b> means a running plan and at least one payment with money. Coupon, school and admin-granted plans are <b>Free pass</b>. Plan values use today's prices (Monthly / Annual).</li>

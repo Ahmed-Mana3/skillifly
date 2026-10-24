@@ -97,6 +97,37 @@ class ActivityReportTests(TestCase):
         self.assertEqual(cohort['return_rate'], 50.0)
         self.assertEqual(self.person(report, done)['xp'], 100)
 
+    # ── Report start (1 May 2026) ──────────────────────────────────────────
+
+    def test_nothing_before_the_report_start_counts(self):
+        from core.payment_report import report_start
+        start = report_start()
+        early = make_editor('launch_era')
+        type(early).objects.filter(pk=early.pk).update(date_joined=start - timedelta(days=3))
+        user = make_editor('may_user')
+        old_payment = give_payment(user)
+        UserPayment.objects.filter(pk=old_payment.pk).update(date=start - timedelta(days=1))
+        old_visit = AnalyticsVisit.objects.create(user=user, session_id='old', user_agent='Mozilla/5.0')
+        AnalyticsVisit.objects.filter(pk=old_visit.pk).update(created_at=start - timedelta(days=1))
+
+        report = ar.build_report('all')
+        self.assertEqual([p['username'] for p in report['people']], ['may_user'])
+        person = self.person(report, user)
+        self.assertEqual(person['plan_state'], 'free')
+        self.assertIsNone(person['last_visit'])
+        self.assertEqual(report['period'].start, start)
+        self.assertIn('since 1 May 2026', report['period'].label)
+
+    def test_periods_are_cut_at_the_report_start_and_never_compared_with_a_cut_window(self):
+        from core.payment_report import report_start
+        start = report_start()
+        early = ar.resolve_period('90', now=start + timedelta(days=50))
+        self.assertEqual(early.start, start)
+        self.assertIn('from 1 May 2026', early.label)
+        self.assertIsNone(early.previous)
+        self.assertIsNone(ar.resolve_period('90', now=start + timedelta(days=120)).previous)
+        self.assertEqual(ar.resolve_period('90', now=start + timedelta(days=200)).previous.days, 90)
+
     # ── Who to contact ─────────────────────────────────────────────────────
 
     def test_contact_lists(self):
