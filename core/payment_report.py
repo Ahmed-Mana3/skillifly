@@ -552,6 +552,29 @@ def _ago(dt, now):
     return f'{months} months ago'
 
 
+def _freshness(dt, now):
+    """How warm a lead is, as (key, label). Shown with a text label, never colour alone."""
+    age = now - dt
+    if age < timedelta(days=1):
+        return 'today', 'Active today'
+    if age < timedelta(days=7):
+        return 'week', 'This week'
+    if age < timedelta(days=30):
+        return 'month', 'This month'
+    return 'cold', 'Gone quiet'
+
+
+def lead_summary(leads):
+    """Header numbers for the follow-up list: how many, how warm, and what they're worth."""
+    return {
+        'checkout': sum(1 for r in leads if r['stage'] == 3),
+        'picked': sum(1 for r in leads if r['stage'] == 2),
+        'warm': sum(1 for r in leads if r['freshness'][0] in ('today', 'week')),
+        'value': _money(sum((r['plan_value'] or 0 for r in leads), Decimal('0'))),
+        'emails': [r['email'] for r in leads if r['email']],
+    }
+
+
 def _leads(core):
     """Signed-in people who picked a plan or started checkout and haven't paid."""
     candidates = [p for p in core['people'].values()
@@ -566,6 +589,9 @@ def _leads(core):
                        .exclude(fawaterk_intent_key__startswith='MANUAL-')
                        .exclude(fawaterk_intent_key__isnull=True)
                        .values_list('user_id', flat=True))
+    from payments.views import PLAN_CATALOGUE  # lazy: payments.views imports core.views
+    prices = {'monthly': Decimal(PLAN_CATALOGUE['monthly'][0]),
+              'annual': Decimal(PLAN_CATALOGUE['pro_annual'][0])}
     now = timezone.now()
     leads = []
     for p in candidates:
@@ -573,9 +599,13 @@ def _leads(core):
         if not u or p['user_id'] in active:
             continue
         last_seen = max(filter(None, (site_seen.get(u.id), u.last_login, p['last'])))
+        name = u.get_full_name().strip() or u.username
         leads.append({
             'user_id': u.id,
-            'name': u.get_full_name().strip() or u.username,
+            'name': name,
+            'initials': ''.join(w[0] for w in name.split()[:2]).upper() or '?',
+            'plan_value': prices.get(p['plan']),
+            'freshness': _freshness(last_seen, now),
             'username': u.username,
             'email': u.email,
             'stage': p['stage'],
@@ -771,6 +801,7 @@ def build_report(period_param='30', include_team=False, now=None):
         'method_rows': method_rows,
         'health': health,
         'leads': leads,
+        'lead_summary': lead_summary(leads),
         'segments': segments,
         'insights': _insights(core, plan_rows, health, leads, segments),
         'renewal_visitors': _renewal_visitors(core),

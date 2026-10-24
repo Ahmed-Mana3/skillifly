@@ -213,6 +213,80 @@ Dense data view: drop base.html's decorative gradient orbs.
                font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
     .pr-back:hover { color: var(--brand); }
 
+    /* People to follow up */
+    .pr-lead-tools { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .pr-btn { cursor: pointer; font-family: inherit; }
+    .pr-btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .pr-btn-primary:hover { background: #5b21b6; border-color: #5b21b6; color: #fff; }
+    .pr-icon-btn { width: 2.125rem; height: 2.125rem; border-radius: 999px; border: 1px solid var(--line); background: #fff;
+                   color: var(--muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+                   transition: color .15s, border-color .15s; }
+    .pr-icon-btn:hover { color: var(--brand); border-color: var(--brand-mid); }
+    .pr-icon-btn:focus-visible, .pr-btn:focus-visible, .pr-more-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+    .pr-lead-sum { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 0 1.25rem; border: 1px solid var(--line);
+                   border-radius: 14px; overflow: hidden; background: #fafbfc; }
+    .pr-lead-sum > div { padding: .875rem 1.125rem; border-left: 1px solid var(--line); }
+    .pr-lead-sum > div:first-child { border-left: 0; }
+    .pr-lead-sum dt { font-size: .75rem; font-weight: 600; color: var(--muted); margin-bottom: .25rem; }
+    .pr-lead-sum dd { margin: 0; font-size: 1.375rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+    .pr-lead-sum dd small { font-size: .75rem; color: var(--muted); font-weight: 600; }
+    .pr-lead-sum .is-value { background: #faf8ff; }
+    .pr-lead-sum .is-value dd { color: var(--brand); }
+
+    .pr-leads { list-style: none; margin: 0; padding: 0; }
+    .pr-lead-group { display: flex; align-items: baseline; gap: .5rem; padding: 1rem .25rem .5rem; font-size: .6875rem;
+                     font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+    .pr-lead-group:first-child { padding-top: 0; }
+    .pr-lead-group span { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); font-size: .75rem; }
+    .pr-lead { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.35fr) minmax(0, .7fr) minmax(0, 1.1fr) auto;
+               gap: 1.25rem; align-items: center; padding: .875rem 1rem; margin: 0 -.25rem .5rem; border: 1px solid var(--line);
+               border-radius: 14px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+    .pr-lead:hover { border-color: #d8ccfb; box-shadow: 0 6px 18px -12px rgba(109,40,217,.35); }
+    .pr-lead-who { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+    .pr-lead-id { min-width: 0; }
+    .pr-lead-id .pr-name, .pr-lead-id .pr-sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pr-ava { width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: 999px; display: inline-flex; align-items: center;
+              justify-content: center; font-size: .8125rem; font-weight: 700; background: #eef2f6; color: var(--ink-2); }
+    .pr-ava.is-hot { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; }
+    .pr-lead-l { display: block; font-size: .875rem; font-weight: 600; color: var(--ink); }
+    .pr-track { display: flex; gap: 3px; width: 6.5rem; margin-bottom: .4375rem; }
+    .pr-track i { flex: 1; height: .3125rem; border-radius: 999px; background: var(--brand-soft); }
+    .pr-track i.on { background: var(--brand); }
+    .pr-fresh { display: inline-flex; align-items: center; gap: .4375rem; font-size: .8125rem; font-weight: 700; color: var(--ink); }
+    .pr-fresh i { width: .5rem; height: .5rem; border-radius: 999px; background: #94a3b8; box-shadow: 0 0 0 3px #f1f5f9; }
+    .pr-fresh.is-today i { background: #059669; box-shadow: 0 0 0 3px #d1fae5; }
+    .pr-fresh.is-week i { background: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+    .pr-fresh.is-month i { background: #d97706; box-shadow: 0 0 0 3px #fef3c7; }
+    .pr-fresh.is-cold { color: var(--muted); }
+    .pr-lead-seen time { margin-top: .1875rem; white-space: nowrap; }
+    .pr-lead-act { display: flex; align-items: center; gap: .375rem; justify-content: flex-end; }
+    .pr-more-btn { display: block; width: 100%; margin-top: .25rem; padding: .75rem; border-radius: 12px; border: 1px dashed #cbd5e1;
+                   background: transparent; font: inherit; font-size: .8125rem; font-weight: 700; color: var(--brand); cursor: pointer; }
+    .pr-more-btn:hover { background: #faf8ff; border-color: var(--brand-mid); }
+    .pr-lead-empty { display: flex; align-items: center; gap: .875rem; padding: 1.25rem; border-radius: 14px;
+                     background: var(--good-bg); color: #065f46; }
+    .pr-lead-empty p { margin: 0; font-size: .875rem; }
+    .pr-toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translate(-50%, 1rem); z-index: 60; padding: .625rem 1rem;
+                border-radius: 999px; background: var(--ink); color: #fff; font-size: .8125rem; font-weight: 600;
+                opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+    .pr-toast.on { opacity: 1; transform: translate(-50%, 0); }
+    @media (max-width: 1023px) {
+      /* Name row gets the full width; the two action buttons sit in its corner. */
+      .pr-lead { position: relative; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: .75rem 1rem; }
+      .pr-lead-who, .pr-lead-step { grid-column: 1 / -1; }
+      .pr-lead-who { padding-right: 5.25rem; }
+      .pr-lead-act { position: absolute; top: .875rem; right: 1rem; }
+      .pr-lead-seen time { white-space: normal; }
+    }
+    @media (max-width: 640px) {
+      .pr-lead-sum { grid-template-columns: repeat(2, 1fr); }
+      .pr-lead-sum > div:nth-child(3) { border-left: 0; }
+      .pr-lead-sum > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+      .pr-lead-act .pr-btn-text { display: none; }
+      .pr-lead-act .pr-btn-primary { width: 2.125rem; height: 2.125rem; padding: 0; justify-content: center; }
+    }
+
     .pr-in { animation: prRise .5s ease-out backwards; }
     @keyframes prRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
@@ -555,37 +629,100 @@ Dense data view: drop base.html's decorative gradient orbs.
         <div class="pr-card-h">
             <div>
                 <h2 id="pr-leads-h">People to follow up</h2>
-                <p>Signed in, picked a plan or started checkout, and still no active plan. Closest to paying first.</p>
+                <p>Signed in, went past the pricing page, and still have no active plan. The people closest to paying are at the top.</p>
             </div>
-            {% if leads %}<a class="pr-btn" href="?{{ base_query }}&amp;export=leads">Download CSV</a>{% endif %}
+            {% if leads %}
+            <div class="pr-lead-tools">
+                <button type="button" class="pr-btn" data-copy="{{ lead_summary.emails|join:', ' }}" data-copy-msg="Copied {{ lead_summary.emails|length }} email{{ lead_summary.emails|length|pluralize }}">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>
+                    Copy all emails
+                </button>
+                <a class="pr-btn" href="?{{ base_query }}&amp;export=leads">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                    CSV
+                </a>
+            </div>
+            {% endif %}
         </div>
-        <div class="pr-scroll" style="max-height:30rem;overflow-y:auto;">
-            <table class="pr-tbl">
-                <thead><tr><th scope="col">Person</th><th scope="col">Got as far as</th><th scope="col">Plan</th><th scope="col" class="num">Pricing opens</th><th scope="col" title="Last time they were on Skillifly, signed in">Last seen</th><th scope="col"><span class="sr-only">Contact</span></th></tr></thead>
-                <tbody>
-                    {% for r in leads|slice:":50" %}
-                    <tr>
-                        <td><span class="pr-name">{{ r.name }}</span><span class="pr-sub">{{ r.email|default:r.username }}</span></td>
-                        <td>
-                            <span class="pr-pill {% if r.stage == 3 %}pr-pill-brand{% else %}pr-pill-slate{% endif %}">{{ r.stage_label }}</span>
-                            {% if r.card_pending %}<span class="pr-sub" style="margin-top:.25rem">Card payment left pending</span>{% endif %}
-                        </td>
-                        <td>{{ r.plan|default:"—" }}</td>
-                        <td class="num">{{ r.pricing_opens }}</td>
-                        <td style="white-space:nowrap;">
-                            <time datetime="{{ r.last_seen|date:'c' }}" title="{{ r.last_seen|date:'j M Y, H:i' }} {{ time_zone }}"><span class="pr-name">{{ r.last_seen_ago }}</span></time>
-                            <span class="pr-sub">{{ r.last_seen|date:"j M, H:i" }}</span>
-                            {% if r.last_payment_visit != r.last_seen %}<span class="pr-sub" title="Last visit to a payment page: {{ r.last_payment_visit_ago }}">Payment page {{ r.last_payment_visit|date:"j M, H:i" }}</span>{% endif %}
-                        </td>
-                        <td class="num">{% if r.email %}<a class="pr-btn" href="mailto:{{ r.email }}?subject={{ 'Your Skillifly portfolio'|urlencode }}">Email</a>{% endif %}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="6" class="pr-empty">No one to follow up in this period. Everyone who started paying either finished or already has a plan.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        {% if leads %}
+        <dl class="pr-lead-sum">
+            <div><dt>Started checkout</dt><dd>{{ lead_summary.checkout }}</dd></div>
+            <div><dt>Picked a plan</dt><dd>{{ lead_summary.picked }}</dd></div>
+            <div><dt>Active this week</dt><dd>{{ lead_summary.warm }}</dd></div>
+            <div class="is-value"><dt>Worth if they all buy</dt><dd>{{ lead_summary.value }} <small>EGP</small></dd></div>
+        </dl>
+
+        <ol class="pr-leads">
+            {% for r in leads|slice:":50" %}
+            {% ifchanged r.stage %}
+            <li class="pr-lead-group{% if forloop.counter > 8 %} pr-more{% endif %}" {% if forloop.counter > 8 %}hidden{% endif %}>
+                {% if r.stage == 3 %}Started checkout <span>closest to paying</span>{% else %}Picked a plan <span>interested, not started paying</span>{% endif %}
+            </li>
+            {% endifchanged %}
+            <li class="pr-lead{% if forloop.counter > 8 %} pr-more{% endif %}" {% if forloop.counter > 8 %}hidden{% endif %}>
+                <div class="pr-lead-who">
+                    <span class="pr-ava {% if r.stage == 3 %}is-hot{% endif %}" aria-hidden="true">{{ r.initials }}</span>
+                    <div class="pr-lead-id">
+                        <span class="pr-name" title="{{ r.name }}">{{ r.name }}</span>
+                        <span class="pr-sub" title="{{ r.email|default:r.username }}">{{ r.email|default:r.username }}</span>
+                    </div>
+                </div>
+
+                <div class="pr-lead-step">
+                    <span class="pr-track" role="img" aria-label="Reached step {{ r.stage }} of 4: {{ r.stage_label }}">
+                        {% for n in "1234" %}<i class="{% if forloop.counter <= r.stage %}on{% endif %}"></i>{% endfor %}
+                    </span>
+                    <span class="pr-lead-l">{{ r.stage_label }}</span>
+                    <span class="pr-sub">Opened pricing {{ r.pricing_opens }}&times; · last on {{ r.last_payment_visit|date:"j M" }}</span>
+                    {% if r.card_pending %}
+                    <span class="pr-pill pr-pill-warn" style="margin-top:.375rem">
+                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 8v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                        Card payment pending
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="pr-lead-plan">
+                    {% if r.plan %}
+                    <span class="pr-lead-l">{{ r.plan }}</span>
+                    <span class="pr-sub">{{ r.plan_value|floatformat:"0" }} EGP</span>
+                    {% else %}<span class="pr-sub">No plan picked</span>{% endif %}
+                </div>
+
+                <div class="pr-lead-seen">
+                    <span class="pr-fresh is-{{ r.freshness.0 }}"><i aria-hidden="true"></i>{{ r.freshness.1 }}</span>
+                    <time class="pr-sub" datetime="{{ r.last_seen|date:'c' }}" title="Last on Skillifly {{ r.last_seen|date:'j M Y, H:i' }} {{ time_zone }}">{{ r.last_seen_ago }} · {{ r.last_seen|date:"j M, H:i" }}</time>
+                </div>
+
+                <div class="pr-lead-act">
+                    {% if r.email %}
+                    <a class="pr-btn pr-btn-primary" href="mailto:{{ r.email }}?subject={{ 'Need a hand finishing your Skillifly plan?'|urlencode }}" aria-label="Email {{ r.name }}">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                        <span class="pr-btn-text">Email</span>
+                    </a>
+                    <button type="button" class="pr-icon-btn" data-copy="{{ r.email }}" data-copy-msg="Email copied" aria-label="Copy {{ r.name }}'s email" title="Copy email">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>
+                    </button>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+
+        {% if leads|length > 8 %}
+        <button type="button" class="pr-more-btn" id="prLeadsMore" aria-expanded="false">
+            Show all {% if leads|length > 50 %}50 of {% endif %}{{ leads|length }} people
+        </button>
+        {% endif %}
+        {% if leads|length > 50 %}<p class="pr-kpi-s" style="text-align:center">The CSV has everyone.</p>{% endif %}
+        {% else %}
+        <div class="pr-lead-empty">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p><b>No one to follow up.</b> Everyone who went past pricing either paid or already has a plan.</p>
         </div>
-        {% if leads|length > 50 %}<p class="pr-kpi-s">Showing 50 of {{ leads|length }}. The CSV has everyone.</p>{% endif %}
+        {% endif %}
+        <div class="pr-toast" id="prToast" role="status" aria-live="polite"></div>
     </section>
 
     <!-- Ledger -->
@@ -655,6 +792,38 @@ Dense data view: drop base.html's decorative gradient orbs.
 
 {% block extra_scripts %}
 <script>
+(function () {
+    // Follow-up list: copy buttons + "show all"
+    var toast = document.getElementById('prToast'), timer;
+    function say(msg) {
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.classList.add('on');
+        clearTimeout(timer);
+        timer = setTimeout(function () { toast.classList.remove('on'); }, 1800);
+    }
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var text = btn.getAttribute('data-copy'), msg = btn.getAttribute('data-copy-msg') || 'Copied';
+            var fallback = function () {
+                var ta = document.createElement('textarea');
+                ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); say(msg); } catch (e) { say('Copy failed'); }
+                document.body.removeChild(ta);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function () { say(msg); }, fallback);
+            } else { fallback(); }
+        });
+    });
+    var more = document.getElementById('prLeadsMore');
+    if (more) more.addEventListener('click', function () {
+        document.querySelectorAll('.pr-leads .pr-more').forEach(function (el) { el.hidden = false; });
+        more.remove();
+    });
+})();
+
 (function () {
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
