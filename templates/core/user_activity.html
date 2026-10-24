@@ -1,156 +1,986 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}User Activity Report | Skillifly{% endblock %}
+{% block title %}User Activity | Skillifly{% endblock %}
+
+{% comment %}
+Dense data view: drop base.html's decorative gradient orbs.
+Same visual system as manage_payment_tracking.html (pr- classes); ua- classes are
+specific to this page. Ordered categories (recency, heat) use one purple ramp,
+light -> dark, and every colour sits next to a text label or number.
+{% endcomment %}
+{% block ambient_orbs %}{% endblock %}
 
 {% block extra_head %}
 <style>
-    .activity-row {
-        transition: all 0.2s ease;
-    }
-    .activity-row:hover {
-        background-color: #f8fafc;
-    }
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 99px;
-        font-size: 10px;
-        font-weight: 800;
-        text-transform: uppercase;
-        tracking-wider;
-    }
-    .status-active { background: #f0fdf4; color: #166534; }
-    .status-active span { background: #22c55e; }
-    
-    .status-idle { background: #fffbeb; color: #92400e; }
-    .status-idle span { background: #f59e0b; }
-    
-    .status-away { background: #f1f5f9; color: #475569; }
-    .status-away span { background: #94a3b8; }
+    body { background-color: #fafbfc !important; }
 
-    .pulse-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
+    .pr { --ink: #0f172a; --ink-2: #475569; --muted: #64748b; --line: #e2e8f0;
+          --grid: #eef2f6; --brand: #6d28d9; --brand-soft: #ede9fe; --brand-mid: #a78bfa;
+          --good: #047857; --good-bg: #ecfdf5; --bad: #b91c1c; --bad-bg: #fef2f2;
+          --warn: #b45309; --warn-bg: #fffbeb;
+          --r1: #4c1d95; --r2: #6d28d9; --r3: #a78bfa; --r4: #c4b5fd; --r5: #ede9fe;
+          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          color: var(--ink-2); padding: 3rem 0 5rem; }
+    .pr-shell { max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
+    .pr h1, .pr h2, .pr h3 { font-family: 'Syne', sans-serif; color: var(--ink); }
+    .pr-num, .pr-tbl .num { font-variant-numeric: tabular-nums; }
+
+    /* Header */
+    .pr-eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: .75rem; font-weight: 700;
+                  letter-spacing: .18em; text-transform: uppercase; color: var(--brand); margin: 0 0 .75rem; }
+    .pr-eyebrow::before { content: ''; width: 1.5rem; height: 1px; background: currentColor; opacity: .4; }
+    .pr-h1 { font-weight: 800; font-size: clamp(1.875rem, 1.25rem + 2.4vw, 2.75rem); line-height: 1.12;
+             letter-spacing: -.025em; margin: 0 0 .75rem; }
+    .pr-h1 em { font-style: normal; color: var(--brand); }
+    .pr-lede { max-width: 42rem; font-size: 1rem; line-height: 1.6; margin: 0; }
+
+    /* Filter row */
+    .pr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 1.75rem 0 .625rem; }
+    .pr-seg { display: inline-flex; gap: .25rem; padding: .25rem; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+    .pr-seg a { padding: .4375rem .9375rem; border-radius: 999px; font-size: .8125rem; font-weight: 600;
+                color: var(--muted); text-decoration: none; transition: background .15s, color .15s; }
+    .pr-seg a:hover { color: var(--ink); background: #f1f5f9; }
+    .pr-seg a.is-on { background: var(--ink); color: #fff; }
+    .pr-chip { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .875rem; border-radius: 999px;
+               background: #fff; border: 1px solid var(--line); font-size: .8125rem; font-weight: 600;
+               color: var(--ink-2); text-decoration: none; transition: border-color .15s, color .15s; }
+    .pr-chip:hover { border-color: #cbd5e1; color: var(--ink); }
+    .pr-chip .pr-box { width: .875rem; height: .875rem; border-radius: .25rem; border: 1.5px solid #94a3b8;
+                       display: inline-flex; align-items: center; justify-content: center; }
+    .pr-chip.is-on .pr-box { background: var(--brand); border-color: var(--brand); }
+    .pr-chip.is-on .pr-box::after { content: ''; width: .4rem; height: .22rem; border: solid #fff;
+                                    border-width: 0 0 2px 2px; transform: rotate(-45deg) translateY(-1px); }
+    .pr-export { position: relative; margin-left: auto; }
+    .pr-export summary { list-style: none; cursor: pointer; }
+    .pr-export summary::-webkit-details-marker { display: none; }
+    .pr-menu { position: absolute; right: 0; top: calc(100% + .375rem); z-index: 20; min-width: 16rem;
+               background: #fff; border: 1px solid var(--line); border-radius: .875rem; padding: .375rem;
+               box-shadow: 0 12px 32px -12px rgba(15,23,42,.25); }
+    .pr-menu a { display: block; padding: .5rem .75rem; border-radius: .5rem; font-size: .8125rem; color: var(--ink); text-decoration: none; }
+    .pr-menu a:hover { background: #f5f3ff; }
+    .pr-menu a span { display: block; color: var(--muted); font-size: .75rem; }
+    .pr-meta { font-size: .8125rem; color: var(--muted); margin: 0 0 2rem; }
+    .pr-meta b { color: var(--ink-2); font-weight: 600; }
+    .pr a:focus-visible, .pr summary:focus-visible, .pr button:focus-visible,
+    .pr input:focus-visible, .pr select:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+    /* Cards */
+    .pr-card { background: #fff; border: 1px solid rgba(15,23,42,.09); border-radius: 18px; padding: 1.75rem;
+               box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 32px -22px rgba(15,23,42,.25); }
+    .pr-card-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .pr-card-h h2 { font-size: 1.0625rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+    .pr-card-h p { margin: .3rem 0 0; font-size: .8125rem; color: var(--muted); max-width: 40rem; line-height: 1.5; }
+    .pr-grid { display: grid; gap: 1.25rem; }
+    .pr-grid > *, .pr-kpis > * { min-width: 0; }
+    .pr-section { margin-top: 1.25rem; scroll-margin-top: 1.5rem; }
+
+    /* KPI row */
+    .pr-kpis { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+    .pr-kpi { padding: 1.25rem 1.375rem; }
+    .pr-kpi-l { display: flex; align-items: center; gap: .375rem; font-size: .8125rem; font-weight: 600; color: var(--muted); margin: 0 0 .625rem; }
+    .pr-kpi-l svg { width: .875rem; height: .875rem; color: #94a3b8; cursor: help; flex-shrink: 0; }
+    .pr-kpi-v { display: flex; align-items: baseline; gap: .375rem; flex-wrap: wrap; }
+    .pr-kpi-v strong { font-size: 2rem; font-weight: 700; color: var(--ink); letter-spacing: -.02em; line-height: 1; }
+    .pr-kpi:first-child .pr-kpi-v strong { color: var(--brand); }
+    .pr-kpi-s { font-size: .8125rem; color: var(--muted); margin: .625rem 0 0; line-height: 1.4; }
+    .pr-delta { display: inline-flex; align-items: center; gap: .25rem; padding: .125rem .5rem; border-radius: 999px;
+                font-size: .75rem; font-weight: 700; margin-left: .25rem; white-space: nowrap; }
+    .pr-delta.good { background: var(--good-bg); color: var(--good); }
+    .pr-delta.bad { background: var(--bad-bg); color: var(--bad); }
+    .pr-delta.flat { background: #f1f5f9; color: var(--ink-2); }
+    .pr-delta-note { display: block; font-size: .6875rem; color: var(--muted); margin-top: .25rem; }
+
+    /* Insights */
+    .pr-insights { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+    .pr-ins { display: flex; gap: .875rem; padding: 1rem 1.125rem; border-radius: 14px; border: 1px solid var(--line); background: #fff; }
+    .pr-ins-i { width: 2rem; height: 2rem; flex-shrink: 0; border-radius: .625rem; display: flex; align-items: center; justify-content: center; }
+    .pr-ins-i svg { width: 1.0625rem; height: 1.0625rem; }
+    .pr-ins.action { border-color: #ddd6fe; background: #faf8ff; }
+    .pr-ins.action .pr-ins-i { background: var(--brand-soft); color: var(--brand); }
+    .pr-ins.risk { border-color: #fecaca; background: #fffafa; }
+    .pr-ins.risk .pr-ins-i { background: var(--bad-bg); color: var(--bad); }
+    .pr-ins.info .pr-ins-i { background: #f1f5f9; color: var(--ink-2); }
+    .pr-ins-tag { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .pr-ins h3 { font-family: inherit !important; font-size: .9375rem; font-weight: 700; margin: .125rem 0 .25rem; line-height: 1.35; }
+    .pr-ins p { margin: 0; font-size: .8125rem; line-height: 1.55; }
+    .pr-ins a { display: inline-block; margin-top: .5rem; font-size: .8125rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+    .pr-ins a:hover { text-decoration: underline; }
+    .pr-allclear { display: flex; align-items: center; gap: .875rem; padding: 1rem 1.25rem; border-radius: 14px; background: var(--good-bg); color: #065f46; font-size: .875rem; }
+
+    /* Tables */
+    .pr-tbl { width: 100%; border-collapse: collapse; }
+    .pr-tbl th { text-align: left; padding: 0 .75rem .625rem; font-size: .6875rem; font-weight: 700; letter-spacing: .08em;
+                 text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .pr-tbl td { padding: .75rem; font-size: .875rem; color: var(--ink-2); border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .pr-tbl tbody tr:last-child td { border-bottom: 0; }
+    .pr-tbl tbody tr:hover { background: #fafbfc; }
+    .pr-tbl .num { text-align: right; white-space: nowrap; }
+    .pr-tbl th.num { text-align: right; }
+    .pr-tbl .strong { color: var(--ink); font-weight: 700; }
+    .pr-tbl tfoot td { border-top: 2px solid var(--line); border-bottom: 0; font-weight: 700; color: var(--ink); }
+    .pr-scroll { overflow-x: auto; }
+    .pr-name { color: var(--ink); font-weight: 600; }
+    .pr-sub { display: block; font-size: .75rem; color: var(--muted); }
+    .pr-empty { padding: 2rem 1rem; text-align: center; color: var(--muted); font-size: .875rem; }
+    .pr-notes { margin: 1.25rem 0 0; padding: 1rem 0 0; border-top: 1px solid var(--line); list-style: none;
+                display: grid; gap: .375rem; font-size: .75rem; color: var(--muted); line-height: 1.5; }
+    .pr-notes b { color: var(--ink-2); }
+
+    .pr-meter { display: flex; align-items: center; gap: .625rem; justify-content: flex-end; }
+    .pr-meter-t { width: 5rem; height: .375rem; background: var(--brand-soft); border-radius: 999px; overflow: hidden; flex-shrink: 0; }
+    .pr-meter-t i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+
+    .pr-pill { display: inline-flex; align-items: center; gap: .3rem; padding: .1875rem .5625rem; border-radius: 999px;
+               font-size: .6875rem; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
+    .pr-pill-brand { background: var(--brand-soft); color: #5b21b6; }
+    .pr-pill-slate { background: #f1f5f9; color: var(--ink-2); }
+    .pr-pill-warn { background: var(--warn-bg); color: var(--warn); }
+    .pr-pill-good { background: var(--good-bg); color: var(--good); }
+    .pr-pill-bad { background: var(--bad-bg); color: var(--bad); }
+
+    .pr-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.25rem; margin: 0; }
+    .pr-stat dt { font-size: .75rem; color: var(--muted); font-weight: 600; margin-bottom: .25rem; }
+    .pr-stat dd { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--ink); line-height: 1.1; display: flex; align-items: baseline; flex-wrap: wrap; gap: .25rem; }
+    .pr-stat dd small { font-size: .75rem; color: var(--muted); font-weight: 500; }
+
+    .pr-btn { display: inline-flex; align-items: center; gap: .375rem; padding: .4375rem .8125rem; border-radius: 999px;
+              border: 1px solid var(--line); background: #fff; font-size: .75rem; font-weight: 700; color: var(--ink);
+              text-decoration: none; white-space: nowrap; cursor: pointer; font-family: inherit; }
+    .pr-btn:hover { border-color: var(--brand-mid); color: var(--brand); }
+    .pr-btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .pr-btn-primary:hover { background: #5b21b6; border-color: #5b21b6; color: #fff; }
+    .pr-icon-btn { width: 2.125rem; height: 2.125rem; border-radius: 999px; border: 1px solid var(--line); background: #fff;
+                   color: var(--muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+                   transition: color .15s, border-color .15s; text-decoration: none; flex-shrink: 0; }
+    .pr-icon-btn:hover { color: var(--brand); border-color: var(--brand-mid); }
+    .pr-back { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; font-size: .75rem;
+               font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .pr-back:hover { color: var(--brand); }
+    .pr-details summary { cursor: pointer; font-size: .8125rem; font-weight: 600; color: var(--brand); margin-top: 1rem; }
+    .pr-details[open] summary { margin-bottom: .75rem; }
+    .pr-ava { width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 999px; display: inline-flex; align-items: center;
+              justify-content: center; font-size: .75rem; font-weight: 700; background: #eef2f6; color: var(--ink-2); }
+    .pr-ava.is-pay { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; }
+    .pr-toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translate(-50%, 1rem); z-index: 60; padding: .625rem 1rem;
+                border-radius: 999px; background: var(--ink); color: #fff; font-size: .8125rem; font-weight: 600;
+                opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+    .pr-toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+    /* Freshness: dot + text label */
+    .ua-fresh { display: inline-flex; align-items: center; gap: .4375rem; font-size: .8125rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+    .ua-fresh i { width: .5rem; height: .5rem; border-radius: 999px; flex-shrink: 0; background: var(--r5); box-shadow: 0 0 0 1px var(--r4); }
+    .ua-fresh.is-today i { background: var(--r1); box-shadow: 0 0 0 3px var(--brand-soft); }
+    .ua-fresh.is-week i { background: var(--r2); box-shadow: none; }
+    .ua-fresh.is-month i { background: var(--r3); box-shadow: none; }
+    .ua-fresh.is-lapsed i { background: var(--r4); box-shadow: none; }
+    .ua-fresh.is-lapsed, .ua-fresh.is-one_day { color: var(--muted); }
+
+    /* Recency: one 100% bar + matrix */
+    .ua-stack { display: flex; gap: 2px; height: 1.75rem; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem; }
+    .ua-stack a { display: block; min-width: 3px; transition: opacity .15s; }
+    .ua-stack a:hover, .ua-stack a:focus-visible { opacity: .8; }
+    .ua-sw { display: inline-block; width: .75rem; height: .75rem; border-radius: 3px; flex-shrink: 0; }
+    .ua-c-today { background: var(--r1); } .ua-c-week { background: var(--r2); } .ua-c-month { background: var(--r3); }
+    .ua-c-lapsed { background: var(--r4); } .ua-c-one_day { background: var(--r5); box-shadow: inset 0 0 0 1px var(--r4); }
+    .ua-mx td:first-child { white-space: nowrap; }
+    .ua-mx-l { display: flex; align-items: center; gap: .625rem; }
+    .ua-mx a { color: inherit; text-decoration: none; display: inline-block; min-width: 2rem; padding: .125rem .375rem; border-radius: 6px; }
+    .ua-mx a:hover { background: #f5f3ff; color: var(--brand); text-decoration: underline; }
+    .ua-mx .is-zero { color: #cbd5e1; }
+    .ua-mx .is-pay-risk { color: var(--bad); font-weight: 700; }
+
+    /* Setup milestones */
+    .ua-ms { display: grid; gap: .625rem; }
+    .ua-ms-row { display: grid; grid-template-columns: 12.5rem 1fr 6.5rem; gap: 1rem; align-items: center; }
+    .ua-ms-l { font-size: .875rem; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .ua-ms-row.is-after { margin-top: .5rem; padding-top: .875rem; border-top: 1px dashed var(--line); }
+    .ua-bar { height: 1.25rem; background: var(--brand-soft); border-radius: 4px; position: relative; overflow: hidden; }
+    .ua-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--brand); border-radius: 0 4px 4px 0;
+                transition: width 1s cubic-bezier(.22,1,.36,1); }
+    .ua-ms-row.is-weakest .ua-bar i { background: var(--bad); }
+    .ua-ms-row.is-paid .ua-bar i { background: var(--good); }
+    .ua-ms-v { text-align: right; font-size: .875rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .ua-ms-v b { color: var(--ink); font-size: 1rem; margin-right: .25rem; }
+
+    /* Cohort heat cells: one ramp, number always printed */
+    .ua-heat td.cell { text-align: center; padding: .25rem; }
+    .ua-heat td.cell span { display: block; padding: .5rem .25rem; border-radius: 6px; font-weight: 700; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+    .ua-h0 { background: #f8fafc; color: var(--muted); }
+    .ua-h1 { background: #f5f3ff; color: #5b21b6; }
+    .ua-h2 { background: #ddd6fe; color: #4c1d95; }
+    .ua-h3 { background: #a78bfa; color: #1e1b4b; }
+    .ua-h4 { background: #6d28d9; color: #fff; }
+    .ua-hn { color: #cbd5e1; font-weight: 500 !important; }
+    .ua-heat tr.is-small td { opacity: .45; }
+    .ua-heat th { text-align: center; }
+    .ua-heat th:first-child { text-align: left; }
+    .ua-key { display: flex; align-items: center; gap: .375rem; font-size: .75rem; color: var(--muted); }
+    .ua-key span { width: 1.5rem; height: .75rem; border-radius: 3px; }
+
+    /* Trend small multiples */
+    .pr-trend { display: grid; gap: .25rem; }
+    .pr-tm { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; align-items: center; }
+    .pr-tm-l { font-size: .8125rem; font-weight: 600; color: var(--ink); }
+    .pr-tm-l span { display: block; font-size: .75rem; font-weight: 500; color: var(--muted); margin-top: .125rem; }
+    .pr-tm svg, .pr-x svg { display: block; width: 100%; overflow: visible; }
+    .pr-tm .bar { fill: var(--brand); }
+    .pr-tm .bar.alt { fill: #0d9488; }
+    .pr-tm .bar.is-hot { opacity: .65; }
+    .pr-tm .grid { stroke: var(--grid); stroke-width: 1; }
+    .pr-tm .base { stroke: #cbd5e1; stroke-width: 1; }
+    .pr-trend .tick { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+    .pr-tm .hit { fill: transparent; cursor: crosshair; outline: none; }
+    .pr-tm .hit:focus-visible { fill: rgba(109,40,217,.08); }
+    .pr-tm .hair { stroke: #94a3b8; stroke-width: 1; }
+    .pr-x { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; }
+    .pr-tip { position: fixed; z-index: 50; pointer-events: none; background: #0f172a; color: #e2e8f0; border-radius: 10px;
+              padding: .625rem .75rem; font-size: .75rem; min-width: 11rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,.4); opacity: 0; transition: opacity .1s; }
+    .pr-tip.on { opacity: 1; }
+    .pr-tip-h { font-weight: 700; color: #fff; margin-bottom: .375rem; }
+    .pr-tip-r { display: flex; align-items: center; gap: .5rem; padding: .125rem 0; }
+    .pr-tip-r i { width: .75rem; height: 2px; border-radius: 1px; flex-shrink: 0; }
+    .pr-tip-r b { color: #fff; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 1rem; }
+
+    /* Contact lists */
+    .ua-tabs { display: flex; gap: .375rem; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin: 0 0 1.25rem; }
+    .ua-tab { display: inline-flex; align-items: center; gap: .5rem; padding: .625rem .875rem; margin-bottom: -1px; border: 0;
+              border-bottom: 2px solid transparent; background: none; font: inherit; font-size: .875rem; font-weight: 600;
+              color: var(--muted); cursor: pointer; }
+    .ua-tab:hover { color: var(--ink); }
+    .ua-tab[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--brand); }
+    .ua-tab b { min-width: 1.375rem; padding: .0625rem .4375rem; border-radius: 999px; background: #f1f5f9; color: var(--ink-2); font-size: .75rem; text-align: center; }
+    .ua-tab[aria-selected="true"] b { background: var(--brand-soft); color: #5b21b6; }
+    .ua-panel-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .ua-panel-h p { margin: 0; font-size: .8125rem; line-height: 1.5; max-width: 40rem; }
+    .ua-panel-h p b { color: var(--ink); }
+    .ua-tools { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .ua-people { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+    .ua-person { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+                 gap: 1rem; align-items: center; padding: .75rem 1rem; border: 1px solid var(--line); border-radius: 14px; background: #fff;
+                 transition: border-color .15s, box-shadow .15s; }
+    .ua-person:hover { border-color: #d8ccfb; box-shadow: 0 6px 18px -12px rgba(109,40,217,.35); }
+    .ua-who { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+    .ua-who > div { min-width: 0; }
+    .ua-who .pr-name, .ua-who .pr-sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ua-l { display: block; font-size: .875rem; font-weight: 600; color: var(--ink); }
+    .ua-act { display: flex; align-items: center; gap: .375rem; justify-content: flex-end; }
+    .ua-ok { display: flex; align-items: center; gap: .875rem; padding: 1.25rem; border-radius: 14px; background: var(--good-bg); color: #065f46; font-size: .875rem; }
+
+    /* Directory */
+    .ua-dir-f { display: flex; flex-wrap: wrap; gap: .625rem; align-items: center; margin-bottom: 1rem; }
+    .ua-input, .ua-select { height: 2.375rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit;
+                            font-size: .8125rem; color: var(--ink); padding: 0 .75rem; }
+    .ua-input { flex: 1 1 15rem; min-width: 12rem; }
+    .ua-select { padding-right: 1.75rem; }
+    .ua-count { font-size: .8125rem; color: var(--muted); margin: 0 0 .75rem; }
+    .ua-count b { color: var(--ink); }
+    .ua-count a { color: var(--brand); font-weight: 700; margin-left: .5rem; }
+    .ua-track { display: flex; gap: 3px; width: 5.5rem; margin-bottom: .375rem; }
+    .ua-track i { flex: 1; height: .3125rem; border-radius: 999px; background: var(--brand-soft); }
+    .ua-track i.on { background: var(--brand); }
+    .ua-dir td { white-space: nowrap; }
+    .ua-dir td.ua-dir-who { white-space: normal; min-width: 14rem; }
+    .ua-dir a.pr-name { text-decoration: none; }
+    .ua-dir a.pr-name:hover { color: var(--brand); text-decoration: underline; }
+    .ua-pager { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1rem; font-size: .8125rem; color: var(--muted); }
+
+    .pr-in { animation: prRise .5s ease-out backwards; }
+    @keyframes prRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+    @media (min-width: 1024px) {
+      .pr-grid-2 { grid-template-columns: 1.35fr 1fr; align-items: stretch; }
     }
-    .animate-pulse-slow {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    @media (max-width: 1023px) {
+      .ua-person { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); position: relative; }
+      .ua-who { grid-column: 1 / -1; padding-right: 5.25rem; }
+      .ua-act { position: absolute; top: .75rem; right: 1rem; }
     }
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: .5; }
+    @media (max-width: 640px) {
+      .ua-ms-row { grid-template-columns: 1fr 5.5rem; }
+      .ua-ms-row .ua-ms-l { grid-column: 1 / -1; }
+      .pr-tm, .pr-x { grid-template-columns: 1fr; gap: .25rem; }
+      .pr-export { margin-left: 0; }
+      .ua-person .pr-btn-text { display: none; }
+      .ua-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+      .ua-tab { white-space: nowrap; flex-shrink: 0; }
     }
-    .gradient-text {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    @media (prefers-reduced-motion: reduce) {
+      .pr-in { animation: none; }
+      .ua-bar i { transition: none; }
+    }
+    @media print {
+      .pr-filters, .pr-back, .pr-details summary, .pr-btn, .pr-icon-btn, .ua-dir-f, .ua-pager, .ua-tabs { display: none !important; }
+      .ua-panel[hidden] { display: block !important; }
+      .pr-card { box-shadow: none; break-inside: avoid; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-12">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-3">
-                Live Monitoring
-            </div>
-            <h1 class="text-4xl font-bold mb-2 text-black" style="font-family: 'Syne', sans-serif;">
-                User <span class="gradient-text">Activity</span> Hub <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain">
-            </h1>
-            <p class="text-slate-500 font-medium">Tracking platform engagement and portfolio traffic in real-time.</p>
+<div class="pr">
+<div class="pr-shell">
+
+    <header class="pr-in">
+        <p class="pr-eyebrow">Engagement &amp; retention</p>
+        <h1 class="pr-h1">User <em>activity</em></h1>
+        <p class="pr-lede">Who uses Skillifly, whether new signups get to a portfolio worth sharing, which paying
+            customers are drifting away, and who to contact today. Every number links to the people behind it.</p>
+
+        <div class="pr-filters">
+            <nav class="pr-seg" aria-label="Reporting period">
+                {% for label, href, on in period_links %}
+                <a href="{{ href }}" class="{% if on %}is-on{% endif %}" {% if on %}aria-current="true"{% endif %}>{{ label }}</a>
+                {% endfor %}
+            </nav>
+            <nav class="pr-seg" aria-label="Who to include">
+                {% for label, href, on in audience_links %}
+                <a href="{{ href }}" class="{% if on %}is-on{% endif %}" {% if on %}aria-current="true"{% endif %}>{{ label }}</a>
+                {% endfor %}
+            </nav>
+            <a href="{{ team_toggle_href }}" class="pr-chip {% if include_team %}is-on{% endif %}" role="switch" aria-checked="{% if include_team %}true{% else %}false{% endif %}"
+               title="Staff and admin accounts are left out by default so the team's own use doesn't count.">
+                <span class="pr-box" aria-hidden="true"></span> Include team accounts
+            </a>
+            <details class="pr-export">
+                <summary class="pr-chip">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export CSV
+                </summary>
+                <div class="pr-menu">
+                    <a href="{{ export_users_href }}">All users{% if filtered %} (filtered){% endif %}<span>The directory below, with plan, setup and portfolio columns</span></a>
+                    {% for c in contact_lists %}
+                    <a href="{{ c.export_href }}">{{ c.label }}<span>{{ c.count }} {{ c.count|pluralize:"person,people" }}</span></a>
+                    {% endfor %}
+                </div>
+            </details>
         </div>
-        <a href="{% url 'manage_dashboard' %}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Back to Management
-        </a>
+        <p class="pr-meta">
+            <b>{{ period.label }}</b>{% if compare_label %} · changes compare with the {{ compare_label }}{% endif %}
+            · <b>{{ total_people }}</b> {{ audience_label|lower }}
+            {% if not include_team and team_excluded %} · {{ team_excluded }} team account{{ team_excluded|pluralize }} left out{% endif %}
+            · as of {{ now|date:"j M Y, H:i" }} {{ time_zone }}
+        </p>
+    </header>
+
+    {% if not has_data %}
+    <section class="pr-card pr-in" style="text-align:center;padding:4rem 2rem;">
+        <h2 style="font-size:1.25rem;margin:0 0 .75rem;">No users to report on yet</h2>
+        <p style="max-width:30rem;margin:0 auto;line-height:1.7;">The report fills in as people sign up. Try “All accounts” or include team accounts.</p>
+    </section>
+    {% else %}
+
+    <!-- KPIs -->
+    <section class="pr-kpis pr-in" style="animation-delay:.05s" aria-label="Headline numbers">
+        {% for k in kpis %}
+        <div class="pr-card pr-kpi">
+            <p class="pr-kpi-l">{{ k.label }}
+                {% if k.help %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" role="img" aria-label="{{ k.help }}"><title>{{ k.help }}</title><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{% endif %}
+            </p>
+            <div class="pr-kpi-v">
+                <strong>{{ k.value }}</strong>
+                {% if k.delta %}
+                <span class="pr-delta {% if k.delta.dir == 'flat' %}flat{% elif k.delta.dir == 'up' %}good{% else %}bad{% endif %}" title="Compared with {{ k.delta_note }}">
+                    <span aria-hidden="true">{% if k.delta.dir == 'up' %}▲{% elif k.delta.dir == 'down' %}▼{% else %}■{% endif %}</span>
+                    <span class="sr-only">{% if k.delta.dir == 'up' %}Up{% elif k.delta.dir == 'down' %}Down{% else %}No change{% endif %}</span>
+                    {{ k.delta.label }}
+                </span>
+                {% endif %}
+            </div>
+            <p class="pr-kpi-s">{{ k.sub }}</p>
+            {% if k.delta and k.delta_note %}<span class="pr-delta-note">vs {{ k.delta_note }}</span>{% endif %}
+        </div>
+        {% endfor %}
+    </section>
+
+    <!-- What needs attention -->
+    <section class="pr-section pr-in" style="animation-delay:.1s" aria-labelledby="ua-ins-h">
+        <h2 id="ua-ins-h" style="font-size:1.0625rem;font-weight:700;margin:1.25rem 0 .875rem;">What needs attention</h2>
+        {% if insights %}
+        <div class="pr-insights">
+            {% for i in insights %}
+            <article class="pr-ins {{ i.tone }}">
+                <span class="pr-ins-i" aria-hidden="true">
+                    {% if i.tone == 'action' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% elif i.tone == 'risk' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/></svg>
+                    {% else %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </span>
+                <div>
+                    <span class="pr-ins-tag">{% if i.tone == 'action' %}To do{% elif i.tone == 'risk' %}Risk{% else %}Note{% endif %}</span>
+                    <h3>{{ i.title }}</h3>
+                    <p>{{ i.body }}</p>
+                    {% if i.anchor %}<a href="{{ i.anchor }}" data-goto="{{ i.anchor }}">{% if 'contact-' in i.anchor %}See who →{% else %}See the numbers →{% endif %}</a>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="pr-allclear">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span><b>Nothing urgent.</b> No renewals due, no paying customers gone quiet, and new signups are getting set up.</span>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Recency x plan -->
+    <section class="pr-card pr-section pr-in" id="engagement" style="animation-delay:.15s" aria-labelledby="ua-eng-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="ua-eng-h">How recently people used Skillifly</h2>
+                <p>All {{ engagement.total }} {{ audience_label|lower }} by their last visit, split by plan. Not tied to the period above.
+                    Click any number to list those people. Paying customers in red have been away 30+ days.</p>
+            </div>
+        </div>
+
+        <div class="ua-stack" role="img" aria-label="{% for r in engagement.rows %}{{ r.label }} {{ r.pct|floatformat:'-1' }}%{% if not forloop.last %}, {% endif %}{% endfor %}">
+            {% for r in engagement.rows %}{% if r.count %}<a href="{{ r.href }}" class="ua-c-{{ r.key }}" style="flex:{{ r.count }}" title="{{ r.label }}: {{ r.count }} ({{ r.pct|floatformat:'-1' }}%)" aria-hidden="true" tabindex="-1"></a>{% endif %}{% endfor %}
+        </div>
+
+        <div class="pr-scroll">
+            <table class="pr-tbl ua-mx">
+                <thead><tr>
+                    <th scope="col">Last active</th>
+                    <th scope="col" class="num">People</th>
+                    <th scope="col" class="num">Share</th>
+                    {% for key, label, hint in plan_options %}<th scope="col" class="num" title="{{ hint }}">{{ label }}</th>{% endfor %}
+                </tr></thead>
+                <tbody>
+                    {% for r in engagement.rows %}
+                    <tr>
+                        <td><div class="ua-mx-l"><span class="ua-sw ua-c-{{ r.key }}" aria-hidden="true"></span>
+                            <div><span class="pr-name">{{ r.label }}</span><span class="pr-sub">{{ r.hint }}</span></div></div></td>
+                        <td class="num strong"><a href="{{ r.href }}">{{ r.count }}</a></td>
+                        <td class="num"><div class="pr-meter"><span>{{ r.pct|floatformat:"-1" }}%</span><span class="pr-meter-t" aria-hidden="true"><i style="width:{{ r.pct|default:0|stringformat:'s' }}%"></i></span></div></td>
+                        {% for c in r.cells %}
+                        <td class="num">{% if c.count %}<a href="{{ c.href }}" class="{% if c.state == 'paying' and r.key == 'lapsed' or c.state == 'paying' and r.key == 'one_day' %}is-pay-risk{% endif %}">{{ c.count }}</a>{% else %}<span class="is-zero">0</span>{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot><tr>
+                    <td>Total</td><td class="num">{{ engagement.total }}</td><td class="num">100%</td>
+                    {% for c in engagement.totals %}<td class="num"><a href="{{ c.href }}">{{ c.count }}</a></td>{% endfor %}
+                </tr></tfoot>
+            </table>
+        </div>
+    </section>
+
+    <!-- Setup + traction -->
+    <div class="pr-grid pr-grid-2 pr-section">
+        <section class="pr-card pr-in" id="setup" style="animation-delay:.2s" aria-labelledby="ua-setup-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="ua-setup-h">Do new signups get set up?</h2>
+                    <p>The {{ cohort.signups }} {{ cohort.signups|pluralize:"person,people" }} who signed up in the period, and how far each got today.
+                        Steps can be done in any order; the four setup steps are the launch checklist.</p>
+                </div>
+            </div>
+            {% if cohort.signups %}
+            <div class="ua-ms" role="list">
+                {% for m in milestones %}
+                <div class="ua-ms-row{% if m.is_weakest %} is-weakest{% endif %}{% if m.key == 'launched' or m.key == 'subscribed' %} is-after{% endif %}{% if m.key == 'subscribed' or m.key == 'live' %} is-paid{% endif %}" role="listitem">
+                    <span class="ua-ms-l">{{ m.label }}{% if m.is_weakest %} <span class="pr-pill pr-pill-bad">Weakest step</span>{% endif %}</span>
+                    <div class="ua-bar" aria-hidden="true"><i data-w="{{ m.pct|default:0|stringformat:'s' }}"></i></div>
+                    <span class="ua-ms-v"><b>{{ m.count }}</b>{{ m.pct|floatformat:"-1" }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="pr-empty">No one signed up in this period.</p>
+            {% endif %}
+            <ul class="pr-notes">
+                <li><b>Finished setup</b> means all four steps (100 XP). <b>Subscribed</b> means they paid for a plan. <b>Portfolio live</b> means public with a running plan.</li>
+                {% if small_sample %}<li><b>Small sample.</b> Only {{ cohort.signups }} signup{{ cohort.signups|pluralize }}, so one person moves these rates a lot. Check a longer period.</li>{% endif %}
+            </ul>
+        </section>
+
+        <section class="pr-card pr-in" id="traction" style="animation-delay:.22s" aria-labelledby="ua-tr-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="ua-tr-h">Are portfolios getting seen?</h2>
+                    <p>Human visits to portfolios in the period (bots and owners viewing their own page are left out).
+                        A portfolio nobody visits is hard to keep paying for.</p>
+                </div>
+            </div>
+            <dl class="pr-stats">
+                <div class="pr-stat"><dt>Portfolio visits</dt><dd>{{ traction.visits }}
+                    {% if traction.visits_delta %}<span class="pr-delta {% if traction.visits_delta.dir == 'flat' %}flat{% elif traction.visits_delta.dir == 'up' %}good{% else %}bad{% endif %}" title="Compared with the {{ compare_label }}"><span aria-hidden="true">{% if traction.visits_delta.dir == 'up' %}▲{% elif traction.visits_delta.dir == 'down' %}▼{% else %}■{% endif %}</span> {{ traction.visits_delta.label }}<span class="sr-only"> compared with the {{ compare_label }}</span></span>{% endif %}</dd></div>
+                <div class="pr-stat"><dt>Live portfolios</dt><dd>{{ traction.live }}</dd></div>
+                <div class="pr-stat"><dt>Live, with visitors</dt><dd>{{ traction.live_with_visits }}</dd></div>
+                <div class="pr-stat"><dt>Live, no visitors</dt><dd>{{ traction.live_no_visits }}{% if traction.median_live is not None %}<small>median {{ traction.median_live|floatformat:"-1" }} visits per live portfolio</small>{% endif %}</dd></div>
+            </dl>
+            {% if traction.top %}
+            <h3 style="font-family:inherit;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .5rem;">Most visited</h3>
+            <table class="pr-tbl">
+                <tbody>
+                    {% for p in traction.top %}
+                    <tr>
+                        <td><a class="pr-name" style="text-decoration:none" href="/{{ p.username }}/" target="_blank" rel="noopener">{{ p.name }}</a><span class="pr-sub">{{ p.plan_state_label }}{% if not p.live %} · not live now{% endif %}</span></td>
+                        <td class="num"><div class="pr-meter"><span class="strong">{{ p.visits }}</span><span class="pr-meter-t" aria-hidden="true"><i style="width:{{ p.visits_pct }}%"></i></span></div></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="pr-empty">No portfolio visits in this period.</p>
+            {% endif %}
+        </section>
     </div>
 
-    <!-- Table Container -->
-    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/50">
-                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">User / Identity</th>
-                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Platform Status</th>
-                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Site Activity</th>
-                        <th class="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Portfolio Visit</th>
+    <!-- Cohorts -->
+    <section class="pr-card pr-section pr-in" id="cohorts" style="animation-delay:.25s" aria-labelledby="ua-co-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="ua-co-h">Retention by signup {{ cohorts.unit }}</h2>
+                <p>Each row is the people who signed up that {{ cohorts.unit }}{% if cohorts.unit == 'week' %} (weeks start Monday){% endif %}. Read across to see how many stuck around.
+                    “After 7+ days” means they were active again at least a week after signing up. A dash means the group is too new to measure.</p>
+            </div>
+            <div class="ua-key" aria-hidden="true">0%<span class="ua-h1"></span><span class="ua-h2"></span><span class="ua-h3"></span><span class="ua-h4"></span>60%+</div>
+        </div>
+        <div class="pr-scroll">
+            <table class="pr-tbl ua-heat">
+                <thead><tr>
+                    <th scope="col">Signed up</th><th scope="col">Signups</th><th scope="col">Added a video</th>
+                    <th scope="col">Came back</th><th scope="col">After 7+ days</th><th scope="col">After 30+ days</th><th scope="col">Subscribed</th>
+                </tr></thead>
+                <tbody>
+                    {% for r in cohorts.rows %}
+                    <tr{% if r.small %} class="is-small" title="Fewer than {{ cohorts.min_sample }} signups: too few to read a rate from"{% endif %}>
+                        <td class="pr-name" style="white-space:nowrap">{% if cohorts.unit == 'week' %}Wk of {% endif %}{{ r.label }}{% if r.current %}<span class="pr-sub">so far</span>{% endif %}</td>
+                        <td class="num strong" style="text-align:center">{{ r.signups }}</td>
+                        {% include "core/_activity_heat_cell.html" with c=r.activated %}
+                        {% include "core/_activity_heat_cell.html" with c=r.returned %}
+                        {% include "core/_activity_heat_cell.html" with c=r.week1 %}
+                        {% include "core/_activity_heat_cell.html" with c=r.month1 %}
+                        {% include "core/_activity_heat_cell.html" with c=r.paid %}
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for u in users %}
-                    <tr class="activity-row">
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm shadow-inner">
-                                    {{ u.username|slice:":2"|upper }}
-                                </div>
+                    {% empty %}
+                    <tr><td colspan="7" class="pr-empty">No signups in this range.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <ul class="pr-notes">
+            {% if cohorts.has_small %}<li>Faded rows have fewer than {{ cohorts.min_sample }} signups, so a single person swings their rates. Don't read trends from them.</li>{% endif %}
+            <li>A cell marked <b>*</b> counts only the people old enough to measure (hover it for the numbers). Activity has been recorded since {{ activity_since|date:"j M Y" }}; earlier accounts may look less active than they were.</li>
+        </ul>
+    </section>
+
+    <!-- Trend -->
+    {% if trend.points %}
+    <section class="pr-card pr-section pr-in" style="animation-delay:.28s" aria-labelledby="ua-trend-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="ua-trend-h">Over time</h2>
+                <p>Per {{ trend.unit }}. Each row has its own scale, so compare shapes, not heights. Hover a column for the numbers.</p>
+            </div>
+        </div>
+        <div class="pr-trend" id="uaTrend">
+            <div class="pr-tm"><div class="pr-tm-l">Signups<span>new accounts</span></div><svg data-metric="signups" role="img" aria-label="Signups per {{ trend.unit }}"></svg></div>
+            <div class="pr-tm"><div class="pr-tm-l">Added a video<span>of those signups</span></div><svg data-metric="activated" role="img" aria-label="Signups who added a video, per {{ trend.unit }}"></svg></div>
+            <div class="pr-tm"><div class="pr-tm-l">Portfolio visits<span>human visits</span></div><svg data-metric="visits" role="img" aria-label="Portfolio visits per {{ trend.unit }}"></svg></div>
+            <div class="pr-x"><span></span><svg data-axis="x" aria-hidden="true"></svg></div>
+        </div>
+        <div class="pr-tip" id="uaTip" role="status" aria-live="polite"></div>
+        <details class="pr-details">
+            <summary>Show as table</summary>
+            <div class="pr-scroll" style="max-height:22rem;overflow-y:auto;">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">{{ trend.unit|capfirst }}</th><th scope="col" class="num">Signups</th><th scope="col" class="num">Added a video</th><th scope="col" class="num">Portfolio visits</th></tr></thead>
+                    <tbody>
+                        {% for p in trend.points %}
+                        <tr><td>{{ p.label }}</td><td class="num">{{ p.signups }}</td><td class="num">{{ p.activated }}</td><td class="num">{{ p.visits }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+    {% endif %}
+
+    <!-- Who to contact -->
+    <section class="pr-card pr-section pr-in" id="contact" style="animation-delay:.3s" aria-labelledby="ua-ct-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="ua-ct-h">Who to contact</h2>
+                <p>Ready-made lists, worked out from today's data. Each one has a reason to get in touch and a value if it goes well.</p>
+            </div>
+        </div>
+        <div class="ua-tabs" role="tablist" aria-label="Contact lists">
+            {% for c in contact_lists %}
+            <button type="button" class="ua-tab" role="tab" id="tab-{{ c.key }}" data-count="{{ c.count }}" aria-controls="contact-{{ c.key }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" {% if not forloop.first %}tabindex="-1"{% endif %}>
+                {{ c.label }} <b>{{ c.count }}</b>
+            </button>
+            {% endfor %}
+        </div>
+        {% for c in contact_lists %}
+        <div class="ua-panel" role="tabpanel" id="contact-{{ c.key }}" aria-labelledby="tab-{{ c.key }}" data-panel>
+            <div class="ua-panel-h">
+                <p>{{ c.blurb }}{% if c.count %} <b>{{ c.count }} {{ c.count|pluralize:"person,people" }}</b>{% if c.value != '0' %}, worth <b>{{ c.value }} EGP</b>{% if c.key == 'upgrade' %} a month{% endif %}{% endif %}.{% endif %}</p>
+                {% if c.count %}
+                <div class="ua-tools">
+                    {% if c.emails %}
+                    <button type="button" class="pr-btn" data-copy="{{ c.emails|join:', ' }}" data-copy-msg="Copied {{ c.emails|length }} email{{ c.emails|length|pluralize }}">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>
+                        Copy emails
+                    </button>
+                    {% endif %}
+                    <a class="pr-btn" href="{{ c.export_href }}">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                        CSV
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% if c.rows %}
+            <ol class="ua-people">
+                {% for p in c.rows|slice:":25" %}
+                <li class="ua-person">
+                    <div class="ua-who">
+                        <span class="pr-ava {% if p.plan_state == 'paying' %}is-pay{% endif %}" aria-hidden="true">{{ p.initials }}</span>
+                        <div><span class="pr-name" title="{{ p.name }}">{{ p.name }}</span><span class="pr-sub" title="{{ p.email }}">{{ p.email|default:p.username }}</span></div>
+                    </div>
+                    <div><span class="ua-l">{{ p.reason }}</span><span class="pr-sub">{% if p.plan_label %}{{ p.plan_label }} plan{% if p.plan_value %} · {{ p.plan_value|floatformat:"0" }} EGP{% endif %}{% else %}No plan yet{% endif %}</span></div>
+                    <div><span class="ua-fresh is-{{ p.recency }}"><i aria-hidden="true"></i>{{ p.recency_label }}</span><span class="pr-sub" title="{{ p.last_active|date:'j M Y, H:i' }}">{{ p.last_active_ago }}</span></div>
+                    <div><span class="ua-l">{% if p.live %}Live{% elif p.public %}Public, no plan{% else %}Private{% endif %}</span><span class="pr-sub">{{ p.videos }} video{{ p.videos|pluralize }} · {{ p.visits }} visit{{ p.visits|pluralize }}</span></div>
+                    <div class="ua-act">
+                        {% if p.email %}
+                        <a class="pr-btn pr-btn-primary" href="mailto:{{ p.email }}?subject={{ c.subject|urlencode }}" aria-label="Email {{ p.name }}">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                            <span class="pr-btn-text">Email</span>
+                        </a>
+                        {% endif %}
+                        <a class="pr-icon-btn" href="{% url 'admin:core_customuser_change' p.id %}" title="Open in admin" aria-label="Open {{ p.name }} in admin">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        </a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ol>
+            {% if c.count > 25 %}<p class="pr-kpi-s" style="text-align:center">Showing 25 of {{ c.count }}. The CSV has everyone.</p>{% endif %}
+            {% else %}
+            <div class="ua-ok">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>{{ c.empty }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="pr-toast" id="uaToast" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- Directory -->
+    <section class="pr-card pr-section pr-in" id="directory" style="animation-delay:.32s" aria-labelledby="ua-dir-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="ua-dir-h">All users</h2>
+                <p>Search, filter and sort everyone. Visits are for the selected period.</p>
+            </div>
+            <a class="pr-btn" href="{{ export_users_href }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                CSV{% if filtered %} (filtered){% endif %}
+            </a>
+        </div>
+
+        <form method="get" action="#directory" class="ua-dir-f" id="uaDirForm" role="search">
+            {% for k, v in base_params.items %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+            <label class="sr-only" for="uaQ">Search by name, username or email</label>
+            <input class="ua-input" id="uaQ" type="search" name="q" value="{{ f_q }}" placeholder="Search name, @username or email" autocomplete="off">
+            <label class="sr-only" for="uaStatus">Last active</label>
+            <select class="ua-select" id="uaStatus" name="status" data-autosubmit>
+                <option value="">Any activity</option>
+                {% for key, label, hint in recency_options %}<option value="{{ key }}" {% if f_status == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <label class="sr-only" for="uaPlan">Plan</label>
+            <select class="ua-select" id="uaPlan" name="plan" data-autosubmit>
+                <option value="">Any plan</option>
+                {% for key, label, hint in plan_options %}<option value="{{ key }}" {% if f_plan == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <label class="sr-only" for="uaSort">Sort by</label>
+            <select class="ua-select" id="uaSort" name="sort" data-autosubmit>
+                {% for key, label in sort_options %}<option value="{{ key }}" {% if f_sort == key %}selected{% endif %}>Sort: {{ label }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="pr-btn pr-btn-primary">Apply</button>
+        </form>
+
+        <p class="ua-count">
+            {% if directory_count %}Showing <b>{{ page.start_index }}–{{ page.end_index }}</b> of <b>{{ directory_count }}</b>{% else %}No one matches{% endif %}
+            {% if filtered %}<a href="{{ clear_filters_href }}">Clear filters</a>{% endif %}
+        </p>
+
+        {% if directory_count %}
+        <div class="pr-scroll">
+            <table class="pr-tbl ua-dir">
+                <thead><tr>
+                    <th scope="col">Person</th><th scope="col">Last active</th><th scope="col">Plan</th>
+                    <th scope="col">Setup</th><th scope="col">Portfolio</th><th scope="col">Joined</th><th scope="col"><span class="sr-only">Actions</span></th>
+                </tr></thead>
+                <tbody>
+                    {% for p in page.object_list %}
+                    <tr>
+                        <td class="ua-dir-who">
+                            <div class="ua-who">
+                                <span class="pr-ava {% if p.plan_state == 'paying' %}is-pay{% endif %}" aria-hidden="true">{{ p.initials }}</span>
                                 <div>
-                                    <p class="text-base font-bold text-black">{{ u.username }}</p>
-                                    <p class="text-xs text-slate-400 font-medium">{{ u.email }}</p>
+                                    <a class="pr-name" href="/{{ p.username }}/" target="_blank" rel="noopener" title="Open portfolio">{{ p.name }}</a>
+                                    <span class="pr-sub">{{ p.email }}{% if audience == 'all' and p.account_type != 'editor' %} · {% if p.account_type == 'client' %}Client{% else %}School admin{% endif %}{% endif %}</span>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-8 py-6">
-                            {% if u.profile.last_seen %}
-                                {% if u.profile.last_seen > active_threshold %}
-                                    <div class="status-badge status-active">
-                                        <span class="pulse-dot animate-pulse-slow"></span>
-                                        Active Now
-                                    </div>
-                                {% elif u.profile.last_seen > idle_threshold %}
-                                    <div class="status-badge status-idle">
-                                        <span class="pulse-dot"></span>
-                                        Idle
-                                    </div>
-                                {% else %}
-                                    <div class="status-badge status-away">
-                                        <span class="pulse-dot"></span>
-                                        Away
-                                    </div>
-                                {% endif %}
-                            {% else %}
-                                <div class="status-badge status-away">
-                                    <span class="pulse-dot"></span>
-                                    Never Seen
-                                </div>
-                            {% endif %}
+                        <td><span class="ua-fresh is-{{ p.recency }}"><i aria-hidden="true"></i>{{ p.recency_label }}</span>
+                            <time class="pr-sub" datetime="{{ p.last_active|date:'c' }}" title="{{ p.last_active|date:'j M Y, H:i' }} {{ time_zone }}">{{ p.last_active_ago }}</time></td>
+                        <td>
+                            {% if p.plan_state == 'paying' %}<span class="pr-pill pr-pill-good">Paying</span>
+                            {% elif p.plan_state == 'free_pass' %}<span class="pr-pill pr-pill-brand">Free pass</span>
+                            {% elif p.plan_state == 'expired' %}<span class="pr-pill pr-pill-warn">Expired</span>
+                            {% else %}<span class="pr-pill pr-pill-slate">Never paid</span>{% endif %}
+                            <span class="pr-sub">{% if p.plan_state == 'paying' or p.plan_state == 'free_pass' %}{{ p.plan_label }} · ends {{ p.plan_end|date:"j M Y" }}{% elif p.plan_state == 'expired' %}Ended {{ p.plan_end|date:"j M Y" }}{% else %}&nbsp;{% endif %}</span>
                         </td>
-                        <td class="px-8 py-6">
-                            {% if u.profile.last_seen %}
-                                <p class="text-sm font-bold text-slate-700">{{ u.profile.last_seen|timesince }} ago</p>
-                                <p class="text-[10px] text-slate-400 font-medium">{{ u.profile.last_seen|date:"M d, H:i" }}</p>
-                            {% else %}
-                                <span class="text-slate-300 text-sm italic">No data</span>
-                            {% endif %}
+                        <td>
+                            <span class="ua-track" role="img" aria-label="Setup {{ p.xp }} of 100 XP">{% for k, done in p.steps.items %}<i class="{% if done %}on{% endif %}"></i>{% endfor %}</span>
+                            <span class="pr-sub">{{ p.xp }} XP · {{ p.videos }} video{{ p.videos|pluralize }}</span>
                         </td>
-                        <td class="px-8 py-6">
-                            {% if u.last_portfolio_visit %}
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                    <p class="text-sm font-bold text-blue-600">{{ u.last_portfolio_visit|timesince }} ago</p>
-                                </div>
-                                <p class="text-[10px] text-slate-400 font-medium ml-4">{{ u.last_portfolio_visit|date:"M d, H:i" }}</p>
-                            {% else %}
-                                <span class="text-slate-300 text-sm italic">No visits yet</span>
-                            {% endif %}
+                        <td>
+                            <span class="ua-l">{% if p.live %}Live{% elif p.public %}Public, no plan{% else %}Private{% endif %}</span>
+                            <span class="pr-sub">{{ p.visits }} visit{{ p.visits|pluralize }}{% if p.last_visit %} · last {{ p.last_visit|date:"j M" }}{% endif %}</span>
                         </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="px-8 py-20 text-center">
-                            <p class="text-slate-400 italic">No users found in the system.</p>
+                        <td class="pr-num">{{ p.joined|date:"j M Y" }}</td>
+                        <td>
+                            <div class="ua-act">
+                                {% if p.email %}<a class="pr-icon-btn" href="mailto:{{ p.email }}" title="Email" aria-label="Email {{ p.name }}"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></a>{% endif %}
+                                <a class="pr-icon-btn" href="{% url 'admin:core_customuser_change' p.id %}" title="Open in admin" aria-label="Open {{ p.name }} in admin"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% if page.has_other_pages %}
+        <nav class="ua-pager" aria-label="Pages">
+            {% if prev_href %}<a class="pr-btn" href="{{ prev_href }}">← Previous</a>{% else %}<span></span>{% endif %}
+            <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+            {% if next_href %}<a class="pr-btn" href="{{ next_href }}">Next →</a>{% else %}<span></span>{% endif %}
+        </nav>
+        {% endif %}
+        {% endif %}
+    </section>
+
+    <!-- Method -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.34s">
+        <details class="pr-details" style="margin:0">
+            <summary style="margin:0">How these numbers are worked out</summary>
+            <ul class="pr-notes" style="border:0;margin:0;padding:0">
+                <li><b>Last active</b> is the latest of: any signed-in page view, a login, or the signup itself. Only the latest time is stored, so “active users” is exact for the period, but can't be compared with an earlier period.</li>
+                <li><b>Came back</b> means active again at least a day after signing up. <b>Left on day one</b> means more than 30 days since signup and never back after that first day. <b>Lapsed</b> means they came back at least once, then nothing for 30+ days.</li>
+                <li><b>Paying</b> means a running plan and at least one payment with money. Coupon, school and admin-granted plans are <b>Free pass</b>. Plan values use today's prices (Monthly / Annual).</li>
+                <li><b>Paying customers</b> change is measured against how many were paying at the start of the period.</li>
+                <li>Portfolio visits come from the portfolio tracker: bots and owners viewing their own portfolio are not counted. The theme-preview demo account is never included.</li>
+                <li>Signup comparisons use today's state of both groups, so the older group has had longer to set up and come back.</li>
+            </ul>
+        </details>
+    </section>
+
+    {% endif %}
+
+    <div style="margin-top:3rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+        <a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Back to manage</a>
+        <a href="{% url 'manage_payment_tracking' %}" class="pr-back">Payment performance &rarr;</a>
     </div>
 </div>
+</div>
+{{ trend|json_script:"uaTrendData" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    // Copy buttons
+    var toast = document.getElementById('uaToast'), timer;
+    function say(msg) {
+        if (!toast) return;
+        toast.textContent = msg; toast.classList.add('on');
+        clearTimeout(timer); timer = setTimeout(function () { toast.classList.remove('on'); }, 1800);
+    }
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var text = btn.getAttribute('data-copy'), msg = btn.getAttribute('data-copy-msg') || 'Copied';
+            var fallback = function () {
+                var ta = document.createElement('textarea');
+                ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); say(msg); } catch (e) { say('Copy failed'); }
+                document.body.removeChild(ta);
+            };
+            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { say(msg); }, fallback);
+            else fallback();
+        });
+    });
+
+    // Contact tabs (without JS every list stays visible)
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.ua-tab'));
+    function select(tab, focus) {
+        tabs.forEach(function (t) {
+            var on = t === tab;
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.tabIndex = on ? 0 : -1;
+            document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+        });
+        if (focus) tab.focus();
+    }
+    if (tabs.length) {
+        // Open the first list that has someone in it.
+        select(tabs.filter(function (t) { return +t.dataset.count > 0; })[0] || tabs[0]);
+        tabs.forEach(function (t, i) {
+            t.addEventListener('click', function () { select(t); });
+            t.addEventListener('keydown', function (e) {
+                var n = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+                if (n) { e.preventDefault(); select(tabs[(i + n + tabs.length) % tabs.length], true); }
+            });
+        });
+        // Insight links jump to the matching list
+        function openHash(hash) {
+            var tab = tabs.filter(function (t) { return '#' + t.getAttribute('aria-controls') === hash; })[0];
+            if (!tab) return false;
+            select(tab);
+            document.getElementById('contact').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return true;
+        }
+        document.querySelectorAll('[data-goto]').forEach(function (a) {
+            a.addEventListener('click', function (e) { if (openHash(a.getAttribute('data-goto'))) e.preventDefault(); });
+        });
+        if (location.hash) openHash(location.hash);
+    }
+
+    // Directory filters apply on change
+    document.querySelectorAll('[data-autosubmit]').forEach(function (s) {
+        s.addEventListener('change', function () { s.form.submit(); });
+    });
+
+    // Milestone bars grow in
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var bars = document.querySelectorAll('.ua-bar i[data-w]');
+    var paint = function () { bars.forEach(function (b) { b.style.width = b.getAttribute('data-w') + '%'; }); };
+    if (reduce) paint(); else requestAnimationFrame(function () { requestAnimationFrame(paint); });
+})();
+
+(function () {
+    // Trend: small multiples, one scale per row, shared hover
+    var root = document.getElementById('uaTrend');
+    var dataEl = document.getElementById('uaTrendData');
+    if (!root || !dataEl) return;
+    var trend = JSON.parse(dataEl.textContent);
+    var pts = trend.points || [];
+    if (!pts.length) return;
+
+    var NS = 'http://www.w3.org/2000/svg', H = 64, PAD_T = 14, AXIS_H = 18;
+    var tip = document.getElementById('uaTip');
+    var rows = [
+        { key: 'signups', label: 'Signups', color: '#6d28d9' },
+        { key: 'activated', label: 'Added a video', color: '#6d28d9' },
+        { key: 'visits', label: 'Portfolio visits', color: '#0d9488', alt: true }
+    ];
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var nice = function (max) {
+        if (max <= 0) return 1;
+        var p = Math.pow(10, Math.floor(Math.log10(max))), m = max / p;
+        return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+    };
+    function el(name, attrs, parent) {
+        var n = document.createElementNS(NS, name);
+        for (var k in attrs) n.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(n);
+        return n;
+    }
+    function colPath(x, y, w, h) {
+        if (h <= 0) return '';
+        var r = Math.min(4, w / 2, h);
+        return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y +
+               'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+    }
+    function showTip(i, evt) {
+        var p = pts[i];
+        tip.textContent = '';
+        var h = document.createElement('div'); h.className = 'pr-tip-h'; h.textContent = p.label; tip.appendChild(h);
+        rows.forEach(function (r) {
+            var row = document.createElement('div'); row.className = 'pr-tip-r';
+            var key = document.createElement('i'); key.style.background = r.color; row.appendChild(key);
+            row.appendChild(document.createTextNode(r.label));
+            var b = document.createElement('b'); b.textContent = fmt(p[r.key]); row.appendChild(b);
+            tip.appendChild(row);
+        });
+        var x, y;
+        if (evt && evt.clientX != null) { x = evt.clientX; y = evt.clientY; }
+        else { var bb = evt.target.getBoundingClientRect(); x = bb.left + bb.width / 2; y = bb.top; }
+        tip.classList.add('on');
+        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        var left = x + 14; if (left + tw > window.innerWidth - 8) left = x - tw - 14;
+        var top = y - th - 10; if (top < 8) top = y + 16;
+        tip.style.left = left + 'px'; tip.style.top = top + 'px';
+        root.querySelectorAll('.bar').forEach(function (b) { b.classList.toggle('is-hot', +b.dataset.i === i); });
+        root.querySelectorAll('.hair').forEach(function (l) {
+            l.setAttribute('x1', l.dataset['x' + i]); l.setAttribute('x2', l.dataset['x' + i]); l.style.display = '';
+        });
+    }
+    function hideTip() {
+        tip.classList.remove('on');
+        root.querySelectorAll('.bar.is-hot').forEach(function (b) { b.classList.remove('is-hot'); });
+        root.querySelectorAll('.hair').forEach(function (l) { l.style.display = 'none'; });
+    }
+    function draw() {
+        var svgs = root.querySelectorAll('svg[data-metric]');
+        var W = svgs[0].getBoundingClientRect().width || 600;
+        var GUTTER = 34, plotW = W - GUTTER, band = plotW / pts.length;
+        var bw = Math.max(2, Math.min(24, band - 2));
+        svgs.forEach(function (svg, rowIdx) {
+            var key = svg.dataset.metric, alt = key === 'visits';
+            svg.textContent = '';
+            svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+            svg.setAttribute('height', H);
+            var max = nice(Math.max.apply(null, pts.map(function (p) { return p[key]; })));
+            var plotH = H - PAD_T;
+            [0, max].forEach(function (v, j) {
+                var y = PAD_T + plotH - (v / max) * plotH;
+                el('line', { x1: GUTTER, x2: W, y1: y, y2: y, 'class': j ? 'grid' : 'base' }, svg);
+                var t = el('text', { x: GUTTER - 6, y: y + 3, 'text-anchor': 'end', 'class': 'tick' }, svg);
+                t.textContent = max >= 1000 && v ? (v / 1000) + 'K' : v;
+            });
+            var hair = el('line', { y1: PAD_T - 6, y2: H, 'class': 'hair', style: 'display:none' }, svg);
+            pts.forEach(function (p, i) {
+                var cx = GUTTER + band * i + band / 2;
+                hair.dataset['x' + i] = cx;
+                var h = (p[key] / max) * plotH;
+                if (p[key] > 0) el('path', { d: colPath(cx - bw / 2, PAD_T + plotH - h, bw, h), 'class': 'bar' + (alt ? ' alt' : ''), 'data-i': i }, svg);
+                var hit = el('rect', { x: GUTTER + band * i, y: 0, width: band, height: H, 'class': 'hit' }, svg);
+                if (rowIdx === 0) {
+                    hit.setAttribute('tabindex', '0');
+                    hit.setAttribute('aria-label', p.label + ': ' + p.signups + ' signups, ' + p.activated + ' added a video, ' + p.visits + ' portfolio visits');
+                }
+                hit.addEventListener('pointermove', function (e) { showTip(i, e); });
+                hit.addEventListener('pointerleave', hideTip);
+                hit.addEventListener('focus', function (e) { showTip(i, e); });
+                hit.addEventListener('blur', hideTip);
+            });
+        });
+        var ax = root.querySelector('svg[data-axis="x"]');
+        ax.textContent = '';
+        ax.setAttribute('viewBox', '0 0 ' + W + ' ' + AXIS_H);
+        ax.setAttribute('height', AXIS_H);
+        var every = Math.max(1, Math.ceil(44 / band));
+        pts.forEach(function (p, i) {
+            if (i % every && i !== pts.length - 1) return;
+            if (i === pts.length - 1 && i % every && (i % every) < every / 2) return;
+            var t = el('text', { x: GUTTER + band * i + band / 2, y: 12, 'text-anchor': 'middle', 'class': 'tick' }, ax);
+            t.textContent = trend.unit === 'month' ? p.label : p.label.replace('Wk of ', '');
+        });
+    }
+    draw();
+    var t;
+    window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 120); });
+})();
+</script>
 {% endblock %}

@@ -1,15 +1,16 @@
 import json
 import threading
 from datetime import timedelta
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Count, Avg, OuterRef, Subquery
+from django.db.models import Count, Avg
 from django.db.models.functions import TruncDate
 
 from core.models import CustomUser, AnalyticsVisit, AnalyticsEvent, UserPayment
@@ -405,26 +406,102 @@ def arabic_analytics_dashboard(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def user_activity_report(request):
-    """View to see last time users opened Skillifly and last portfolio visits."""
+    """User activity & retention: who uses Skillifly, who is drifting away, and who to contact."""
+    from django.core.paginator import Paginator
+    from core import activity_report as ar
 
-    # Subquery to get the latest visit for each user's portfolio
-    latest_visit_subquery = AnalyticsVisit.objects.filter(
-        user=OuterRef('pk')
-    ).order_by('-created_at').values('created_at')[:1]
+    include_team = request.GET.get('team') == '1'
+    report = ar.build_report(request.GET.get('days', ar.DEFAULT_PERIOD),
+                             request.GET.get('audience', ar.DEFAULT_AUDIENCE), include_team)
+    period = report['period']
 
-    users = CustomUser.objects.annotate(
-        last_portfolio_visit=Subquery(latest_visit_subquery)
-    ).select_related('profile', 'personal_info').order_by('-profile__last_seen')
+    status = request.GET.get('status', '')
+    status = status if status in ar.RECENCY_LABELS else ''
+    plan = request.GET.get('plan', '')
+    plan = plan if plan in ar.PLAN_STATE_LABELS else ''
+    sort = request.GET.get('sort', ar.DEFAULT_SORT)
+    sort = sort if sort in ar.SORTS else ar.DEFAULT_SORT
+    q = request.GET.get('q', '').strip()[:100]
+    directory = ar.filter_people(report['people'], status, plan, q, sort)
 
-    # Calculate status badges (Active: < 15 mins, Idle: < 24 hours, Away: > 24 hours)
-    now = timezone.now()
-    active_threshold = now - timedelta(minutes=15)
-    idle_threshold = now - timedelta(hours=24)
+    export = request.GET.get('export')
+    if export == 'users':
+        return _activity_csv('users', directory, report)
+    if export in ar.CONTACT_KEYS:
+        rows = next(c['rows'] for c in report['contact_lists'] if c['key'] == export)
+        return _activity_csv(export, rows, report)
 
+    base = {'days': period.key, 'audience': report['audience']}
+    if include_team:
+        base['team'] = '1'
+    filters = {'status': status, 'plan': plan, 'q': q, 'sort': sort if sort != ar.DEFAULT_SORT else ''}
+
+    def link(_anchor='', **changes):
+        params = {**base, **filters, **changes}
+        return '?' + urlencode({k: v for k, v in params.items() if v}) + _anchor
+
+    for row in report['engagement']['rows']:
+        row['href'] = link('#directory', status=row['key'], plan='', q='', page='')
+        for cell in row['cells']:
+            cell['href'] = link('#directory', status=row['key'], plan=cell['state'], q='', page='')
+    for cell in report['engagement']['totals']:
+        cell['href'] = link('#directory', status='', plan=cell['state'], q='', page='')
+    for c in report['contact_lists']:
+        c['export_href'] = link(export=c['key'])
+
+    page = Paginator(directory, ar.PAGE_SIZE).get_page(request.GET.get('page'))
     context = {
-        'users': users,
-        'now': now,
-        'active_threshold': active_threshold,
-        'idle_threshold': idle_threshold,
+        **report,
+        'time_zone': settings.TIME_ZONE,
+        'period_links': [(label, link(days=key), key == period.key)
+                         for key, label in (('7', '7 days'), ('30', '30 days'), ('90', '90 days'), ('all', 'All time'))],
+        'audience_links': [(label, link(audience=key, page=''), key == report['audience'])
+                           for key, label in ar.AUDIENCES.items()],
+        'team_toggle_href': link(team='' if include_team else '1', page=''),
+        'export_users_href': link(export='users'),
+        'base_params': base,
+        'recency_options': ar.RECENCY,
+        'plan_options': ar.PLAN_STATES,
+        'sort_options': ar.SORTS.items(),
+        'f_status': status, 'f_plan': plan, 'f_sort': sort, 'f_q': q,
+        'filtered': bool(status or plan or q),
+        'clear_filters_href': link('#directory', status='', plan='', q='', sort='', page=''),
+        'page': page,
+        'directory_count': len(directory),
+        'prev_href': link('#directory', page=page.previous_page_number()) if page.has_previous() else None,
+        'next_href': link('#directory', page=page.next_page_number()) if page.has_next() else None,
     }
+    context.pop('people')
     return render(request, 'core/user_activity.html', context)
+
+
+def _activity_csv(kind, rows, report):
+    """CSV of the filtered user directory or one of the contact lists."""
+    import csv
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = (
+        f'attachment; filename="skillifly-users-{kind}-{report["period"].key}-{timezone.now():%Y%m%d}.csv"')
+    response.write('﻿')  # Excel needs the BOM to read UTF-8 (Arabic names)
+    writer = csv.writer(response)
+
+    def stamp(dt):
+        return timezone.localtime(dt).strftime('%Y-%m-%d %H:%M') if dt else ''
+
+    header = ['Name', 'Username', 'Email', 'Account type', 'Joined', 'Last active', 'Activity',
+              'Plan status', 'Plan', 'Plan ends', 'Total paid (EGP)', 'Setup XP', 'Videos',
+              'Portfolio public', 'Portfolio live', f'Portfolio visits ({report["period"].label})',
+              'Last portfolio visit']
+    if kind != 'users':
+        header.insert(3, 'Why')
+    writer.writerow(header)
+    for p in rows:
+        row = [p['name'], p['username'], p['email'], p['account_type'], stamp(p['joined']),
+               stamp(p['last_active']), p['recency_label'], p['plan_state_label'], p['plan_label'],
+               stamp(p['plan_end']), f'{p["spent"]:.0f}', p['xp'], p['videos'],
+               'yes' if p['public'] else 'no', 'yes' if p['live'] else 'no', p['visits'],
+               stamp(p['last_visit'])]
+        if kind != 'users':
+            row.insert(3, p['reason'])
+        writer.writerow(row)
+    return response

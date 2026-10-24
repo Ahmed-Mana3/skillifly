@@ -1,0 +1,1 @@
+<td class="cell">{% if c.pct is None %}<span class="ua-hn" title="Too new to measure">&mdash;</span>{% else %}<span class="ua-h{{ c.heat }}" title="{{ c.hits }} of {{ c.n }} {{ c.n|pluralize:'person,people' }}">{{ c.pct|floatformat:"0" }}%{% if c.partial %}*{% endif %}</span>{% endif %}</td>
