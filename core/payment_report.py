@@ -20,7 +20,7 @@ from decimal import Decimal
 from django.db.models import Q
 from django.utils import timezone
 
-from core.models import CustomUser, ManualPayment, PaymentTrackingEvent, UserPayment
+from core.models import CustomUser, ManualPayment, PaymentTrackingEvent, Profile, UserPayment
 
 PERIODS = {'7': 7, '30': 30, '90': 90, 'all': None}
 DEFAULT_PERIOD = '30'
@@ -540,6 +540,18 @@ def _active_user_ids(user_ids):
     return active
 
 
+def _ago(dt, now):
+    """'just now' / '3 hours ago' / '15 days ago': one unit, and days stay exact up to two
+    months, so a follow-up list can tell 15 days from 18 (timesince would say "2 weeks")."""
+    seconds = (now - dt).total_seconds()
+    for limit, size, unit in ((3600, 60, 'minute'), (86400, 3600, 'hour'), (60 * 86400, 86400, 'day')):
+        if seconds < limit:
+            n = int(seconds // size)
+            return 'just now' if n < 1 else f'{n} {unit}{"s" if n != 1 else ""} ago'
+    months = int(seconds // (30 * 86400))
+    return f'{months} months ago'
+
+
 def _leads(core):
     """Signed-in people who picked a plan or started checkout and haven't paid."""
     candidates = [p for p in core['people'].values()
@@ -547,15 +559,20 @@ def _leads(core):
     ids = {p['user_id'] for p in candidates}
     active = _active_user_ids(ids)
     users = {u.id: u for u in CustomUser.objects.filter(id__in=ids)}
+    # Profile.last_seen is touched on every signed-in request, so it shows when
+    # they were last on Skillifly at all, not just on the payment pages.
+    site_seen = dict(Profile.objects.filter(user_id__in=ids).values_list('user_id', 'last_seen'))
     pending_card = set(UserPayment.objects.filter(user_id__in=ids, status='pending')
                        .exclude(fawaterk_intent_key__startswith='MANUAL-')
                        .exclude(fawaterk_intent_key__isnull=True)
                        .values_list('user_id', flat=True))
+    now = timezone.now()
     leads = []
     for p in candidates:
         u = users.get(p['user_id'])
         if not u or p['user_id'] in active:
             continue
+        last_seen = max(filter(None, (site_seen.get(u.id), u.last_login, p['last'])))
         leads.append({
             'user_id': u.id,
             'name': u.get_full_name().strip() or u.username,
@@ -566,7 +583,10 @@ def _leads(core):
             'plan': PLAN_LABELS.get(p['plan'], ''),
             'plan_key': p['plan'],
             'pricing_opens': p['pricing_opens'],
-            'last_seen': p['last'],
+            'last_seen': last_seen,
+            'last_seen_ago': _ago(last_seen, now),
+            'last_payment_visit': p['last'],
+            'last_payment_visit_ago': _ago(p['last'], now),
             'card_pending': u.id in pending_card,
         })
     leads.sort(key=lambda r: (-r['stage'], -r['last_seen'].timestamp()))

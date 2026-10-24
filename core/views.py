@@ -3917,10 +3917,11 @@ def _payment_report_csv(kind, report):
 
     if kind == 'leads':
         writer.writerow(['Name', 'Username', 'Email', 'Furthest step', 'Plan interest',
-                         'Pricing opens', 'Card checkout pending', 'Last seen'])
+                         'Pricing opens', 'Card checkout pending', 'Last seen on site', 'Last payment page visit'])
         for r in report['leads']:
             writer.writerow([r['name'], r['username'], r['email'], r['stage_label'], r['plan'],
-                             r['pricing_opens'], 'yes' if r['card_pending'] else '', stamp(r['last_seen'])])
+                             r['pricing_opens'], 'yes' if r['card_pending'] else '',
+                             stamp(r['last_seen']), stamp(r['last_payment_visit'])])
     elif kind == 'payments':
         writer.writerow(['Date', 'Username', 'Email', 'Status', 'Plan', 'Method', 'Amount (EGP)', 'Coupon'])
         for p in report['core']['payments']:

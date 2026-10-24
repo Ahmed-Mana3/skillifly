@@ -363,6 +363,22 @@ class PaymentTrackingReportTests(TestCase):
         self.assertEqual([r['username'] for r in leads], ['hot_lead', 'warm_lead'])
         self.assertEqual(leads[1]['plan'], 'Annual')
 
+    def test_lead_last_seen_is_last_activity_on_the_site(self):
+        from core.models import Profile
+        lead = self._user('came_back')
+        self._event('manual_payment', user=lead, session_id='pvid_cb', days_ago=10)
+        Profile.objects.update_or_create(user=lead, defaults={'last_seen': timezone.now() - timedelta(hours=3)})
+        row = self._report()['leads'][0]
+        self.assertEqual(row['last_seen_ago'], '3 hours ago')
+        self.assertEqual(row['last_payment_visit_ago'], '10 days ago')
+
+    def test_lead_last_seen_falls_back_to_the_payment_visit(self):
+        lead = self._user('no_profile')
+        self._event('manual_payment', user=lead, session_id='pvid_np', days_ago=2)
+        row = self._report()['leads'][0]
+        self.assertEqual(row['last_seen'], row['last_payment_visit'])
+        self.assertEqual(row['last_seen_ago'], '2 days ago')
+
     def test_card_checkout_health(self):
         user = self._user('carder')
         self._pay(user, key='FW-1')
