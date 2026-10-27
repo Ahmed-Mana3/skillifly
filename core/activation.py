@@ -18,6 +18,7 @@ EVENTS = frozenset({
     'welcome_viewed', 'link_previewed', 'welcome_skipped', 'welcome_submitted',
     'project_created', 'reveal_viewed', 'reveal_action', 'theme_switched',
     'builder_saved', 'builder_save_failed', 'profile_field_added',
+    'builder_item_saved', 'builder_item_save_failed', 'builder_item_deleted',
     'nudge_sent', 'nudge_clicked',
     'launch_viewed', 'launch_step_completed', 'launch_skipped', 'launch_finished',
 })

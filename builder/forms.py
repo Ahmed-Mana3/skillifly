@@ -312,7 +312,7 @@ class ProjectForm(forms.Form):
 
         ``category_id`` is a plain CharField because the chips write ids straight
         into a hidden input. Without this check a tampered or stale id resolves
-        to None in ``_category_for`` and the assignment is dropped without any
+        to None in ``services.category_for`` and the assignment is dropped without any
         signal to the user.
         """
         from core.models import ProjectCategory

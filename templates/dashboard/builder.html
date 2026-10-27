@@ -17,7 +17,7 @@
 {% block ambient_orbs %}{% endblock %}
 
 {% block content %}
-<div class="bx-root" id="builder-root" data-category="{{ category }}">
+<div class="bx-root" id="builder-root" data-category="{{ category }}" data-lang="en"{% if autosave_enabled %} data-autosave="1" data-api-base="{{ autosave_api_base }}"{% endif %}>
 
   <header class="bx-header">
     <div>
@@ -26,12 +26,20 @@
         {% if is_update %}Update your portfolio{% else %}Build your portfolio{% endif %}
       </h1>
       <p class="bx-subtitle">
-        Fill in the sections below — your changes go live the moment you save.
+        {% if autosave_enabled %}Fill in the sections below. Every change saves automatically as you go.
+        {% else %}Fill in the sections below — your changes go live the moment you save.{% endif %}
         Sections marked with a check are complete.
       </p>
     </div>
     <div class="bx-header-actions">
-      {% if is_update %}
+      {% if autosave_enabled %}
+      <span class="bx-autosave-status" id="bx-autosave-status" data-state="saved" role="status" aria-live="polite" hidden>
+        <span class="bx-autosave-dot" aria-hidden="true"></span>
+        <span class="bx-autosave-text">All changes saved</span>
+        <button type="button" class="bx-autosave-retry" data-action="autosave-retry" hidden>Retry</button>
+      </span>
+      {% endif %}
+      {% if is_update or autosave_enabled %}
       <a href="{% url 'preview' username=request.user.username %}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         View live site

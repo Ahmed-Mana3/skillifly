@@ -63,7 +63,14 @@ const BX_I18N = Object.assign({
   orderLiveMoved: '{name} moved to position {n} of {total}',
   orderLiveHidden: '{name} hidden from your portfolio',
   orderLiveShown: '{name} visible again',
-  orderLiveSaved: 'Layout saved.'
+  orderLiveSaved: 'Layout saved.',
+  autosaveSaved: 'All changes saved',
+  autosaveSaving: 'Saving…',
+  autosaveError: 'Some changes didn’t save',
+  autosaveSignedOut: 'You were signed out. Sign in again to save your changes.',
+  autosaveDraft: 'Fill in the required fields to save the new item',
+  autosaveFirstVideo: 'Your first video is on your portfolio.',
+  autosaveSeeIt: 'See it'
 }, window.BuilderI18n || {});
 
 function bxt(key, vars) {
@@ -115,6 +122,7 @@ const BX = {
     this.cachePanels();
     this.applySectionOrder();
     this.bindEvents();
+    BXAutosave.init(this.root);
     BXSectionOrder.init();
     this.setupCharCounters();
     this.refreshEmptyStates();
@@ -212,6 +220,7 @@ const BX = {
         case 'order-reset': BXSectionOrder.reset(); break;
         case 'order-confirm-save': BXSectionOrder.confirmReset(); break;
         case 'order-confirm-cancel': BXSectionOrder.closeConfirm(); break;
+        case 'autosave-retry': BXAutosave.retryAll(); break;
       }
     });
 
@@ -222,11 +231,16 @@ const BX = {
       }
     });
 
-    this.form.addEventListener('input', () => { this.markDirty(); this.scheduleProgress(); });
+    this.form.addEventListener('input', (e) => {
+      this.markDirty();
+      this.scheduleProgress();
+      BXAutosave.onFieldEvent(e.target, false);
+    });
     this.form.addEventListener('change', (e) => {
       this.markDirty();
       this.scheduleProgress();
       if (e.target.matches('input[type="file"]')) this.handleFileChange(e.target);
+      BXAutosave.onFieldEvent(e.target, true);
     });
 
     this.form.addEventListener('focusout', (e) => {
@@ -245,7 +259,8 @@ const BX = {
 
     window.addEventListener('beforeunload', (e) => {
       const layoutPending = !!(BXSectionOrder.list && BXSectionOrder.hasPending());
-      if ((this.isDirty || layoutPending) && !this.isSubmitting) {
+      const unsaved = BXAutosave.on ? BXAutosave.hasUnsaved() : (this.isDirty || layoutPending);
+      if (unsaved && !this.isSubmitting) {
         e.preventDefault();
         e.returnValue = '';
         return e.returnValue;
@@ -452,6 +467,12 @@ const BX = {
       e.preventDefault();
       return;
     }
+    // Autosave: Enter in a field must not post the whole form; save what is waiting instead.
+    if (BXAutosave.on) {
+      e.preventDefault();
+      BXAutosave.saveAll();
+      return;
+    }
 
     // The section layout saves through its own AJAX endpoint, so the form POST
     // would silently drop pending layout edits. Flush them first, then replay
@@ -648,6 +669,7 @@ const BX = {
 
     const entry = { item, deleteCheckbox, requiredFields };
     this.undoStack.push(entry);
+    BXAutosave.onRemove(item);
     this.toast(bxt('msgRemoved'), 'info', {
       label: bxt('undo'),
       fn: () => this.restoreItem(entry)
@@ -661,6 +683,7 @@ const BX = {
     requestAnimationFrame(() => entry.item.classList.remove('is-removed'));
     entry.requiredFields.forEach(r => r.el.setAttribute('required', r.value));
     this.undoStack = this.undoStack.filter(e => e !== entry);
+    BXAutosave.onRestore(entry.item);
     this.afterRemoval();
     this.toast(bxt('msgRestored'), 'success');
   },
@@ -784,7 +807,11 @@ const BX = {
     container.querySelectorAll('.bx-chip').forEach(c => c.classList.remove('is-active'));
     chip.classList.add('is-active');
     const hidden = chip.closest('.bx-item').querySelector('.project-category-input');
-    if (hidden) hidden.value = chip.dataset.value;
+    if (hidden) {
+      hidden.value = chip.dataset.value;
+      // A script-set value fires no event; this one lets autosave pick the chip up.
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     this.markDirty();
   },
 
@@ -1205,6 +1232,464 @@ const BX = {
 };
 
 /* ========================================================================
+   Autosave (SiteSettings.builder_autosave_enabled, see BUILDER_AUTOSAVE_PLAN.md).
+   Each row (one skill, one video, ...) and the personal-info panel saves itself
+   through the per-item API in builder/api.py: text 800 ms after typing stops,
+   everything else at once. Requests for one row never overlap, a new row is
+   created once its required fields are filled, a value the server refused is
+   held back until the user changes it (so it never blocks the rest), and a
+   removed row is deleted only after its Undo toast has gone. Without the switch
+   (or without JS) the page keeps its full-form Save.
+   ======================================================================== */
+const BXAutosave = {
+  DEBOUNCE_MS: 800,
+  DELETE_DELAY_MS: 6000, // the Undo toast stays up 6 s
+  RETRY_DELAYS_MS: [1000, 3000, 9000],
+  KINDS: ['skills', 'education', 'experience', 'projects', 'links', 'creators'],
+  PERSONAL_FIELDS: ['fullname', 'title', 'email', 'phone', 'booking_url', 'bio', 'picture'],
+  // Worst first: the status pill shows the first state any row is in.
+  STATE_ORDER: ['signed_out', 'error', 'invalid', 'saving', 'pending', 'draft'],
+  on: false,
+  rows: [],
+  layout: { state: 'saved', timer: null },
+
+  init(root) {
+    this.on = !!(root && root.dataset.autosave === '1' && root.dataset.apiBase &&
+                 typeof fetch === 'function' && typeof FormData === 'function');
+    if (!this.on) return;
+    this.base = root.dataset.apiBase;
+    this.lang = root.dataset.lang === 'ar' ? 'ar' : 'en';
+    this.fetch = (url, opts) => fetch(url, opts);
+    this.statusEl = document.getElementById('bx-autosave-status');
+    if (this.statusEl) this.statusEl.hidden = false;
+    document.body.classList.add('bx-autosave-on');
+    window.addEventListener('pagehide', () => this.flushOnExit());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.saveAll();
+    });
+    this.refreshStatus();
+  },
+
+  // --- rows -----------------------------------------------------------------
+
+  stateFor(el, kind) {
+    let row = this.rows.find(r => r.el === el);
+    if (!row) {
+      row = {
+        el, kind, id: this.readId(el, kind),
+        dirty: new Set(), files: new Map(), rejected: {},
+        state: 'saved', timer: null, retryTimer: null, attempts: 0, chain: Promise.resolve(),
+        removed: false, deleteTimer: null, deleteSent: false
+      };
+      this.rows.push(row);
+    }
+    return row;
+  },
+
+  rowFor(el) {
+    if (!el || !el.closest) return null;
+    const panel = el.closest('#panel-identity');
+    if (panel) return this.stateFor(panel, 'personal');
+    const item = el.classList && el.classList.contains('bx-item') ? el : el.closest('.bx-item');
+    const container = item && item.parentElement;
+    const match = container && /^(\w+)-container$/.exec(container.id || '');
+    if (!match || this.KINDS.indexOf(match[1]) === -1) return null;
+    return this.stateFor(item, match[1]);
+  },
+
+  readId(el, kind) {
+    if (kind === 'personal') return null;
+    const input = el.querySelector('input[name$="-id"]');
+    const id = input ? parseInt(input.value, 10) : NaN;
+    return id > 0 ? id : null;
+  },
+
+  writeId(row) {
+    const input = row.el.querySelector('input[name$="-id"]');
+    if (input) input.value = row.id ? String(row.id) : '';
+  },
+
+  // The API's name for a builder input ("projects-3-name" -> "name"), or null.
+  fieldName(row, field) {
+    const name = field.name || '';
+    if (row.kind === 'personal') return this.PERSONAL_FIELDS.indexOf(name) !== -1 ? name : null;
+    const match = /^[a-z_]+-\d+-(\w+)$/.exec(name);
+    return match && match[1] !== 'id' && match[1] !== 'DELETE' ? match[1] : null;
+  },
+
+  fields(row) {
+    const out = {};
+    row.el.querySelectorAll('input, textarea, select').forEach(field => {
+      const name = this.fieldName(row, field);
+      if (name) out[name] = field;
+    });
+    return out;
+  },
+
+  isValid(field) {
+    return typeof field.checkValidity !== 'function' || field.checkValidity();
+  },
+
+  readyToCreate(fields) {
+    return Object.keys(fields).every(name => {
+      const field = fields[name];
+      if (field.type === 'file') return true;
+      if (field.required && !(field.value || '').trim()) return false;
+      return this.isValid(field);
+    });
+  },
+
+  // --- queueing -------------------------------------------------------------
+
+  // Typing waits for a pause; selects, chips, dates and files save at once.
+  onFieldEvent(field, immediate) {
+    if (!this.on) return;
+    const row = this.rowFor(field);
+    if (!row || row.removed) return;
+    const name = this.fieldName(row, field);
+    if (!name) return;
+    if (field.type === 'file') {
+      // Some browsers fire "input" as well as "change" for a chosen file: upload it once.
+      const file = field.files && field.files[0];
+      if (!immediate || !file) return;
+      row.files.set(name, file);
+    } else {
+      row.dirty.add(name);
+    }
+    this.schedule(row, immediate);
+  },
+
+  schedule(row, immediate) {
+    clearTimeout(row.timer);
+    clearTimeout(row.retryTimer);
+    row.retryTimer = null;
+    row.state = 'pending';
+    row.timer = setTimeout(() => this.save(row), immediate ? 0 : this.DEBOUNCE_MS);
+    this.refreshStatus();
+  },
+
+  // Requests for one row run one after another, so a create is never sent twice.
+  save(row, opts) {
+    clearTimeout(row.timer);
+    row.timer = null;
+    row.chain = row.chain.then(() => this.send(row, opts || {})).catch(() => {});
+    return row.chain;
+  },
+
+  saveAll() {
+    this.rows.forEach(row => { if (row.timer) this.save(row); });
+    if (this.layout.timer) this.saveLayout();
+  },
+
+  retryAll() {
+    this.rows.forEach(row => {
+      if (row.removed || (row.state !== 'error' && row.state !== 'signed_out')) return;
+      row.attempts = 0;
+      this.save(row);
+    });
+    if (this.layout.state === 'error') this.saveLayout();
+  },
+
+  urlFor(row, creating) {
+    if (row.kind === 'personal') return this.base + 'personal/';
+    return this.base + row.kind + '/' + (creating ? '' : row.id + '/');
+  },
+
+  csrf() {
+    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+    return input ? input.value : '';
+  },
+
+  async send(row, opts) {
+    if (row.removed) return;
+    const creating = row.kind !== 'personal' && !row.id;
+    const fields = this.fields(row);
+    if (!row.dirty.size && !row.files.size) {
+      this.settle(row);
+      return;
+    }
+    if (creating && !this.readyToCreate(fields)) {
+      row.state = 'draft';
+      this.refreshStatus();
+      return;
+    }
+
+    // A create sends the whole row; an update only what changed. Values the browser
+    // or the server already refused wait until the user changes them.
+    const names = creating
+      ? Object.keys(fields).filter(name => fields[name].type !== 'file')
+      : Array.from(row.dirty).filter(name => fields[name]);
+    const refusedNow = name => row.rejected[name] && row.rejected[name].value === fields[name].value;
+    const held = names.filter(name => !this.isValid(fields[name]) || refusedNow(name));
+    held.forEach(name => this.showError(fields[name], refusedNow(name) ? row.rejected[name].message : ''));
+    const sending = creating && held.length ? [] : names.filter(name => held.indexOf(name) === -1);
+    if (!sending.length && !(row.files.size && !creating)) {
+      row.state = held.length ? 'invalid' : 'saved';
+      this.refreshStatus();
+      return;
+    }
+
+    const files = new Map(row.files);
+    sending.forEach(name => row.dirty.delete(name));
+    row.files.clear();
+    const body = new FormData();
+    body.append('lang', this.lang);
+    sending.forEach(name => body.append(name, fields[name].value));
+    files.forEach((file, name) => body.append(name, file));
+
+    row.state = 'saving';
+    this.refreshStatus();
+    let res;
+    let data;
+    try {
+      res = await this.fetch(this.urlFor(row, creating), {
+        method: 'POST', body, credentials: 'same-origin', keepalive: !!opts.keepalive,
+        headers: { 'X-CSRFToken': this.csrf() }
+      });
+      data = await res.json().catch(() => ({}));
+    } catch (err) {
+      this.retryLater(row, sending, files);
+      return;
+    }
+
+    if (res.status === 404 && row.id) {
+      // Removed elsewhere (another tab) while the user was editing it: add it back.
+      row.id = null;
+      this.writeId(row);
+      Object.keys(fields).forEach(name => { if (fields[name].type !== 'file') row.dirty.add(name); });
+      files.forEach((file, name) => row.files.set(name, file));
+      await this.send(row, opts);
+      return;
+    }
+    if (res.status === 401 || res.status === 403) {
+      this.restore(row, sending, files);
+      row.state = 'signed_out';
+      this.refreshStatus();
+      return;
+    }
+    if (res.status === 400) {
+      const errors = (data && data.errors) || {};
+      const refused = Object.keys(errors);
+      refused.forEach(name => {
+        const field = fields[name];
+        if (!field) return;
+        this.showError(field, errors[name][0]);
+        if (field.type !== 'file') row.rejected[name] = { value: field.value, message: errors[name][0] };
+      });
+      // Nothing was saved: send the rest again without the refused values.
+      this.restore(row, sending, files, refused);
+      const progress = refused.some(name => sending.indexOf(name) !== -1);
+      const rest = sending.filter(name => refused.indexOf(name) === -1);
+      if (progress && (rest.length || (row.files.size && !creating))) {
+        await this.send(row, opts);
+      } else {
+        row.state = 'invalid';
+        this.refreshStatus();
+      }
+      return;
+    }
+    if (!res.ok || !data || !data.ok) {
+      this.retryLater(row, sending, files);
+      return;
+    }
+
+    row.attempts = 0;
+    sending.forEach(name => {
+      delete row.rejected[name];
+      this.clearError(fields[name]);
+    });
+    files.forEach((file, name) => this.clearError(fields[name]));
+    if (creating && data.id) {
+      row.id = data.id;
+      this.writeId(row);
+    }
+    if (data.reveal_url) this.announceFirstVideo(data.reveal_url);
+    this.settle(row);
+  },
+
+  // After a request: the row is saved unless the user typed meanwhile or a value is held back.
+  settle(row) {
+    if (row.timer) row.state = 'pending';
+    else if (row.dirty.size) row.state = 'invalid';
+    else row.state = 'saved';
+    this.refreshStatus();
+  },
+
+  // Put back what a failed request carried, so the next save sends it again.
+  restore(row, sending, files, dropFiles) {
+    sending.forEach(name => row.dirty.add(name));
+    files.forEach((file, name) => {
+      if (!dropFiles || dropFiles.indexOf(name) === -1) row.files.set(name, file);
+    });
+  },
+
+  retryLater(row, sending, files) {
+    this.restore(row, sending, files);
+    const delay = this.RETRY_DELAYS_MS[row.attempts];
+    row.attempts += 1;
+    if (delay === undefined) {
+      row.state = 'error';
+    } else {
+      row.state = 'pending';
+      row.retryTimer = setTimeout(() => { row.retryTimer = null; this.save(row); }, delay);
+    }
+    this.refreshStatus();
+  },
+
+  // --- removing -------------------------------------------------------------
+
+  onRemove(item) {
+    if (!this.on) return;
+    const row = this.rowFor(item);
+    if (!row) return;
+    row.removed = true;
+    clearTimeout(row.timer);
+    clearTimeout(row.retryTimer);
+    row.timer = row.retryTimer = null;
+    row.deleteTimer = setTimeout(() => this.sendDelete(row), this.DELETE_DELAY_MS);
+    this.refreshStatus();
+  },
+
+  onRestore(item) {
+    if (!this.on) return;
+    const row = this.rowFor(item);
+    if (!row) return;
+    clearTimeout(row.deleteTimer);
+    row.deleteTimer = null;
+    row.removed = false;
+    if (row.deleteSent) {
+      // Undo came after the delete went out: create the row again.
+      row.deleteSent = false;
+      row.id = null;
+      this.writeId(row);
+      const fields = this.fields(row);
+      Object.keys(fields).forEach(name => { if (fields[name].type !== 'file') row.dirty.add(name); });
+    }
+    if (row.dirty.size || row.files.size) this.schedule(row, true);
+    else this.refreshStatus();
+  },
+
+  sendDelete(row, keepalive) {
+    row.deleteTimer = null;
+    row.chain = row.chain.then(async () => {
+      if (!row.removed || !row.id || row.deleteSent) return;
+      row.deleteSent = true;
+      const body = new FormData();
+      body.append('lang', this.lang);
+      try {
+        await this.fetch(this.base + row.kind + '/' + row.id + '/delete/', {
+          method: 'POST', body, credentials: 'same-origin', keepalive: !!keepalive,
+          headers: { 'X-CSRFToken': this.csrf() }
+        });
+      } catch (err) {
+        row.deleteSent = false; // still on the server; the next exit or removal tries again
+      }
+    }).catch(() => {});
+    return row.chain;
+  },
+
+  // Leaving the page: send what is still waiting, with keepalive so it outlives the page.
+  flushOnExit() {
+    this.rows.forEach(row => {
+      if (row.deleteTimer) {
+        clearTimeout(row.deleteTimer);
+        this.sendDelete(row, true);
+      } else if (row.timer) {
+        this.save(row, { keepalive: true });
+      }
+    });
+  },
+
+  // --- section layout ---------------------------------------------------------
+
+  layoutChanged() {
+    if (!this.on) return;
+    clearTimeout(this.layout.timer);
+    this.layout.timer = null;
+    if (!BXSectionOrder.hasPending()) {
+      if (this.layout.state === 'pending') this.layout.state = 'saved';
+      this.refreshStatus();
+      return;
+    }
+    this.layout.state = 'pending';
+    this.layout.timer = setTimeout(() => this.saveLayout(), this.DEBOUNCE_MS);
+    this.refreshStatus();
+  },
+
+  async saveLayout() {
+    clearTimeout(this.layout.timer);
+    this.layout.timer = null;
+    this.layout.state = 'saving';
+    this.refreshStatus();
+    const ok = await BXSectionOrder.flush();
+    this.layout.state = !ok ? 'error' : (BXSectionOrder.hasPending() ? 'pending' : 'saved');
+    if (this.layout.state === 'pending') this.layoutChanged();
+    this.refreshStatus();
+  },
+
+  // --- what the user sees -----------------------------------------------------
+
+  overallState() {
+    const states = this.rows.filter(row => !row.removed).map(row => row.state).concat(this.layout.state);
+    return this.STATE_ORDER.find(state => states.indexOf(state) !== -1) || 'saved';
+  },
+
+  hasUnsaved() {
+    return this.on && this.overallState() !== 'saved';
+  },
+
+  refreshStatus() {
+    const el = this.statusEl;
+    if (!el) return;
+    const state = this.overallState();
+    const labels = {
+      saved: 'autosaveSaved', saving: 'autosaveSaving', pending: 'autosaveSaving', draft: 'autosaveDraft',
+      invalid: 'autosaveError', error: 'autosaveError', signed_out: 'autosaveSignedOut'
+    };
+    el.dataset.state = state;
+    const text = el.querySelector('.bx-autosave-text');
+    if (text) text.textContent = bxt(labels[state]);
+    const retry = el.querySelector('.bx-autosave-retry');
+    if (retry) retry.hidden = state !== 'error' && state !== 'signed_out';
+  },
+
+  showError(field, message) {
+    const wrap = field && field.closest ? field.closest('.bx-field') : null;
+    if (!wrap) return;
+    if (!message) {
+      BX.validateField(field);
+      return;
+    }
+    const errEl = wrap.querySelector('.bx-field-error');
+    wrap.classList.add('has-error');
+    field.setAttribute('aria-invalid', 'true');
+    if (errEl) {
+      errEl.textContent = message;
+      errEl.classList.add('is-visible');
+    }
+  },
+
+  clearError(field) {
+    const wrap = field && field.closest ? field.closest('.bx-field') : null;
+    if (!wrap || !wrap.classList.contains('has-error') || !this.isValid(field)) return;
+    wrap.classList.remove('has-error');
+    field.removeAttribute('aria-invalid');
+    const errEl = wrap.querySelector('.bx-field-error');
+    if (errEl) {
+      errEl.textContent = '';
+      errEl.classList.remove('is-visible');
+    }
+  },
+
+  announceFirstVideo(url) {
+    BX.toast(bxt('autosaveFirstVideo'), 'success', {
+      label: bxt('autosaveSeeIt'),
+      fn: () => window.open(url, '_blank', 'noopener')
+    });
+  }
+};
+
+/* ========================================================================
    Section layout panel — drag & drop ordering + visibility for the
    minimal theme. Talks to the ajax_save_section_layout endpoint; the
    public template reorders sections via CSS `order` (see
@@ -1491,6 +1976,7 @@ const BXSectionOrder = {
     if (this.saveBtn) this.saveBtn.disabled = !this.hasPending();
     this.refreshChips();
     this.setStatus();
+    BXAutosave.layoutChanged();
   },
 
   csrfToken() {

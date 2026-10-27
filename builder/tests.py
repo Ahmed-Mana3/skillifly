@@ -1,10 +1,12 @@
 import base64
+from datetime import date
 
 from django.test import TestCase, RequestFactory
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 
-from core.models import Profile, Project, ProjectCategory
+from core.models import Creator, Education, Experience, Link, Profile, Project, ProjectCategory, Skill
+from core.testing_helpers import make_editor
 from builder.forms import (
     PersonalInfoForm,
     SkillFormSet,
@@ -137,13 +139,29 @@ class SavePortfolioDataTests(TestCase):
         p1 = Project.objects.create(user=self.user, title="Project A")
         p2 = Project.objects.create(user=self.user, title="Project B")
 
+        # The builder's remove button ticks the row's hidden DELETE box.
+        removed = self._project_row("Project B", project_id=p2.id)
+        removed["DELETE"] = "on"
         post = self._base_post([
             self._project_row("Project A", project_id=p1.id),
+            removed,
         ])
         self._call_save(post)
 
         self.assertFalse(Project.objects.filter(id=p2.id).exists())
         self.assertEqual(Project.objects.filter(user=self.user).count(), 1)
+
+    def test_project_missing_from_the_post_is_kept(self):
+        """Added after the builder loaded (launch pages, agent, another tab): not the builder's to delete."""
+        p1 = Project.objects.create(user=self.user, title="Project A")
+        p2 = Project.objects.create(user=self.user, title="Added elsewhere")
+
+        self._call_save(self._base_post([
+            self._project_row("Project A", project_id=p1.id),
+        ]))
+
+        self.assertTrue(Project.objects.filter(id=p2.id).exists())
+        self.assertEqual(Project.objects.filter(user=self.user).count(), 2)
 
     def _png(self, name="thumb.png"):
         png = base64.b64decode(
@@ -173,6 +191,135 @@ class SavePortfolioDataTests(TestCase):
 
         project = Project.objects.get(user=self.user, title="Brand New")
         self.assertTrue(project.image)
+
+
+class ExplicitDeleteTests(TestCase):
+    """A builder save deletes only the rows the user removed (DELETE ticked).
+
+    Regression: rows missing from the POST used to be deleted, so anything added after
+    the builder loaded (launch pages, the AI agent, another tab) was wiped on save.
+    """
+
+    # prefix -> (model, make a row for a user, the builder's POST fields for that row)
+    KINDS = {
+        "skills": (
+            Skill,
+            lambda user: Skill.objects.create(user=user, name="DaVinci Resolve"),
+            lambda row: {"skill": row.name},
+        ),
+        "education": (
+            Education,
+            lambda user: Education.objects.create(
+                user=user, school="Cairo University", degree="BA", field="Film", grade_year=date(2020, 1, 1),
+            ),
+            lambda row: {"school": row.school, "degree": row.degree, "field": row.field, "year": "2020"},
+        ),
+        "experience": (
+            Experience,
+            lambda user: Experience.objects.create(
+                user=user, title="Editor", company="Studio", start_date=date(2021, 1, 1), duration=0,
+            ),
+            lambda row: {"title": row.title, "company": row.company, "start": "2021-01", "end": "", "description": ""},
+        ),
+        "projects": (
+            Project,
+            lambda user: Project.objects.create(user=user, title="Brand Film"),
+            lambda row: {"name": row.title, "url": "", "description": "", "video_type": "long", "category_id": ""},
+        ),
+        "links": (
+            Link,
+            lambda user: Link.objects.create(user=user, platform="Instagram", url="https://instagram.com/me"),
+            lambda row: {"name": row.platform, "url": row.url},
+        ),
+        "creators": (
+            Creator,
+            lambda user: Creator.objects.create(user=user, name="MrBeast"),
+            lambda row: {"name": row.name, "url": ""},
+        ),
+    }
+
+    def setUp(self):
+        self.user = make_editor(username="deleter")
+        Profile.objects.create(user=self.user)
+        self.client.force_login(self.user)
+
+    def _post(self, rows_by_prefix):
+        """POST /builder/update/ with the given rows; every other formset is sent empty."""
+        post = {"fullname": "Editor One", "title": "Video Editor"}
+        for prefix in self.KINDS:
+            rows = rows_by_prefix.get(prefix, [])
+            post[f"{prefix}-TOTAL_FORMS"] = str(len(rows))
+            post[f"{prefix}-INITIAL_FORMS"] = str(len([r for r in rows if r.get("id")]))
+            post[f"{prefix}-MIN_NUM_FORMS"] = "0"
+            post[f"{prefix}-MAX_NUM_FORMS"] = "1000"
+            for i, row in enumerate(rows):
+                for key, value in row.items():
+                    post[f"{prefix}-{i}-{key}"] = value
+        res = self.client.post("/builder/update/", post)
+        self.assertEqual(res.status_code, 302)  # 200 means a formset failed validation
+        return res
+
+    def _row(self, prefix, instance, delete=False):
+        _, _, fields = self.KINDS[prefix]
+        row = {"id": str(instance.id), **fields(instance)}
+        if delete:
+            row["DELETE"] = "on"
+        return row
+
+    def test_rows_missing_from_the_post_are_kept(self):
+        made = {prefix: make(self.user) for prefix, (_, make, _) in self.KINDS.items()}
+        self._post({})
+        for prefix, row in made.items():
+            model = self.KINDS[prefix][0]
+            with self.subTest(prefix):
+                self.assertTrue(model.objects.filter(id=row.id).exists())
+
+    def test_rows_marked_delete_are_deleted(self):
+        made = {prefix: make(self.user) for prefix, (_, make, _) in self.KINDS.items()}
+        self._post({prefix: [self._row(prefix, row, delete=True)] for prefix, row in made.items()})
+        for prefix, row in made.items():
+            model = self.KINDS[prefix][0]
+            with self.subTest(prefix):
+                self.assertFalse(model.objects.filter(id=row.id).exists())
+
+    def test_one_removed_row_leaves_the_others(self):
+        kept = Project.objects.create(user=self.user, title="Keep me")
+        removed = Project.objects.create(user=self.user, title="Remove me")
+        added_elsewhere = Project.objects.create(user=self.user, title="Added in another tab")
+
+        self._post({"projects": [
+            self._row("projects", kept),
+            self._row("projects", removed, delete=True),
+        ]})
+
+        remaining = set(Project.objects.filter(user=self.user).values_list("title", flat=True))
+        self.assertEqual(remaining, {"Keep me", "Added in another tab"})
+        self.assertTrue(Project.objects.filter(id=added_elsewhere.id).exists())
+
+    def test_removed_row_with_blank_required_fields_is_still_deleted(self):
+        """The builder strips `required` from removed rows; their leftovers must not block the delete."""
+        project = Project.objects.create(user=self.user, title="Old cut")
+        row = self._row("projects", project, delete=True)
+        row["name"] = ""
+        self._post({"projects": [row]})
+        self.assertFalse(Project.objects.filter(id=project.id).exists())
+
+    def test_delete_with_another_users_id_deletes_nothing(self):
+        other = make_editor(username="someone_else")
+        theirs = Project.objects.create(user=other, title="Not yours")
+        mine = Project.objects.create(user=self.user, title="Mine")
+
+        self._post({"projects": [self._row("projects", theirs, delete=True)]})
+
+        self.assertTrue(Project.objects.filter(id=theirs.id).exists())
+        self.assertTrue(Project.objects.filter(id=mine.id).exists())
+        self.assertEqual(Project.objects.filter(user=self.user).count(), 1)
+
+    def test_removed_new_row_creates_nothing(self):
+        """A row added and removed before saving has no id: nothing is created or deleted."""
+        self._post({"projects": [{"name": "Never mind", "url": "", "description": "",
+                                  "video_type": "long", "category_id": "", "DELETE": "on"}]})
+        self.assertFalse(Project.objects.filter(user=self.user).exists())
 
 
 class ProjectCategoryAssignmentTests(TestCase):
@@ -331,7 +478,7 @@ class ProjectCategoryOwnershipTests(TestCase):
     """A submitted category id must belong to the signed-in user.
 
     ``category_id`` is a hidden CharField, so without an ownership check a
-    tampered or stale id used to resolve to None in ``_category_for`` and the
+    tampered or stale id used to resolve to None in ``services.category_for`` and the
     assignment was dropped with no feedback at all.
     """
 

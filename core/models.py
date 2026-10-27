@@ -619,6 +619,11 @@ class SiteSettings(models.Model):
         help_text="Send new editors through the full-screen launch checklist after signup "
                   "(about you, first video, theme, skills, then their portfolio). Takes precedence over the welcome page.",
     )
+    # See BUILDER_AUTOSAVE_PLAN.md
+    builder_autosave_enabled = models.BooleanField(
+        default=False,
+        help_text="The portfolio builder saves each change as the user types, instead of a Save button.",
+    )
 
     class Meta:
         verbose_name = "Site Settings"

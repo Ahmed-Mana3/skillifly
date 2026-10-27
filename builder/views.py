@@ -8,9 +8,9 @@ from django.template.loader import get_template
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
-from datetime import date
 import logging
 
+from builder import services
 from core import activation, onboarding
 
 logger = logging.getLogger(__name__)
@@ -283,12 +283,7 @@ def _builder_flow(request, arabic=False):
                 projects=Project.objects.filter(user=request.user).count(),
             )
 
-            # Set profile to public if user has payment
-            payment = UserPayment.objects.filter(user=request.user, status='paid').last()
-            if payment and payment.is_active:
-                profile, _ = Profile.objects.get_or_create(user=request.user)
-                profile.is_public = True
-                profile.save()
+            services.publish_if_paid(request.user)
 
             first_project = _first_project_redirect(request, had_projects, arabic)
             if first_project:
@@ -376,6 +371,8 @@ def _builder_flow(request, arabic=False):
         "section_layout_enabled": section_layout_enabled,
         "section_presets": section_presets,
         "is_arabic_page": arabic,
+        "autosave_enabled": services.autosave_enabled(),
+        "autosave_api_base": reverse("builder_api_personal").rsplit("personal/", 1)[0],
     }
 
     if arabic:
@@ -455,13 +452,7 @@ def _update_flow(request, arabic=False):
                 user, 'builder_saved', flow='update',
                 projects=Project.objects.filter(user=user).count(),
             )
-            # Set profile to public if user has active payment
-            payment = UserPayment.objects.filter(user=request.user, status='paid').last()
-            if payment and payment.is_active:
-                profile = Profile.objects.filter(user=user).first()
-                if profile:
-                    profile.is_public = True
-                    profile.save()
+            services.publish_if_paid(user)
 
             first_project = _first_project_redirect(request, had_projects, arabic)
             if first_project:
@@ -546,6 +537,8 @@ def _update_flow(request, arabic=False):
         "section_layout_enabled": section_layout_enabled,
         "section_presets": section_presets,
         "is_arabic_page": arabic,
+        "autosave_enabled": services.autosave_enabled(),
+        "autosave_api_base": reverse("builder_api_personal").rsplit("personal/", 1)[0],
     }
 
     if arabic:
@@ -569,303 +562,33 @@ def _update_flow(request, arabic=False):
 
 def _portfolio_initial_data(user):
     """Build formset initial data (with DB ids) so existing rows are updated in place."""
-    from core.models import ProjectCategory
-
-    skills = [{"id": s.id, "skill": s.name} for s in Skill.objects.filter(user=user)]
-
-    education = [{
-        "id": e.id,
-        "school": e.school,
-        "degree": e.degree,
-        "field": e.field,
-        "year": e.grade_year.year,
-    } for e in Education.objects.filter(user=user)]
-
-    experience = []
-    for e in Experience.objects.filter(user=user):
-        experience.append({
-            "id": e.id,
-            "title": e.title,
-            "company": e.company,
-            "start": e.start_date.strftime('%Y-%m') if e.start_date else '',
-            "end": e.end_date.strftime('%Y-%m') if e.end_date else '',
-            "description": e.details,
-        })
-
-    projects = [{
-        "id": p.id,
-        "name": p.title,
-        "url": p.url,
-        "description": p.details,
-        "video_type": p.video_type,
-        "thumbnail": p.image,
-        "category_id": p.category_id,
-    } for p in Project.objects.filter(user=user)]
-
-    project_categories = [{
+    initial = {
+        key: [kind.to_initial(row) for row in kind.model.objects.filter(user=user)]
+        for key, kind in services.KINDS.items()
+    }
+    initial["project_categories"] = [{
         "id": c.id,
         "name": c.name,
         "description": c.description,
         "thumbnail": c.thumbnail,
     } for c in ProjectCategory.objects.filter(user=user)]
+    return initial
 
-    links = [{"id": l.id, "name": l.platform, "url": l.url} for l in Link.objects.filter(user=user)]
-
-    creators = [{
-        "id": c.id,
-        "name": c.name,
-        "image": c.image,
-        "url": c.url,
-    } for c in Creator.objects.filter(user=user)]
-
-    return {
-        "skills": skills,
-        "education": education,
-        "experience": experience,
-        "projects": projects,
-        "project_categories": project_categories,
-        "links": links,
-        "creators": creators,
-    }
-
-
-def _category_for(category_id, category_mapping):
-    if not category_id:
-        return None
-    try:
-        return category_mapping.get(int(category_id))
-    except (TypeError, ValueError):
-        return None
-
-
-def _parse_month_year(date_str):
-    if not date_str:
-        return None
-    try:
-        y, m = map(int, date_str.split("-"))
-        return date(y, m, 1)
-    except (ValueError, AttributeError):
-        return None
-
-
-def _update_or_create(existing_map, submitted_ids, data, model_cls, user, fields):
-    """Update existing rows by id, create new ones, then delete rows no longer submitted."""
-    row_id = data.get("id")
-    if row_id and row_id in existing_map:
-        instance = existing_map[row_id]
-        has_changed = False
-        for key, value in fields.items():
-            if getattr(instance, key) != value:
-                setattr(instance, key, value)
-                has_changed = True
-        if has_changed:
-            instance.save()
-        submitted_ids.add(row_id)
-    else:
-        model_cls.objects.create(user=user, **fields)
-
-
-def _track_profile_fields_added(user, previous, personal_data):
-    """Record which personal-info fields went from empty/placeholder to filled in."""
-    def filled(value):
-        return bool((value or '').strip())
-
-    added = []
-    for field in ('bio', 'booking_url', 'phone'):
-        if filled(personal_data.get(field)) and not (previous and filled(getattr(previous, field, ''))):
-            added.append(field)
-    new_title = (personal_data.get('title') or '').strip()
-    old_title = (previous.title or '').strip() if previous else ''
-    if new_title and new_title not in onboarding.PLACEHOLDER_TITLES and (
-        not old_title or old_title in onboarding.PLACEHOLDER_TITLES
-    ):
-        added.append('title')
-    for field in added:
-        transaction.on_commit(
-            lambda f=field: activation.track(user, 'profile_field_added', field=f, source='builder')
-        )
 
 
 @transaction.atomic
 def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None):
-    personal_data = personal_form.cleaned_data
-
-    skills = [
-        f.cleaned_data
-        for f in skill_formset
-        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-    ]
-
-    education = [
-        f.cleaned_data
-        for f in education_formset
-        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-    ]
-
-    experience = [
-        f.cleaned_data
-        for f in experience_formset
-        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-    ]
-
-    projects = [
-        f.cleaned_data
-        for f in project_formset
-        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-    ]
-
-    links = [
-        f.cleaned_data
-        for f in link_formset
-        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-    ]
-
-    creators = [
-        f.cleaned_data
-        for f in creator_formset
-        if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
-    ]
-
-    previous_info = PersonalInfo.objects.filter(user=request.user).first()
-    personal_info, created = PersonalInfo.objects.update_or_create(
-        user=request.user,
-        defaults={
-            "full_name": personal_data["fullname"],
-            "title": personal_data["title"],
-            "email": personal_data["email"],
-            "phone": personal_data["phone"],
-            "bio": personal_data["bio"],
-            "booking_url": personal_data.get("booking_url"),
-        },
-    )
-    _track_profile_fields_added(request.user, previous_info, personal_data)
-
-    # Save picture to Profile if provided
-    if "picture" in personal_data and personal_data["picture"]:
-        profile, p_created = Profile.objects.get_or_create(user=request.user)
-        had_picture = bool(profile.picture)
-        profile.picture = personal_data["picture"]
-        profile.save()
-        if not had_picture:
-            transaction.on_commit(lambda: activation.track(request.user, 'profile_field_added', field='picture', source='builder'))
-
-    # --- Skills ---
-    existing_map = {s.id: s for s in Skill.objects.filter(user=request.user)}
-    submitted_ids = set()
-    for skill_data in skills:
-        _update_or_create(
-            existing_map, submitted_ids,
-            skill_data, Skill, request.user,
-            {"name": skill_data["skill"]},
-        )
-    for s_id, skill in existing_map.items():
-        if s_id not in submitted_ids:
-            skill.delete()
-
-    # --- Education ---
-    existing_map = {e.id: e for e in Education.objects.filter(user=request.user)}
-    submitted_ids = set()
-    for edu_data in education:
-        _update_or_create(
-            existing_map, submitted_ids,
-            edu_data, Education, request.user,
-            {
-                "school": edu_data["school"],
-                "degree": edu_data["degree"],
-                "field": edu_data["field"],
-                "grade_year": date(edu_data["year"], 1, 1),
-            },
-        )
-    for e_id, edu in existing_map.items():
-        if e_id not in submitted_ids:
-            edu.delete()
-
-    # --- Experience ---
-    existing_map = {e.id: e for e in Experience.objects.filter(user=request.user)}
-    submitted_ids = set()
-    for exp_data in experience:
-        start_date = _parse_month_year(exp_data.get("start"))
-        end_date = _parse_month_year(exp_data.get("end"))
-        _update_or_create(
-            existing_map, submitted_ids,
-            exp_data, Experience, request.user,
-            {
-                "title": exp_data["title"],
-                "company": exp_data["company"],
-                "start_date": start_date or date.today(),
-                "end_date": end_date,
-                "still_working": not end_date,
-                "duration": 0.0,
-                "details": exp_data.get("description", ""),
-            },
-        )
-    for e_id, exp in existing_map.items():
-        if e_id not in submitted_ids:
-            exp.delete()
-
-    # --- Project Categories (read from DB, saved via AJAX) ---
-    from core.models import ProjectCategory
-    category_mapping = {c.id: c for c in ProjectCategory.objects.filter(user=request.user)}
-
-    # --- Projects ---
-    existing_map = {p.id: p for p in Project.objects.filter(user=request.user)}
-    submitted_ids = set()
-    for proj_data in projects:
-        new_image = proj_data.get("thumbnail")
-        fields = {
-            "title": proj_data["name"],
-            "url": proj_data.get("url"),
-            "details": proj_data.get("description"),
-            "video_type": proj_data.get("video_type", "long"),
-            "category": _category_for(proj_data.get("category_id"), category_mapping),
-        }
-        if new_image:
-            fields["image"] = new_image
-        _update_or_create(
-            existing_map, submitted_ids,
-            proj_data, Project, request.user, fields,
-        )
-    for p_id, project in existing_map.items():
-        if p_id not in submitted_ids:
-            project.delete()
-
-    # --- Links ---
-    existing_map = {l.id: l for l in Link.objects.filter(user=request.user)}
-    submitted_ids = set()
-    for link_data in links:
-        _update_or_create(
-            existing_map, submitted_ids,
-            link_data, Link, request.user,
-            {
-                "platform": link_data["name"],
-                "url": link_data["url"],
-            },
-        )
-    for l_id, link in existing_map.items():
-        if l_id not in submitted_ids:
-            link.delete()
-
-    # --- Creators ---
-    existing_map = {c.id: c for c in Creator.objects.filter(user=request.user)}
-    submitted_ids = set()
-    for cr_data in creators:
-        fields = {
-            "name": cr_data["name"],
-            "url": cr_data.get("url"),
-        }
-        new_image = cr_data.get("image")
-        if new_image:
-            fields["image"] = new_image
-        _update_or_create(
-            existing_map, submitted_ids,
-            cr_data, Creator, request.user, fields,
-        )
-    for c_id, creator in existing_map.items():
-        if c_id not in submitted_ids:
-            creator.delete()
-
-    # Ensure a UserPayment record exists
-    if not UserPayment.objects.filter(user=request.user).exists():
-        UserPayment.objects.create(user=request.user)
-
-
+    """Save the whole builder form. Collections are saved separately, over AJAX."""
+    user = request.user
+    services.save_personal(user, personal_form.cleaned_data)
+    categories = services.category_map(user)
+    for key, formset in (
+        ("skills", skill_formset),
+        ("education", education_formset),
+        ("experience", experience_formset),
+        ("projects", project_formset),
+        ("links", link_formset),
+        ("creators", creator_formset),
+    ):
+        services.save_formset(user, key, formset, categories)
+    services.ensure_payment_row(user)

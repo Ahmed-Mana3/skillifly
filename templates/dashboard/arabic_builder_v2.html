@@ -63,19 +63,27 @@
 {% block ambient_orbs %}{% endblock %}
 
 {% block content %}
-<div class="bx-root arabic-rtl" id="builder-root" data-category="{{ category }}">
+<div class="bx-root arabic-rtl" id="builder-root" data-category="{{ category }}" data-lang="ar"{% if autosave_enabled %} data-autosave="1" data-api-base="{{ autosave_api_base }}"{% endif %}>
 
   <header class="bx-header">
     <div>
       <p class="bx-eyebrow"><span class="bx-eyebrow-dot"></span> منشئ الملف المهني</p>
       <h1 class="bx-title">{% if is_update %}حدِّث ملفك المهني{% else %}أنشئ ملفك المهني{% endif %}</h1>
       <p class="bx-subtitle">
-        املأ الأقسام أدناه — تعديلاتك تظهر مباشرة بعد الحفظ.
+        {% if autosave_enabled %}املأ الأقسام أدناه، وكل تعديل يُحفَظ تلقائيًا أثناء عملك.
+        {% else %}املأ الأقسام أدناه — تعديلاتك تظهر مباشرة بعد الحفظ.{% endif %}
         علامة الصحّ تعني أن القسم مكتمِل.
       </p>
     </div>
     <div class="bx-header-actions">
-      {% if is_update %}
+      {% if autosave_enabled %}
+      <span class="bx-autosave-status" id="bx-autosave-status" data-state="saved" role="status" aria-live="polite" hidden>
+        <span class="bx-autosave-dot" aria-hidden="true"></span>
+        <span class="bx-autosave-text">تم حفظ كل التعديلات</span>
+        <button type="button" class="bx-autosave-retry" data-action="autosave-retry" hidden>إعادة المحاولة</button>
+      </span>
+      {% endif %}
+      {% if is_update or autosave_enabled %}
       <a href="{% url 'preview' username=request.user.username %}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         عرض موقعك المنشور
@@ -1307,7 +1315,14 @@
     orderLiveMoved: 'تم نقل {name} إلى الموضع {n} من {total}',
     orderLiveHidden: 'تم إخفاء {name} من ملفك المهني',
     orderLiveShown: 'أصبح {name} ظاهرًا الآن',
-    orderLiveSaved: 'تم حفظ الترتيب.'
+    orderLiveSaved: 'تم حفظ الترتيب.',
+    autosaveSaved: 'تم حفظ كل التعديلات',
+    autosaveSaving: 'جارٍ الحفظ…',
+    autosaveError: 'لم يُحفَظ بعض التعديلات',
+    autosaveSignedOut: 'تم تسجيل خروجك. سجّل الدخول مجددًا لحفظ تعديلاتك.',
+    autosaveDraft: 'أكمل الحقول المطلوبة لحفظ العنصر الجديد',
+    autosaveFirstVideo: 'أصبح أول فيديو لك في ملفك المهني.',
+    autosaveSeeIt: 'شاهده'
   };
 </script>
 <script src="{% static 'js/builder_v2.js' %}?v={% now 'U' %}"></script>

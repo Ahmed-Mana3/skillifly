@@ -1269,6 +1269,88 @@ body.bx-layout-dirty .bx-savebar {
   50% { opacity: 0.35; }
 }
 
+/* Autosave (builder_autosave_enabled): the JS adds .bx-autosave-on, so without JS
+   the Save buttons stay. A status pill in the header replaces them. */
+body.bx-autosave-on [data-save-button],
+body.bx-autosave-on .bx-savebar,
+body.bx-autosave-on #bx-order-save {
+  display: none !important;
+}
+
+.bx-autosave-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--bx-border);
+  background: var(--bx-surface);
+  color: var(--bx-muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.3;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.bx-autosave-status[hidden] {
+  display: none;
+}
+
+.bx-autosave-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--bx-success);
+}
+
+.bx-autosave-status[data-state="saving"] .bx-autosave-dot,
+.bx-autosave-status[data-state="pending"] .bx-autosave-dot {
+  background: var(--bx-accent);
+  animation: bxDotPulse 1.2s ease-in-out infinite;
+}
+
+.bx-autosave-status[data-state="draft"] {
+  color: var(--bx-warn);
+  border-color: #FDE68A;
+  background: var(--bx-warn-bg);
+}
+
+.bx-autosave-status[data-state="draft"] .bx-autosave-dot {
+  background: var(--bx-warn);
+}
+
+.bx-autosave-status[data-state="invalid"],
+.bx-autosave-status[data-state="error"],
+.bx-autosave-status[data-state="signed_out"] {
+  color: var(--bx-danger);
+  border-color: #FECACA;
+  background: var(--bx-danger-bg);
+}
+
+.bx-autosave-status[data-state="invalid"] .bx-autosave-dot,
+.bx-autosave-status[data-state="error"] .bx-autosave-dot,
+.bx-autosave-status[data-state="signed_out"] .bx-autosave-dot {
+  background: var(--bx-danger);
+}
+
+.bx-autosave-retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.bx-autosave-retry[hidden] {
+  display: none;
+}
+
 .bx-toasts {
   position: fixed;
   bottom: 84px;
