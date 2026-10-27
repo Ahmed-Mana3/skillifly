@@ -80,7 +80,7 @@ const BX_I18N = Object.assign({
   pasteEmpty: 'Paste a video link first.',
   orderSaveFail: 'Couldn’t save the new order. Try again.',
   linkCopied: 'Link copied. Paste it to your client.',
-  copyFallback: 'Copy your portfolio link:',
+  copiedShort: 'Copied',
   skillsMax: 'You can show up to {n} skills.',
   linkLabel: 'Link'
 }, window.BuilderI18n || {});
@@ -288,7 +288,9 @@ const BX = {
         case 'order-confirm-cancel': BXSectionOrder.closeConfirm(); break;
         case 'autosave-retry': BXAutosave.retryAll(); break;
         case 'toggle-more': this.toggleMore(); break;
-        case 'copy-link': this.copyPortfolioLink(); break;
+        case 'copy-link': this.copyPortfolioLink(actionEl); break;
+        case 'copy-link-dialog': this.copyFromLinkDialog(); break;
+        case 'close-link-dialog': this.closeLinkDialog(); break;
         case 'keep-title': this.keepTitle(); break;
         case 'paste-add': BXVideos.addFromPaste(); break;
         case 'toggle-details': BXVideos.toggleDetails(actionEl.closest('.bx-item')); break;
@@ -959,15 +961,94 @@ const BX = {
     if (target) setTimeout(() => target.focus({ preventScroll: false }), 350);
   },
 
-  copyPortfolioLink() {
+  // Copy the portfolio link with our own feedback, never a browser dialog: the clipboard API
+  // where the page may use it (https), a hidden textarea otherwise (plain http), and as a last
+  // resort a small dialog with the link selected.
+  copyPortfolioLink(btn) {
     const url = this.root ? this.root.dataset.portfolioUrl : '';
     if (!url) return;
-    const done = () => this.toast(bxt('linkCopied'), 'success');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(done, () => window.prompt(bxt('copyFallback'), url));
-    } else {
-      window.prompt(bxt('copyFallback'), url);
+    this.copyText(url).then(ok => (ok ? this.showCopied(btn) : this.openLinkDialog()));
+  },
+
+  copyText(text) {
+    const legacy = () => {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
+      document.body.appendChild(area);
+      area.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      document.body.removeChild(area);
+      return ok;
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(() => true, () => legacy());
     }
+    return Promise.resolve(legacy());
+  },
+
+  // The button says "Copied" for a moment, and a toast says what to do next.
+  showCopied(btn) {
+    if (btn && !btn.dataset.label) {
+      btn.dataset.label = btn.innerHTML;
+      btn.classList.add('is-copied');
+      btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>' + bxt('copiedShort');
+      setTimeout(() => {
+        btn.innerHTML = btn.dataset.label;
+        delete btn.dataset.label;
+        btn.classList.remove('is-copied');
+      }, 2000);
+    }
+    this.toast(bxt('linkCopied'), 'success');
+  },
+
+  openLinkDialog() {
+    const dialog = document.getElementById('bx-link-dialog');
+    if (!dialog) return;
+    // <main> is its own layer (z-10) under the site's fixed nav (z-50): from <body> the
+    // dialog's backdrop covers the whole page.
+    if (dialog.parentElement !== document.body) document.body.appendChild(dialog);
+    this.linkDialogOpener = document.activeElement;
+    dialog.classList.add('is-open');
+    dialog.setAttribute('aria-hidden', 'false');
+    const field = dialog.querySelector('[data-link-dialog-url]');
+    dialog.querySelector('[data-link-dialog-hint]').hidden = true;
+    dialog.onclick = e => { if (e.target === dialog) this.closeLinkDialog(); };
+    this.trapFocus(dialog); // sets onkeydown for Tab; Escape is added on top of it
+    const keepFocus = dialog.onkeydown;
+    dialog.onkeydown = e => {
+      if (e.key === 'Escape') this.closeLinkDialog();
+      else keepFocus(e);
+    };
+    setTimeout(() => { field.focus(); field.select(); }, 60);
+  },
+
+  copyFromLinkDialog() {
+    const dialog = document.getElementById('bx-link-dialog');
+    const field = dialog && dialog.querySelector('[data-link-dialog-url]');
+    if (!field) return;
+    field.focus();
+    field.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+    if (ok) {
+      this.closeLinkDialog();
+      this.toast(bxt('linkCopied'), 'success');
+    } else {
+      dialog.querySelector('[data-link-dialog-hint]').hidden = false; // selected: Ctrl+C does the rest
+    }
+  },
+
+  closeLinkDialog() {
+    const dialog = document.getElementById('bx-link-dialog');
+    if (!dialog) return;
+    dialog.classList.remove('is-open');
+    dialog.setAttribute('aria-hidden', 'true');
+    dialog.onclick = null;
+    dialog.onkeydown = null;
+    if (this.linkDialogOpener && this.linkDialogOpener.focus) this.linkDialogOpener.focus();
   },
 
   selectChip(chip) {

@@ -34,4 +34,20 @@
     {% endif %}
   </div>
 </header>
+
+{% if is_live %}
+{# Shown only when the browser won't let the page copy by itself: the link, ready to copy by hand. #}
+<div class="bx-overlay" id="bx-link-dialog" role="dialog" aria-modal="true" aria-labelledby="bx-link-dialog-title" aria-hidden="true">
+  <div class="bx-overlay-card bx-confirm-card bx-link-card">
+    <h3 class="bx-confirm-title" id="bx-link-dialog-title">{% if ar %}رابط معرضك{% else %}Your portfolio link{% endif %}</h3>
+    <p class="bx-confirm-desc">{% if ar %}انسخه وأرسله لعميلك.{% else %}Copy it and send it to your client.{% endif %}</p>
+    <input class="bx-input bx-link-field" type="text" readonly dir="ltr" value="{{ portfolio_url }}" data-link-dialog-url aria-label="{% if ar %}رابط معرضك{% else %}Your portfolio link{% endif %}">
+    <p class="bx-link-hint" data-link-dialog-hint hidden>{% if ar %}الرابط محدد. اضغط Ctrl+C (أو ⌘C) لنسخه.{% else %}The link is selected. Press Ctrl+C (or ⌘C) to copy it.{% endif %}</p>
+    <div class="bx-confirm-actions">
+      <button type="button" class="bx-btn bx-btn-ghost bx-btn-md" data-action="close-link-dialog">{% if ar %}إغلاق{% else %}Close{% endif %}</button>
+      <button type="button" class="bx-btn bx-btn-primary bx-btn-md" data-action="copy-link-dialog">{% if ar %}انسخ{% else %}Copy{% endif %}</button>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endwith %}

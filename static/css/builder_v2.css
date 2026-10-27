@@ -2737,6 +2737,14 @@ body.bx-autosave-on #bx-order-save {
 
 .bx-done-btn { text-decoration: none; }
 
+/* --- copy link: "Copied" on the button, or the link in a small dialog --- */
+.bx-btn.is-copied { background: var(--bx-success); box-shadow: none; filter: none; }
+.bx-btn-ghost.is-copied { background: var(--bx-success-bg); border-color: #A7F3D0; color: var(--bx-success); }
+#bx-link-dialog { z-index: 10050; } /* above the site's fixed navigation bar */
+.bx-link-card { max-width: 440px; }
+.bx-link-field { margin-top: 18px; text-align: center; font-weight: 600; color: var(--bx-text); background: var(--bx-field-bg); }
+.bx-link-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--bx-muted); }
+
 /* --- tablets and phones: readiness above the sticky pill nav --- */
 @media (max-width: 1023px) {
   .bx-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }

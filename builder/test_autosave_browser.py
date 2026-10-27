@@ -17,13 +17,16 @@ from unittest import skipUnless
 os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.db import OperationalError
 from django.test import override_settings
 
 from unittest.mock import patch
 
 from core.models import Link, PersonalInfo, Profile, Project, Skill
 from core.test_onboarding_browser import LIVE_SETTINGS, RUN, YT, fake_fetch, fake_thumb
-from core.testing_helpers import TempMediaMixin, clear_cache, make_editor, png_bytes, seed_themes, site_settings
+from core.testing_helpers import (
+    TempMediaMixin, clear_cache, give_payment, make_editor, png_bytes, seed_themes, site_settings,
+)
 
 SHOTS = os.environ.get('SKILLIFLY_SCREENSHOT_DIR') or os.path.join(tempfile.gettempdir(), 'skillifly-autosave-shots')
 
@@ -84,8 +87,14 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
     def wait_until(self, page, check, message, timeout=15):
         end = time.time() + timeout
         while time.time() < end:
-            if check():
-                return
+            try:
+                if check():
+                    return
+            except OperationalError as exc:
+                # The test database is one in-memory SQLite shared with the live server's
+                # thread; reading while that thread writes reports "locked". Look again.
+                if 'locked' not in str(exc):
+                    raise
             page.wait_for_timeout(150)
         self.fail(message)
 
@@ -265,6 +274,43 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         mobile = self.open_builder(width=390, height=844)
         self.assertLessEqual(mobile.evaluate('document.documentElement.scrollWidth'), 391, 'no sideways scroll')
         self.shot(mobile, 'work-mobile')
+
+    # --- copy link -------------------------------------------------------------------
+
+    def go_live(self):
+        give_payment(self.user)
+        Profile.objects.filter(user=self.user).update(is_public=True)
+
+    def test_copy_link_confirms_on_the_page_not_in_a_browser_dialog(self):
+        self.go_live()
+        page = self.open_builder()
+        dialogs = []
+        page.on('dialog', lambda d: (dialogs.append(d.message), d.dismiss()))
+        page.click('.bx-header [data-action="copy-link"]')
+        page.wait_for_selector('.bx-header [data-action="copy-link"].is-copied')
+        page.wait_for_selector('.bx-toast:has-text("Link copied")')
+        self.assertEqual(dialogs, [], 'no browser dialog')
+        self.shot(page, 'copied', '.bx-header')
+
+    def test_when_copying_is_blocked_the_link_shows_in_a_dialog(self):
+        self.go_live()
+        page = self.open_builder()
+        dialogs = []
+        page.on('dialog', lambda d: (dialogs.append(d.message), d.dismiss()))
+        # A browser that allows neither the clipboard API nor execCommand('copy').
+        page.evaluate("""() => {
+            Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+            document.execCommand = () => false;
+        }""")
+        page.click('.bx-header [data-action="copy-link"]')
+        page.wait_for_selector('#bx-link-dialog.is-open')
+        self.assertTrue(page.input_value('[data-link-dialog-url]').endswith('/sara/'))
+        page.click('[data-action="copy-link-dialog"]')
+        page.wait_for_selector('[data-link-dialog-hint]:visible')
+        self.shot(page, 'copy-dialog')
+        page.keyboard.press('Escape')
+        page.wait_for_selector('#bx-link-dialog', state='hidden')
+        self.assertEqual(dialogs, [], 'no browser dialog')
 
     def test_switched_off_the_save_button_still_saves_a_pasted_video(self):
         site_settings(builder_autosave_enabled=False)

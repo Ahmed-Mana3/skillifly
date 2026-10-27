@@ -29,6 +29,15 @@ from core.models import (
 from core.theme_colors import resolve_background_palette
 
 
+def _is_site_admin(user):
+    """Staff users and superusers may view private portfolios (and don't inflate visit counts)."""
+    return bool(user.is_authenticated and (user.is_staff or user.is_superuser))
+
+
+def _can_view_private(request, owner):
+    return request.user == owner or owner.username == 'alex_mercer' or _is_site_admin(request.user)
+
+
 # ------------------------------------------------------------------
 # Examples Gallery
 # ------------------------------------------------------------------
@@ -374,13 +383,14 @@ def preview_view(request, username):
         profile.is_public = False
         profile.save(update_fields=['is_public'])
 
-    if not profile.is_public and request.user != user and user.username != 'alex_mercer':
+    if not profile.is_public and not _can_view_private(request, user):
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    # Don't log visits for mock user, owner visiting their own portfolio,
+    # Don't log visits for mock user, owner visiting their own portfolio, site admins,
     # or landing-page embeds (?embed=1) so hero impressions don't inflate stats
     if (user.username != 'alex_mercer'
             and (not request.user.is_authenticated or request.user != user)
+            and not _is_site_admin(request.user)
             and request.GET.get('embed') != '1'):
         profile.visits += 1
         profile.save(update_fields=['visits'])
@@ -559,10 +569,11 @@ def portfolio_reels(request, username):
         profile.is_public = False
         profile.save(update_fields=['is_public'])
 
-    if profile and not profile.is_public and request.user != user and user.username != 'alex_mercer':
+    if profile and not profile.is_public and not _can_view_private(request, user):
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    if user.username != 'alex_mercer' and profile and (not request.user.is_authenticated or request.user != user):
+    if (user.username != 'alex_mercer' and profile and not _is_site_admin(request.user)
+            and (not request.user.is_authenticated or request.user != user)):
         profile.visits += 1
         profile.save(update_fields=['visits'])
 
@@ -635,10 +646,11 @@ def portfolio_long_videos(request, username):
         profile.is_public = False
         profile.save(update_fields=['is_public'])
 
-    if profile and not profile.is_public and request.user != user and user.username != 'alex_mercer':
+    if profile and not profile.is_public and not _can_view_private(request, user):
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
-    if user.username != 'alex_mercer' and profile and (not request.user.is_authenticated or request.user != user):
+    if (user.username != 'alex_mercer' and profile and not _is_site_admin(request.user)
+            and (not request.user.is_authenticated or request.user != user)):
         profile.visits += 1
         profile.save(update_fields=['visits'])
 
@@ -711,7 +723,7 @@ def portfolio_video_detail(request, username, slug):
         profile.is_public = False
         profile.save(update_fields=['is_public'])
 
-    if profile and not profile.is_public and request.user != user and user.username != 'alex_mercer':
+    if profile and not profile.is_public and not _can_view_private(request, user):
         return render(request, 'errors/403_private.html', {'username': username}, status=403)
 
     personal_info = PersonalInfo.objects.filter(user=user).first()
