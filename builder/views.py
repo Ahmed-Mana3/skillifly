@@ -220,15 +220,23 @@ def arabic_builder_view(request):
     return _builder_flow(request, arabic=True)
 
 
-def _translate_project_video_types(project_formset):
-    """Swap video_type choice labels for the Arabic UI (values unchanged)."""
-    for form in project_formset.forms + [project_formset.empty_form]:
-        if 'video_type' in form.fields:
-            form.fields['video_type'].choices = [
-                ('long', 'فيديو طويل'),
-                ('reel', 'ريلز / فيديو قصير'),
-            ]
-        form.invalid_category_error = ProjectForm.INVALID_CATEGORY_ERROR_AR
+def _page_context(request, arabic):
+    """What the builder's header, readiness card, video cards and skill chips need."""
+    user = request.user
+    payment = UserPayment.objects.filter(user=user, status='paid').last()
+    is_live = bool(payment and payment.is_active and Profile.objects.filter(user=user, is_public=True).exists())
+    portfolio_path = reverse('preview', kwargs={'username': user.username})
+    return {
+        "autosave_enabled": services.autosave_enabled(),
+        "autosave_api_base": reverse("builder_api_personal").rsplit("personal/", 1)[0],
+        "is_live": is_live,
+        "preview_url": portfolio_path,
+        "portfolio_url": request.build_absolute_uri(portfolio_path),
+        "publish_url": reverse('arabic_payment' if arabic else 'payment') + '?ra=live',
+        "link_preview_url": reverse('welcome_preview_link'),
+        "projects_order_url": reverse('builder_api_projects_order'),
+        "skill_presets": services.skill_presets(arabic),
+    }
 
 
 def _invalid_sections(**forms):
@@ -257,13 +265,10 @@ def _builder_flow(request, arabic=False):
         skill_formset = SkillFormSet(request.POST, prefix="skills")
         education_formset = EducationFormSet(request.POST, prefix="education")
         experience_formset = ExperienceFormSet(request.POST, prefix="experience")
-        project_formset = ProjectFormSet(request.POST, request.FILES, prefix="projects", form_kwargs={"user": request.user})
+        project_formset = ProjectFormSet(request.POST, request.FILES, prefix="projects", form_kwargs={"user": request.user, "arabic": arabic})
         project_category_formset = ProjectCategoryFormSet(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSet(request.POST, prefix="links")
         creator_formset = CreatorFormSet(request.POST, request.FILES, prefix="creators")
-
-        if arabic:
-            _translate_project_video_types(project_formset)
 
         if (
             personal_form.is_valid()
@@ -277,7 +282,7 @@ def _builder_flow(request, arabic=False):
 
             had_projects = Project.objects.filter(user=request.user).exists()
             with activation.source('builder'):
-                save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+                save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset, arabic=arabic)
             activation.track(
                 request.user, 'builder_saved', flow='builder',
                 projects=Project.objects.filter(user=request.user).count(),
@@ -318,16 +323,14 @@ def _builder_flow(request, arabic=False):
             request.user, PersonalInfo.objects.filter(user=request.user).first(), arabic,
         ))
 
-        skill_formset = SkillFormSet(initial=initial["skills"], prefix="skills")
-        education_formset = EducationFormSet(initial=initial["education"], prefix="education")
-        experience_formset = ExperienceFormSet(initial=initial["experience"], prefix="experience")
-        project_formset = ProjectFormSet(initial=initial["projects"], prefix="projects", form_kwargs={"user": request.user})
-        project_category_formset = ProjectCategoryFormSet(initial=initial["project_categories"], prefix="project_categories")
-        link_formset = LinkFormSet(initial=initial["links"], prefix="links")
-        creator_formset = CreatorFormSet(initial=initial["creators"], prefix="creators")
-
-        if arabic:
-            _translate_project_video_types(project_formset)
+        # No blank placeholder rows: an empty section shows its empty state and an Add button.
+        skill_formset = SkillFormSetUpdate(initial=initial["skills"], prefix="skills")
+        education_formset = EducationFormSetUpdate(initial=initial["education"], prefix="education")
+        experience_formset = ExperienceFormSetUpdate(initial=initial["experience"], prefix="experience")
+        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects", form_kwargs={"user": request.user, "arabic": arabic})
+        project_category_formset = ProjectCategoryFormSetUpdate(initial=initial["project_categories"], prefix="project_categories")
+        link_formset = LinkFormSetUpdate(initial=initial["links"], prefix="links")
+        creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")
 
     profile = getattr(request.user, 'profile', None)
 
@@ -371,8 +374,7 @@ def _builder_flow(request, arabic=False):
         "section_layout_enabled": section_layout_enabled,
         "section_presets": section_presets,
         "is_arabic_page": arabic,
-        "autosave_enabled": services.autosave_enabled(),
-        "autosave_api_base": reverse("builder_api_personal").rsplit("personal/", 1)[0],
+        **_page_context(request, arabic),
     }
 
     if arabic:
@@ -428,13 +430,10 @@ def _update_flow(request, arabic=False):
         skill_formset = SkillFormSetUpdate(request.POST, prefix="skills")
         education_formset = EducationFormSetUpdate(request.POST, prefix="education")
         experience_formset = ExperienceFormSetUpdate(request.POST, prefix="experience")
-        project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects", form_kwargs={"user": request.user})
+        project_formset = ProjectFormSetUpdate(request.POST, request.FILES, prefix="projects", form_kwargs={"user": request.user, "arabic": arabic})
         project_category_formset = ProjectCategoryFormSetUpdate(request.POST, request.FILES, prefix="project_categories")
         link_formset = LinkFormSetUpdate(request.POST, prefix="links")
         creator_formset = CreatorFormSetUpdate(request.POST, request.FILES, prefix="creators")
-
-        if arabic:
-            _translate_project_video_types(project_formset)
 
         if (
             personal_form.is_valid()
@@ -447,7 +446,7 @@ def _update_flow(request, arabic=False):
         ):
             had_projects = Project.objects.filter(user=user).exists()
             with activation.source('builder'):
-                save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset)
+                save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset, arabic=arabic)
             activation.track(
                 user, 'builder_saved', flow='update',
                 projects=Project.objects.filter(user=user).count(),
@@ -490,13 +489,10 @@ def _update_flow(request, arabic=False):
         skill_formset = SkillFormSetUpdate(initial=initial["skills"], prefix="skills")
         education_formset = EducationFormSetUpdate(initial=initial["education"], prefix="education")
         experience_formset = ExperienceFormSetUpdate(initial=initial["experience"], prefix="experience")
-        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects", form_kwargs={"user": request.user})
+        project_formset = ProjectFormSetUpdate(initial=initial["projects"], prefix="projects", form_kwargs={"user": request.user, "arabic": arabic})
         project_category_formset = ProjectCategoryFormSetUpdate(initial=initial["project_categories"], prefix="project_categories")
         link_formset = LinkFormSetUpdate(initial=initial["links"], prefix="links")
         creator_formset = CreatorFormSetUpdate(initial=initial["creators"], prefix="creators")
-
-        if arabic:
-            _translate_project_video_types(project_formset)
 
     profile = getattr(request.user, 'profile', None)
 
@@ -537,8 +533,7 @@ def _update_flow(request, arabic=False):
         "section_layout_enabled": section_layout_enabled,
         "section_presets": section_presets,
         "is_arabic_page": arabic,
-        "autosave_enabled": services.autosave_enabled(),
-        "autosave_api_base": reverse("builder_api_personal").rsplit("personal/", 1)[0],
+        **_page_context(request, arabic),
     }
 
     if arabic:
@@ -577,7 +572,7 @@ def _portfolio_initial_data(user):
 
 
 @transaction.atomic
-def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None):
+def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None, arabic=False):
     """Save the whole builder form. Collections are saved separately, over AJAX."""
     user = request.user
     services.save_personal(user, personal_form.cleaned_data)
@@ -590,5 +585,5 @@ def save_portfolio_data(request, personal_form, skill_formset, education_formset
         ("links", link_formset),
         ("creators", creator_formset),
     ):
-        services.save_formset(user, key, formset, categories)
+        services.save_formset(user, key, formset, categories, arabic=arabic)
     services.ensure_payment_row(user)

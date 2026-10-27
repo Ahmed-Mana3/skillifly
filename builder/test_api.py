@@ -3,6 +3,7 @@ import re
 import shutil
 import tempfile
 from datetime import date
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -10,6 +11,7 @@ from django.test import TestCase, override_settings
 from core.models import (
     ActivationEvent, Creator, Education, Experience, Link, PersonalInfo, Profile, Project, ProjectCategory, Skill,
 )
+from core.oembed import VideoMeta
 from core.testing_helpers import give_payment, make_editor, png_bytes
 
 ARABIC = re.compile(r"[؀-ۿ]")
@@ -153,11 +155,19 @@ class BuilderApiTests(TestCase):
         self.assertEqual(list(res.json()["errors"]), ["url"])
         self.assertFalse(Link.objects.exists())
 
-    def test_new_project_needs_a_title(self):
-        res = self.post("projects/", {"url": "https://youtube.com/watch?v=abc"})
+    def test_new_video_needs_a_link_or_a_title(self):
+        res = self.post("projects/", {"description": "Colour and cut"})
         self.assertEqual(res.status_code, 400)
-        self.assertIn("name", res.json()["errors"])
+        self.assertEqual(list(res.json()["errors"]), ["url"])
         self.assertFalse(Project.objects.exists())
+
+    def test_a_video_added_by_link_takes_the_link_title(self):
+        meta = VideoMeta(url="https://www.youtube.com/watch?v=abcdefghijk", provider="youtube", title="Nike — Run Cairo")
+        with patch("core.oembed.fetch", return_value=meta):
+            res = self.post("projects/", {"url": "https://www.youtube.com/watch?v=abcdefghijk"})
+        self.assertEqual(res.status_code, 201, res.content)
+        self.assertEqual(Project.objects.get(id=res.json()["id"]).title, "Nike — Run Cairo")
+        self.assertEqual(res.json()["item"]["name"], "Nike — Run Cairo")
 
     def test_bad_booking_link_does_not_save_the_other_fields_sent_with_it(self):
         PersonalInfo.objects.create(user=self.user, full_name="Sara Ali", title="Colorist", email="", phone="", bio="")

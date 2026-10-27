@@ -241,19 +241,28 @@ class ProjectForm(forms.Form):
     INVALID_CATEGORY_ERROR = "This collection is no longer available. Pick one from the list."
     #: Arabic twin; the Arabic builder swaps it in before validation.
     INVALID_CATEGORY_ERROR_AR = "هذه المجموعة لم تعد متاحة. اختر مجموعة من القائمة."
+    #: A row needs something to show: the link (the title is then filled in from it) or a title.
+    LINK_OR_TITLE_ERROR = "Paste the video link (or give it a title)."
+    LINK_OR_TITLE_ERROR_AR = "الصق رابط الفيديو (أو اكتب له عنوانًا)."
 
-    def __init__(self, *args, user=None, **kwargs):
-        # ``user`` scopes category validation to the signed-in owner. It arrives
-        # via the formset's ``form_kwargs``.
+    def __init__(self, *args, user=None, arabic=False, **kwargs):
+        # ``user`` scopes category validation to the signed-in owner; ``arabic`` switches
+        # the labels and messages. Both arrive via the formset's ``form_kwargs``, which
+        # Django also applies to ``empty_form`` (a fresh form on every access).
         super().__init__(*args, **kwargs)
         self.user = user
+        if arabic:
+            self.fields["video_type"].choices = [("long", "فيديو كامل"), ("reel", "ريلز / فيديو قصير")]
+            self.invalid_category_error = self.INVALID_CATEGORY_ERROR_AR
+            self.link_or_title_error = self.LINK_OR_TITLE_ERROR_AR
 
     id = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={"class": "project-id-input"}))
+    # Optional: a blank title is filled in from the link when the row is saved
+    # (builder.services.save_row).
     name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
             "placeholder": "e.g., Portfolio Builder",
-            "required": True,
         })
     )
     url = forms.CharField(
@@ -283,7 +292,7 @@ class ProjectForm(forms.Form):
         })
     )
     video_type = forms.ChoiceField(
-        choices=[('long', 'Long Video'), ('reel', 'Short/Reel')],
+        choices=[('long', 'Full video'), ('reel', 'Short / reel')],
         initial='long',
         widget=forms.Select(attrs={"class": "sf-input"})
     )
@@ -338,17 +347,24 @@ class ProjectForm(forms.Form):
             raise forms.ValidationError(invalid_message, code="invalid_category")
         return category_id
 
+    def clean(self):
+        cleaned = super().clean()
+        if not (cleaned.get("name") or "").strip() and not cleaned.get("url") and "url" not in self.errors:
+            message = getattr(self, "link_or_title_error", None) or self.LINK_OR_TITLE_ERROR
+            self.add_error("url", forms.ValidationError(message, code="link_or_title"))
+        return cleaned
+
 
 # =========================
 # Links (Formset)
 # =========================
 class LinkForm(forms.Form):
     id = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    # Optional: a blank name is filled in from the URL (builder.services.platform_from_url).
     name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
             "placeholder": "e.g., GitHub, LinkedIn, Portfolio",
-            "required": True,
         })
     )
     url = forms.CharField(

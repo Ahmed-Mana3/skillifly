@@ -19,8 +19,10 @@ os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import override_settings
 
+from unittest.mock import patch
+
 from core.models import Link, PersonalInfo, Profile, Project, Skill
-from core.test_onboarding_browser import LIVE_SETTINGS, RUN
+from core.test_onboarding_browser import LIVE_SETTINGS, RUN, YT, fake_fetch, fake_thumb
 from core.testing_helpers import TempMediaMixin, clear_cache, make_editor, png_bytes, seed_themes, site_settings
 
 SHOTS = os.environ.get('SKILLIFLY_SCREENSHOT_DIR') or os.path.join(tempfile.gettempdir(), 'skillifly-autosave-shots')
@@ -51,6 +53,11 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         Profile.objects.create(user=self.user, theme=seed_themes()['Creative'])
         PersonalInfo.objects.create(user=self.user, full_name='Sara Ali', title='Video Editor',
                                     email='', phone='', bio='')
+        # Link lookups (the card preview and the server's title/thumbnail) never leave the machine.
+        for target, fn in (('core.oembed.fetch', fake_fetch), ('core.oembed.download_thumbnail', fake_thumb)):
+            patcher = patch(target, side_effect=fn)
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def open_builder(self, path='/builder/update/', width=1280, height=900):
         self.client.force_login(self.user)
@@ -113,18 +120,16 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         page.reload()
         self.assertEqual(page.input_value('#f-title'), 'Colorist')
 
-    def test_new_skill_is_created_once_and_then_updated(self):
+    def test_a_video_added_by_hand_is_created_once_and_then_updated(self):
         page = self.open_builder()
-        self.section(page, 'skills')
-        page.locator('#panel-skills [data-action="add"][data-prefix="skills"]').first.click()
-        field = page.locator('#skills-container input[name$="-skill"]').first
-        field.fill('Premiere')
-        self.wait_until(page, lambda: Skill.objects.filter(user=self.user).exists(), 'skill created')
-        field.fill('Premiere Pro')
-        self.wait_until(page, lambda: Skill.objects.filter(user=self.user, name='Premiere Pro').exists(),
-                        'skill updated')
+        page.locator('#panel-projects .bx-panel-head [data-action="add"][data-prefix="projects"]').click()
+        field = page.locator('#projects-container input[name$="-name"]').first
+        field.fill('Cut')
+        self.wait_until(page, lambda: Project.objects.filter(user=self.user).exists(), 'video created')
+        field.fill('Final cut')
+        self.wait_until(page, lambda: self.titles() == ['Final cut'], 'video updated')
         self.wait_saved(page)
-        self.assertEqual(Skill.objects.filter(user=self.user).count(), 1, 'one row, not a duplicate')
+        self.assertEqual(Project.objects.filter(user=self.user).count(), 1, 'one row, not a duplicate')
 
     def test_a_bad_booking_link_does_not_block_the_bio(self):
         page = self.open_builder()
@@ -163,6 +168,111 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         rows.filter(has=page.locator(f'input[value="{gone.platform}"]')).locator('.bx-remove').click()
         self.wait_until(page, lambda: not Link.objects.filter(id=gone.id).exists(), 'removed link deleted', timeout=12)
         self.assertTrue(Link.objects.filter(id=kept.id).exists(), 'undone link kept')
+
+    # --- video cards ---------------------------------------------------------------------
+
+    def titles(self):
+        return list(Project.objects.filter(user=self.user).values_list('title', flat=True))
+
+    def test_paste_a_link_adds_a_filled_in_card(self):
+        page = self.open_builder()
+        page.wait_for_selector('#panel-projects.is-active')  # video editors land on their work
+        page.fill('#bx-paste-input', YT)
+        page.click('[data-action="paste-add"]')
+        page.wait_for_selector('#projects-container .bx-vcard-title:text("Never Gonna Edit You Up")')
+        self.wait_until(page, lambda: self.titles() == ['Never Gonna Edit You Up'], 'video saved with the title of its link')
+        self.wait_until(page, lambda: bool(Project.objects.get(user=self.user).image), 'its thumbnail attached')
+        self.wait_saved(page)
+        self.shot(page, 'video-card', '#panel-projects')
+
+    def test_videos_reorder_with_the_arrows(self):
+        Project.objects.create(user=self.user, title='First', url=YT, order=0)
+        Project.objects.create(user=self.user, title='Second', url=YT, order=1)
+        page = self.open_builder()
+        page.locator('#projects-container > .bx-item').nth(1).locator('[data-action="move-up"]').click()
+        self.wait_until(page, lambda: self.titles() == ['Second', 'First'], 'new order saved')
+
+    def test_details_open_and_close(self):
+        Project.objects.create(user=self.user, title='Brand film', url=YT)
+        page = self.open_builder()
+        row = page.locator('#projects-container > .bx-item').first
+        self.assertFalse(row.locator('[data-vcard-details]').is_visible(), 'a saved video starts folded')
+        row.locator('[data-action="toggle-details"]').click()
+        self.assertTrue(row.locator('[data-vcard-details]').is_visible())
+        row.locator('textarea').fill('Edit and colour.')
+        self.wait_until(page, lambda: Project.objects.get(user=self.user).details == 'Edit and colour.', 'role saved')
+
+    # --- skills and links ------------------------------------------------------------------
+
+    def test_skill_chips(self):
+        page = self.open_builder()
+        self.section(page, 'skills')
+        preset = '.bx-skill-preset[data-skill="DaVinci Resolve"]'
+        page.click(preset)
+        page.fill('#bx-skill-new', 'Unreal Engine')
+        page.press('#bx-skill-new', 'Enter')
+        names = lambda: set(Skill.objects.filter(user=self.user).values_list('name', flat=True))
+        self.wait_until(page, lambda: names() == {'DaVinci Resolve', 'Unreal Engine'}, 'preset and own skill saved')
+        self.assertEqual(page.get_attribute(preset, 'aria-pressed'), 'true')
+        self.assertEqual(page.locator('#skills-container .bx-item:visible').count(), 1, 'only the own skill shows as a chip')
+        self.shot(page, 'skills', '#panel-skills')
+        page.click(preset)  # untick: removed once the Undo window has passed
+        self.wait_until(page, lambda: names() == {'Unreal Engine'}, 'preset removed', timeout=12)
+
+    def test_a_pasted_link_names_itself(self):
+        page = self.open_builder()
+        self.section(page, 'links')
+        page.locator('#panel-links [data-action="add"][data-prefix="links"]').first.click()
+        page.locator('#links-container input[name$="-url"]').first.fill('instagram.com/sara')
+        self.wait_until(page, lambda: Link.objects.filter(user=self.user, platform='Instagram').exists(), 'link saved by name')
+        self.assertEqual(page.inner_text('#links-container [data-link-platform]'), 'Instagram')
+
+    # --- readiness, folded sections, Done ----------------------------------------------------
+
+    def test_readiness_card_and_sections(self):
+        page = self.open_builder()
+        self.assertIn('Get client-ready', page.inner_text('#bx-ready'))
+        page.click('.bx-ready-item[data-ready="contact"]')
+        page.wait_for_selector('#panel-identity.is-active')
+        self.assertFalse(page.is_visible('.bx-nav-item[data-nav-key="education"]'), 'empty extras are folded')
+        page.click('.bx-nav-more')
+        self.assertTrue(page.is_visible('.bx-nav-item[data-nav-key="education"]'))
+        self.section(page, 'reviews')
+        self.assertTrue(page.is_visible('#panel-reviews .bx-done-btn'), 'the last main section ends with Done')
+        self.shot(page, 'sidebar-more', '.bx-sidebar')
+
+    def test_client_ready_offers_publish(self):
+        for i in range(3):
+            Project.objects.create(user=self.user, title=f'Video {i}', url=YT, order=i)
+        PersonalInfo.objects.filter(user=self.user).update(title='Colorist', booking_url='https://wa.me/201001234567')
+        page = self.open_builder()
+        self.assertIn("You're client-ready", page.inner_text('#bx-ready'))
+        self.assertTrue(page.is_visible('#bx-ready [data-ready-action]'))
+        self.shot(page, 'ready', '#bx-ready')
+        self.shot(page, 'work-desktop')
+        mobile = self.open_builder(width=390, height=844)
+        self.assertLessEqual(mobile.evaluate('document.documentElement.scrollWidth'), 391, 'no sideways scroll')
+        self.shot(mobile, 'work-mobile')
+
+    def test_switched_off_the_save_button_still_saves_a_pasted_video(self):
+        site_settings(builder_autosave_enabled=False)
+        page = self.open_builder_without_autosave()
+        page.fill('#bx-paste-input', YT)
+        page.click('[data-action="paste-add"]')
+        page.wait_for_selector('#projects-container .bx-vcard-title:text("Never Gonna Edit You Up")')
+        page.locator('.bx-header [data-save-button]').click()
+        self.wait_until(page, lambda: self.titles() == ['Never Gonna Edit You Up'], 'saved by the form')
+
+    def open_builder_without_autosave(self):
+        self.client.force_login(self.user)
+        context = self.browser.new_context(viewport={'width': 1280, 'height': 900})
+        context.add_cookies([{'name': 'sessionid', 'value': self.client.cookies['sessionid'].value,
+                              'url': self.live_server_url}])
+        page = context.new_page()
+        page.set_default_timeout(20000)
+        self.addCleanup(context.close)
+        page.goto(self.live_server_url + '/builder/update/')
+        return page
 
     # --- Arabic ----------------------------------------------------------------------
 

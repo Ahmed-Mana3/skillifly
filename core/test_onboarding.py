@@ -90,8 +90,9 @@ class BuilderPrefillTests(OnboardingTestCase):
         self.assertNotContains(resp, 'value="Video Editor"')
 
     def test_link_hint_mentions_instagram_and_drive(self):
-        self.assertContains(self.client.get(reverse('update_portfolio')), 'Instagram Reels and Google Drive')
-        self.assertContains(self.client.get(reverse('arabic_update_portfolio')), 'جوجل درايف')
+        # The paste-a-link box at the top of the Work panel names them.
+        self.assertContains(self.client.get(reverse('update_portfolio')), 'TikTok, Instagram or Drive link')
+        self.assertContains(self.client.get(reverse('arabic_update_portfolio')), 'إنستجرام أو درايف')
 
 
 class DefaultThemeTests(OnboardingTestCase):

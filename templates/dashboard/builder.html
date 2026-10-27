@@ -17,7 +17,8 @@
 {% block ambient_orbs %}{% endblock %}
 
 {% block content %}
-<div class="bx-root" id="builder-root" data-category="{{ category }}" data-lang="en"{% if autosave_enabled %} data-autosave="1" data-api-base="{{ autosave_api_base }}"{% endif %}>
+<div class="bx-root" id="builder-root" data-category="{{ category }}" data-lang="en"
+  data-link-preview-url="{{ link_preview_url }}" data-order-url="{{ projects_order_url }}"{% if autosave_enabled %} data-autosave="1" data-api-base="{{ autosave_api_base }}"{% endif %}>
 
   <header class="bx-header">
     <div>
@@ -40,22 +41,26 @@
       </span>
       {% endif %}
       {% if is_update or autosave_enabled %}
-      <a href="{% url 'preview' username=request.user.username %}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
+      <a href="{{ preview_url }}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        View live site
+        {% if is_live %}View live site{% else %}Preview{% endif %}
       </a>
       {% endif %}
       <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button>
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+        {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
       </button>
     </div>
   </header>
 
+  {% if category == 'video_editor' %}
+  {% include "dashboard/builder/_readiness.html" %}
+  {% else %}
   <div class="bx-progress" role="group" aria-label="Completion progress">
     <div class="bx-progress-track"><div class="bx-progress-fill" id="bx-progress-fill"></div></div>
-    <span class="bx-progress-label" id="bx-progress-label">{% if category == 'video_editor' %}Client-ready 0/3{% else %}0 of 7 sections{% endif %}</span>
+    <span class="bx-progress-label" id="bx-progress-label">0 of 7 sections</span>
   </div>
+  {% endif %}
 
   <div class="bx-layout">
 
@@ -94,7 +99,7 @@
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="creators">
           <span class="bx-nav-num">7</span>
-          <span class="bx-nav-text"><span class="bx-nav-name">Creators you've worked with</span><span class="bx-nav-desc">Collaborators</span></span>
+          <span class="bx-nav-text"><span class="bx-nav-name">Collaborators</span><span class="bx-nav-desc">Creators &amp; brands</span></span>
           <span class="bx-nav-state" aria-hidden="true"></span>
         </button></li>
         <li><button type="button" class="bx-nav-item" data-nav-key="reviews">
@@ -110,7 +115,7 @@
         </button></li>
         {% endif %}
       </ol>
-      <p class="bx-sidebar-tip"><strong>Tip:</strong> jump between sections freely — we'll flag anything missing before you save.</p>
+      <p class="bx-sidebar-tip"><strong>Tip:</strong> {% if autosave_enabled %}jump between sections freely — every change saves on its own.{% else %}jump between sections freely — we'll flag anything missing before you save.{% endif %}</p>
     </nav>
 
     <form method="POST" id="portfolio-form" enctype="multipart/form-data" class="bx-form" novalidate>
@@ -198,7 +203,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -211,39 +216,9 @@
               <h2 class="bx-panel-title" id="heading-skills">{% if category == 'video_editor' %}Software skills{% else %}Expertise{% endif %}</h2>
               <p class="bx-panel-desc">The tools and skills clients hire you for.</p>
             </div>
-            <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="skills">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add skill
-            </button>
           </div>
           {{ skill_formset.management_form }}
-          <div class="bx-panel-body">
-            <div id="skills-container" class="bx-list-grid">
-              {% for form in skill_formset %}
-              <div class="bx-item">
-                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Skill</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this skill">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">Skill name</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.skill.html_name }}" value="{{ form.skill.value|default:'' }}" class="bx-input" placeholder="e.g. Adobe Premiere Pro" required>
-                  <p class="bx-field-error" role="alert"></p>
-                </div>
-                <div style="display:none">{{ form.DELETE }}</div>
-              </div>
-              {% endfor %}
-            </div>
-            <div class="bx-empty" data-empty-for="skills" hidden>
-              <div class="bx-empty-icon">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
-              </div>
-              <p class="bx-empty-title">No skills yet</p>
-              <p class="bx-empty-sub">Add the software and techniques you're strongest at.</p>
-              <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="skills">Add your first skill</button>
-            </div>
-          </div>
+          {% include "dashboard/builder/_skills_panel_body.html" %}
           <footer class="bx-panel-foot">
             <button type="button" class="bx-btn bx-btn-quiet" data-action="prev">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18"/></svg>
@@ -256,7 +231,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -326,7 +301,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -406,7 +381,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -421,7 +396,7 @@
             </div>
             <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="projects">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-              Add project
+              {% if category == 'video_editor' %}Add without a link{% else %}Add project{% endif %}
             </button>
           </div>
           {{ project_formset.management_form }}
@@ -464,80 +439,10 @@
           {% endif %}
 
           <div class="bx-panel-body">
+            {% if category == 'video_editor' %}{% include "dashboard/builder/_paste_link.html" %}{% endif %}
             <div id="projects-container" class="bx-list">
               {% for form in project_formset %}
-              <div class="bx-item">
-                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Project</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this project">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                <div class="bx-grid-2">
-                  <div class="bx-field bx-span-2">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video title{% else %}Project name{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
-                    <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="e.g. Brand Campaign 2025" required>
-                    <p class="bx-field-error" role="alert">{% for e in form.name.errors %}{{ e }}{% endfor %}</p>
-                  </div>
-
-                  {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
-                  <div class="bx-field bx-span-2">
-                    <span class="bx-label-row"><span class="bx-label">Collection</span><span class="bx-opt">Optional</span></span>
-                    <div class="bx-chips category-chips-container" role="group" aria-label="Assign to collection">
-                      <button type="button" class="bx-chip {% if not form.category_id.value %}is-active{% endif %}" data-value="">Uncategorized</button>
-                      {% for cat in request.user.project_categories.all %}
-                      <button type="button" class="bx-chip {% if form.category_id.value|stringformat:'s' == cat.id|stringformat:'s' %}is-active{% endif %}" data-value="{{ cat.id }}">{{ cat.name }}</button>
-                      {% endfor %}
-                    </div>
-                  </div>
-                  {% endif %}
-                  {% if form.category_id.errors %}
-                  <div class="bx-field bx-span-2">
-                    <p class="bx-field-error" role="alert">{% for e in form.category_id.errors %}{{ e }}{% endfor %}</p>
-                  </div>
-                  {% endif %}
-
-                  <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
-                    <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="YouTube, Vimeo, TikTok, Instagram Reel or Drive link">
-                    <p class="bx-hint">YouTube, Vimeo, TikTok, Instagram Reels and Google Drive links play right on your portfolio. Drive: set sharing to &quot;Anyone with the link&quot;.</p>
-                    <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
-                  </div>
-                  <div class="bx-field">
-                    <label class="bx-label-row"><span class="bx-label">Display size</span></label>
-                    {{ form.video_type }}
-                  </div>
-                  <div class="bx-field bx-span-2">
-                    <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Your role in this video{% else %}What was your role?{% endif %}</span><span class="bx-opt">Optional</span></label>
-                    <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="Editor? Colorist? Motion designer? Say what you did…">{{ form.description.value|default:'' }}</textarea>
-                    <p class="bx-field-error" role="alert">{% for e in form.description.errors %}{{ e }}{% endfor %}</p>
-                  </div>
-                  {% if show_project_images %}
-                  <div class="bx-field bx-span-2">
-                    <span class="bx-label-row"><span class="bx-label">Thumbnail</span><span class="bx-opt">Optional</span></span>
-                    <div class="bx-upload">
-                      <label class="bx-dropzone">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                        <span class="bx-drop-hint">Upload thumbnail</span>
-                        <span class="bx-drop-sub">Used as the cover image</span>
-                        <input type="file" name="{{ form.thumbnail.html_name }}" accept="image/*" class="bx-file-input">
-                      </label>
-                      <div class="bx-upload-meta">
-                        {% if form.thumbnail.value %}
-                        <img src="{{ form.thumbnail.value.url }}" alt="Current thumbnail" class="bx-upload-preview">
-                        <span class="bx-upload-name">Current image — uploading replaces it</span>
-                        {% else %}
-                        <img class="bx-upload-preview" alt="" hidden>
-                        <span class="bx-upload-name">No file chosen</span>
-                        {% endif %}
-                        <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
-                      </div>
-                    </div>
-                    <p class="bx-field-error" role="alert"></p>
-                  </div>
-                  {% endif %}
-                </div>
-                <div style="display:none">{{ form.DELETE }}</div>
-              </div>
+              <div class="bx-item bx-video">{% include "dashboard/builder/_project_row.html" %}</div>
               {% endfor %}
             </div>
             <div class="bx-empty" data-empty-for="projects" hidden>
@@ -545,7 +450,7 @@
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
               </div>
               <p class="bx-empty-title">No projects yet</p>
-              <p class="bx-empty-sub">{% if category == 'video_editor' %}Add your best videos — 3 to 6 strong pieces beat a long list.{% else %}Add your best work — quality over quantity.{% endif %}</p>
+              <p class="bx-empty-sub">{% if category == 'video_editor' %}Paste your best video link above — 3 to 6 strong pieces beat a long list.{% else %}Add your best work — quality over quantity.{% endif %}</p>
               <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="projects">Add your first project</button>
             </div>
           </div>
@@ -561,7 +466,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -600,24 +505,7 @@
           <div class="bx-panel-body">
             <div id="links-container" class="bx-list-grid">
               {% for form in link_formset %}
-              <div class="bx-item">
-                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                <span class="bx-item-num">Link</span>
-                <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this link">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">Platform name</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" placeholder="e.g. Instagram" required>
-                  <p class="bx-field-error" role="alert"></p>
-                </div>
-                <div class="bx-field">
-                  <label class="bx-label-row"><span class="bx-label">URL</span><span class="bx-req" aria-hidden="true">*</span></label>
-                  <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" placeholder="instagram.com/yourhandle" required>
-                  <p class="bx-field-error" role="alert"></p>
-                </div>
-                <div style="display:none">{{ form.DELETE }}</div>
-              </div>
+              <div class="bx-item">{% include "dashboard/builder/_link_row.html" %}</div>
               {% endfor %}
             </div>
             <div class="bx-empty" data-empty-for="links" hidden>
@@ -641,7 +529,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -725,7 +613,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save hidden>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -805,7 +693,7 @@
               </button>
               <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button data-nav-save>
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+                {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
               </button>
             </div>
           </footer>
@@ -906,23 +794,13 @@
   <div class="bx-savebar" id="bx-savebar" role="status">
     <span class="bx-savebar-text"><span class="bx-dirty-dot" aria-hidden="true"></span><span>You have unsaved changes</span></span>
     <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-sm" data-save-button>
-      {% if is_update %}Save changes{% else %}Launch portfolio{% endif %}
+      {% if is_update %}Save changes{% else %}Save portfolio{% endif %}
     </button>
   </div>
 </div>
 
 <script type="text/html" id="skills-empty-form">
-  {% for hidden in skill_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Skill</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this skill">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-  </button>
-  <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">Skill name</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="skills-__prefix__-skill" class="bx-input" placeholder="e.g. Adobe Premiere Pro" required>
-    <p class="bx-field-error" role="alert"></p>
-  </div>
-  <div style="display:none"><input type="checkbox" name="skills-__prefix__-DELETE"></div>
+  {% include "dashboard/builder/_skill_row.html" with form=skill_formset.empty_form %}
 </script>
 
 <script type="text/html" id="education-empty-form">
@@ -988,66 +866,7 @@
 </script>
 
 <script type="text/html" id="projects-empty-form">
-  {% for hidden in project_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Project</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this project">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-  </button>
-  <div class="bx-grid-2">
-    <div class="bx-field bx-span-2">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video title{% else %}Project name{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
-      <input type="text" name="projects-__prefix__-name" class="bx-input" placeholder="e.g. Brand Campaign 2025" required>
-      <p class="bx-field-error" role="alert"></p>
-    </div>
-
-    {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
-    <div class="bx-field bx-span-2">
-      <span class="bx-label-row"><span class="bx-label">Collection</span><span class="bx-opt">Optional</span></span>
-      <div class="bx-chips category-chips-container" role="group" aria-label="Assign to collection">
-        <button type="button" class="bx-chip is-active" data-value="">Uncategorized</button>
-        {% for cat in request.user.project_categories.all %}
-        <button type="button" class="bx-chip" data-value="{{ cat.id }}">{{ cat.name }}</button>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Video link{% else %}Project link{% endif %}</span><span class="bx-opt">Optional</span></label>
-      <input type="text" name="projects-__prefix__-url" class="bx-input" placeholder="YouTube, Vimeo, TikTok, Instagram Reel or Drive link">
-      <p class="bx-hint">YouTube, Vimeo, TikTok, Instagram Reels and Google Drive links play right on your portfolio. Drive: set sharing to &quot;Anyone with the link&quot;.</p>
-      <p class="bx-field-error" role="alert"></p>
-    </div>
-    <div class="bx-field">
-      <label class="bx-label-row"><span class="bx-label">Display size</span></label>
-      {{ project_formset.empty_form.video_type }}
-    </div>
-    <div class="bx-field bx-span-2">
-      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}Your role in this video{% else %}What was your role?{% endif %}</span><span class="bx-opt">Optional</span></label>
-      <textarea name="projects-__prefix__-description" class="bx-input" rows="3" placeholder="Editor? Colorist? Motion designer? Say what you did…"></textarea>
-      <p class="bx-field-error" role="alert"></p>
-    </div>
-    {% if show_project_images %}
-    <div class="bx-field bx-span-2">
-      <span class="bx-label-row"><span class="bx-label">Thumbnail</span><span class="bx-opt">Optional</span></span>
-      <div class="bx-upload">
-        <label class="bx-dropzone">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-          <span class="bx-drop-hint">Upload thumbnail</span>
-          <span class="bx-drop-sub">Used as the cover image</span>
-          <input type="file" name="projects-__prefix__-thumbnail" accept="image/*" class="bx-file-input">
-        </label>
-        <div class="bx-upload-meta">
-          <img class="bx-upload-preview" alt="" hidden>
-          <span class="bx-upload-name">No file chosen</span>
-          <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>Remove</button>
-        </div>
-      </div>
-      <p class="bx-field-error" role="alert"></p>
-    </div>
-    {% endif %}
-  </div>
-  <div style="display:none"><input type="checkbox" name="projects-__prefix__-DELETE"></div>
+  {% include "dashboard/builder/_project_row.html" with form=project_formset.empty_form %}
 </script>
 
 <script type="text/html" id="project_categories-empty-form">
@@ -1059,22 +878,7 @@
 </script>
 
 <script type="text/html" id="links-empty-form">
-  {% for hidden in link_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-  <span class="bx-item-num">Link</span>
-  <button type="button" class="bx-remove" data-action="remove-item" aria-label="Remove this link">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-  </button>
-  <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">Platform name</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="links-__prefix__-name" class="bx-input" placeholder="e.g. Instagram" required>
-    <p class="bx-field-error" role="alert"></p>
-  </div>
-  <div class="bx-field">
-    <label class="bx-label-row"><span class="bx-label">URL</span><span class="bx-req" aria-hidden="true">*</span></label>
-    <input type="text" name="links-__prefix__-url" class="bx-input" placeholder="instagram.com/yourhandle" required>
-    <p class="bx-field-error" role="alert"></p>
-  </div>
-  <div style="display:none"><input type="checkbox" name="links-__prefix__-DELETE"></div>
+  {% include "dashboard/builder/_link_row.html" with form=link_formset.empty_form %}
 </script>
 
 <script type="text/html" id="creators-empty-form">
@@ -1198,6 +1002,8 @@
 </div>
 
 <p class="bx-visually-hidden" id="bx-order-live" role="status" aria-live="polite"></p>
+
+<template id="bx-done-tpl"><a class="bx-btn bx-btn-primary bx-btn-md bx-done-btn" href="{{ preview_url }}">Done — view my portfolio</a></template>
 
 <div class="bx-toasts" id="bx-toasts" aria-live="polite"></div>
 <div class="bx-toasts" id="bx-toasts-alert" aria-live="assertive" style="bottom:150px;"></div>

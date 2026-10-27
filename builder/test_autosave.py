@@ -21,6 +21,13 @@ class AutosaveScriptLogicTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('autosave checks passed', result.stdout)
 
+    @unittest.skipUnless(shutil.which('node'), 'Node.js is not installed')
+    def test_cards_skills_and_links(self):
+        script = os.path.join(settings.BASE_DIR, 'builder', 'js_tests', 'builder_cards_check.js')
+        result = subprocess.run([shutil.which('node'), script], capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('card checks passed', result.stdout)
+
 
 class AutosaveSwitchTests(TestCase):
     PAGES = ('/builder/', '/builder/update/', '/ar/builder/', '/ar/update/')

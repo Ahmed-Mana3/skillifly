@@ -1,6 +1,34 @@
 # Builder autosave and safe saving: implementation plan
 
-Status: Phases 0, 1 and 2 built and tested, not committed (2026-10-27). The switch is off; Phase 3 (rollout) is next.
+Status: Phases 0, 1 and 2 committed (2b07237). The switch is off; Phase 3 (rollout) is next.
+The builder UX stages 1-2 (below) are built and tested, not committed (2026-10-27).
+
+## Builder UX, stages 1-2 (built on top of autosave)
+
+These apply whether or not the autosave switch is on.
+
+- **No blank rows** on `/builder/` (the formsets have no extra empty forms); empty sections show their empty state.
+- **Videos are cards** (`templates/dashboard/builder/_project_row.html`): thumbnail, title, format, link host,
+  arrows and a drag handle; the fields fold underneath ("Edit").
+  - A video needs its link **or** a title (`ProjectForm.clean`). A blank title is filled from the link when
+    saved (`services.link_title`), and a video with a new link and no image gets the link's thumbnail after
+    the save commits (`services.attach_link_thumbnail`).
+  - "Paste a video link" box at the top of the Work panel (`_paste_link.html`); the card looks the link up
+    through `welcome_preview_link` and fills in the title, format and thumbnail.
+  - "Display size: Long Video / Short/Reel" is now "Format: Full video / Short / reel" (Arabic labels come
+    through `ProjectForm(arabic=True)`, so the "add" template is translated too).
+  - Order saves on its own through `POST /builder/api/projects/order/` (`ids` repeated).
+- **Skills are chips** (`_skills_panel_body.html`, `_skill_row.html`): the launch checklist's presets plus
+  "Your own"; every picked skill is still a formset row.
+- **Links name themselves** from the URL (`services.platform_from_url`, mirrored in `BXLinks`); "Shown as" is optional.
+- **Readiness card** (`_readiness.html`, video editors): the three client-ready items, each a shortcut to its
+  field; when all three are done it offers "Copy your link" (live) or "Publish your portfolio".
+- **Section order** for video editors: Work, About you, Skills, Links, Reviews; Experience, Education,
+  Collaborators and Section layout fold under "More sections" while empty.
+- **Copy:** "Preview" until the portfolio is live; "Save portfolio" instead of "Launch portfolio"; the sidebar
+  tip matches autosave; "Collaborators" in the sidebar; with autosave, the last sections end with "Done — view my portfolio".
+- Tests: `builder/test_cards.py`, `builder/js_tests/builder_cards_check.js` (run by `builder.test_autosave`),
+  and more checks in the opt-in `builder/test_autosave_browser.py` (15 in all).
 
 Phase 1 as built differs from the text below in two small ways:
 - There is also a `builder_item_deleted` event (`kind`).

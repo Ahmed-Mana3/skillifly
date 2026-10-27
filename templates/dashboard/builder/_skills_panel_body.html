@@ -1,0 +1,32 @@
+{# Skills: tap the presets (video editors), or add your own. Every picked skill is a .bx-item row in #skills-container; the script hides the rows a preset chip already shows. #}
+{% with ar=is_arabic_page %}
+<div class="bx-panel-body bx-skills">
+  {% if category == 'video_editor' %}
+  {% for group in skill_presets %}
+  <div class="bx-skill-group">
+    <p class="bx-skill-group-title">{{ group.title }}</p>
+    <div class="bx-chips" role="group" aria-label="{{ group.title }}">
+      {% for chip in group.chips %}
+      <button type="button" class="bx-chip bx-skill-preset" data-action="toggle-skill" data-skill="{{ chip.label }}" data-names="{{ chip.names }}" aria-pressed="false">{{ chip.label }}</button>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <div class="bx-skill-group">
+    {% if category == 'video_editor' %}<p class="bx-skill-group-title">{% if ar %}مهارات أخرى{% else %}Your own{% endif %}</p>{% endif %}
+    <div id="skills-container" class="bx-skill-list">
+      {% for form in skill_formset %}
+      <div class="bx-item">{% include "dashboard/builder/_skill_row.html" %}</div>
+      {% endfor %}
+    </div>
+    <div class="bx-skill-add">
+      <input type="text" class="bx-input" id="bx-skill-new" maxlength="60" autocomplete="off"
+        placeholder="{% if ar %}أضف مهارة، مثال: Blender{% else %}Add a skill, e.g. Blender{% endif %}"
+        aria-label="{% if ar %}أضف مهارة{% else %}Add a skill{% endif %}">
+      <button type="button" class="bx-btn bx-btn-add bx-btn-md" data-action="add-skill">{% if ar %}أضف{% else %}Add{% endif %}</button>
+    </div>
+  </div>
+</div>
+{% endwith %}

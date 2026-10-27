@@ -1,0 +1,100 @@
+{# One video (or project) row, inside .bx-item. Shared by the English and Arabic builders; with form=project_formset.empty_form it is the "add" template. #}
+{% with ar=is_arabic_page %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+<div class="bx-vcard">
+  <span class="bx-vcard-handle" data-drag-handle title="{% if ar %}اسحب لتغيير الترتيب{% else %}Drag to reorder{% endif %}" aria-hidden="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+  </span>
+  <div class="bx-vcard-thumb" data-vcard-thumb>
+    <img alt="" data-vcard-img{% if form.thumbnail.value %} src="{{ form.thumbnail.value.url }}"{% if 'oembed_' in form.thumbnail.value.name %} data-auto="1"{% endif %}{% else %} hidden{% endif %}>
+    <svg class="bx-vcard-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z"/></svg>
+  </div>
+  <div class="bx-vcard-main">
+    <p class="bx-vcard-title" data-vcard-title data-empty="{% if category == 'video_editor' %}{% if ar %}فيديو جديد{% else %}New video{% endif %}{% else %}{% if ar %}مشروع جديد{% else %}New project{% endif %}{% endif %}">{{ form.name.value|default:'' }}</p>
+    <p class="bx-vcard-meta">
+      {% if category == 'video_editor' %}<span class="bx-vcard-badge" data-vcard-format></span>{% endif %}
+      <span class="bx-vcard-host" data-vcard-host dir="ltr"></span>
+    </p>
+    <p class="bx-vcard-status" data-link-status role="status" hidden></p>
+  </div>
+  <div class="bx-vcard-actions">
+    <button type="button" class="bx-icon-btn" data-action="move-up" aria-label="{% if ar %}نقل لأعلى{% else %}Move up{% endif %}">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"/></svg>
+    </button>
+    <button type="button" class="bx-icon-btn" data-action="move-down" aria-label="{% if ar %}نقل لأسفل{% else %}Move down{% endif %}">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+    </button>
+    <button type="button" class="bx-vcard-edit" data-action="toggle-details" aria-expanded="true">{% if ar %}تعديل{% else %}Edit{% endif %}</button>
+    <button type="button" class="bx-remove" data-action="remove-item" aria-label="{% if category == 'video_editor' %}{% if ar %}إزالة هذا الفيديو{% else %}Remove this video{% endif %}{% else %}{% if ar %}إزالة هذا العمل{% else %}Remove this project{% endif %}{% endif %}">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="bx-vcard-details" data-vcard-details>
+  <div class="bx-grid-2">
+    <div class="bx-field bx-span-2">
+      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}{% if ar %}رابط الفيديو{% else %}Video link{% endif %}{% else %}{% if ar %}رابط المشروع{% else %}Project link{% endif %}{% endif %}</span></label>
+      <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" inputmode="url" data-video-link
+        placeholder="{% if ar %}رابط يوتيوب أو فيميو أو تيك توك أو ريلز إنستجرام أو درايف{% else %}YouTube, Vimeo, TikTok, Instagram Reel or Drive link{% endif %}">
+      {% if category == 'video_editor' %}<p class="bx-hint">{% if ar %}نجلب العنوان والصورة المصغّرة من الرابط. درايف: اجعل المشاركة «أي شخص لديه الرابط».{% else %}We fill in the title and thumbnail from the link. Drive: set sharing to &quot;Anyone with the link&quot;.{% endif %}</p>{% endif %}
+      <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
+    </div>
+
+    <div class="bx-field bx-span-2">
+      <label class="bx-label-row"><span class="bx-label">{% if ar %}العنوان{% else %}Title{% endif %}</span><span class="bx-opt">{% if ar %}اختياري — من الرابط{% else %}Optional — taken from the link{% endif %}</span></label>
+      <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" data-video-title
+        placeholder="{% if ar %}مثال: حملة إعلانية 2025{% else %}e.g. Brand Campaign 2025{% endif %}">
+      <p class="bx-field-error" role="alert">{% for e in form.name.errors %}{{ e }}{% endfor %}</p>
+    </div>
+
+    {% if theme_name == 'categories' or theme_name == 'video_editor_categories' or theme_name == 'categories_white' %}
+    <div class="bx-field bx-span-2">
+      <span class="bx-label-row"><span class="bx-label">{% if ar %}المجموعة{% else %}Collection{% endif %}</span><span class="bx-opt">{% if ar %}اختياري{% else %}Optional{% endif %}</span></span>
+      <div class="bx-chips category-chips-container" role="group" aria-label="{% if ar %}اختر مجموعة هذا العمل{% else %}Assign to collection{% endif %}">
+        <button type="button" class="bx-chip {% if not form.category_id.value %}is-active{% endif %}" data-value="">{% if ar %}بدون مجموعة{% else %}Uncategorized{% endif %}</button>
+        {% for cat in request.user.project_categories.all %}
+        <button type="button" class="bx-chip {% if form.category_id.value|stringformat:'s' == cat.id|stringformat:'s' %}is-active{% endif %}" data-value="{{ cat.id }}">{{ cat.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if form.category_id.errors %}
+    <div class="bx-field bx-span-2">
+      <p class="bx-field-error is-visible" role="alert">{% for e in form.category_id.errors %}{{ e }}{% endfor %}</p>
+    </div>
+    {% endif %}
+
+    <div class="bx-field">
+      <label class="bx-label-row"><span class="bx-label">{% if ar %}النوع{% else %}Format{% endif %}</span></label>
+      {{ form.video_type }}
+    </div>
+
+    <div class="bx-field bx-span-2">
+      <label class="bx-label-row"><span class="bx-label">{% if category == 'video_editor' %}{% if ar %}دورك في هذا الفيديو{% else %}Your role in this video{% endif %}{% else %}{% if ar %}ما كان دورك؟{% else %}What was your role?{% endif %}{% endif %}</span><span class="bx-opt">{% if ar %}اختياري{% else %}Optional{% endif %}</span></label>
+      <textarea name="{{ form.description.html_name }}" class="bx-input" rows="3" placeholder="{% if ar %}مونتاج؟ تصحيح ألوان؟ موشن جرافيك؟ اذكر ما قمت به…{% else %}Editor? Colorist? Motion designer? Say what you did…{% endif %}">{{ form.description.value|default:'' }}</textarea>
+      <p class="bx-field-error" role="alert">{% for e in form.description.errors %}{{ e }}{% endfor %}</p>
+    </div>
+
+    {% if show_project_images %}
+    <div class="bx-field bx-span-2">
+      <span class="bx-label-row"><span class="bx-label">{% if ar %}صورة مصغّرة مخصّصة{% else %}Custom thumbnail{% endif %}</span><span class="bx-opt">{% if ar %}اختياري — نستخدم صورة الفيديو{% else %}Optional — we use the video's own{% endif %}</span></span>
+      <div class="bx-upload">
+        <label class="bx-dropzone bx-dropzone-sm">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+          <span class="bx-drop-hint">{% if ar %}ارفع صورة{% else %}Upload an image{% endif %}</span>
+          <input type="file" name="{{ form.thumbnail.html_name }}" accept="image/*" class="bx-file-input">
+        </label>
+        <div class="bx-upload-meta">
+          <img class="bx-upload-preview" alt="" hidden>
+          <span class="bx-upload-name">{% if form.thumbnail.value %}{% if ar %}الصورة الحالية — رفع صورة جديدة يستبدلها{% else %}Current image — uploading replaces it{% endif %}{% else %}{% if ar %}لم يتم اختيار ملف{% else %}No file chosen{% endif %}{% endif %}</span>
+          <button type="button" class="bx-upload-clear" data-action="clear-upload" hidden>{% if ar %}إزالة{% else %}Remove{% endif %}</button>
+        </div>
+      </div>
+      <p class="bx-field-error" role="alert"></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+<div style="display:none">{{ form.DELETE }}</div>
+{% endwith %}

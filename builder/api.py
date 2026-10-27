@@ -35,6 +35,7 @@ ERRORS_AR = {
     "Enter a valid graduation year.": "أدخل سنة تخرّج صحيحة.",
     launch.FIELD_ERRORS["booking_url"][0]: launch.FIELD_ERRORS["booking_url"][1],
     ProjectForm.INVALID_CATEGORY_ERROR: ProjectForm.INVALID_CATEGORY_ERROR_AR,
+    ProjectForm.LINK_OR_TITLE_ERROR: ProjectForm.LINK_OR_TITLE_ERROR_AR,
 }
 
 
@@ -164,14 +165,14 @@ def create_item(request, kind):
         return _invalid(user, kind, image_errors, reason="bad_image")
 
     posted = _posted(request, spec.form, skip=(spec.image_field,))
-    form = spec.form(data={**spec.create_defaults, **posted}, files=files, **services.form_kwargs(kind, user))
+    form = spec.form(data={**spec.create_defaults, **posted}, files=files, **services.form_kwargs(kind, user, arabic))
     cleaned, errors = _validate(form, arabic, posted)
     if errors:
         return _invalid(user, kind, errors)
 
     first_project = kind == "projects" and not Project.objects.filter(user=user).exists()
     with transaction.atomic(), activation.source("builder"):
-        row, _ = services.save_row(user, kind, cleaned)
+        row, _ = services.save_row(user, kind, cleaned, arabic=arabic)
         _after_save(user)
     activation.track(user, "builder_item_saved", kind=kind, created=True)
 
@@ -194,16 +195,30 @@ def update_item(request, kind, pk):
     stored = spec.to_initial(row)
     stored.pop(spec.image_field, None)  # images only change through an upload
     posted = _posted(request, spec.form, skip=(spec.image_field,))
-    form = spec.form(data={**stored, **posted}, files=files, **services.form_kwargs(kind, user))
+    form = spec.form(data={**stored, **posted}, files=files, **services.form_kwargs(kind, user, arabic))
     cleaned, errors = _validate(form, arabic, posted, stored)
     if errors:
         return _invalid(user, kind, errors)
 
     with transaction.atomic(), activation.source("builder"):
-        row, _ = services.save_row(user, kind, cleaned, instance=row)
+        row, _ = services.save_row(user, kind, cleaned, instance=row, arabic=arabic)
         _after_save(user)
     activation.track(user, "builder_item_saved", kind=kind, created=False)
     return JsonResponse({"ok": True, "id": row.id, "item": _serialize(spec.to_initial(row))})
+
+
+@require_POST
+@_login_required_json
+def reorder_projects(request):
+    """Put the user's videos in the order sent (``ids``, repeated). Ids that aren't theirs are ignored."""
+    ids = []
+    for raw in request.POST.getlist("ids"):
+        try:
+            ids.append(int(raw))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "invalid"}, status=400)
+    order = services.reorder_projects(request.user, ids)
+    return JsonResponse({"ok": True, "order": order})
 
 
 @require_POST

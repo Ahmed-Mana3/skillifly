@@ -12,6 +12,7 @@ from builder.forms import (
     SkillFormSet,
     EducationFormSet,
     ExperienceFormSet,
+    ProjectForm,
     ProjectFormSet,
     ProjectFormSetUpdate,
     LinkFormSet,
@@ -414,12 +415,17 @@ class ProjectCategoryAssignmentTests(TestCase):
         self.assertTrue(formset.forms[0].has_changed())
         self.assertTrue(formset.is_valid(), formset.errors)
 
-    def test_blank_name_still_errors_when_the_row_is_really_filled(self):
-        """The fix must not blanket-disable required-field validation."""
-        formset = self._formset(name="", url="https://example.com",
+    def test_a_filled_row_without_link_or_title_still_errors(self):
+        """The fix must not blanket-disable validation: a real row needs its link or a title."""
+        formset = self._formset(name="", url="", description="Colour and cut",
                                category_id=str(self.category.id))
         self.assertFalse(formset.is_valid())
-        self.assertIn("name", formset.forms[0].errors)
+        self.assertIn("url", formset.forms[0].errors)
+
+    def test_a_link_without_a_title_is_valid(self):
+        """The title is filled in from the link when the row is saved."""
+        formset = self._formset(name="", url="https://example.com", category_id=str(self.category.id))
+        self.assertTrue(formset.is_valid(), formset.errors)
 
     # --- end-to-end through the builder view ---
 
@@ -461,12 +467,12 @@ class ProjectCategoryAssignmentTests(TestCase):
         existing.refresh_from_db()
         self.assertEqual(existing.category, self.category)
 
-    def test_server_side_name_error_is_rendered_next_to_the_field(self):
+    def test_server_side_link_error_is_rendered_next_to_the_field(self):
         """The generic banner alone is not actionable; the error must be inline."""
-        res = self._post_builder(name="", category_id=str(self.category.id),
-                                 url="https://example.com")
+        res = self._post_builder(name="", url="", description="Colour and cut",
+                                 category_id=str(self.category.id))
         self.assertEqual(res.status_code, 200)
-        self.assertIn("This field is required.", res.content.decode())
+        self.assertIn(ProjectForm.LINK_OR_TITLE_ERROR, res.content.decode())
 
     def test_rendered_builder_offers_the_newly_created_category_chip(self):
         res = self.client.get("/builder/")

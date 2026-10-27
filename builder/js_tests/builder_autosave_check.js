@@ -8,6 +8,11 @@ const vm = require('vm');
 
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'static', 'js', 'builder_v2.js'), 'utf8');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+// Wait for something that should happen, without depending on how busy the machine is.
+async function until(check, ms = 3000) {
+  const end = Date.now() + ms;
+  while (!check() && Date.now() < end) await sleep(5);
+}
 
 function load() {
   const context = {
@@ -187,7 +192,7 @@ const type = (A, field, value) => { field.value = value; A.onFieldEvent(field, f
     const { A, calls } = setUp(['network', { status: 200, body: { ok: true } }]);
     const row = makeRow('skills', { skill: 'Resolve' }, { id: 1 });
     type(A, row.f.skill, 'DaVinci Resolve');
-    await sleep(80);
+    await until(() => calls.length === 2 && A.overallState() === 'saved');
     assert.strictEqual(calls.length, 2, 'retried after the failure');
     assert.deepStrictEqual(calls[1].data, { lang: 'en', skill: 'DaVinci Resolve' });
     assert.strictEqual(A.overallState(), 'saved');
@@ -196,11 +201,11 @@ const type = (A, field, value) => { field.value = value; A.onFieldEvent(field, f
     const { A, calls } = setUp(['network', 'network', 'network', { status: 500, body: {} }]);
     const row = makeRow('skills', { skill: 'Resolve' }, { id: 1 });
     type(A, row.f.skill, 'Avid');
-    await sleep(150);
+    await until(() => A.overallState() === 'error');
     assert.strictEqual(calls.length, 4, 'first try plus three retries');
     assert.strictEqual(A.overallState(), 'error');
     A.retryAll();
-    await sleep(30);
+    await until(() => calls.length === 5 && A.overallState() === 'saved');
     assert.strictEqual(calls.length, 5, 'Retry sends it again');
     assert.deepStrictEqual(calls[4].data, { lang: 'en', skill: 'Avid' });
     assert.strictEqual(A.overallState(), 'saved');

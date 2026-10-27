@@ -55,4 +55,4 @@ class BuilderProgressLabelTests(TestCase):
         path = os.path.join(settings.BASE_DIR, 'static', 'js', 'builder_v2.js')
         with open(path, encoding='utf-8') as fh:
             text = fh.read()
-        self.assertIn("video_editor: ['identity', 'projects'", text)
+        self.assertIn("video_editor: ['projects', 'identity'", text)

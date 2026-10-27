@@ -1,0 +1,12 @@
+{# Top of the Work panel (video editors): paste a link, a video card appears and fills itself in. No name: never part of the form POST. #}
+{% with ar=is_arabic_page %}
+<div class="bx-paste" data-paste-link>
+  <label class="bx-label" for="bx-paste-input">{% if ar %}أضف فيديو{% else %}Add a video{% endif %}</label>
+  <div class="bx-paste-row">
+    <input type="text" id="bx-paste-input" class="bx-input" dir="ltr" inputmode="url" autocomplete="off"
+      placeholder="{% if ar %}الصق رابط يوتيوب أو فيميو أو تيك توك أو إنستجرام أو درايف{% else %}Paste a YouTube, Vimeo, TikTok, Instagram or Drive link{% endif %}">
+    <button type="button" class="bx-btn bx-btn-primary bx-btn-md" data-action="paste-add">{% if ar %}أضف الفيديو{% else %}Add video{% endif %}</button>
+  </div>
+  <p class="bx-field-error" data-paste-error role="alert"></p>
+</div>
+{% endwith %}

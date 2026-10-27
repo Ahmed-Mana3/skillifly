@@ -1,0 +1,21 @@
+{# One link (inside .bx-item): paste the URL, the platform name fills itself in. With form=link_formset.empty_form it is the "add" template. #}
+{% with ar=is_arabic_page %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+<span class="bx-item-num" data-link-platform>{{ form.name.value|default:'' }}{% if not form.name.value %}{% if ar %}رابط{% else %}Link{% endif %}{% endif %}</span>
+<button type="button" class="bx-remove" data-action="remove-item" aria-label="{% if ar %}إزالة هذا الرابط{% else %}Remove this link{% endif %}">
+  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+</button>
+<div class="bx-field">
+  <label class="bx-label-row"><span class="bx-label">{% if ar %}الرابط{% else %}Link{% endif %}</span><span class="bx-req" aria-hidden="true">*</span></label>
+  <input type="text" name="{{ form.url.html_name }}" value="{{ form.url.value|default:'' }}" class="bx-input" dir="ltr" inputmode="url" data-link-url required
+    placeholder="instagram.com/yourhandle">
+  <p class="bx-field-error" role="alert">{% for e in form.url.errors %}{{ e }}{% endfor %}</p>
+</div>
+<div class="bx-field">
+  <label class="bx-label-row"><span class="bx-label">{% if ar %}يظهر باسم{% else %}Shown as{% endif %}</span><span class="bx-opt">{% if ar %}اختياري{% else %}Optional{% endif %}</span></label>
+  <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" class="bx-input" data-link-name{% if not form.name.value %} data-auto="1"{% endif %}
+    placeholder="{% if ar %}يُملأ من الرابط{% else %}Filled in from the link{% endif %}">
+  <p class="bx-field-error" role="alert">{% for e in form.name.errors %}{{ e }}{% endfor %}</p>
+</div>
+<div style="display:none">{{ form.DELETE }}</div>
+{% endwith %}

@@ -132,7 +132,9 @@ class BuilderEventTests(TestCase):
         self.assertEqual((saved.props['flow'], saved.props['projects']), ('update', 1))
 
     def test_failed_save_records_which_sections_failed(self):
-        resp = self.client.post(reverse('update_portfolio'), builder_post([project_row('')]))
+        # A video row with neither a link nor a title (a link alone is enough since the builder cards).
+        resp = self.client.post(reverse('update_portfolio'),
+                                builder_post([{**project_row('', url=''), 'description': 'Colour and cut'}]))
         self.assertEqual(resp.status_code, 200)
         failed = events('builder_save_failed').get()
         self.assertEqual(failed.props['sections'], ['projects'])

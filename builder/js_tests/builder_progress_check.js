@@ -72,8 +72,10 @@ function counter(BX, values, names, opts) {
 const { BX, bxt, context } = load();
 
 // --- section order -------------------------------------------------------
-assert.strictEqual(BX.ORDERS_BY_CATEGORY.video_editor[0], 'identity', 'video editors start with personal identity');
-assert.strictEqual(BX.ORDERS_BY_CATEGORY.video_editor[1], 'projects');
+assert.strictEqual(BX.ORDERS_BY_CATEGORY.video_editor[0], 'projects', 'video editors start with their work');
+assert.strictEqual(BX.ORDERS_BY_CATEGORY.video_editor[1], 'identity');
+assert.deepStrictEqual(Array.from(BX.EXTRAS_BY_CATEGORY.video_editor), ['experience', 'education', 'creators', 'order'],
+  'the optional sections fold under "More sections"');
 assert.strictEqual(BX.ORDERS_BY_CATEGORY.developer[0], 'identity', 'other categories are unchanged');
 assert.strictEqual(BX.ORDERS_BY_CATEGORY.student[0], 'identity');
 const eight = ['identity', 'projects', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'];

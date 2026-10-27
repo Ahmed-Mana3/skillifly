@@ -70,7 +70,19 @@ const BX_I18N = Object.assign({
   autosaveSignedOut: 'You were signed out. Sign in again to save your changes.',
   autosaveDraft: 'Fill in the required fields to save the new item',
   autosaveFirstVideo: 'Your first video is on your portfolio.',
-  autosaveSeeIt: 'See it'
+  autosaveSeeIt: 'See it',
+  moreSections: 'More sections ({n})',
+  fewerSections: 'Fewer sections',
+  detailsEdit: 'Edit',
+  detailsClose: 'Close',
+  linkLookingUp: 'Looking up the video…',
+  linkDuplicate: 'This video is already in your portfolio.',
+  pasteEmpty: 'Paste a video link first.',
+  orderSaveFail: 'Couldn’t save the new order. Try again.',
+  linkCopied: 'Link copied. Paste it to your client.',
+  copyFallback: 'Copy your portfolio link:',
+  skillsMax: 'You can show up to {n} skills.',
+  linkLabel: 'Link'
 }, window.BuilderI18n || {});
 
 function bxt(key, vars) {
@@ -94,8 +106,14 @@ const BX = {
 
   ORDERS_BY_CATEGORY: {
     student: ['identity', 'education', 'skills', 'experience', 'projects', 'creators', 'reviews', 'links', 'order'],
-    video_editor: ['identity', 'projects', 'skills', 'creators', 'reviews', 'experience', 'education', 'links', 'order'],
+    // Video editors: what clients look at first. The work, who made it, tools, where to follow, proof.
+    video_editor: ['projects', 'identity', 'skills', 'links', 'reviews', 'experience', 'education', 'creators', 'order'],
     developer: ['identity', 'skills', 'experience', 'projects', 'creators', 'reviews', 'education', 'links', 'order']
+  },
+
+  // Optional sections folded under "More sections" in the sidebar until they have content.
+  EXTRAS_BY_CATEGORY: {
+    video_editor: ['experience', 'education', 'creators', 'order']
   },
 
   SECTION_LABELS: {
@@ -124,11 +142,57 @@ const BX = {
     this.bindEvents();
     BXAutosave.init(this.root);
     BXSectionOrder.init();
+    BXVideos.init(this.root);
+    BXSkills.init();
+    BXLinks.init();
     this.setupCharCounters();
     this.refreshEmptyStates();
-    this.refreshProgress();
-    this.openFromHash();
     this.updateNavStates();
+    this.foldExtraSections();
+    this.addDoneButtons();
+    this.openFromHash();
+  },
+
+  // Video editors: optional sections that are still empty wait under "More sections".
+  foldExtraSections() {
+    const extras = (this.EXTRAS_BY_CATEGORY[this.category] || []).filter(key => this.navByKey[key]);
+    const folded = extras.filter(key => !this.isSectionDone(key));
+    if (!folded.length) return;
+    const firstLi = this.navByKey[extras[0]].closest('li');
+    const li = document.createElement('li');
+    li.className = 'bx-nav-more-li';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bx-nav-more';
+    btn.dataset.action = 'toggle-more';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = bxt('moreSections', { n: folded.length });
+    li.appendChild(btn);
+    this.navList.insertBefore(li, firstLi);
+    this.foldedKeys = folded;
+    this.moreBtn = btn;
+    folded.forEach(key => this.navByKey[key].closest('li').classList.add('is-folded'));
+  },
+
+  toggleMore(open) {
+    if (!this.moreBtn) return;
+    const expand = open === undefined ? this.moreBtn.getAttribute('aria-expanded') !== 'true' : open;
+    this.moreBtn.setAttribute('aria-expanded', expand ? 'true' : 'false');
+    this.moreBtn.textContent = expand ? bxt('fewerSections') : bxt('moreSections', { n: this.foldedKeys.length });
+    this.foldedKeys.forEach(key => this.navByKey[key].closest('li').classList.toggle('is-folded', !expand));
+  },
+
+  // Autosave has no Save button, so the last sections end with a way out.
+  addDoneButtons() {
+    const tpl = document.getElementById('bx-done-tpl');
+    if (!BXAutosave.on || !tpl) return;
+    const extras = this.EXTRAS_BY_CATEGORY[this.category] || [];
+    const primary = this.order.filter(key => extras.indexOf(key) === -1);
+    const keys = [primary[primary.length - 1], this.order[this.order.length - 1]];
+    keys.filter((key, i) => key && keys.indexOf(key) === i).forEach(key => {
+      const end = this.panelByKey[key] && this.panelByKey[key].querySelector('.bx-foot-end');
+      if (end) end.appendChild(tpl.content.cloneNode(true));
+    });
   },
 
   cachePanels() {
@@ -197,6 +261,8 @@ const BX = {
       if (!actionEl) {
         const chip = e.target.closest('.category-chips-container .bx-chip');
         if (chip) this.selectChip(chip);
+        const ready = e.target.closest('.bx-ready-item');
+        if (ready) this.openReadyItem(ready);
         return;
       }
       const action = actionEl.dataset.action;
@@ -221,6 +287,14 @@ const BX = {
         case 'order-confirm-save': BXSectionOrder.confirmReset(); break;
         case 'order-confirm-cancel': BXSectionOrder.closeConfirm(); break;
         case 'autosave-retry': BXAutosave.retryAll(); break;
+        case 'toggle-more': this.toggleMore(); break;
+        case 'copy-link': this.copyPortfolioLink(); break;
+        case 'paste-add': BXVideos.addFromPaste(); break;
+        case 'toggle-details': BXVideos.toggleDetails(actionEl.closest('.bx-item')); break;
+        case 'move-up': BXVideos.move(actionEl.closest('.bx-item'), -1, actionEl); break;
+        case 'move-down': BXVideos.move(actionEl.closest('.bx-item'), 1, actionEl); break;
+        case 'toggle-skill': BXSkills.toggle(actionEl); break;
+        case 'add-skill': BXSkills.addFromInput(); break;
       }
     });
 
@@ -231,16 +305,28 @@ const BX = {
       }
     });
 
+    // Helper inputs without a name (paste a link, add a skill) are not portfolio data.
     this.form.addEventListener('input', (e) => {
+      if (!e.target.name) return;
       this.markDirty();
       this.scheduleProgress();
+      BXVideos.onInput(e.target);
+      BXLinks.onInput(e.target);
       BXAutosave.onFieldEvent(e.target, false);
     });
     this.form.addEventListener('change', (e) => {
+      if (!e.target.name) return;
       this.markDirty();
       this.scheduleProgress();
       if (e.target.matches('input[type="file"]')) this.handleFileChange(e.target);
+      BXVideos.onInput(e.target);
       BXAutosave.onFieldEvent(e.target, true);
+    });
+    // Enter in a helper input adds what it holds instead of posting the form.
+    this.form.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      if (e.target.id === 'bx-paste-input') { e.preventDefault(); BXVideos.addFromPaste(); }
+      if (e.target.id === 'bx-skill-new') { e.preventDefault(); BXSkills.addFromInput(); }
     });
 
     this.form.addEventListener('focusout', (e) => {
@@ -320,6 +406,7 @@ const BX = {
   goTo(key, { silent = false } = {}) {
     const panel = this.panelByKey[key];
     if (!panel || key === this.currentKey) return;
+    if (this.foldedKeys && this.foldedKeys.indexOf(key) !== -1) this.toggleMore(true);
 
     const current = this.panelByKey[this.currentKey];
     if (current) current.classList.remove('is-active');
@@ -621,29 +708,32 @@ const BX = {
     if (clearBtn) clearBtn.hidden = true;
   },
 
-  addItem(prefix) {
+  // Returns the new row. `focus: false` leaves the caret where it is (the row is filled by script).
+  addItem(prefix, { focus = true } = {}) {
     const template = document.getElementById(prefix + '-empty-form');
     const container = document.getElementById(prefix + '-container');
     const totalForms = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
-    if (!template || !container || !totalForms) return;
+    if (!template || !container || !totalForms) return null;
 
     const count = parseInt(totalForms.value, 10);
     const wrapper = document.createElement('div');
-    wrapper.className = 'bx-item';
+    wrapper.className = prefix === 'projects' ? 'bx-item bx-video' : 'bx-item';
     wrapper.innerHTML = template.innerHTML.replace(/__prefix__/g, count);
 
     container.prepend(wrapper);
     totalForms.value = count + 1;
+    if (prefix === 'projects') BXVideos.setupCard(wrapper, { expanded: focus });
 
     this.refreshEmptyStates();
     this.markDirty();
     this.updateNavStates();
 
     const firstInput = wrapper.querySelector('input:not([type=hidden]):not([type=file]), textarea');
-    if (firstInput) {
+    if (firstInput && focus) {
       firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => firstInput.focus({ preventScroll: true }), 300);
     }
+    return wrapper;
   },
 
   removeItem(btn) {
@@ -692,6 +782,8 @@ const BX = {
     this.refreshEmptyStates();
     this.updateNavStates();
     this.markDirty();
+    BXSkills.refresh();
+    BXVideos.scheduleOrder();
   },
 
   refreshEmptyStates() {
@@ -739,12 +831,13 @@ const BX = {
         const containerId = key + '-container';
         const container = document.getElementById(containerId);
         if (!container) return false;
+        // A video counts with a link alone (its title comes from the link); so does a link.
         const coreFields = {
           skills: '[name$="-skill"]',
           education: '[name$="-school"]',
           experience: '[name$="-title"]',
-          projects: '[name$="-name"]',
-          links: '[name$="-name"]',
+          projects: '[name$="-name"], [name$="-url"]',
+          links: '[name$="-url"]',
           creators: '[name$="-name"]'
         };
         const selector = coreFields[key];
@@ -763,25 +856,33 @@ const BX = {
   // Mirrors core.onboarding.client_ready on the server.
   PLACEHOLDER_TITLES: ['video editor', 'مونتير فيديو'],
 
-  clientReadyCount() {
+  clientReadyItems() {
     const value = name => {
       const el = this.form && this.form.querySelector('[name="' + name + '"]');
       return el ? el.value.trim() : '';
     };
     const container = document.getElementById('projects-container');
+    // One per video row that has a title or a link and isn't removed.
     const videos = container
       ? Array.from(container.querySelectorAll('[name$="-name"]')).filter(inp => {
-          if (!inp.value.trim()) return false;
           const item = inp.closest('.bx-item');
+          const link = item && item.querySelector ? item.querySelector('[name$="-url"]') : null;
+          if (!inp.value.trim() && !(link && link.value.trim())) return false;
           return !(item && (item.classList.contains('is-removed') || item.style.display === 'none'));
         }).length
       : 0;
     const title = value('title');
-    return [
-      videos >= 3,
-      !!title && this.PLACEHOLDER_TITLES.indexOf(title.toLowerCase()) === -1,
-      !!(value('booking_url') || value('phone'))
-    ].filter(Boolean).length;
+    return {
+      videoCount: videos,
+      videos: videos >= 3,
+      title: !!title && this.PLACEHOLDER_TITLES.indexOf(title.toLowerCase()) === -1,
+      contact: !!(value('booking_url') || value('phone'))
+    };
+  },
+
+  clientReadyCount() {
+    const items = this.clientReadyItems();
+    return [items.videos, items.title, items.contact].filter(Boolean).length;
   },
 
   refreshProgress() {
@@ -789,9 +890,11 @@ const BX = {
     const label = document.getElementById('bx-progress-label');
     if (!fill || !label) return;
     if (this.category === 'video_editor') {
-      const ready = this.clientReadyCount();
+      const items = this.clientReadyItems();
+      const ready = [items.videos, items.title, items.contact].filter(Boolean).length;
       fill.style.width = Math.round((ready / 3) * 100) + '%';
       label.textContent = bxt('clientReadyOf', { done: ready });
+      this.paintReadiness(items, ready);
       return;
     }
     const done = this.ACTIONABLE_SECTIONS.filter(k => this.isSectionDone(k)).length;
@@ -799,6 +902,46 @@ const BX = {
     const pct = Math.round((done / total) * 100);
     fill.style.width = pct + '%';
     label.textContent = bxt('progressOf', { done: done, total: total });
+  },
+
+  // The readiness card: tick what's done, and once all three are, offer the next move.
+  paintReadiness(items, ready) {
+    const card = document.getElementById('bx-ready');
+    if (!card) return;
+    ['videos', 'title', 'contact'].forEach(key => {
+      const el = card.querySelector('[data-ready="' + key + '"]');
+      if (el) el.classList.toggle('is-done', !!items[key]);
+    });
+    const count = card.querySelector('[data-ready-count]');
+    if (count) count.textContent = '(' + Math.min(items.videoCount, 3) + '/3)';
+    const done = ready === 3;
+    card.classList.toggle('is-ready', done);
+    const todo = card.querySelector('[data-ready-todo]');
+    const doneTitle = card.querySelector('[data-ready-done]');
+    if (todo) todo.hidden = done;
+    if (doneTitle) doneTitle.hidden = !done;
+    const action = card.querySelector('[data-ready-action]');
+    if (action) action.hidden = !done;
+  },
+
+  openReadyItem(item) {
+    const key = item.dataset.goto;
+    if (key) this.goTo(key);
+    const target = item.dataset.focus ? document.querySelector(item.dataset.focus)
+      : (key === 'projects' ? document.getElementById('bx-paste-input') : null);
+    if (target) setTimeout(() => target.focus({ preventScroll: false }), 350);
+  },
+
+  copyPortfolioLink() {
+    const card = document.getElementById('bx-ready');
+    const url = card ? card.dataset.portfolioUrl : '';
+    if (!url) return;
+    const done = () => this.toast(bxt('linkCopied'), 'success');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done, () => window.prompt(bxt('copyFallback'), url));
+    } else {
+      window.prompt(bxt('copyFallback'), url);
+    }
   },
 
   selectChip(chip) {
@@ -1232,6 +1375,446 @@ const BX = {
 };
 
 /* ========================================================================
+   Video cards (Work panel). Each row shows as a card (thumbnail, title, format,
+   link host) with its fields folded underneath. Pasting a link looks it up
+   (welcome_preview_link) and fills in the title, format and thumbnail. Cards move
+   with the arrows or by dragging the handle; the order saves on its own.
+   ======================================================================== */
+const BXVideos = {
+  LOOKUP_DEBOUNCE_MS: 600,
+  ORDER_DEBOUNCE_MS: 500,
+
+  init(root) {
+    this.container = document.getElementById('projects-container');
+    if (!root || !this.container) return;
+    this.previewUrl = root.dataset.linkPreviewUrl || '';
+    this.orderUrl = root.dataset.orderUrl || '';
+    this.lang = root.dataset.lang === 'ar' ? 'ar' : 'en';
+    this.paste = document.getElementById('bx-paste-input');
+    this.rows().forEach(row => this.setupCard(row, { expanded: false }));
+    this.savedOrder = this.orderIds().join(',');
+    this.bindDrag();
+  },
+
+  rows() {
+    return this.container ? Array.from(this.container.querySelectorAll(':scope > .bx-item')) : [];
+  },
+
+  field(row, suffix) {
+    return row.querySelector('[name$="-' + suffix + '"]');
+  },
+
+  // Fill the card header from the fields. A row with something in it starts folded,
+  // unless a field shows an error (from the server or the browser).
+  setupCard(row, { expanded = false } = {}) {
+    if (!row || !row.querySelector('.bx-vcard')) return;
+    this.syncCard(row);
+    const hasContent = !!((this.field(row, 'name') || {}).value || (this.field(row, 'url') || {}).value);
+    const hasError = Array.from(row.querySelectorAll('.bx-field-error')).some(el => el.textContent.trim());
+    this.setExpanded(row, expanded || !hasContent || hasError);
+  },
+
+  setExpanded(row, open) {
+    row.classList.toggle('is-collapsed', !open);
+    const btn = row.querySelector('[data-action="toggle-details"]');
+    if (btn) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open ? bxt('detailsClose') : bxt('detailsEdit');
+    }
+  },
+
+  toggleDetails(row) {
+    if (row) this.setExpanded(row, row.classList.contains('is-collapsed'));
+  },
+
+  syncCard(row) {
+    const name = this.field(row, 'name');
+    const url = this.field(row, 'url');
+    const type = this.field(row, 'video_type');
+    const title = row.querySelector('[data-vcard-title]');
+    if (title) {
+      const text = name && name.value.trim();
+      title.textContent = text || title.dataset.empty || '';
+      title.classList.toggle('is-placeholder', !text);
+    }
+    const host = row.querySelector('[data-vcard-host]');
+    if (host) host.textContent = this.hostOf(url ? url.value : '');
+    const badge = row.querySelector('[data-vcard-format]');
+    if (badge && type) {
+      const option = type.options ? type.options[type.selectedIndex] : null;
+      badge.textContent = option ? option.text : '';
+      badge.classList.toggle('is-reel', type.value === 'reel');
+    }
+    const img = row.querySelector('[data-vcard-img]');
+    if (img && (!img.getAttribute('src') || img.dataset.auto === '1')) {
+      const yt = this.youtubeThumb(url ? url.value : '');
+      if (yt) {
+        img.src = yt;
+        img.hidden = false;
+        img.dataset.auto = '1';
+      }
+    }
+  },
+
+  hostOf(url) {
+    const raw = (url || '').trim();
+    if (!raw) return '';
+    try {
+      return new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw).hostname.replace(/^www\./, '');
+    } catch (err) {
+      return '';
+    }
+  },
+
+  youtubeThumb(url) {
+    const match = /(?:youtu\.be\/|youtube\.com\/(?:shorts\/|embed\/|v\/|.*[?&]v=))([\w-]{11})/.exec(url || '');
+    return match ? 'https://i.ytimg.com/vi/' + match[1] + '/hqdefault.jpg' : '';
+  },
+
+  setThumb(row, src) {
+    const img = row.querySelector('[data-vcard-img]');
+    if (!img || !src) return;
+    img.src = src;
+    img.hidden = false;
+    img.dataset.auto = '0';
+  },
+
+  setStatus(row, message, kind) {
+    const el = row.querySelector('[data-link-status]');
+    if (!el) return;
+    el.textContent = message || '';
+    el.hidden = !message;
+    el.classList.toggle('is-error', kind === 'error');
+    el.classList.toggle('is-warn', kind === 'warn');
+  },
+
+  // Called for every input/change in the form.
+  onInput(field) {
+    const row = field.closest && field.closest('.bx-video');
+    if (!row) return;
+    if (field.type === 'file') {
+      const file = field.files && field.files[0];
+      if (file && typeof FileReader === 'function') {
+        const reader = new FileReader();
+        reader.onload = ev => this.setThumb(row, ev.target.result);
+        reader.readAsDataURL(file);
+      }
+      return;
+    }
+    this.syncCard(row);
+    if (field.hasAttribute('data-video-link')) this.scheduleLookup(row);
+  },
+
+  scheduleLookup(row) {
+    clearTimeout(row._lookupTimer);
+    row._lookupTimer = setTimeout(() => this.lookup(row), this.LOOKUP_DEBOUNCE_MS);
+  },
+
+  async lookup(row) {
+    const url = this.field(row, 'url');
+    const value = url ? url.value.trim() : '';
+    if (!value || !this.previewUrl || value === row._lookedUp) {
+      if (!value) this.setStatus(row, '');
+      return;
+    }
+    row._lookedUp = value;
+    this.setStatus(row, bxt('linkLookingUp'));
+    let data;
+    try {
+      const res = await fetch(this.previewUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': BXAutosave.csrf() },
+        body: JSON.stringify({ url: value, lang: this.lang })
+      });
+      if (res.status === 429) { this.setStatus(row, ''); return; }
+      data = await res.json();
+    } catch (err) {
+      this.setStatus(row, '');
+      return;
+    }
+    if (url.value.trim() !== value) return; // the user kept typing; a newer lookup follows
+    if (!data.ok) {
+      this.setStatus(row, data.message || '', data.hard ? 'error' : 'warn');
+      if (data.hard) this.setExpanded(row, true);
+      return;
+    }
+    this.setStatus(row, data.duplicate ? bxt('linkDuplicate') : '', data.duplicate ? 'warn' : '');
+    const name = this.field(row, 'name');
+    if (name && !name.value.trim() && data.title) {
+      name.value = data.title;
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    const type = this.field(row, 'video_type');
+    if (type && data.video_type && type.value !== data.video_type) {
+      type.value = data.video_type;
+      type.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const img = row.querySelector('[data-vcard-img]');
+    if (data.thumbnail_url && img && (!img.getAttribute('src') || img.dataset.auto === '1')) {
+      img.src = data.thumbnail_url;
+      img.hidden = false;
+      img.dataset.auto = '1';
+    }
+    this.syncCard(row);
+  },
+
+  // "Paste a link" box: a new card at the top, filled in from the link.
+  addFromPaste() {
+    if (!this.paste) return;
+    const value = this.paste.value.trim();
+    const error = document.querySelector('[data-paste-error]');
+    if (!value) {
+      if (error) { error.textContent = bxt('pasteEmpty'); error.classList.add('is-visible'); }
+      this.paste.focus();
+      return;
+    }
+    if (error) { error.textContent = ''; error.classList.remove('is-visible'); }
+    const row = BX.addItem('projects', { focus: false });
+    if (!row) return;
+    const url = this.field(row, 'url');
+    url.value = value;
+    url.dispatchEvent(new Event('input', { bubbles: true }));
+    url.dispatchEvent(new Event('change', { bubbles: true }));
+    this.setExpanded(row, false);
+    this.lookup(row);
+    this.paste.value = '';
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
+
+  // --- order ---------------------------------------------------------------
+
+  move(row, delta, focusEl) {
+    if (!row) return;
+    const visible = this.rows().filter(r => !r.classList.contains('is-removed'));
+    const index = visible.indexOf(row);
+    const target = visible[index + delta];
+    if (!target) return;
+    if (delta < 0) this.container.insertBefore(row, target);
+    else this.container.insertBefore(row, target.nextSibling);
+    if (focusEl) focusEl.focus();
+    this.scheduleOrder();
+  },
+
+  bindDrag() {
+    let dragged = null;
+    this.container.addEventListener('mousedown', e => {
+      const handle = e.target.closest('[data-drag-handle]');
+      const row = handle && handle.closest('.bx-item');
+      if (row) row.draggable = true;
+    });
+    this.container.addEventListener('dragstart', e => {
+      const row = e.target.closest && e.target.closest('.bx-item');
+      if (!row || !row.draggable) return;
+      dragged = row;
+      row.classList.add('is-dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+      }
+    });
+    this.container.addEventListener('dragover', e => {
+      if (!dragged) return;
+      e.preventDefault();
+      const over = e.target.closest && e.target.closest('.bx-item');
+      if (!over || over === dragged) return;
+      const box = over.getBoundingClientRect();
+      const after = e.clientY > box.top + box.height / 2;
+      this.container.insertBefore(dragged, after ? over.nextSibling : over);
+    });
+    const end = () => {
+      if (!dragged) return;
+      dragged.classList.remove('is-dragging');
+      dragged.draggable = false;
+      dragged = null;
+      this.scheduleOrder();
+    };
+    this.container.addEventListener('drop', e => { if (dragged) e.preventDefault(); end(); });
+    this.container.addEventListener('dragend', end);
+  },
+
+  scheduleOrder() {
+    if (!this.container || !this.orderUrl) return;
+    clearTimeout(this.orderTimer);
+    BXAutosave.setExtra('order', 'pending');
+    this.orderTimer = setTimeout(() => this.saveOrder(), this.ORDER_DEBOUNCE_MS);
+  },
+
+  orderIds() {
+    return this.rows()
+      .filter(row => !row.classList.contains('is-removed'))
+      .map(row => parseInt((this.field(row, 'id') || {}).value, 10))
+      .filter(id => id > 0);
+  },
+
+  async saveOrder() {
+    const ids = this.orderIds();
+    const key = ids.join(',');
+    if (key === this.savedOrder) {
+      BXAutosave.setExtra('order', 'saved');
+      return;
+    }
+    const body = new FormData();
+    ids.forEach(id => body.append('ids', id));
+    BXAutosave.setExtra('order', 'saving');
+    try {
+      const res = await fetch(this.orderUrl, {
+        method: 'POST', body, credentials: 'same-origin', headers: { 'X-CSRFToken': BXAutosave.csrf() }
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      this.savedOrder = key;
+      BXAutosave.setExtra('order', 'saved');
+    } catch (err) {
+      BXAutosave.setExtra('order', 'error');
+      if (!BXAutosave.on) BX.toast(bxt('orderSaveFail'), 'error');
+    }
+  }
+};
+
+/* ========================================================================
+   Skill chips. Tap a preset (the launch checklist's list) or add your own.
+   Every picked skill is a hidden .bx-item row in #skills-container, so saving
+   (form POST or autosave) works as for any other row; a row a preset chip
+   already shows is hidden.
+   ======================================================================== */
+const BXSkills = {
+  MAX: 20,
+
+  init() {
+    this.container = document.getElementById('skills-container');
+    this.input = document.getElementById('bx-skill-new');
+    this.presets = Array.from(document.querySelectorAll('.bx-skill-preset'));
+    this.refresh();
+  },
+
+  rows() {
+    return this.container
+      ? Array.from(this.container.querySelectorAll(':scope > .bx-item')).filter(r => !r.classList.contains('is-removed'))
+      : [];
+  },
+
+  valueOf(row) {
+    const input = row.querySelector('[data-skill-value]');
+    return input ? input.value.trim() : '';
+  },
+
+  presetFor(value) {
+    const key = value.trim().toLocaleLowerCase();
+    return this.presets.find(btn => (btn.dataset.names || '').split('|').indexOf(key) !== -1) || null;
+  },
+
+  // Press the presets that are picked; hide their rows (the chip already shows them).
+  refresh() {
+    if (!this.container) return;
+    const picked = new Set();
+    this.rows().forEach(row => {
+      const preset = this.presetFor(this.valueOf(row));
+      row.classList.toggle('is-preset', !!preset);
+      if (preset) picked.add(preset);
+    });
+    this.presets.forEach(btn => {
+      const on = picked.has(btn);
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  },
+
+  toggle(btn) {
+    const row = this.rows().find(r => this.presetFor(this.valueOf(r)) === btn);
+    if (row) {
+      const remove = row.querySelector('[data-action="remove-item"]');
+      if (remove) BX.removeItem(remove);
+    } else {
+      this.add(btn.dataset.skill);
+    }
+  },
+
+  addFromInput() {
+    if (!this.input) return;
+    const value = this.input.value.replace(/\s+/g, ' ').trim();
+    if (!value) return;
+    if (this.add(value)) this.input.value = '';
+    this.input.focus();
+  },
+
+  add(value) {
+    const name = (value || '').trim().slice(0, 60);
+    if (!name || !this.container) return false;
+    const key = name.toLocaleLowerCase();
+    if (this.rows().some(r => this.valueOf(r).toLocaleLowerCase() === key)) return true; // already there
+    if (this.rows().length >= this.MAX) {
+      BX.toast(bxt('skillsMax', { n: this.MAX }), 'info');
+      return false;
+    }
+    const preset = this.presetFor(name);
+    const row = BX.addItem('skills', { focus: false });
+    if (!row) return false;
+    const input = row.querySelector('[data-skill-value]');
+    const label = row.querySelector('[data-skill-label]');
+    input.value = preset ? preset.dataset.skill : name;
+    if (label) label.textContent = input.value;
+    this.container.appendChild(row); // keep the order they were picked in
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    this.refresh();
+    return true;
+  }
+};
+
+/* ========================================================================
+   Links: paste the URL and the name shows itself ("Instagram"), until the user
+   types their own. Mirrors builder.services.platform_from_url.
+   ======================================================================== */
+const BXLinks = {
+  PLATFORMS: [
+    ['instagram.com', 'Instagram'], ['youtube.com', 'YouTube'], ['youtu.be', 'YouTube'],
+    ['tiktok.com', 'TikTok'], ['vimeo.com', 'Vimeo'], ['behance.net', 'Behance'],
+    ['linkedin.com', 'LinkedIn'], ['facebook.com', 'Facebook'], ['fb.com', 'Facebook'],
+    ['x.com', 'X'], ['twitter.com', 'X'], ['threads.net', 'Threads'], ['wa.me', 'WhatsApp'],
+    ['whatsapp.com', 'WhatsApp'], ['t.me', 'Telegram'], ['dribbble.com', 'Dribbble'],
+    ['artstation.com', 'ArtStation'], ['github.com', 'GitHub'], ['snapchat.com', 'Snapchat'],
+    ['pinterest.com', 'Pinterest'], ['calendly.com', 'Calendly'], ['drive.google.com', 'Google Drive']
+  ],
+
+  init() {
+    document.querySelectorAll('#links-container > .bx-item').forEach(row => this.paintBadge(row));
+  },
+
+  platformFromUrl(url) {
+    const host = BXVideos.hostOf(url).toLowerCase();
+    if (!host) return '';
+    const hit = this.PLATFORMS.find(([domain]) => host === domain || host.endsWith('.' + domain));
+    return hit ? hit[1] : host;
+  },
+
+  paintBadge(row) {
+    const badge = row.querySelector('[data-link-platform]');
+    const name = row.querySelector('[data-link-name]');
+    const url = row.querySelector('[data-link-url]');
+    if (!badge) return;
+    badge.textContent = (name && name.value.trim()) || this.platformFromUrl(url ? url.value : '') || bxt('linkLabel');
+  },
+
+  onInput(field) {
+    const row = field.closest && field.closest('#links-container > .bx-item');
+    if (!row) return;
+    const name = row.querySelector('[data-link-name]');
+    if (field.hasAttribute('data-link-url') && name && (name.dataset.auto === '1' || !name.value.trim())) {
+      const platform = this.platformFromUrl(field.value);
+      if (name.value !== platform) {
+        name.value = platform;
+        name.dataset.auto = '1';
+        this.filling = true;
+        name.dispatchEvent(new Event('input', { bubbles: true }));
+        this.filling = false;
+      }
+    } else if (field.hasAttribute('data-link-name') && !this.filling) {
+      field.dataset.auto = field.value.trim() ? '0' : '1';
+    }
+    this.paintBadge(row);
+  }
+};
+
+/* ========================================================================
    Autosave (SiteSettings.builder_autosave_enabled, see BUILDER_AUTOSAVE_PLAN.md).
    Each row (one skill, one video, ...) and the personal-info panel saves itself
    through the per-item API in builder/api.py: text 800 ms after typing stops,
@@ -1252,6 +1835,7 @@ const BXAutosave = {
   on: false,
   rows: [],
   layout: { state: 'saved', timer: null },
+  extras: {},
 
   init(root) {
     this.on = !!(root && root.dataset.autosave === '1' && root.dataset.apiBase &&
@@ -1330,7 +1914,12 @@ const BXAutosave = {
     return typeof field.checkValidity !== 'function' || field.checkValidity();
   },
 
-  readyToCreate(fields) {
+  readyToCreate(fields, kind) {
+    // A video needs its link or a title (the server fills the title in from the link).
+    if (kind === 'projects') {
+      const has = name => !!(fields[name] && fields[name].value.trim());
+      if (!has('url') && !has('name')) return false;
+    }
     return Object.keys(fields).every(name => {
       const field = fields[name];
       if (field.type === 'file') return true;
@@ -1388,6 +1977,7 @@ const BXAutosave = {
       this.save(row);
     });
     if (this.layout.state === 'error') this.saveLayout();
+    if (this.extras.order === 'error') BXVideos.saveOrder();
   },
 
   urlFor(row, creating) {
@@ -1408,7 +1998,7 @@ const BXAutosave = {
       this.settle(row);
       return;
     }
-    if (creating && !this.readyToCreate(fields)) {
+    if (creating && !this.readyToCreate(fields, row.kind)) {
       row.state = 'draft';
       this.refreshStatus();
       return;
@@ -1502,6 +2092,7 @@ const BXAutosave = {
     if (creating && data.id) {
       row.id = data.id;
       this.writeId(row);
+      if (row.kind === 'projects') BXVideos.scheduleOrder(); // keep it where the user put it
     }
     if (data.reveal_url) this.announceFirstVideo(data.reveal_url);
     this.settle(row);
@@ -1629,8 +2220,15 @@ const BXAutosave = {
 
   // --- what the user sees -----------------------------------------------------
 
+  // Saves that aren't rows (the video order) report here too.
+  setExtra(name, state) {
+    this.extras[name] = state;
+    this.refreshStatus();
+  },
+
   overallState() {
-    const states = this.rows.filter(row => !row.removed).map(row => row.state).concat(this.layout.state);
+    const states = this.rows.filter(row => !row.removed).map(row => row.state)
+      .concat(this.layout.state, Object.keys(this.extras).map(key => this.extras[key]));
     return this.STATE_ORDER.find(state => states.indexOf(state) !== -1) || 'saved';
   },
 

@@ -1,0 +1,43 @@
+{# Video editors: what makes the portfolio worth sending, and the next move once it is (copy the link, or publish). Kept current by BX.refreshProgress. #}
+{% with ar=is_arabic_page %}
+<section class="bx-ready" id="bx-ready" aria-labelledby="bx-ready-title"
+  data-live="{% if is_live %}1{% else %}0{% endif %}" data-portfolio-url="{{ portfolio_url }}">
+  <div class="bx-ready-head">
+    <h2 class="bx-ready-title" id="bx-ready-title">
+      <span data-ready-todo>{% if ar %}جهّز معرضك للعملاء{% else %}Get client-ready{% endif %}</span>
+      <span data-ready-done hidden>{% if ar %}معرضك جاهز للعملاء{% else %}You're client-ready{% endif %}</span>
+    </h2>
+    <span class="bx-progress-label" id="bx-progress-label">{% if ar %}جاهز للعملاء 0/3{% else %}Client-ready 0/3{% endif %}</span>
+  </div>
+  <div class="bx-progress-track"><div class="bx-progress-fill" id="bx-progress-fill"></div></div>
+  <div class="bx-ready-row">
+    <ul class="bx-ready-items">
+      <li><button type="button" class="bx-ready-item" data-ready="videos" data-goto="projects">
+        <span class="bx-ready-tick" aria-hidden="true"></span>
+        <span>{% if ar %}3 فيديوهات أو أكثر{% else %}3+ videos{% endif %} <span class="bx-ready-count" data-ready-count dir="ltr"></span></span>
+      </button></li>
+      <li><button type="button" class="bx-ready-item" data-ready="title" data-goto="identity" data-focus="#f-title">
+        <span class="bx-ready-tick" aria-hidden="true"></span>
+        <span>{% if ar %}مسمّى وظيفي حقيقي{% else %}A real job title{% endif %}</span>
+      </button></li>
+      <li><button type="button" class="bx-ready-item" data-ready="contact" data-goto="identity" data-focus="#f-booking">
+        <span class="bx-ready-tick" aria-hidden="true"></span>
+        <span>{% if ar %}رابط حجز أو رقم هاتف{% else %}A booking link or phone{% endif %}</span>
+      </button></li>
+    </ul>
+    <div class="bx-ready-action">
+      {% if is_live %}
+      <button type="button" class="bx-btn bx-btn-primary bx-btn-sm" data-action="copy-link" data-ready-action hidden>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>
+        {% if ar %}انسخ رابطك{% else %}Copy your link{% endif %}
+      </button>
+      {% else %}
+      <a class="bx-btn bx-btn-primary bx-btn-sm" href="{{ publish_url }}" data-ready-action hidden>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>
+        {% if ar %}انشر معرضك{% else %}Publish your portfolio{% endif %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endwith %}

@@ -1,0 +1,8 @@
+{# One skill, shown as a chip (inside .bx-item). With form=skill_formset.empty_form it is the "add" template; the script fills the value. #}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+<input type="hidden" name="{{ form.skill.html_name }}" value="{{ form.skill.value|default:'' }}" data-skill-value>
+<span class="bx-skill-label" data-skill-label>{{ form.skill.value|default:'' }}</span>
+<button type="button" class="bx-skill-x" data-action="remove-item" aria-label="{% if is_arabic_page %}إزالة المهارة{% else %}Remove skill{% endif %}">
+  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+</button>
+<div style="display:none">{{ form.DELETE }}</div>
