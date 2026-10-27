@@ -64,42 +64,11 @@
 
 {% block content %}
 <div class="bx-root arabic-rtl" id="builder-root" data-category="{{ category }}" data-lang="ar"
-  data-link-preview-url="{{ link_preview_url }}" data-order-url="{{ projects_order_url }}"{% if autosave_enabled %} data-autosave="1" data-api-base="{{ autosave_api_base }}"{% endif %}>
+  data-link-preview-url="{{ link_preview_url }}" data-order-url="{{ projects_order_url }}" data-portfolio-url="{{ portfolio_url }}"{% if autosave_enabled %} data-autosave="1" data-api-base="{{ autosave_api_base }}"{% endif %}>
 
-  <header class="bx-header">
-    <div>
-      <p class="bx-eyebrow"><span class="bx-eyebrow-dot"></span> منشئ الملف المهني</p>
-      <h1 class="bx-title">{% if is_update %}حدِّث ملفك المهني{% else %}أنشئ ملفك المهني{% endif %}</h1>
-      <p class="bx-subtitle">
-        {% if autosave_enabled %}املأ الأقسام أدناه، وكل تعديل يُحفَظ تلقائيًا أثناء عملك.
-        {% else %}املأ الأقسام أدناه — تعديلاتك تظهر مباشرة بعد الحفظ.{% endif %}
-        علامة الصحّ تعني أن القسم مكتمِل.
-      </p>
-    </div>
-    <div class="bx-header-actions">
-      {% if autosave_enabled %}
-      <span class="bx-autosave-status" id="bx-autosave-status" data-state="saved" role="status" aria-live="polite" hidden>
-        <span class="bx-autosave-dot" aria-hidden="true"></span>
-        <span class="bx-autosave-text">تم حفظ كل التعديلات</span>
-        <button type="button" class="bx-autosave-retry" data-action="autosave-retry" hidden>إعادة المحاولة</button>
-      </span>
-      {% endif %}
-      {% if is_update or autosave_enabled %}
-      <a href="{{ preview_url }}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        {% if is_live %}عرض موقعك المنشور{% else %}معاينة{% endif %}
-      </a>
-      {% endif %}
-      <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button>
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        {% if is_update %}حفظ التغييرات{% else %}احفظ ملفك المهني{% endif %}
-      </button>
-    </div>
-  </header>
+  {% include "dashboard/builder/_topbar.html" %}
 
-  {% if category == 'video_editor' %}
-  {% include "dashboard/builder/_readiness.html" %}
-  {% else %}
+  {% if category != 'video_editor' %}
   <div class="bx-progress" role="group" aria-label="نسبة إنجاز الملف">
     <div class="bx-progress-track"><div class="bx-progress-fill" id="bx-progress-fill"></div></div>
     <span class="bx-progress-label" id="bx-progress-label">0 من 7 أقسام مكتملة</span>
@@ -107,6 +76,10 @@
   {% endif %}
 
   <div class="bx-layout">
+
+    <aside class="bx-side">
+
+    {% if category == 'video_editor' %}{% include "dashboard/builder/_readiness.html" %}{% endif %}
 
     <nav class="bx-sidebar" aria-label="أقسام الملف المهني">
       <p class="bx-nav-label-cap">الأقسام</p>
@@ -159,8 +132,8 @@
         </button></li>
         {% endif %}
       </ol>
-      <p class="bx-sidebar-tip"><strong>نصيحة:</strong> {% if autosave_enabled %}تنقّل بين الأقسام بحرّية — كل تعديل يُحفَظ تلقائيًا.{% else %}تنقّل بين الأقسام بحرّية — سننبّهك لأي شيء ناقص قبل الحفظ.{% endif %}</p>
     </nav>
+    </aside>
 
     <form method="POST" id="portfolio-form" enctype="multipart/form-data" class="bx-form" novalidate>
       {% csrf_token %}
@@ -201,7 +174,7 @@
                 </div>
               </div>
             </div>
-            {% endif %}
+  {% endif %}
             <div class="bx-grid-2">
               <div class="bx-field bx-span-2">
                 <label class="bx-label-row" for="f-fullname"><span class="bx-label">الاسم الكامل</span><span class="bx-req" aria-hidden="true">*</span></label>
@@ -211,6 +184,11 @@
               <div class="bx-field bx-span-2">
                 <label class="bx-label-row" for="f-title"><span class="bx-label">المسمى الوظيفي</span><span class="bx-req" aria-hidden="true">*</span></label>
                 <input class="bx-input" type="text" id="f-title" name="title" value="{{ personal_form.title.value|default:'' }}" placeholder="مثال: محرر فيديو أول" required>
+                <input type="hidden" id="f-title-confirmed" name="title_confirmed" value="{% if title_confirmed %}1{% else %}0{% endif %}">
+                <p class="bx-title-keep" data-title-keep hidden>
+                  <span>ملأنا هذا المسمّى نيابةً عنك.</span>
+                  <button type="button" class="bx-link-btn" data-action="keep-title">احتفظ بهذا المسمّى</button>
+                </p>
                 <p class="bx-field-error" role="alert"></p>
               </div>
               <div class="bx-field">
@@ -493,7 +471,7 @@
               <div class="bx-empty-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
               </div>
-              <p class="bx-empty-title">لا توجد أعمال بعد</p>
+              <p class="bx-empty-title">{% if category == 'video_editor' %}لا توجد فيديوهات بعد{% else %}لا توجد أعمال بعد{% endif %}</p>
               <p class="bx-empty-sub">{% if category == 'video_editor' %}الصق رابط أفضل فيديو لك بالأعلى — من 3 إلى 6 أعمال قوية أفضل من قائمة طويلة.{% else %}أضف أفضل أعمالك — الجودة قبل الكمية.{% endif %}</p>
               <button type="button" class="bx-btn bx-btn-add bx-btn-sm" data-action="add" data-prefix="projects">أضف أول عمل</button>
             </div>

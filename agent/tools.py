@@ -353,6 +353,7 @@ def update_personal_info(user, full_name=None, title=None, bio=None, booking_url
         if title is not None and title.strip():
             diff["title"] = {"old": info.title, "new": title.strip()}
             info.title = title.strip()
+            info.title_confirmed = True  # the user asked for this title
         if bio is not None and bio.strip():
             diff["bio"] = {"old": info.bio, "new": bio.strip()}
             info.bio = bio.strip()

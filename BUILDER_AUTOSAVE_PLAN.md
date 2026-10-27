@@ -1,7 +1,7 @@
 # Builder autosave and safe saving: implementation plan
 
 Status: Phases 0, 1 and 2 committed (2b07237). The switch is off; Phase 3 (rollout) is next.
-The builder UX stages 1-2 (below) are built and tested, not committed (2026-10-27).
+The builder UX stages 1-2 (below) are committed (56fe6c4).
 
 ## Builder UX, stages 1-2 (built on top of autosave)
 
@@ -29,6 +29,20 @@ These apply whether or not the autosave switch is on.
   tip matches autosave; "Collaborators" in the sidebar; with autosave, the last sections end with "Done — view my portfolio".
 - Tests: `builder/test_cards.py`, `builder/js_tests/builder_cards_check.js` (run by `builder.test_autosave`),
   and more checks in the opt-in `builder/test_autosave_browser.py` (15 in all).
+
+## Calm visual design (after stages 1-2)
+
+The builder felt busy (a full-width readiness card, dashed borders everywhere, nine two-line nav items,
+a "SECTION n" kicker and tinted band on every panel). The calm pass:
+
+- One top bar (`templates/dashboard/builder/_topbar.html`): title, save state, Preview and **one** primary
+  action: Publish (or Copy link once live). Without autosave, Save is primary and Publish is secondary.
+- Client-readiness moved to the top of the sidebar as a small block (`_readiness.html`) that folds into
+  "Ready to send to clients." once all three items are done.
+- Sidebar: an icon and a name per section (icons are CSS masks keyed by `data-nav-key`), no numbers,
+  descriptions or tip box; "More sections" is a text link.
+- Panels: no kicker or tinted band, hairline borders, one spacing scale; dashed borders only on upload drop zones.
+- Styles live in the "Calm builder" section at the end of `static/css/builder_v2.css` (it overrides older rules above it).
 
 Phase 1 as built differs from the text below in two small ways:
 - There is also a `builder_item_deleted` event (`kind`).

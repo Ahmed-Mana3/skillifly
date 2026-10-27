@@ -224,6 +224,9 @@ class PersonalInfo(models.Model):
     booking_url = models.CharField(max_length=500, blank=True, null=True)
     # null: rows created before this field existed have an unknown creation time.
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    # The user chose this title (typed it, or kept the one filled in at signup). Lets the
+    # signup default ("Video Editor") count as their real title once they confirm it.
+    title_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"PersonalInfo: {self.full_name}"

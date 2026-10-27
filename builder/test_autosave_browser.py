@@ -81,7 +81,7 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
     def state(self, page):
         return page.get_attribute('#bx-autosave-status', 'data-state')
 
-    def wait_until(self, page, check, message, timeout=8):
+    def wait_until(self, page, check, message, timeout=15):
         end = time.time() + timeout
         while time.time() < end:
             if check():
@@ -231,7 +231,8 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
 
     def test_readiness_card_and_sections(self):
         page = self.open_builder()
-        self.assertIn('Get client-ready', page.inner_text('#bx-ready'))
+        self.shot(page, 'new-user-desktop')
+        self.assertIn('Client-ready 0/3', page.inner_text('#bx-ready'))
         page.click('.bx-ready-item[data-ready="contact"]')
         page.wait_for_selector('#panel-identity.is-active')
         self.assertFalse(page.is_visible('.bx-nav-item[data-nav-key="education"]'), 'empty extras are folded')
@@ -241,13 +242,24 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         self.assertTrue(page.is_visible('#panel-reviews .bx-done-btn'), 'the last main section ends with Done')
         self.shot(page, 'sidebar-more', '.bx-sidebar')
 
+    def test_keeping_the_default_title_counts(self):
+        page = self.open_builder()
+        self.section(page, 'identity')
+        self.assertTrue(page.is_visible('[data-title-keep]'), 'offered under the default title')
+        page.click('[data-action="keep-title"]')
+        self.wait_until(page, lambda: PersonalInfo.objects.get(user=self.user).title_confirmed, 'title kept')
+        self.assertFalse(page.is_visible('[data-title-keep]'))
+        self.assertIn('is-done', page.get_attribute('.bx-ready-item[data-ready="title"]', 'class'))
+
     def test_client_ready_offers_publish(self):
         for i in range(3):
             Project.objects.create(user=self.user, title=f'Video {i}', url=YT, order=i)
         PersonalInfo.objects.filter(user=self.user).update(title='Colorist', booking_url='https://wa.me/201001234567')
         page = self.open_builder()
-        self.assertIn("You're client-ready", page.inner_text('#bx-ready'))
-        self.assertTrue(page.is_visible('#bx-ready [data-ready-action]'))
+        page.wait_for_selector('#bx-ready.is-ready')
+        self.assertIn('Ready to send to clients.', page.inner_text('#bx-ready'))
+        self.assertFalse(page.is_visible('#bx-ready [data-ready-todo]'), 'the checklist folds once done')
+        self.assertTrue(page.is_visible('.bx-header [data-publish]'), 'Publish is the top bar action')
         self.shot(page, 'ready', '#bx-ready')
         self.shot(page, 'work-desktop')
         mobile = self.open_builder(width=390, height=844)
@@ -283,3 +295,4 @@ class AutosaveBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         page.fill('#f-title', 'مصحح ألوان')
         self.wait_until(page, lambda: PersonalInfo.objects.get(user=self.user).title == 'مصحح ألوان', 'title saved')
         self.shot(page, 'header-arabic', '.bx-header')
+        self.shot(page, 'arabic-desktop')

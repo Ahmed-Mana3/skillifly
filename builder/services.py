@@ -373,7 +373,19 @@ def track_profile_fields_added(user, previous, personal_data):
         )
 
 
-def save_personal(user, data):
+def title_confirmed_after(previous, title, confirm_title):
+    """Whether the saved title counts as the user's choice.
+
+    It does when they set it this time (``confirm_title``: they typed in the title field or
+    pressed "Keep this title"), when it isn't the signup default, or when they had already
+    kept this same title. The default carried along by an unrelated save doesn't count.
+    """
+    if confirm_title or not onboarding.is_placeholder_title(title):
+        return True
+    return bool(previous and previous.title_confirmed and (previous.title or "").strip() == (title or "").strip())
+
+
+def save_personal(user, data, confirm_title=False):
     """Save valid personal-info form data; a new picture goes on the Profile."""
     previous = PersonalInfo.objects.filter(user=user).first()
     info, _ = PersonalInfo.objects.update_or_create(
@@ -381,6 +393,7 @@ def save_personal(user, data):
         defaults={
             "full_name": data["fullname"],
             "title": data["title"],
+            "title_confirmed": title_confirmed_after(previous, data["title"], confirm_title),
             "email": data["email"],
             "phone": data["phone"],
             "bio": data["bio"],

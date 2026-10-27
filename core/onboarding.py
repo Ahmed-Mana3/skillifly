@@ -30,6 +30,19 @@ DEFAULT_TITLES = {  # normalized theme category -> (English, Arabic)
     'student': ('Student', 'طالب'),
 }
 PLACEHOLDER_TITLES = frozenset(t for pair in DEFAULT_TITLES.values() for t in pair)
+_PLACEHOLDER_KEYS = frozenset(t.casefold() for t in PLACEHOLDER_TITLES)
+
+
+def is_placeholder_title(title):
+    """The title filled in at signup ('Video Editor', any case), not one the user wrote."""
+    return (title or '').strip().casefold() in _PLACEHOLDER_KEYS
+
+
+def title_counts(info):
+    """Whether the portfolio's title is the user's own: anything they wrote, or the
+    signup default once they kept it (PersonalInfo.title_confirmed)."""
+    title = (info.title or '').strip() if info else ''
+    return bool(title) and (info.title_confirmed or not is_placeholder_title(title))
 DEFAULT_VIDEO_TITLES = ('My video', 'فيديو من أعمالي')
 
 ERROR_MESSAGES = {
@@ -368,10 +381,9 @@ def next_step(user, projects_count, arabic=False):
 def client_ready(user):
     """The three things that make a portfolio worth sending to a client."""
     info = PersonalInfo.objects.filter(user=user).first()
-    title = (info.title or '').strip() if info else ''
     ready = {
         'videos': Project.objects.filter(user=user).count() >= 3,
-        'title': bool(title) and title not in PLACEHOLDER_TITLES,
+        'title': title_counts(info),
         'contact': bool(info and ((info.booking_url or '').strip() or (info.phone or '').strip())),
     }
     ready['count'] = sum(1 for k in ('videos', 'title', 'contact') if ready[k])

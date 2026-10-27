@@ -2254,6 +2254,7 @@ def _launch_personal(request, arabic=False):
             fields = {
                 'full_name': data['fullname'].strip()[:254],
                 'title': data['title'].strip()[:500],
+                'title_confirmed': True,  # this step asks for the title: saving it is choosing it
                 'bio': (data.get('bio') or '').strip()[:1500],
                 'booking_url': (data.get('booking_url') or '')[:500],
             }

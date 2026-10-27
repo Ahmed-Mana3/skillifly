@@ -289,6 +289,7 @@ const BX = {
         case 'autosave-retry': BXAutosave.retryAll(); break;
         case 'toggle-more': this.toggleMore(); break;
         case 'copy-link': this.copyPortfolioLink(); break;
+        case 'keep-title': this.keepTitle(); break;
         case 'paste-add': BXVideos.addFromPaste(); break;
         case 'toggle-details': BXVideos.toggleDetails(actionEl.closest('.bx-item')); break;
         case 'move-up': BXVideos.move(actionEl.closest('.bx-item'), -1, actionEl); break;
@@ -308,6 +309,7 @@ const BX = {
     // Helper inputs without a name (paste a link, add a skill) are not portfolio data.
     this.form.addEventListener('input', (e) => {
       if (!e.target.name) return;
+      if (e.target.name === 'title') this.confirmTitle();
       this.markDirty();
       this.scheduleProgress();
       BXVideos.onInput(e.target);
@@ -875,9 +877,35 @@ const BX = {
     return {
       videoCount: videos,
       videos: videos >= 3,
-      title: !!title && this.PLACEHOLDER_TITLES.indexOf(title.toLowerCase()) === -1,
+      // The signup default counts once the user keeps it (core.onboarding.title_counts).
+      title: !!title && (!this.isPlaceholderTitle(title) || value('title_confirmed') === '1'),
       contact: !!(value('booking_url') || value('phone'))
     };
+  },
+
+  isPlaceholderTitle(title) {
+    return this.PLACEHOLDER_TITLES.indexOf((title || '').trim().toLowerCase()) !== -1;
+  },
+
+  // Typing in the title, or pressing "Keep this title", makes it the user's own.
+  confirmTitle() {
+    const flag = document.getElementById('f-title-confirmed');
+    if (flag) flag.value = '1';
+  },
+
+  keepTitle() {
+    this.confirmTitle();
+    const title = document.getElementById('f-title');
+    if (title) title.dispatchEvent(new Event('input', { bubbles: true })); // autosave sends it: confirmed
+    this.paintTitleKeep();
+  },
+
+  paintTitleKeep() {
+    const prompt = document.querySelector('[data-title-keep]');
+    const title = document.getElementById('f-title');
+    const flag = document.getElementById('f-title-confirmed');
+    if (!prompt || !title || !flag) return;
+    prompt.hidden = !(this.isPlaceholderTitle(title.value) && flag.value !== '1');
   },
 
   clientReadyCount() {
@@ -886,6 +914,7 @@ const BX = {
   },
 
   refreshProgress() {
+    this.paintTitleKeep();
     const fill = document.getElementById('bx-progress-fill');
     const label = document.getElementById('bx-progress-label');
     if (!fill || !label) return;
@@ -904,7 +933,7 @@ const BX = {
     label.textContent = bxt('progressOf', { done: done, total: total });
   },
 
-  // The readiness card: tick what's done, and once all three are, offer the next move.
+  // The sidebar's readiness block: tick what's done; once all three are, fold into one line.
   paintReadiness(items, ready) {
     const card = document.getElementById('bx-ready');
     if (!card) return;
@@ -913,15 +942,13 @@ const BX = {
       if (el) el.classList.toggle('is-done', !!items[key]);
     });
     const count = card.querySelector('[data-ready-count]');
-    if (count) count.textContent = '(' + Math.min(items.videoCount, 3) + '/3)';
+    if (count) count.textContent = items.videos ? '' : Math.min(items.videoCount, 3) + '/3';
     const done = ready === 3;
     card.classList.toggle('is-ready', done);
     const todo = card.querySelector('[data-ready-todo]');
-    const doneTitle = card.querySelector('[data-ready-done]');
+    const doneLine = card.querySelector('[data-ready-done]');
     if (todo) todo.hidden = done;
-    if (doneTitle) doneTitle.hidden = !done;
-    const action = card.querySelector('[data-ready-action]');
-    if (action) action.hidden = !done;
+    if (doneLine) doneLine.hidden = !done;
   },
 
   openReadyItem(item) {
@@ -933,8 +960,7 @@ const BX = {
   },
 
   copyPortfolioLink() {
-    const card = document.getElementById('bx-ready');
-    const url = card ? card.dataset.portfolioUrl : '';
+    const url = this.root ? this.root.dataset.portfolioUrl : '';
     if (!url) return;
     const done = () => this.toast(bxt('linkCopied'), 'success');
     if (navigator.clipboard && navigator.clipboard.writeText) {

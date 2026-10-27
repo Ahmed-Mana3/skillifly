@@ -1,0 +1,37 @@
+{# The builder's top bar, shared by both languages: title on one side; save state, Preview and one primary action on the other. #}
+{% with ar=is_arabic_page %}
+<header class="bx-header">
+  <div class="bx-header-text">
+    <h1 class="bx-title">{% if ar %}{% if is_update %}حدِّث ملفك المهني{% else %}أنشئ ملفك المهني{% endif %}{% else %}{% if is_update %}Your portfolio{% else %}Build your portfolio{% endif %}{% endif %}</h1>
+    <p class="bx-subtitle">{% if autosave_enabled %}{% if ar %}كل تعديل يُحفَظ تلقائيًا.{% else %}Every change saves as you go.{% endif %}{% else %}{% if ar %}احفظ عند الانتهاء، وتظهر تعديلاتك في معرضك.{% else %}Save when you're done and your portfolio updates.{% endif %}{% endif %}</p>
+  </div>
+  <div class="bx-header-actions">
+    {% if autosave_enabled %}
+    <span class="bx-autosave-status" id="bx-autosave-status" data-state="saved" role="status" aria-live="polite" hidden>
+      <span class="bx-autosave-dot" aria-hidden="true"></span>
+      <span class="bx-autosave-text">{% if ar %}تم حفظ كل التعديلات{% else %}All changes saved{% endif %}</span>
+      <button type="button" class="bx-autosave-retry" data-action="autosave-retry" hidden>{% if ar %}إعادة المحاولة{% else %}Retry{% endif %}</button>
+    </span>
+    {% endif %}
+    <a href="{{ preview_url }}{% if ar %}?lang=ar{% endif %}" target="_blank" rel="noopener" class="bx-btn bx-btn-ghost bx-btn-md">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      {% if is_live %}{% if ar %}عرض موقعك المنشور{% else %}View live site{% endif %}{% else %}{% if ar %}معاينة{% else %}Preview{% endif %}{% endif %}
+    </a>
+    {% if is_live %}
+    <button type="button" class="bx-btn {% if autosave_enabled %}bx-btn-primary{% else %}bx-btn-ghost{% endif %} bx-btn-md" data-action="copy-link">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+      {% if ar %}انسخ الرابط{% else %}Copy link{% endif %}
+    </button>
+    {% else %}
+    <a href="{{ publish_url }}" class="bx-btn {% if autosave_enabled %}bx-btn-primary{% else %}bx-btn-ghost{% endif %} bx-btn-md" data-publish>
+      {% if ar %}انشر معرضك{% else %}Publish{% endif %}
+    </a>
+    {% endif %}
+    {% if not autosave_enabled %}
+    <button type="submit" form="portfolio-form" class="bx-btn bx-btn-primary bx-btn-md" data-save-button>
+      {% if ar %}{% if is_update %}حفظ التغييرات{% else %}احفظ ملفك المهني{% endif %}{% else %}{% if is_update %}Save changes{% else %}Save portfolio{% endif %}{% endif %}
+    </button>
+    {% endif %}
+  </div>
+</header>
+{% endwith %}

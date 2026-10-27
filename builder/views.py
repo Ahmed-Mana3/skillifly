@@ -236,6 +236,7 @@ def _page_context(request, arabic):
         "link_preview_url": reverse('welcome_preview_link'),
         "projects_order_url": reverse('builder_api_projects_order'),
         "skill_presets": services.skill_presets(arabic),
+        "title_confirmed": PersonalInfo.objects.filter(user=user, title_confirmed=True).exists(),
     }
 
 
@@ -575,7 +576,9 @@ def _portfolio_initial_data(user):
 def save_portfolio_data(request, personal_form, skill_formset, education_formset, experience_formset, project_formset, link_formset, creator_formset, project_category_formset=None, arabic=False):
     """Save the whole builder form. Collections are saved separately, over AJAX."""
     user = request.user
-    services.save_personal(user, personal_form.cleaned_data)
+    # The page sets title_confirmed=1 once the user types in the title or keeps the default.
+    services.save_personal(user, personal_form.cleaned_data,
+                          confirm_title=request.POST.get("title_confirmed") == "1")
     categories = services.category_map(user)
     for key, formset in (
         ("skills", skill_formset),

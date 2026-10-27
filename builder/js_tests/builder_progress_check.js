@@ -90,6 +90,8 @@ assert.strictEqual(run({ title: 'Video Editor' }, ['', '']), 0, 'blank project r
 assert.strictEqual(run({ title: 'Colorist' }, []), 1, 'a real title counts');
 assert.strictEqual(run({ title: 'مونتير فيديو' }, []), 0, 'Arabic placeholder title');
 assert.strictEqual(run({ title: 'VIDEO EDITOR' }, []), 0, 'placeholder check is case-insensitive');
+assert.strictEqual(run({ title: 'Video Editor', title_confirmed: '1' }, []), 1, 'the default counts once the user keeps it');
+assert.strictEqual(run({ title: 'Video Editor', title_confirmed: '0' }, []), 0, 'but not before');
 assert.strictEqual(run({ title: 'Colorist', booking_url: 'https://wa.me/20100' }, []), 2, 'booking link counts as contact');
 assert.strictEqual(run({ title: 'Colorist', phone: '+201001234567' }, []), 2, 'phone counts as contact');
 assert.strictEqual(run({ title: 'Colorist', booking_url: 'x' }, ['A', 'B', 'C']), 3, 'three videos complete it');

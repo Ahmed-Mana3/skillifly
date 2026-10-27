@@ -145,7 +145,8 @@ def save_personal(request):
         return _invalid(user, "personal", errors)
 
     with transaction.atomic(), activation.source("builder"):
-        services.save_personal(user, cleaned)
+        # Autosave sends only what changed: a title in the request is one the user set.
+        services.save_personal(user, cleaned, confirm_title="title" in posted)
         _after_save(user)
     activation.track(user, "builder_item_saved", kind="personal", created=not has_row)
 

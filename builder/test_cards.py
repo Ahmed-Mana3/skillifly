@@ -188,7 +188,7 @@ class BuilderPageTests(TestCase):
     def test_preview_until_live(self):
         html = self.page()
         self.assertIn("Preview", html)
-        self.assertIn('?ra=live" data-ready-action', html)  # Publish, once client-ready
+        self.assertIn('?ra=live" class="bx-btn bx-btn-ghost bx-btn-md" data-publish', html)  # Publish in the top bar
         self.assertNotIn('data-action="copy-link"', html)
 
         give_payment(self.user)
@@ -200,7 +200,8 @@ class BuilderPageTests(TestCase):
 
     def test_arabic_page(self):
         html = self.page("/ar/update/")
-        self.assertIn("جهّز معرضك للعملاء", html)
+        self.assertIn("جاهز للعملاء 0/3", html)
+        self.assertIn("انشر معرضك", html)
         self.assertIn('<option value="long" selected>فيديو كامل</option>', html)
         self.assertIn("معاينة", html)
         self.assertIn("moreSections: 'أقسام إضافية ({n})'", html)
