@@ -1,494 +1,88 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Skillifly — أنشئ ملفًا مهنيًا عربيًا احترافيًا خلال دقائق{% endblock %}
-{% block meta_description %}ابنِ ملفًا مهنيًا عربيًا احترافيًا في دقائق مع Skillifly. اعرض مهاراتك وخبراتك ومشاريعك في صفحة عربية أنيقة وسهلة المشاركة مع العملاء وأصحاب العمل.{% endblock %}
-{% block meta_keywords %}منصة ملفات مهنية, ملف مهني عربي, ملف شخصي احترافي, سيرة ذاتية إلكترونية, portfolio, مهارات, نماذج ملفات مهنية, skillifly{% endblock %}
+{% block title %}Skillifly — منصة معارض الأعمال لمحرري الفيديو{% endblock %}
+{% block meta_description %}حوّل مونتاجك إلى شغل مدفوع. Skillifly يمنح محرري الفيديو معرض أعمال سينمائيًا للريلز والفيديوهات الطويلة، مع تقييمات العملاء والتحليلات والذكاء الاصطناعي ورابطك الخاص. ابدأ مجانًا.{% endblock %}
+{% block meta_keywords %}معرض أعمال محرر فيديو, بورتفوليو مونتاج, موقع أعمال محرر فيديو, ريلز, ملف مهني عربي, محرر فيديو فريلانس, skillifly, portfolio{% endblock %}
 
-{% block og_title %}Skillifly — ملف مهني عربي يبرز أفضل ما لديك{% endblock %}
-{% block og_description %}حوّل مهاراتك وخبراتك ومشاريعك إلى ملف مهني احترافي عربي يمكنك مشاركته خلال دقائق.{% endblock %}
+{% block og_title %}Skillifly — حوّل مونتاجك إلى شغل مدفوع{% endblock %}
+{% block og_description %}معرض أعمال سينمائي لمحرري الفيديو: ريلز وفيديوهات طويلة وتقييمات عملاء وتحليلات في رابط واحد. ابدأ مجانًا.{% endblock %}
 {% block og_image %}{% static 'img/logo.png' %}{% endblock %}
-{% block twitter_title %}Skillifly — ملف مهني عربي يبرز أفضل ما لديك{% endblock %}
-{% block twitter_description %}حوّل مهاراتك وخبراتك ومشاريعك إلى ملف مهني احترافي عربي يمكنك مشاركته خلال دقائق.{% endblock %}
+{% block twitter_title %}Skillifly — حوّل مونتاجك إلى شغل مدفوع{% endblock %}
+{% block twitter_description %}معرض أعمال سينمائي لمحرري الفيديو: ريلز وفيديوهات طويلة وتقييمات عملاء وتحليلات في رابط واحد. ابدأ مجانًا.{% endblock %}
 {% block twitter_image %}{% static 'img/logo.png' %}{% endblock %}
 
 {% block extra_head %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-<meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#3b82f6" />
-
-<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_landing' %}" />
-<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'index' %}" />
-<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'index' %}" />
-
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
-      "@id": "https://skillifly.cloud/#organization",
-      "name": "Skillifly",
+      "@type": "WebPage",
+      "@id": "https://skillifly.cloud/ar/#webpage",
       "url": "https://skillifly.cloud/ar/",
-      "logo": "https://skillifly.cloud{% static 'img/logo.png' %}",
-      "description": "منصة عربية لإنشاء ملفات مهنية احترافية في دقائق."
-    },
-    {
-      "@type": "WebApplication",
-      "@id": "https://skillifly.cloud/#webapp",
-      "name": "Skillifly Portfolio Builder",
-      "url": "https://skillifly.cloud/ar/",
+      "name": "Skillifly — منصة معارض الأعمال لمحرري الفيديو",
       "inLanguage": "ar",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "All",
-      "offers": [
-        { "@type": "Offer", "name": "الخطة المجانية", "price": "0", "priceCurrency": "EGP" },
-        { "@type": "Offer", "name": "الخطة الشهرية", "price": "99", "priceCurrency": "EGP" },
-        { "@type": "Offer", "name": "الخطة السنوية", "price": "449", "priceCurrency": "EGP" }
-      ]
+      "isPartOf": { "@id": "https://skillifly.cloud/#website" }
     },
     {
       "@type": "FAQPage",
+      "inLanguage": "ar",
       "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "هل يمكنني تغيير التصميم لاحقًا؟",
-          "acceptedAnswer": { "@type": "Answer", "text": "نعم. يمكنك التبديل بين التصاميم المتاحة في خطتك في أي وقت، وسيظهر محتواك داخل التصميم الجديد بشكل منظم." }
-        },
-        {
-          "@type": "Question",
-          "name": "هل سيبدو الملف جيدًا على الهاتف؟",
-          "acceptedAnswer": { "@type": "Answer", "text": "نعم. تصاميم Skillifly متجاوبة مع الهاتف والتابلت والكمبيوتر، بحيث يحصل العملاء وأصحاب العمل على تجربة قراءة مريحة على أي شاشة." }
-        },
-        {
-          "@type": "Question",
-          "name": "هل أحتاج إلى الدفع قبل التجربة؟",
-          "acceptedAnswer": { "@type": "Answer", "text": "لا. يمكنك إنشاء ملفك المهني وتخصيصه مجانًا. وعند رغبتك في فتح التصاميم المميزة والنشر المباشر، يمكنك الترقية مع ضمان استرداد خلال 14 يومًا." }
-        }
+        { "@type": "Question", "name": "هل Skillifly مجاني فعلًا؟", "acceptedAnswer": { "@type": "Answer", "text": "نعم. يمكنك بناء معرضك بالكامل وتخصيصه ومعاينته مجانًا وبدون بطاقة. تدفع فقط عندما تريد نشره على رابط عام." } },
+        { "@type": "Question", "name": "هل يمكنني رفع الفيديوهات أم الروابط فقط؟", "acceptedAnswer": { "@type": "Answer", "text": "الاثنان. الصق رابط YouTube أو Vimeo، أو ارفع ملفات الفيديو مباشرة إلى Skillifly." } },
+        { "@type": "Question", "name": "ماذا يحدث عند انتهاء اشتراكي؟", "acceptedAnswer": { "@type": "Answer", "text": "لا يُحذف شيء. يتحول معرضك إلى خاص حتى تجدد، ثم يعود على نفس الرابط." } },
+        { "@type": "Question", "name": "هل يمكنني استخدام نطاقي الخاص؟", "acceptedAnswer": { "@type": "Answer", "text": "نعم، مع Pro يمكنك ربط نطاقك الخاص مع شهادة SSL." } }
       ]
     }
   ]
 }
 </script>
-
-<script>document.documentElement.classList.add('js');</script>
-
-<style>
-  /* ===== Arabic Landing — Brand Overrides ===== */
-  :root {
-    --bg-dark: #FFFFFF;
-    --bg-card: #FFFFFF;
-    --text-primary: #0F172A;
-    --text-muted: #64748B;
-    --border-subtle: rgba(0, 0, 0, 0.08);
-  }
-
-  body {
-    background: #ffffff !important;
-    color: #0F172A !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Typography: Cairo for headings, Tajawal for body */
-  .arabic-rtl h1,
-  .arabic-rtl h2,
-  .arabic-rtl h3,
-  .arabic-rtl summary,
-  .arabic-rtl .arabic-hero-title {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-    letter-spacing: 0 !important;
-  }
-
-  .arabic-rtl p,
-  .arabic-rtl li,
-  .arabic-rtl a,
-  .arabic-rtl span,
-  .arabic-rtl button,
-  .arabic-rtl summary {
-    font-family: 'Tajawal', 'Cairo', sans-serif !important;
-  }
-
-  .arabic-rtl .btn-primary,
-  .arabic-rtl .btn-ghost {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-  }
-
-  /* Remove decorative Latin text treatments for Arabic */
-  .arabic-rtl .tracking-\[0\.3em\],
-  .arabic-rtl .tracking-widest,
-  .arabic-rtl .tracking-tighter,
-  .arabic-rtl .uppercase {
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-  }
-
-  .arabic-rtl .rtl-arrow {
-    transform: scaleX(-1);
-  }
-
-  /* Gradient text — same brand purple as the English landing */
-  .gradient-text {
-    background: none !important;
-    -webkit-background-clip: initial !important;
-    background-clip: initial !important;
-    -webkit-text-fill-color: #7C3AED !important;
-    color: #7C3AED !important;
-  }
-
-  /* Buttons — English landing uses base.html defaults for btn-primary */
-  .btn-ghost {
-    border: 1px solid rgba(0, 0, 0, 0.15) !important;
-    color: #0F172A !important;
-  }
-
-  .btn-ghost:hover {
-    background: rgba(0, 0, 0, 0.04) !important;
-    border-color: rgba(0, 0, 0, 0.3) !important;
-  }
-
-  /* Cards */
-  .glass-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  /* Testimonials — match English landing */
-  .testimonial-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-
-  .testimonial-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1) !important;
-  }
-
-  .pricing-card {
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 18px 36px -22px rgba(15, 23, 42, 0.12) !important;
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
-  }
-
-  .pricing-card:hover {
-    transform: translateY(-6px);
-  }
-
-  .pricing-featured {
-    box-shadow: 0 0 0 2px rgba(99,102,241,0.6), 0 32px 72px -20px rgba(99,102,241,0.35) !important;
-    transform: translateY(-8px) scale(1.02);
-    z-index: 10;
-  }
-
-  .pricing-featured:hover {
-    transform: translateY(-14px) scale(1.02);
-  }
-
-  @keyframes badge-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.45); }
-    60%       { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
-  }
-  .badge-pulse { animation: badge-pulse 2.4s ease-in-out infinite; }
-
-  /* ── Pricing feature rows ───────────────────────────── */
-  .feat-row {
-    display: flex; align-items: flex-start; gap: 10px;
-    font-size: 0.82rem; line-height: 1.5; color: #475569;
-  }
-  .feat-row.muted { opacity: 0.45; }
-  .feat-check { flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; }
-  .feat-exclusive {
-    margin-right: auto; flex-shrink: 0;
-    font-size: 0.65rem; font-weight: 900;
-    color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe;
-    padding: 1px 7px; border-radius: 999px;
-  }
-
-  /* ── Savings pill ───────────────────────────────────── */
-  .savings-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #fff; font-size: 0.82rem; font-weight: 800;
-    padding: 4px 14px; border-radius: 999px;
-  }
-
-  /* ── Trust bar ──────────────────────────────────────── */
-  .trust-bar {
-    display: flex; flex-wrap: wrap; align-items: center;
-    justify-content: center; gap: 20px 32px; margin-top: 28px;
-  }
-  .trust-item { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #64748b; }
-  .trust-icon { width: 15px; height: 15px; color: #10b981; flex-shrink: 0; }
-
-  .gradient-border {
-    background: #ffffff !important;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid rgba(124, 58, 237, 0.14) !important;
-    transition: all 0.3s ease;
-  }
-
-  .gradient-border::before {
-    background: rgba(124, 58, 237, 0.14) !important;
-  }
-
-  /* Nav */
-  .nav-link {
-    color: #334155 !important;
-    font-weight: 600 !important;
-  }
-
-  .nav-link:hover {
-    color: #7C3AED !important;
-  }
-
-  .hero-badge {
-    border-color: rgba(0, 0, 0, 0.08) !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .review-avatar-fallback {
-    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%) !important;
-  }
-
-  .logo-mark img {
-    filter: none !important;
-  }
-
-  /* Number displays */
-  .stat-number {
-    font-family: 'Syne', sans-serif !important;
-    font-weight: 800 !important;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Reveal-on-scroll */
-  .js .reveal {
-    opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .js .reveal.in-view {
-    opacity: 1;
-    transform: none;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .js .reveal {
-      opacity: 1 !important;
-      transform: none !important;
-      transition: none !important;
-    }
-
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-    }
-  }
-
-  /* Very light blue/purple lights that float in the background of every section */
-  .warm-lights {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(59, 130, 246, 0.09), transparent 60%),
-      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(139, 92, 246, 0.08), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(192, 38, 211, 0.07), transparent 60%),
-      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.06), transparent 60%);
-  }
-
-  /* ── Match English landing: clean white canvas, solid brand-purple buttons ── */
-  .warm-lights { display: none !important; }
-  .orb, .orb-blue, .orb-purple { display: none !important; }
-  .btn-primary {
-    background: #7C3AED !important;
-    background-image: none !important;
-    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
-  }
-  .btn-primary:hover {
-    background: #6D28D9 !important;
-    background-image: none !important;
-    box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
-  }
-  .btn-primary:active { background: #5B21B6 !important; }
-
-  /* Focus visibility */
-  a:focus-visible,
-  button:focus-visible,
-  summary:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
-    border-radius: 12px;
-  }
-
-  /* ── Hero theme showcase ────────────────────────────── */
-  .showcase-wrap { position: relative; margin: 5.5rem auto 0; max-width: 5xl; }
-  .showcase-frame {
-    position: relative;
-    border-radius: 1.25rem;
-    background: #fff;
-    border: 1px solid rgba(15, 23, 42, 0.1);
-    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.18), 0 8px 20px -8px rgba(15, 23, 42, 0.1);
-    overflow: hidden;
-  }
-  .showcase-bar {
-    display: flex; align-items: flex-end; gap: 10px;
-    padding: 8px 14px 0;
-    background: #E9EDF2;
-  }
-  .showcase-dot { width: 11px; height: 11px; border-radius: 999px; flex-shrink: 0; margin-bottom: 10px; }
-  .showcase-tab {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: #fff;
-    border: 1px solid rgba(15, 23, 42, 0.08); border-bottom: 0;
-    border-radius: 10px 10px 0 0;
-    padding: 7px 12px;
-    max-width: 46%; min-width: 0;
-    font-size: 0.68rem; font-weight: 600; color: #475569;
-  }
-  .showcase-tab { direction: ltr; }
-  .showcase-favicon {
-    width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0;
-    background: linear-gradient(135deg, #7C3AED, #4F46E5);
-  }
-  .showcase-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .showcase-tab-x { width: 11px; height: 11px; color: #94A3B8; flex-shrink: 0; }
-  .showcase-tab-new {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px; margin-bottom: 5px; border-radius: 6px;
-    color: #94A3B8; font-size: 0.85rem; font-weight: 700;
-  }
-  .showcase-toolbar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 14px;
-    background: #fff;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  }
-  .showcase-toolbar-btn { width: 13px; height: 13px; color: #94A3B8; flex-shrink: 0; }
-  .showcase-url {
-    flex: 1; min-width: 0;
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #F1F5F9; border: 1px solid rgba(15, 23, 42, 0.06);
-    border-radius: 999px; padding: 5px 14px;
-    font-size: 0.72rem; color: #64748B; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    text-align: left; direction: ltr;
-  }
-  .showcase-lock { width: 10px; height: 10px; color: #10b981; flex-shrink: 0; }
-  @media (max-width: 480px) {
-    .showcase-tab { max-width: 58%; }
-    .showcase-nav-btn { display: none; }
-  }
-  .showcase-viewport {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    background:
-      linear-gradient(100deg, #f8fafc 30%, #f1f5f9 50%, #f8fafc 70%) 0 0 / 200% 100%;
-    animation: showcase-shimmer 1.6s linear infinite;
-  }
-  .showcase-viewport iframe {
-    position: absolute; top: 0; left: 0;
-    width: 200%; height: 200%;
-    border: 0;
-    transform: scale(0.5);
-    transform-origin: top left;
-  }
-  .showcase-viewport:not(.is-loaded) iframe { pointer-events: none; }
-  .showcase-viewport.is-loaded { animation: none; background: #fff; }
-  .showcase-open {
-    position: absolute; right: 12px; bottom: 12px; z-index: 5;
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(15, 23, 42, 0.85); color: #fff;
-    font-size: 0.7rem; font-weight: 700;
-    padding: 6px 12px; border-radius: 999px;
-    opacity: 0.9; transition: opacity .2s ease, background .2s ease;
-    backdrop-filter: blur(4px);
-  }
-  .showcase-open:hover { opacity: 1; background: #7C3AED; }
-  .showcase-hint {
-    position: absolute; right: 12px; bottom: 12px; z-index: 5;
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(255, 255, 255, 0.92); color: #475569;
-    font-size: 0.68rem; font-weight: 700;
-    padding: 6px 12px; border-radius: 999px;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    pointer-events: none;
-    transition: opacity .4s ease;
-  }
-  .showcase-hint.is-hidden { opacity: 0; }
-  @keyframes showcase-shimmer { to { background-position: -200% 0; } }
-
-  .showcase-chips {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
-    margin-top: 1.25rem;
-  }
-  .showcase-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border-radius: 999px;
-    background: #fff; border: 1px solid rgba(15, 23, 42, 0.12);
-    font-size: 0.8rem; font-weight: 700; color: #475569;
-    cursor: pointer; transition: all .2s ease;
-  }
-  .showcase-chip:hover { border-color: rgba(124, 58, 237, 0.5); color: #7C3AED; }
-  .showcase-chip.is-active {
-    background: #7C3AED; border-color: #7C3AED; color: #fff;
-    box-shadow: 0 6px 16px -6px rgba(124, 58, 237, 0.55);
-  }
-  .showcase-caption {
-    margin-top: 0.9rem; text-align: center;
-    font-size: 0.75rem; font-weight: 600; color: #94A3B8;
-  }
-</style>
+{% include "core/landing/_styles.html" %}
 {% endblock %}
 
 {% block content %}
+{% url 'arabic_signup' as signup_url %}
+<script type="application/json" id="lp-claim-i18n">
+  {
+    "checking":  "جارٍ التحقق من {url}…",
+    "available": "✓ الرابط {url} متاح. احجزه قبل غيرك.",
+    "taken":     "الرابط {url} محجوز بالفعل. جرّب:",
+    "reserved":  "«{u}» اسم محجوز. جرّب:",
+    "short":     "استخدم 3 أحرف على الأقل.",
+    "chars":     "الروابط تقبل الحروف الإنجليزية والأرقام و - و _ فقط."
+  }
+</script>
+<div class="lp" dir="rtl">
 
-<!-- ===== 1. HERO ===== -->
-<section class="min-h-[90vh] flex items-center justify-center px-6 py-20 relative overflow-hidden arabic-rtl">
-  <!-- Hero background elements (matched to English landing) -->
-  <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.1]" style="display: none;"></div>
+<!-- ═══ 1. HERO ═══════════════════════════════════════════ -->
+<section class="lp-hero" data-hero>
+  <div class="lp-wrap lp-hero-inner">
+    <span class="lp-pill lp-reveal">
+      {% include "core/landing/_avatars.html" with letters="أبج" %}
+      انضم إلى أكثر من {{ portfolios_count }} محترف
+    </span>
 
-  <div class="max-w-6xl mx-auto text-center relative z-10">
-    <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-8 animate-fadeInUp whitespace-nowrap">
-      <span class="flex -space-x-2 space-x-reverse">
-        <div class="w-6 h-6 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">أ</div>
-        <div class="w-6 h-6 rounded-full border-2 border-white bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white">ب</div>
-        <div class="w-6 h-6 rounded-full border-2 border-white bg-pink-500 flex items-center justify-center text-[10px] font-bold text-white">ج</div>
-      </span>
-      <span class="text-slate-900 font-medium">انضم إلى أكثر من {{ portfolios_count }} محترف</span>
-    </div>
-
-    <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.25] md:leading-[1.15] mb-6 animate-fadeInUp text-slate-900 arabic-hero-title">
-      أنشئ ملفًا مهنيًا<br /><span class="gradient-text">يفتح لك فرصًا أفضل</span>
+    <h1 class="lp-h1 lp-reveal" data-delay="1">
+      حوّل مونتاجك إلى <span class="lp-accent lp-underline">شغل مدفوع.{% include "core/landing/_underline.html" %}</span>
     </h1>
 
-    <p class="text-base sm:text-lg md:text-2xl text-slate-900 max-w-3xl mx-auto leading-relaxed mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
-      اعرض مهاراتك وخبراتك ومشاريعك في دقائق. اختر تصميمًا احترافيًا، ثم شارك رابط ملفك المهني مع العملاء وأصحاب العمل بثقة.
+    <p class="lp-lead lp-reveal" data-delay="2">
+      منصة معارض الأعمال المصممة لمحرري الفيديو.<span class="lp-m-hide"> الريلز والأعمال الطويلة وتقييمات العملاء — في رابط واحد يجلب لك العملاء.</span>
     </p>
 
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-5 px-6 sm:px-0 animate-fadeInUp" style="animation-delay: 0.2s">
-      <div class="relative group w-full sm:w-auto">
-        <a href="{% url 'arabic_signup' %}" class="btn-primary text-lg px-10 py-4 shadow-2xl shadow-blue-500/25 w-full block text-center rounded-2xl">
-          أنشئ ملفك مجانًا
-        </a>
-        <p class="absolute -bottom-7 left-0 right-0 text-[11px] text-slate-900 font-medium hidden sm:block text-center">لا تحتاج إلى بطاقة ائتمانية</p>
-      </div>
-      <a href="{% url 'arabic_examples' %}" class="btn-ghost text-lg px-10 py-4 w-full sm:w-auto text-center rounded-2xl">
-        شاهد نماذج جاهزة
-      </a>
+    <div class="lp-reveal" data-delay="3" data-claim-wrap>
+      {% include "core/landing/_claim.html" with action=signup_url label="احجز رابطي" aria="اختر رابط معرضك" %}
+      <p class="lp-claim-note" data-claim-status aria-live="polite">مجاني للبناء · بدون بطاقة ائتمان</p>
     </div>
 
-    <!-- Live theme showcase (hidden on phones, like the English landing) -->
+    <!-- Live portfolio stage -->
     {{ theme_live_urls|json_script:"theme-live-urls" }}
-    <div class="showcase-wrap animate-fadeInUp max-w-4xl hidden md:block" style="animation-delay: 0.25s" data-showcase>
+    <div class="lp-stage lp-reveal" data-delay="2" data-showcase>
       <div class="showcase-frame">
         <div class="showcase-bar" aria-hidden="true">
           <span class="showcase-dot" style="background:#F87171"></span>
@@ -506,628 +100,566 @@
           <svg class="showcase-toolbar-btn showcase-nav-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           <svg class="showcase-toolbar-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
           <span class="showcase-url">
-            <svg class="showcase-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            {% include "core/landing/_icon.html" with i="lock" cls="showcase-lock" %}
             <span data-showcase-url>skillifly.cloud</span>
           </span>
-          <svg class="showcase-toolbar-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 6v.01M12 12v.01M12 18v.01"/></svg>
         </div>
         <div class="showcase-viewport" data-showcase-viewport>
-          <iframe id="hero-showcase-iframe" title="Live portfolio built with Skillifly" loading="lazy"
+          <iframe id="hero-showcase-iframe" title="معرض أعمال حقيقي مبني باستخدام Skillifly" loading="lazy"
                   tabindex="-1" data-src="{{ showcase_initial_src }}"
                   data-zoom="{{ showcase_zoom }}" data-rotate="{% if showcase_auto_rotate %}1{% else %}0{% endif %}"></iframe>
-          <span class="showcase-hint" data-showcase-hint>مرّر للاستكشاف ↓</span>
+          <span class="showcase-hint" data-showcase-hint>مرّر داخل المعاينة للاستكشاف ↓</span>
           <a class="showcase-open" data-showcase-open href="{{ showcase_initial_src }}" target="_blank" rel="noopener">
-            عرض الملف مباشرة
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            افتح المعرض المباشر {% include "core/landing/_icon.html" with i="out" %}
           </a>
         </div>
       </div>
       <div class="showcase-chips" role="tablist" aria-label="معاينة التصاميم">
         {% for chip in showcase_chips %}
         <button type="button" class="showcase-chip{% if chip.active %} is-active{% endif %}" role="tab"
-                {% if chip.active %}aria-selected="true"{% else %}aria-selected="false"{% endif %}
+                aria-selected="{% if chip.active %}true{% else %}false{% endif %}"
                 data-theme-slug="{{ chip.slug }}" data-theme-label="{{ chip.label }}">{{ chip.label }}</button>
         {% endfor %}
-      </div>
-      <p class="showcase-caption">ملفات مهنية حقيقية صُنعت بـ Skillifly — مرّر داخلها لاستكشافها، واضغط على أي تصميم للتبديل. ملفك قد يكون التالي.</p>
-    </div>
+      </div>    </div>
+  </div>
+</section>
 
-    <div class="flex flex-col md:flex-row justify-center items-center mt-20 md:mt-24 pt-10 md:pt-12 animate-fadeInUp md:divide-x md:divide-x-reverse divide-y md:divide-y-0 divide-slate-200 space-y-10 md:space-y-0" style="animation-delay: 0.3s; border-top: 1px solid rgba(15,23,42,0.08);">
-      <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
-        <p class="text-3xl md:text-4xl font-bold gradient-text stat-number mb-1" style="font-family: 'Syne', sans-serif;">{{ portfolios_count }}+</p>
-        <p class="text-sm text-slate-900 font-semibold">ملفًا مهنيًا تم إنشاؤه</p>
+<!-- ═══ 2. PROOF BAR ══════════════════════════════════════ -->
+<section class="lp-proof" aria-label="Skillifly بالأرقام">
+  <div class="lp-wrap lp-proof-grid">
+    <div class="lp-proof-item"><div class="lp-proof-num" data-count="{{ portfolios_count }}">{{ portfolios_count }}</div><div class="lp-proof-label">معرض تم إنشاؤه</div></div>
+    <div class="lp-proof-item"><div class="lp-proof-num" data-count="{{ themes_count }}">{{ themes_count }}</div><div class="lp-proof-label">تصميمًا سينمائيًا</div></div>
+    <div class="lp-proof-item"><div class="lp-proof-num" data-count="{{ total_visits }}">{{ total_visits }}</div><div class="lp-proof-label">زيارة للمعارض</div></div>  </div>
+</section>
+
+<!-- ═══ 3. PROBLEM ════════════════════════════════════════ -->
+<section class="lp-section">
+  <div class="lp-wrap lp-problem-grid">
+    <div class="lp-problem-copy lp-reveal">
+      <span class="lp-eyebrow">المشكلة</span>
+      <h2 class="lp-h2">العملاء لا يفتحون مجلدات Drive.</h2>
+      <p class="lp-lead">تقضي أيامًا في إتقان كل قطع — ثم ترسله في رابط عشوائي. وهنا يخسر المحررون الجيدون عملاء رائعين بصمت.</p>
+      <ul class="lp-pains">
+        <li><span class="lp-x">{% include "core/landing/_icon.html" with i="x" %}</span><span><b>مجلد Google Drive</b><span class="lp-m-hide"> — بلا صور مصغّرة ولا قصة، وطلبات وصول لا يوافق عليها أحد.</span></span></li>
+        <li><span class="lp-x">{% include "core/landing/_icon.html" with i="x" %}</span><span><b>قناة YouTube</b><span class="lp-m-hide"> — أفضل أعمالك ضائعة بين فيديوهات شخصية واقتراحات لقنوات أخرى.</span></span></li>
+        <li><span class="lp-x">{% include "core/landing/_icon.html" with i="x" %}</span><span><b>سيرة ذاتية PDF</b><span class="lp-m-hide"> — لا تستطيع تشغيل لقطة واحدة مما تفعله فعلًا.</span></span></li>
+      </ul>
+    </div>
+    <div class="lp-versus lp-reveal" data-delay="1" aria-hidden="true">
+      <div class="lp-vcard lp-vcard--before">
+        <div class="lp-vlabel">ما يصل للعملاء اليوم</div>
+        <div class="lp-vurl">drive.google.com/drive/folders/1xA9fK2_final_FINAL_v3</div>
+        <div class="lp-files">
+          <span class="lp-file"><i></i>final_v2.mp4</span>
+          <span class="lp-file"><i></i>IMG_4432.MOV</span>
+          <span class="lp-file"><i></i>reel (1).mp4</span>
+          <span class="lp-file"><i></i>export_new.mov</span>
+          <span class="lp-file"><i></i>cv_2024.pdf</span>
+          <span class="lp-file"><i></i>untitled.mp4</span>
+        </div>
       </div>
-      <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
-        <p class="text-3xl md:text-4xl font-bold gradient-text stat-number mb-1" style="font-family: 'Syne', sans-serif;">{{ themes_count }}</p>
-        <p class="text-sm text-slate-900 font-semibold">تصميمًا احترافيًا</p>
-      </div>
-      <div class="w-full md:w-auto md:px-16 text-center pt-10 md:pt-0">
-        <p class="text-3xl md:text-4xl font-bold gradient-text stat-number mb-1" style="font-family: 'Syne', sans-serif;">{{ total_visits }}+</p>
-        <p class="text-sm text-slate-900 font-semibold">زيارة على ملفات المستخدمين</p>
+      <span class="lp-vs-badge">VS</span>
+      <div class="lp-vcard lp-vcard--after">
+        <div class="lp-vlabel" style="color:var(--brand)">ما يصلهم مع Skillifly</div>
+        <div class="lp-vurl">{% include "core/landing/_icon.html" with i="lock" cls="showcase-lock" %}skillifly.cloud/<b>yourname</b></div>
+        <div class="lp-mini-port">
+          <span class="lp-g3"></span><span class="lp-g1"></span><span class="lp-g2"></span><span class="lp-g4"></span><span class="lp-g6"></span>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== 2. WHY SKILLIFLY ===== -->
-<section class="px-6 py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden arabic-rtl">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="max-w-7xl mx-auto">
-    <div class="text-center mb-16 md:mb-20 reveal">
-      <p class="text-xs sm:text-sm font-bold text-blue-800 tracking-[0.3em] mb-4">لماذا Skillifly؟</p>
-      <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-black tracking-tight leading-tight">
-        سريع وواضح. <br class="block sm:hidden" /><span class="gradient-text">مصمم ليُظهر قيمتك.</span>
-      </h2>
+<!-- ═══ 4. HOW IT WORKS (timeline) ════════════════════════ -->
+<section class="lp-section lp-section--night" id="how-it-works">
+  <div class="lp-wrap">
+    <div class="lp-head lp-reveal">
+      <span class="lp-eyebrow">كيف يعمل</span>
+      <h2 class="lp-h2">من التسجيل إلى معرض منشور <span class="lp-accent">في جلسة واحدة.</span></h2>
+      <p class="lp-lead">قائمة إطلاق موجّهة تأخذك عبر أهم أربعة أشياء يبحث عنها العملاء أولًا. اجمع 100 نقطة XP وستكون جاهزًا للمشاركة.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div class="gradient-border rounded-3xl p-8 group reveal">
-        <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-          <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold mb-3 text-slate-900">إعداد سريع وسلس</h3>
-        <p class="text-slate-900 leading-relaxed">لا تحتاج إلى أسابيع من التصميم والتجارب. يساعدك منشئ Skillifly على تحويل بياناتك إلى صفحة جاهزة للمشاركة خلال دقائق.</p>
+    <div class="lp-tl-shell lp-reveal" data-delay="1">
+      <div class="lp-tl-top">
+        <span class="lp-tl-tc"><small>●</small><span data-timecode>00:00:00:00</span></span>
+        <span class="lp-tl-meta">launch_checklist.prproj · <span data-xp>0</span>/100 XP</span>
       </div>
-
-      <div class="gradient-border rounded-3xl p-8 group reveal shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.08s">
-        <div class="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-          <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold mb-3 text-slate-900">تصاميم احترافية</h3>
-        <p class="text-slate-900 leading-relaxed">اختر من بين قوالب مصممة لتقديم أعمالك بوضوح وأناقة، حتى يلمس الزائر خبرتك من أول نظرة.</p>
-      </div>
-
-      <div class="gradient-border rounded-3xl p-8 group reveal shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.16s">
-        <div class="w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-          <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold mb-3 text-slate-900">تحليلات واضحة</h3>
-        <p class="text-slate-900 leading-relaxed">تابع أداء ملفك واعرف عدد الزيارات والمشاريع التي تجذب الاهتمام، لتطوّر حضورك المهني بناءً على بيانات حقيقية.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 2.5 COMMUNITY PORTFOLIOS (made with Skillifly) ===== -->
-{% if showcases %}
-<section class="px-6 py-24 relative overflow-hidden arabic-rtl hidden md:block">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="max-w-7xl mx-auto">
-    <div class="text-center mb-14 md:mb-16 reveal">
-      <p class="text-xs sm:text-sm font-bold text-blue-800 tracking-[0.3em] mb-4">ملفات حقيقية من مستخدمين حقيقيين</p>
-      <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-black tracking-tight leading-tight mb-4">
-        صُنع بواسطة <span class="gradient-text">Skillifly</span>
-      </h2>
-      <p class="text-slate-900 text-lg max-w-2xl mx-auto">ملفات مهنية مباشرة بناها مجتمعنا — افتح واحدة وشاهد ما الذي قد يبدو عليه ملفك.</p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      {% for showcase in showcases %}
-      <a href="{% url 'preview' showcase.profile.user.username %}" target="_blank" rel="noopener"
-         class="testimonial-card gradient-border rounded-3xl overflow-hidden group block">
-        <div class="relative h-52 bg-slate-100 overflow-hidden">
-          {% if showcase.preview_image %}
-            <img src="{{ showcase.preview_image.url }}" alt="{{ showcase.profile.user.username }}: {{ showcase.title|default:'ملف مهني' }}" loading="lazy"
-                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-          {% elif showcase.profile.picture %}
-            <img src="{{ showcase.profile.picture.url }}" alt="{{ showcase.profile.user.username }}: {{ showcase.title|default:'ملف مهني' }}" loading="lazy"
-                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-          {% else %}
-            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10">
-              <span class="text-4xl font-black gradient-text" style="font-family:'Syne',sans-serif;">{{ showcase.profile.user.username|first|upper }}</span>
-            </div>
-          {% endif %}
-          <span class="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-white/90 backdrop-blur text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm">
-            <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-            مباشر
-          </span>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center justify-between gap-3 mb-2">
-            <h3 class="text-lg font-bold text-slate-900 truncate">
-              {% if showcase.title %}{{ showcase.title }}{% else %}{{ showcase.profile.user.username|title }}{% endif %}
-            </h3>
-            {% if showcase.profile.theme %}
-            <span class="shrink-0 text-[11px] font-bold uppercase tracking-wide text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">{{ showcase.profile.theme.name }}</span>
-            {% endif %}
+      <div class="lp-tl" data-timeline>
+        <div class="lp-tl-ruler" aria-hidden="true"></div>
+        <div class="lp-track">
+          <div class="lp-track-name">V1</div>
+          <div class="lp-track-lane">
+            <div class="lp-clip" data-clip data-xp="25" style="--c:#7C3AED"><b class="lp-clip-n">01</b><span class="lp-clip-t">عنك</span><small><bdi dir="ltr">+25 XP</bdi></small></div>
+            <div class="lp-clip" data-clip data-xp="35" style="--c:#DB2777"><b class="lp-clip-n">02</b><span class="lp-clip-t">أول فيديو</span><small><bdi dir="ltr">+35 XP</bdi></small></div>
+            <div class="lp-clip" data-clip data-xp="15" style="--c:#D97706"><b class="lp-clip-n">03</b><span class="lp-clip-t">التصميم</span><small><bdi dir="ltr">+15 XP</bdi></small></div>
+            <div class="lp-clip" data-clip data-xp="25" style="--c:#0891B2"><b class="lp-clip-n">04</b><span class="lp-clip-t">المهارات</span><small><bdi dir="ltr">+25 XP</bdi></small></div>
           </div>
-          <p class="text-sm text-slate-900 leading-relaxed line-clamp-2">
-            {{ showcase.description|default:showcase.profile.bio|default:"استكشف هذا الملف المهني الاحترافي الذي تم إنشاؤه باستخدام Skillifly." }}
-          </p>
-          <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-purple-700 group-hover:gap-2.5 transition-all">
-            عرض الملف
-            <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </span>
+        </div>
+        <div class="lp-track lp-track--audio" aria-hidden="true">
+          <div class="lp-track-name">A1</div>
+          <div class="lp-track-lane" style="grid-template-columns:1fr"><div class="lp-wave"></div></div>
+        </div>
+        <div class="lp-playhead" data-playhead aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="lp-steps">
+      <div class="lp-step lp-reveal" data-step>
+        <span class="lp-step-n">01</span>
+        <h3>عرّف العملاء بنفسك</h3>
+        <p>اسمك ومسمّاك المهني ونبذة قصيرة. محتار في الكلمات؟ اكتبها بالذكاء الاصطناعي بنقرة.</p>
+        <span class="lp-xp">+25 XP</span>
+      </div>
+      <div class="lp-step lp-reveal" data-delay="1" data-step>
+        <span class="lp-step-n">02</span>
+        <h3>أضف أول فيديو</h3>
+        <p>الصق رابط YouTube أو Vimeo، أو ارفع الملف مباشرة من جهازك.</p>
+        <span class="lp-xp">+35 XP</span>
+      </div>
+      <div class="lp-step lp-reveal" data-delay="2" data-step>
+        <span class="lp-step-n">03</span>
+        <h3>اختر شكلك</h3>
+        <p>اختر تصميمًا وعاينه على أعمالك قبل أن تعتمده.</p>
+        <span class="lp-xp">+15 XP</span>
+      </div>
+      <div class="lp-step lp-reveal" data-delay="3" data-step>
+        <span class="lp-step-n">04</span>
+        <h3>أضف مهاراتك</h3>
+        <p>Premiere و After Effects و DaVinci والتلوين وتصميم الصوت — أظهر ما تتقنه.</p>
+        <span class="lp-xp">+25 XP</span>
+      </div>
+    </div>
+
+    <div class="lp-tl-cta">
+      <a href="{% url 'arabic_signup' %}" class="lp-btn lp-btn--light">ابدأ قائمتي {% include "core/landing/_icon.html" with i="arrow" %}</a>
+      <p>مجاني للبناء. انشر وقتما تكون جاهزًا.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 5. FEATURE SPOTLIGHTS ═════════════════════════════ -->
+<section class="lp-section" id="features">
+  <div class="lp-wrap">
+    <div class="lp-head lp-reveal">
+      <span class="lp-eyebrow">المزايا</span>
+      <h2 class="lp-h2">مصمَّم حول طريقة عمل المحررين <span class="lp-accent">فعلًا.</span></h2>
+      <p class="lp-lead">ليس منشئ مواقع عامًا أُضيف إليه مربع فيديو. كل جزء في Skillifly مصمَّم ليبيع الحركة.</p>
+    </div>
+
+    <!-- Spotlight: showcase -->
+    <div class="lp-spot">
+      <div class="lp-spot-copy lp-reveal">
+        <span class="lp-eyebrow">العرض</span>
+        <h2 class="lp-h2">الريلز والأعمال الطويلة، كلٌّ يُعرض كما تم مونتاجه.</h2>
+        <p class="lp-lead">الريلز العمودية تحصل على صفحة 9:16 قابلة للتمرير، والمشاريع الطويلة تحصل على صفحة ورابط خاص. ونظّم كل شيء في تصنيفات حتى لا يمر عميل الأفراح على مونتاج الألعاب.</p>
+        <ul class="lp-bullets">
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>صفحات مخصصة للريلز والفيديوهات الطويلة</b>، وصفحة قابلة للمشاركة لكل مشروع</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>تصنيفاتك الخاصة</b> — إعلانات، أغانٍ مصورة، أفراح، أيًّا كان ما تعمل عليه</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>روابط أو رفع مباشر</b> — YouTube أو Vimeo أو ملفاتك أنت</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>اسحب لإعادة الترتيب</b> ليبدأ أقوى أعمالك أولًا</span></li>
+        </ul>
+        <a href="{% url 'arabic_examples' %}" class="lp-link">شاهده في معارض حقيقية {% include "core/landing/_icon.html" with i="arrow" %}</a>
+      </div>
+      <div class="lp-visual lp-reveal" data-delay="1" aria-hidden="true">
+        <div class="lp-v-reels">
+          <div class="lp-longcard">
+            <div class="lp-thumb lp-g5"><span class="lp-play">{% include "core/landing/_icon.html" with i="play" %}</span><span class="lp-dur">04:12</span></div>
+            <h4>فيلم لعلامة تجارية — «Night Run»</h4>
+            <p>فيديو طويل · تلوين وتصميم صوت</p>
+            <div class="lp-cats"><span class="on">إعلانات</span><span>أغانٍ مصورة</span><span>أفراح</span><span>وثائقي</span></div>
+          </div>
+          <div class="lp-phone">
+            <div class="lp-thumb lp-thumb--reel lp-g3">
+              <span class="lp-play">{% include "core/landing/_icon.html" with i="play" %}</span>
+              <div class="lp-reel-ui"><b>@yourname</b>إعلان جيم · 0:42</div>
+            </div>
+          </div>
+        </div>
+        <div class="lp-uploadbar">
+          <span class="lp-uploadbar-ic">{% include "core/landing/_icon.html" with i="upload" %}</span>
+          <div class="lp-uploadbar-body"><b>wedding_highlights_4k.mp4</b><div class="lp-progress"><i></i></div></div>
+          <span class="lp-uploadbar-pct">72%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight: analytics -->
+    <div class="lp-spot lp-spot--flip">
+      <div class="lp-spot-copy lp-reveal">
+        <span class="lp-eyebrow">التحليلات <span class="lp-tag lp-tag--pro">Pro</span></span>
+        <h2 class="lp-h2">اعرف من شاهد — وما الذي جعله يبقى.</h2>
+        <p class="lp-lead">شاهد زوارك ومن أين أتوا وكيف وجدوك وأي الفيديوهات نقروا عليها. تابع العميل وهو مهتم، وقدّم ما ينجح أولًا.</p>
+        <ul class="lp-bullets">
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>الزوار ومدة البقاء على الصفحة</b> خلال آخر 30 يومًا</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>الدول والمدن ومصادر الزيارات</b> — Instagram و LinkedIn و WhatsApp وغيرها</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>النقرات لكل فيديو</b> لتعرف أي مونتاج يقوم بالبيع</span></li>
+        </ul>
+      </div>
+      <div class="lp-visual lp-reveal" data-delay="1" aria-hidden="true">
+        <div class="lp-dash">
+          <div class="lp-dash-head"><b>تحليلات المعرض</b><span>آخر 30 يومًا</span></div>
+          <div class="lp-kpis">
+            <div class="lp-kpi"><small>الزوار</small><b>1,284</b><em>▲ 38%</em></div>
+            <div class="lp-kpi"><small>متوسط المدة</small><b>2:47</b><em>▲ 12%</em></div>
+            <div class="lp-kpi"><small>نقرات الفيديو</small><b>562</b><em>▲ 21%</em></div>
+          </div>
+          <div class="lp-bars">
+            <i style="height:30%"></i><i style="height:42%"></i><i style="height:36%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:62%"></i><i style="height:58%"></i><i style="height:70%"></i><i style="height:66%"></i><i style="height:82%"></i><i style="height:76%"></i><i style="height:94%"></i>
+          </div>
+          <div class="lp-dash-rows">
+            <div class="lp-dash-row"><span>Instagram</span><span>46%</span><span class="lp-meter"><i style="width:46%"></i></span></div>
+            <div class="lp-dash-row"><span>WhatsApp</span><span>27%</span><span class="lp-meter"><i style="width:27%"></i></span></div>
+            <div class="lp-dash-row"><span>LinkedIn</span><span>15%</span><span class="lp-meter"><i style="width:15%"></i></span></div>
+          </div>
+        </div>
+        <div class="lp-float lp-dash-float">
+          <span class="lp-float-icon" style="background:#F5F3FF;color:#7C3AED">{% include "core/landing/_icon.html" with i="eye" %}</span>
+          <div><strong>زائر من دبي</strong><small>شاهد «Night Run» مرتين</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight: reviews + hiring -->
+    <div class="lp-spot">
+      <div class="lp-spot-copy lp-reveal">
+        <span class="lp-eyebrow">اكسب العملاء</span>
+        <h2 class="lp-h2">دع العملاء السعداء يُقنعون العميل التالي نيابةً عنك.</h2>
+        <p class="lp-lead">أرسل رابط التقييم بعد كل تسليم. يقيّمك العملاء ويكتبون رأيهم من حساباتهم كعملاء، فيظهر على معرضك كدليل على التزامك.</p>
+        <ul class="lp-bullets">
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>رابط تقييم شخصي</b> جاهز للإرسال على WhatsApp أو البريد</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>تقييمات من حسابات عملاء حقيقية</b>، لذا لها وزن حقيقي</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>كن مكتشَفًا</b> في دليل Skillifly حيث يتصفح العملاء المحررين حسب أعمالهم</span></li>
+        </ul>
+        <a href="{% url 'arabic_hire_editors' %}" class="lp-link">شاهد دليل التوظيف {% include "core/landing/_icon.html" with i="arrow" %}</a>
+      </div>
+      <div class="lp-visual lp-reveal" data-delay="1" aria-hidden="true">
+        <div class="lp-review-card">
+          <div class="lp-review-top">
+            <span class="lp-ava" style="background:#DB2777">س</span>
+            <div><b>سارة م.</b><small>مديرة تسويق · علامة رياضية</small></div>
+            <span class="lp-verified">{% include "core/landing/_icon.html" with i="check" %}عميل</span>
+          </div>
+          <div style="margin-top:10px">{% include "core/landing/_icon.html" with i="stars" %}</div>
+          <p>«تسليم سريع ودقة عالية، وأسلوبنا وصل من أول نسخة. تضاعفت مشاهدات الريلز وحجزنا الحملة القادمة بالفعل.»</p>
+        </div>
+        <div class="lp-linkbox">
+          <code>skillifly.cloud/review/yourname</code>
+          <span>نسخ الرابط</span>
+        </div>
+        <div class="lp-hirecard">
+          <span class="lp-ava" style="background:#0891B2">{% include "core/landing/_icon.html" with i="search" cls="w-4 h-4" %}</span>
+          <div><b>عميل يتصفح المحررين</b><small>التصفية: إعلانات · 4.9★ فأعلى</small></div>
+          <span class="lp-btn lp-btn--primary">وظّف</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 6. SKILLIFLY AI ═══════════════════════════════════ -->
+<section class="lp-section lp-section--night lp-ai" id="ai">
+  <div class="lp-wrap lp-ai-grid">
+    <div class="lp-reveal">
+      <span class="lp-eyebrow">{% include "core/landing/_icon.html" with i="sparkle" cls="w-4 h-4" %} Skillifly AI</span>
+      <h2 class="lp-h2">عدّل معرضك <span class="lp-accent">بمجرد أن تطلب.</span></h2>
+      <p class="lp-lead">اطلب من Skillifly AI ما تريده بالعربية أو الإنجليزية. يعيد كتابة نبذتك، ويرتّب مشاريعك، ويحدّث الأقسام نيابةً عنك — وكل تغيير يمكن التراجع عنه بنقرة.</p>
+      <ul class="lp-bullets">
+        <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>مبني على أعمالك الحقيقية</b> — نصوص مكتوبة من مشاريعك، لا كلام عام</span></li>
+        <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>ينفّذ التعديل بنفسه</b> مع نسخة احتياطية يمكنك التراجع إليها</span></li>
+        <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>كتابة النبذة بالذكاء الاصطناعي للجميع</b>، والمساعد الكامل مع Pro</span></li>
+      </ul>
+      <a href="{% url 'arabic_signup' %}" class="lp-btn lp-btn--light">جرّبه على معرضك {% include "core/landing/_icon.html" with i="arrow" %}</a>
+    </div>
+    <div class="lp-chat lp-reveal" data-delay="1" data-chat aria-hidden="true">
+      <div class="lp-chat-head">
+        <span class="lp-chat-ic">{% include "core/landing/_icon.html" with i="sparkle" %}</span>
+        <div><b>Skillifly AI</b><small>مساعد المعرض</small></div>
+      </div>
+      <div class="lp-chat-body">
+        <div class="lp-msg lp-msg--me" data-chat-step>أعد كتابة نبذتي لتبدو أكثر احترافية، واذكر أنني أعمل على إعلانات للعلامات الرياضية.</div>
+        <div class="lp-msg lp-msg--ai" data-chat-step data-chat-ai>
+          تم. نبذتك الجديدة: «محرر فيديو يصنع إعلانات مليئة بالطاقة للعلامات الرياضية وعلامات أسلوب الحياة — تسليم سريع وإيقاع حاد وصوت مؤثر.»
+          <div class="lp-msg-action">{% include "core/landing/_icon.html" with i="check" %}تم تحديث النبذة<u>تراجع</u></div>
+        </div>
+        <div class="lp-msg lp-msg--me" data-chat-step>انقل «Night Run» إلى أول مشاريعي.</div>
+        <div class="lp-msg lp-msg--ai" data-chat-step data-chat-ai>
+          تم نقل «Night Run» إلى المركز الأول. أصبح أول ما يراه العملاء.
+          <div class="lp-msg-action">{% include "core/landing/_icon.html" with i="check" %}تمت إعادة ترتيب المشاريع<u>تراجع</u></div>
+        </div>
+        <span class="lp-msg lp-msg--ai lp-typing" data-chat-typing style="display:none"><i></i><i></i><i></i></span>
+      </div>
+      <div class="lp-chat-input"><span>اطلب من Skillifly AI تعديل أي شيء…</span><i>{% include "core/landing/_icon.html" with i="send" %}</i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 7. MADE WITH SKILLIFLY ════════════════════════════ -->
+{% if showcases %}
+<section class="lp-section">
+  <div class="lp-wrap">
+    <div class="lp-head lp-reveal">
+      <span class="lp-eyebrow">صُنع باستخدام Skillifly</span>
+      <h2 class="lp-h2">محررون حقيقيون. معارض حقيقية. <span class="lp-accent">تعمل الآن.</span></h2>
+      <p class="lp-lead">افتح أيًّا منها وتخيّل أعمالك فيه.</p>
+    </div>
+    <div class="lp-cases">
+      {% for showcase in showcases %}
+      <a href="{% url 'preview' showcase.profile.user.username %}" target="_blank" rel="noopener" class="lp-case lp-reveal">
+        <div class="lp-case-img">
+          {% if showcase.preview_image %}
+            <img src="{% url 'image_thumb' showcase.preview_image.name 800 %}" alt="معرض {{ showcase.profile.user.username }}" loading="lazy">
+          {% elif showcase.profile.picture %}
+            <img src="{% url 'image_thumb' showcase.profile.picture.name 800 %}" alt="معرض {{ showcase.profile.user.username }}" loading="lazy">
+          {% else %}
+            <div class="lp-case-initial lp-g{% cycle '3' '1' '2' '6' '4' '5' %}">{{ showcase.profile.user.username|first|upper }}</div>
+          {% endif %}
+          <span class="lp-live"><span class="lp-rec"></span>مباشر</span>
+        </div>
+        <div class="lp-case-body">
+          <div class="lp-case-row">
+            <h3>{% if showcase.title %}{{ showcase.title }}{% else %}{{ showcase.profile.user.username|title }}{% endif %}</h3>
+            {% if showcase.profile.theme %}<span class="lp-case-theme">{{ showcase.profile.theme.name }}</span>{% endif %}
+          </div>
+          <p>{{ showcase.description|default:showcase.profile.bio|default:"معرض أعمال احترافي مبني باستخدام Skillifly." }}</p>
         </div>
       </a>
       {% endfor %}
     </div>
-
-    <div class="text-center mt-12">
-      <a href="{% url 'arabic_examples' %}" class="btn-ghost inline-flex items-center gap-2 text-base px-8 py-3.5 rounded-xl">
-        استكشف كل النماذج الجاهزة
-        <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-      </a>
+    <div class="lp-center">
+      <a href="{% url 'arabic_examples' %}" class="lp-btn lp-btn--ghost">استكشف كل المعارض {% include "core/landing/_icon.html" with i="arrow" %}</a>
     </div>
   </div>
 </section>
 {% endif %}
 
-<!-- ===== 3. TESTIMONIALS ===== -->
-<section class="px-6 py-24 relative overflow-hidden arabic-rtl">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="max-w-7xl mx-auto">
-    <div class="text-center mb-20 reveal">
-      <h2 class="text-4xl md:text-6xl font-black mb-6 text-slate-900" >
-        يثق به <span class="gradient-text">أصحاب المهارات</span>
-      </h2>
-      <p class="text-slate-900 text-lg">انضم إلى مستخدمين يعرضون أعمالهم بثقة ويشاركون قصتهم المهنية بطريقة أوضح.</p>
-    </div>
+<!-- ═══ 8. TESTIMONIALS ═══════════════════════════════════ -->
+{% include "core/landing/_reviews.html" with t_eyebrow="يحبه المبدعون" t_title="لا تكتفِ بكلامنا." t_rating_pre="متوسط التقييم من" t_rating_post="تقييمات" t_verified="مستخدم موثّق" t_strip="المزيد من تقييمات المحررين" %}
 
-    {% if reviews %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {% for review in reviews %}
-      <div class="testimonial-card glass-card rounded-3xl p-8 flex flex-col h-full reveal">
-        <div class="flex gap-1 text-amber-400 mb-4" aria-label="التقييم: {{ review.rating }} من 5">
-          {% for i in "12345" %}
-            <svg class="w-4 h-4 {% if forloop.counter <= review.rating %}fill-current{% else %}text-gray-600{% endif %}" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
-          {% endfor %}
-        </div>
-        <p class="text-slate-900 italic leading-relaxed mb-6 flex-grow">«{{ review.content }}»</p>
-        <div class="flex items-center gap-4 mt-auto pt-6 border-t border-slate-100">
-          <div class="w-12 h-12 rounded-full border-2 border-white shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
-            {% if review.image_url %}
-              <img src="{{ review.image_url }}" alt="{{ review.user_name }}" class="w-full h-full object-cover" loading="lazy">
-            {% else %}
-              <div class="review-avatar-fallback w-full h-full flex items-center justify-center text-white text-xs font-black tracking-tighter">
-                {{ review.initials }}
-              </div>
-            {% endif %}
-          </div>
-          <div>
-            <p class="font-bold text-slate-900">{{ review.user_name }}</p>
-            {% if review.user_title %}
-              <p class="text-xs text-slate-900">{{ review.user_title }}</p>
-            {% endif %}
-          </div>
-        </div>
+<!-- ═══ 9. EVERYTHING ELSE (bento) ═════════════════════════ -->
+<section class="lp-section">
+  <div class="lp-wrap">
+    <div class="lp-head lp-reveal">
+      <span class="lp-eyebrow">وكل ما تحتاجه أيضًا</span>
+      <h2 class="lp-h2">كل تفصيلة يحتاجها معرض احترافي.</h2>
+    </div>
+    <div class="lp-bento">
+      <div class="lp-tile lp-tile--wide lp-tile--dark lp-reveal">
+        <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="palette" %}</span>
+        <h3>{{ themes_count }} تصميمًا سينمائيًا</h3>
+        <p>غيّر شكل معرضك بالكامل بنقرة — دون إعادة بناء. وكل تصميم يبدو مثاليًا على الهاتف الذي يفتح منه عميلك.</p>
+        <div class="lp-tile-chips">{% for chip in showcase_chips %}<span>{{ chip.label }}</span>{% endfor %}<span>+ والمزيد</span></div>
       </div>
-      {% endfor %}
+      <div class="lp-tile lp-tile--wide lp-reveal" data-delay="1">
+        <span class="lp-tag lp-tag--pro">Pro</span>
+        <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="globe" %}</span>
+        <h3>نطاقك الخاص</h3>
+        <p>اربط yourname.com مع شهادة SSL. يرى العملاء علامتك أنت في الواجهة.</p>
+        <div class="lp-domain">{% include "core/landing/_icon.html" with i="lock" %}https://yourname.com</div>
+      </div>
+      <div class="lp-tile lp-reveal">
+        <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="sliders" %}</span>
+        <h3>اجعله يشبهك</h3>
+        <p>أعد تسمية الأقسام، ورتّب المشاريع والخبرات، واختر لون الخلفية.</p>
+      </div>
+      <div class="lp-tile lp-reveal" data-delay="1">
+        <span class="lp-tag lp-tag--pro">Pro</span>
+        <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="search" %}</span>
+        <h3>اظهر على Google</h3>
+        <p>حدّد عنوان صفحتك ووصفها ليجدك العملاء المناسبون في البحث.</p>
+      </div>
+      <div class="lp-tile lp-tile--dark lp-reveal" data-delay="2">
+        <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="language" %}</span>
+        <h3>العربية و English</h3>
+        <p>استخدم Skillifly بالكامل بالعربية أو الإنجليزية، مع دعم مدمج للكتابة من اليمين لليسار.</p>
+      </div>
     </div>
-    {% else %}
-    <div class="text-center py-12 glass-card rounded-3xl">
-      <p class="text-slate-900 italic">لا توجد تقييمات بعد. كن أول من يشارك تجربته.</p>
-    </div>
-    {% endif %}
   </div>
 </section>
 
-<!-- ===== 5. PRICING ===== -->
-<section class="px-4 sm:px-6 py-24 bg-slate-50 relative overflow-hidden arabic-rtl" id="pricing">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="max-w-7xl mx-auto">
-
-    <!-- Heading -->
-    <div class="text-center mb-6 reveal">
-      <h2 class="text-4xl md:text-6xl font-black mb-4 text-slate-900">
-        اختر خطتك <span class="gradient-text">وابدأ في التميز</span>
-      </h2>
-      <p class="text-slate-500 text-lg max-w-xl mx-auto">بدون رسوم مخفية. إلغاء في أي وقت.</p>
+<!-- ═══ 10. VISION ════════════════════════════════════════ -->
+<section class="lp-section lp-section--night lp-vision">
+  <div class="lp-wrap">
+    <span class="lp-eyebrow lp-reveal">رؤيتنا</span>
+    <p class="lp-vision-quote lp-reveal" data-delay="1">
+      الموهبة موجودة في كل مكان. <span class="lp-dim">لكن الظهور ليس كذلك.</span>
+      نبني المكان الذي يُحكم فيه على كل محرر — <em>من القاهرة إلى أي مكان</em> — بالشيء الوحيد المهم: العمل.
+    </p>
+    <div class="lp-vision-sides lp-reveal">
+      <span class="lp-eyebrow">منصة واحدة، ثلاثة أطراف</span>
+      <p class="lp-lead lp-vision-sub">بدأ Skillifly مع المحررين، ويكبر ليصبح المكان الذي يجد فيه العملاء المواهب، وتُطلق فيه الأكاديميات خرّيجيها.</p>
     </div>
-
-    <!-- Social proof strip -->
-    <div class="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3 mb-10 px-3 max-w-md sm:max-w-none mx-auto reveal">
-      <span class="flex -space-x-2 space-x-reverse shrink-0" aria-hidden="true">
-        <div class="w-7 h-7 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] font-black text-white">أ</div>
-        <div class="w-7 h-7 rounded-full border-2 border-white bg-purple-500 flex items-center justify-center text-[10px] font-black text-white">ب</div>
-        <div class="w-7 h-7 rounded-full border-2 border-white bg-pink-500 flex items-center justify-center text-[10px] font-black text-white">ج</div>
-        <div class="w-7 h-7 rounded-full border-2 border-white bg-indigo-500 flex items-center justify-center text-[10px] font-black text-white">د</div>
-      </span>
-      <div class="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-2 text-center sm:text-left">
-        <span class="flex gap-0.5 text-amber-400 shrink-0" aria-hidden="true">
-          {% for i in "12345" %}<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>{% endfor %}
-        </span>
-        <p class="text-xs sm:text-sm font-semibold text-slate-600 leading-snug m-0">
-          يثق به <strong class="text-slate-800 whitespace-nowrap">{{ portfolios_count }} محترف</strong>
-        </p>
+    <div class="lp-eco">
+      <div class="lp-eco-card lp-eco-card--main lp-reveal">
+        <span class="lp-eco-who">للمحررين</span>
+        <h3>ابنِ معرضًا يجلب لك الشغل</h3>
+        <p>بيت سينمائي للريلز والمشاريع الطويلة والتقييمات والتحليلات — في رابط واحد تفخر بإرساله.</p>
+        <a href="{% url 'arabic_signup' %}" class="lp-link">ابدأ مجانًا {% include "core/landing/_icon.html" with i="arrow" %}</a>
+      </div>
+      <div class="lp-eco-card lp-reveal" data-delay="1">
+        <span class="lp-eco-who">للعملاء</span>
+        <h3>وظّف محررًا بناءً على أعماله الفعلية</h3>
+        <p>تصفّح المحررين حسب ما أنجزوه وتقييمات عملائهم السابقين، ثم تواصل معهم مباشرة.</p>
+        <a href="{% url 'arabic_hire_editors' %}" class="lp-link">تصفّح المحررين {% include "core/landing/_icon.html" with i="arrow" %}</a>
+      </div>
+      <div class="lp-eco-card lp-reveal" data-delay="2">
+        <span class="lp-eco-who">للأكاديميات</span>
+        <h3>اعرض أعمال طلابك</h3>
+        <p>امنح مدرستك صفحة خاصة تُقيَّم فيها أعمال الطلاب وتُراجَع وتُكتشف.</p>
+        <a href="{% url 'arabic_school_admin_signup' %}" class="lp-link">أنشئ صفحة مدرستك {% include "core/landing/_icon.html" with i="arrow" %}</a>
       </div>
     </div>
+  </div>
+</section>
 
-    <!-- مفتاح فترة الاشتراك -->
-    <div id="billing-switch" role="tablist" aria-label="فترة الاشتراك"
-      class="flex items-center justify-center gap-1 p-1.5 rounded-full w-fit mx-auto mb-12 bg-white border border-slate-200 shadow-sm reveal">
-      <button type="button" id="switch-monthly" role="tab" aria-selected="false" onclick="selectLandingPlan('monthly')"
-        class="px-8 py-2.5 rounded-full text-sm font-bold text-slate-500 hover:text-slate-900 transition-all duration-200">
-        شهري
-      </button>
-      <button type="button" id="switch-annual" role="tab" aria-selected="true" onclick="selectLandingPlan('annual')"
-        class="px-8 py-2.5 rounded-full text-sm font-bold bg-slate-900 text-white shadow-md transition-all duration-200 flex items-center gap-2">
-        <span>سنوي</span>
-        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white">وفّر 739 جنيهًا</span>
-      </button>
+<!-- ═══ 11. PRICING ═══════════════════════════════════════ -->
+<section class="lp-section lp-section--tint" id="pricing">
+  <div class="lp-wrap">
+    <div class="lp-head lp-reveal">
+      <span class="lp-eyebrow">الأسعار</span>
+      <h2 class="lp-h2">ابدأ مجانًا. <span class="lp-accent">وانشر حين تكون جاهزًا.</span></h2>
+      <p class="lp-lead">ابنِ معرضك بالكامل مجانًا، وقم بالترقية حين تريد أن يراه العالم.</p>
     </div>
 
-    <!-- 2-column cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-8 items-start max-w-4xl mx-auto reveal">
+    <script type="application/json" id="lp-pricing-i18n">
+      {
+        "annual":  { "title": "Pro · سنوي", "price": "449", "period": "جنيه / سنة", "strike": "1,188 جنيه عند الدفع شهريًا", "note": "أي حوالي 37 جنيهًا في الشهر", "badge": "أفضل قيمة", "cta": "احصل على Pro السنوي" },
+        "monthly": { "title": "Pro · شهري", "price": "99",  "period": "جنيه / شهر", "strike": "",                            "note": "يُدفع شهريًا. ألغِ في أي وقت.", "badge": "مرن", "cta": "احصل على Pro الشهري" }
+      }
+    </script>
+    <div class="lp-billing" role="tablist" aria-label="مدة الاشتراك">
+      <button type="button" id="switch-monthly" role="tab" aria-selected="false" onclick="selectLandingPlan('monthly')">شهري</button>
+      <button type="button" id="switch-annual" role="tab" aria-selected="true" onclick="selectLandingPlan('annual')">سنوي <em>وفّر 739 جنيه</em></button>
+    </div>
 
-      <!-- ① برو (لوحة متفاعلة مع المفتاح) -->
-      <div class="pricing-card pricing-featured bg-white rounded-3xl border border-indigo-300 p-8 flex flex-col relative" id="pricing-pro">
-        <!-- شارة -->
-        <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-          <span id="pro-badge" class="badge-pulse inline-flex items-center gap-1.5 bg-amber-400 text-black text-[11px] font-black px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
-            🏆 الأكثر شعبية
-          </span>
-        </div>
-        <!-- تدرج الخلفية -->
-        <div class="absolute inset-0 rounded-3xl pointer-events-none" style="background: #ffffff;"></div>
-
-        <div class="relative z-10 flex flex-col flex-1">
-          <div class="mb-5 pt-3">
-            <p id="pro-title" class="text-xs font-black text-blue-600 mb-2">الخطة السنوية</p>
-            <span id="pro-savings-pill" class="savings-pill mb-3">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-              وفّر 739 جنيهًا
-            </span>
-            <div class="flex items-baseline gap-1 mt-3 mb-1">
-              <span id="pro-price" class="text-5xl font-extrabold text-slate-900 stat-number">449</span>
-              <span id="pro-period" class="text-slate-500 font-semibold text-sm">جنيه / سنة</span>
-            </div>
-            <p id="pro-strike" class="text-xs text-slate-400 font-medium line-through">1,188 جنيهًا شهريًا</p>
-            <p id="pro-note" class="text-xs text-emerald-600 font-bold mt-0.5">~37 جنيهًا فقط شهريًا</p>
-          </div>
-
-          <div class="h-px mb-5" style="background: linear-gradient(to left, transparent, #E2E8F0, transparent);"></div>
-          <ul class="space-y-3.5 flex-1 mb-8">
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>جميع التصاميم المميزة</span></li>
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>رابط عام على skillifly.cloud/اسمك</span></li>
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>مشاريع وريلز وفيديوهات بلا حدود</span></li>
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>لوحة تحليلات البورتفوليو</span></li>
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>دعم الدومين المخصص</span></li>
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>وصول مبكر للتصاميم الجديدة</span></li>
-            <li class="feat-row"><svg class="feat-check text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span>دعم بأولوية أعلى</span></li>
-          </ul>
-
-          <a href="{% url 'arabic_manual_payment' 'pro_annual' %}" id="pro-cta"
-            data-url-annual="{% url 'arabic_manual_payment' 'pro_annual' %}"
-            data-url-monthly="{% url 'arabic_manual_payment' 'monthly' %}"
-            class="btn-primary block w-full text-center py-4 rounded-2xl text-sm font-bold shadow-xl shadow-indigo-500/25 transition-transform hover:scale-[1.02]">
-            اختر الخطة السنوية
-          </a>
-          <p class="text-center text-[11px] text-slate-400 mt-3 font-medium">مراجعة الإيصالات بالذكاء الاصطناعي &middot; تفعيل فوري</p>
-        </div>
-      </div>
-
-      <!-- ② مجاني -->
-      <div class="pricing-card bg-white rounded-3xl border border-slate-200 p-8 flex flex-col shadow-sm relative hover:border-slate-300 transition-all" id="pricing-free">
-        <div class="mb-5">
-          <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 text-[11px] font-bold px-3.5 py-1 rounded-full mb-3">
-            ⚡ الخطة الأساسية
-          </span>
-          <p class="text-xs font-black text-slate-400 mb-1">المستوى المجاني</p>
-          <div class="flex items-baseline gap-1 mb-1">
-            <span class="text-5xl font-extrabold text-slate-900 stat-number">0</span>
-            <span class="text-slate-400 font-semibold text-sm">جنيه</span>
-          </div>
-          <p class="text-xs text-slate-500 font-medium">مجاني للأبد. لا تحتاج بطاقة بنكية.</p>
-        </div>
-
-        <div class="h-px bg-slate-100 mb-6"></div>
-
-        <ul class="space-y-3.5 flex-1 mb-8">
-          <li class="feat-row"><svg class="feat-check text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span class="font-semibold text-slate-700">أنشئ ملفك المهني</span></li>
-          <li class="feat-row"><svg class="feat-check text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span class="font-semibold text-slate-700">أضف مشاريع ومهارات</span></li>
-          <li class="feat-row"><svg class="feat-check text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span class="font-semibold text-slate-700">معاينة البورتفوليو بالكامل</span></li>
-          <li class="feat-row"><svg class="feat-check text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span class="font-semibold text-slate-700">جميع التصاميم المميزة</span></li>
-          <li class="feat-row"><svg class="feat-check text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span class="font-semibold text-slate-700">مشاريع وريلز وفيديوهات بلا حدود</span></li>
-          <li class="feat-row muted"><svg class="feat-check text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg><span>رابط عام للنشر (برو)</span></li>
-          <li class="feat-row muted"><svg class="feat-check text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg><span>لوحة تحليلات البورتفوليو (برو)</span></li>
-          <li class="feat-row muted"><svg class="feat-check text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg><span>دعم الدومين المخصص (برو)</span></li>
+    <div class="lp-plans">
+      <div class="lp-plan lp-reveal" id="pricing-free">
+        <span class="lp-plan-name">مجاني</span>
+        <div class="lp-price"><b>0</b><span>جنيه</span></div>
+        <p class="lp-plan-sub">للأبد. بدون بطاقة ائتمان.</p>
+        <hr>
+        <ul class="lp-feats">
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>ابنِ معرضك بالكامل وخصّصه</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>مشاريع وريلز وفيديوهات بلا حدود</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>كل التصاميم المميزة</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>رفع الفيديوهات مباشرة</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>كتابة النبذة بالذكاء الاصطناعي</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>معاينة خاصة كاملة</span></li>
+          <li class="off">{% include "core/landing/_icon.html" with i="x" %}<span>رابط عام على skillifly.cloud/you</span></li>
+          <li class="off">{% include "core/landing/_icon.html" with i="x" %}<span>التحليلات والنطاق الخاص و SEO</span></li>
+          <li class="off">{% include "core/landing/_icon.html" with i="x" %}<span>مساعد Skillifly AI</span></li>
         </ul>
+        <a href="{% url 'arabic_signup' %}" id="pricing-cta-free" class="lp-btn lp-btn--ghost lp-btn--block">ابدأ البناء مجانًا</a>
+        <p class="lp-plan-foot">رقِّ في أي وقت — دون إعادة بناء.</p>
+      </div>
 
-        <div class="mt-auto">
-          <a href="{% url 'arabic_signup' %}" id="pricing-cta-free"
-            class="w-full inline-flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-lg shadow-slate-900/10 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-            <span>ابدأ الآن مجانًا</span>
-            <svg class="rtl-arrow w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-4 4m4-4H3"/></svg>
-          </a>
-          <p class="text-center text-[11px] text-slate-400 mt-2.5 font-medium">أنشئ وعدّل بورتفوليوك مجانًا بالكامل</p>
-        </div>
+      <div class="lp-plan lp-plan--pro lp-reveal" data-delay="1" id="pricing-pro">
+        <span class="lp-plan-badge" id="pro-badge">أفضل قيمة</span>
+        <span class="lp-plan-name" id="pro-title">Pro · سنوي</span>
+        <div class="lp-price"><b id="pro-price">449</b><span id="pro-period">جنيه / سنة</span></div>
+        <p class="lp-plan-sub"><s id="pro-strike">1,188 جنيه عند الدفع شهريًا</s></p>
+        <p class="lp-plan-sub" id="pro-note" style="color:#E6E3F3;font-weight:700">أي حوالي 37 جنيهًا في الشهر</p>
+        <span class="lp-plan-save" id="pro-savings-pill">توفّر 739 جنيه</span>
+        <hr>
+        <ul class="lp-feats">
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>كل ما في الخطة المجانية</b>، بالإضافة إلى:</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>معرض منشور على skillifly.cloud/you</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>تحليلات المعرض</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>نطاق خاص مع SSL</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>إعدادات SEO</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>مساعد Skillifly AI</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>مساحة أكبر لرفع الفيديوهات</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span>وصول مبكر للتصاميم الجديدة ودعم ذو أولوية</span></li>
+        </ul>
+        <a href="{% url 'arabic_manual_payment' 'pro_annual' %}" id="pro-cta"
+           data-url-annual="{% url 'arabic_manual_payment' 'pro_annual' %}"
+           data-url-monthly="{% url 'arabic_manual_payment' 'monthly' %}"
+           class="lp-btn lp-btn--primary lp-btn--block"><span data-cta-label>احصل على Pro السنوي</span> {% include "core/landing/_icon.html" with i="arrow" %}</a>
+        <p class="lp-plan-foot">تحقق من الإيصال بالذكاء الاصطناعي · تفعيل سريع</p>
       </div>
     </div>
 
-    <!-- Trust bar -->
-    <div class="trust-bar max-w-2xl mx-auto reveal mt-14">
-      <div class="trust-item">
-        <svg class="trust-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-        <span>إلغاء في أي وقت</span>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        <span>تفعيل فوري</span>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-        <span>مراجعة الإيصالات بالذكاء الاصطناعي</span>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        <span>دفع آمن</span>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- ===== 6. FAQ ===== -->
-<section class="px-6 py-24 relative overflow-hidden arabic-rtl" id="faq">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="max-w-3xl mx-auto">
-    <div class="text-center mb-16 reveal">
-      <h2 class="text-3xl md:text-5xl font-black mb-4 text-slate-900">أسئلة <span class="gradient-text">شائعة</span></h2>
-      <p class="text-slate-900">إجابات سريعة تساعدك على البدء بثقة.</p>
-    </div>
-
-    <div class="space-y-4">
-      <details class="gradient-border rounded-2xl group reveal" id="faq-1">
-        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors list-none">
-          <span>هل يمكنني تغيير التصميم لاحقًا؟</span>
-          <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-        </summary>
-        <div class="px-6 pb-6 text-slate-600 text-sm leading-relaxed font-medium">
-          نعم. يمكنك التبديل بين التصاميم المتاحة في خطتك في أي وقت، وسيظهر محتواك داخل التصميم الجديد بشكل منظم.
-        </div>
-      </details>
-
-      <details class="gradient-border rounded-2xl group reveal" id="faq-2">
-        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors list-none">
-          <span>هل سيبدو الملف جيدًا على الهاتف؟</span>
-          <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-        </summary>
-        <div class="px-6 pb-6 text-slate-600 text-sm leading-relaxed font-medium">
-          نعم. تصاميم Skillifly متجاوبة مع الهاتف والتابلت والكمبيوتر، بحيث يحصل العملاء وأصحاب العمل على تجربة قراءة مريحة على أي شاشة.
-        </div>
-      </details>
-
-      <details class="gradient-border rounded-2xl group reveal" id="faq-3">
-        <summary class="p-6 cursor-pointer flex items-center justify-between text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors list-none">
-          <span>هل أحتاج إلى الدفع قبل التجربة؟</span>
-          <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-        </summary>
-        <div class="px-6 pb-6 text-slate-600 text-sm leading-relaxed font-medium">
-          لا. يمكنك إنشاء ملفك المهني وتخصيصه مجانًا. وعند رغبتك في فتح المميزات الكاملة والنشر، يمكنك الترقية في أي وقت.
-        </div>
-      </details>
+    <div class="lp-paybar">
+      <span>{% include "core/landing/_icon.html" with i="wallet" %}ادفع عبر إنستاباي أو فودافون كاش</span>
+      <span>{% include "core/landing/_icon.html" with i="bolt" %}تفعيل سريع</span>
+      <span>{% include "core/landing/_icon.html" with i="shield" %}ألغِ في أي وقت</span>
     </div>
   </div>
 </section>
 
-<!-- ===== 7. FINAL CTA ===== -->
-<section class="px-6 py-24 arabic-rtl">
-  <div class="max-w-5xl mx-auto">
-    <div class="rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden bg-white border border-slate-100 shadow-2xl shadow-slate-200">
-      <div class="absolute inset-0 opacity-[0.03]" style="display: none;"></div>
-      <div class="relative z-10">
-        <h2 class="text-3xl sm:text-4xl md:text-6xl font-black mb-6 text-black">
-          جاهز لتقديم أفضل ما لديك؟
-        </h2>
-        <p class="text-slate-800 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-medium">ابدأ ملفك المهني الآن، واعرض مهاراتك ومشاريعك بأفضل صورة.</p>
+<!-- ═══ 12. FAQ ═══════════════════════════════════════════ -->
+<section class="lp-section">
+  <div class="lp-wrap lp-faq-grid">
+    <div class="lp-faq-side lp-reveal">
+      <span class="lp-eyebrow">الأسئلة الشائعة</span>
+      <h2 class="lp-h2">أسئلتك، وإجاباتها.</h2>
+      <p class="lp-lead">كل ما تحتاج معرفته قبل أن تحجز رابطك.</p>
+      <div class="lp-faq-help">
+        <b>لديك سؤال آخر؟</b>
+        <p>نحن أشخاص حقيقيون ونرد بسرعة.</p>
+        <a href="{% url 'contact' %}" class="lp-link">تواصل معنا {% include "core/landing/_icon.html" with i="arrow" %}</a>
+      </div>
+    </div>
+    <div class="lp-faq lp-reveal" data-delay="1">
+      <details open>
+        <summary>هل Skillifly مجاني فعلًا؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>نعم. يمكنك بناء معرضك بالكامل وتخصيصه ومعاينته مجانًا وبدون بطاقة. تدفع فقط عندما تريد نشره على رابط عام يفتحه العملاء.</div>
+      </details>
+      <details>
+        <summary>ماذا أحصل عليه مع Pro؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>معرضك المنشور على skillifly.cloud/you، وتحليلات الزوار، ونطاقك الخاص مع SSL، وإعدادات SEO، ومساعد Skillifly AI، ومساحة رفع أكبر، ووصول مبكر للتصاميم الجديدة، ودعم ذو أولوية.</div>
+      </details>
+      <details>
+        <summary>هل يمكنني رفع الفيديوهات أم الروابط فقط؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>الاثنان. الصق رابط YouTube أو Vimeo، أو ارفع ملفات الفيديو مباشرة إلى Skillifly. وتحصل الريلز والفيديوهات الطويلة على صفحات خاصة بها.</div>
+      </details>
+      <details>
+        <summary>هل يمكنني تغيير التصميم لاحقًا؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>في أي وقت وبنقرة واحدة. تنتقل مشاريعك ومهاراتك ونصوصك إلى التصميم الجديد تلقائيًا.</div>
+      </details>
+      <details>
+        <summary>هل يدعم اللغة العربية؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>نعم. Skillifly ثنائي اللغة بالكامل — يمكنك استخدام المنصة كلها بالعربية أو الإنجليزية مع دعم مدمج للكتابة من اليمين لليسار.</div>
+      </details>
+      <details>
+        <summary>كيف أدفع؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>ادفع محليًا عبر إنستاباي أو فودافون كاش وارفع صورة الإيصال. يتحقق منه الذكاء الاصطناعي ليتم تفعيل خطتك بسرعة. الأسعار بالجنيه المصري.</div>
+      </details>
+      <details>
+        <summary>ماذا يحدث عند انتهاء اشتراكي؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>لا يُحذف شيء. يتحول معرضك إلى خاص حتى تجدد، ثم يعود على نفس الرابط بكل محتواه.</div>
+      </details>
+      <details>
+        <summary>هل المنصة لمحرري الفيديو فقط؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>Skillifly مصمَّم لمحرري الفيديو أولًا، ويناسب بنفس القدر مصممي الموشن والمصورين وخبراء التلوين وكل المبدعين الذين يبيعون بأعمالهم.</div>
+      </details>
+    </div>
+  </div>
+</section>
 
-        <div class="flex flex-col items-center gap-4">
-          <a href="{% url 'arabic_signup' %}" class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg shadow-2xl shadow-purple-500/20 whitespace-nowrap">
-            أنشئ ملفك المجاني الآن
-            <svg class="rtl-arrow w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </a>
-        </div>
+<!-- ═══ 13. FINAL CTA ═════════════════════════════════════ -->
+<section class="lp-final" data-final-cta>
+  <div class="lp-wrap">
+    <div class="lp-final-card lp-reveal">
+      <span class="lp-eyebrow" style="color:#B79CFF">عميلك القادم على بُعد رابط</span>
+      <h2 class="lp-h2">أفضل أعمالك تستحق <span class="lp-underline">أن تُرى.{% include "core/landing/_underline.html" %}</span></h2>
+      <p class="lp-lead">احجز رابطك الآن. إنه مجاني — والأسماء الجيدة تُحجز بسرعة.</p>
+      <div data-claim-wrap>
+        {% include "core/landing/_claim.html" with action=signup_url label="احجز رابطي" aria="اختر رابط معرضك" %}
+        <p class="lp-claim-note" data-claim-status aria-live="polite">مجاني للبناء · بدون بطاقة ائتمان · عربي و English</p>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Sticky mobile CTA -->
+<div class="lp-sticky" data-sticky-cta>
+  <div><b>ابنِ معرضك</b><small>مجاني · بدون بطاقة</small></div>
+  <a href="{% url 'arabic_signup' %}" class="lp-btn lp-btn--primary">ابدأ مجانًا</a>
+</div>
+
+</div>
+{% endblock %}
 
 {% block extra_scripts %}
-<script>
-  // ── Hero live theme showcase ─────────────────────────
-  (function () {
-    var iframe    = document.getElementById('hero-showcase-iframe');
-    var viewport  = document.querySelector('[data-showcase-viewport]');
-    var openLink  = document.querySelector('[data-showcase-open]');
-    var urlPill   = document.querySelector('[data-showcase-url]');
-    var tabTitle  = document.querySelector('[data-showcase-tab-title]');
-    var chips     = Array.prototype.slice.call(document.querySelectorAll('[data-theme-slug]'));
-    if (!iframe || !chips.length) return;
-
-    var liveUrls = {};
-    try {
-      var mapEl = document.getElementById('theme-live-urls');
-      if (mapEl) liveUrls = JSON.parse(mapEl.textContent);
-    } catch (e) { liveUrls = {}; }
-
-    var index = 0;
-    var userPinned = false;
-    var hovering = false;
-    var lastActivity = 0;
-    var hint = document.querySelector('[data-showcase-hint]');
-
-    function markActivity() { lastActivity = Date.now(); }
-
-    function bindFrame() {
-      var doc;
-      try { doc = iframe.contentDocument; } catch (e) { doc = null; }
-      if (!doc) return;
-      doc.documentElement.addEventListener('mouseenter', function () { hovering = true; });
-      doc.documentElement.addEventListener('mouseleave', function () { hovering = false; });
-      ['mousemove', 'wheel', 'scroll', 'touchmove'].forEach(function (evt) {
-        doc.addEventListener(evt, markActivity, { passive: true });
-      });
-      if (hint) {
-        doc.addEventListener('scroll', function () { hint.classList.add('is-hidden'); }, { passive: true });
-      }
-    }
-
-    function srcFor(slug) {
-      var u = liveUrls[slug];
-      if (u) return u + (u.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
-      return '/preview/' + slug + '/';
-    }
-    function pillFor(slug) {
-      var u = liveUrls[slug];
-      if (!u) return 'skillifly.cloud/you';
-      var name = u.replace(/^\/+|\/+$/g, '');
-      return name ? 'skillifly.cloud/' + name : 'skillifly.cloud';
-    }
-    function tabTitleFor(chip) {
-      var u = liveUrls[chip.dataset.themeSlug];
-      var who = u ? u.replace(/^\/+|\/+$/g, '').split('?')[0] : chip.dataset.themeLabel;
-      return (who || 'Portfolio') + ' — Skillifly';
-    }
-
-    function applyZoom() {
-      var zoom = parseInt(iframe.getAttribute('data-zoom'), 10);
-      if (isNaN(zoom)) zoom = 50;
-      zoom = Math.min(100, Math.max(10, zoom));
-      var pct = 100 / (zoom / 100);
-      iframe.style.width = pct + '%';
-      iframe.style.height = pct + '%';
-      iframe.style.transform = 'scale(' + (zoom / 100) + ')';
-    }
-    applyZoom();
-
-    function activate(i) {
-      index = (i + chips.length) % chips.length;
-      var chip = chips[index];
-      chips.forEach(function (c) {
-        var on = c === chip;
-        c.classList.toggle('is-active', on);
-        c.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-      var url = srcFor(chip.dataset.themeSlug);
-      viewport.classList.remove('is-loaded');
-      iframe.src = url;
-      if (openLink) openLink.href = url;
-      if (urlPill) urlPill.textContent = pillFor(chip.dataset.themeSlug);
-      iframe.onload = function () { viewport.classList.add('is-loaded'); bindFrame(); };
-    }
-
-    function start() {
-      activate(index);
-    }
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting) { start(); io.disconnect(); }
-      }, { rootMargin: '200px' });
-      io.observe(viewport);
-    } else {
-      start();
-    }
-
-    chips.forEach(function (chip, i) {
-      chip.addEventListener('click', function () {
-        userPinned = true;
-        activate(i);
-      });
-    });
-
-    var wrap = document.querySelector('[data-showcase]');
-    if (wrap) {
-      wrap.addEventListener('mouseenter', function () { hovering = true; });
-      wrap.addEventListener('mouseleave', function () { hovering = false; });
-    }
-
-    if (iframe.getAttribute('data-rotate') !== '0') {
-      setInterval(function () {
-        var idle = Date.now() - lastActivity > 3000;
-        if (!userPinned && !hovering && idle && document.visibilityState === 'visible' && viewport.classList.contains('is-loaded')) {
-          activate(index + 1);
-        }
-      }, 7000);
-    }
-  })();
-
-  (function () {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (!prefersReduced && 'IntersectionObserver' in window) {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
-      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-    } else {
-      document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in-view'));
-    }
-
-    document.querySelectorAll('details').forEach((details) => {
-      details.addEventListener('toggle', () => {
-        if (details.open) {
-          document.querySelectorAll('details').forEach((other) => {
-            if (other !== details) other.open = false;
-          });
-        }
-      });
-    });
-  })();
-
-  // Billing Wizard Switcher
-  function selectLandingPlan(planKey) {
-    const isAnnual = planKey === 'annual';
-    const btnM = document.getElementById('switch-monthly');
-    const btnA = document.getElementById('switch-annual');
-    
-    if (btnM && btnA) {
-      btnM.setAttribute('aria-selected', !isAnnual);
-      btnA.setAttribute('aria-selected', isAnnual);
-      
-      btnM.className = 'px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ' + 
-        (!isAnnual ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-900');
-      btnA.className = 'px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-2 ' + 
-        (isAnnual ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-900');
-    }
-
-    const titleEl = document.getElementById('pro-title');
-    const priceEl = document.getElementById('pro-price');
-    const periodEl = document.getElementById('pro-period');
-    const strikeEl = document.getElementById('pro-strike');
-    const noteEl = document.getElementById('pro-note');
-    const savingsPill = document.getElementById('pro-savings-pill');
-    const badgeEl = document.getElementById('pro-badge');
-    const ctaEl = document.getElementById('pro-cta');
-
-    if (titleEl) titleEl.textContent = isAnnual ? 'الخطة السنوية' : 'الخطة الشهرية';
-    if (priceEl) priceEl.textContent = isAnnual ? '449' : '99';
-    if (periodEl) periodEl.textContent = isAnnual ? 'جنيه / سنة' : 'جنيه / شهر';
-    if (strikeEl) strikeEl.textContent = isAnnual ? '1,188 جنيهًا شهريًا' : '';
-    if (noteEl) noteEl.textContent = isAnnual ? '~37 جنيهًا فقط شهريًا' : 'يُدفع شهريًا. إلغاء في أي وقت.';
-    
-    if (savingsPill) {
-      if (isAnnual) savingsPill.classList.remove('hidden');
-      else savingsPill.classList.add('hidden');
-    }
-
-    if (badgeEl) badgeEl.textContent = isAnnual ? '🏆 الأكثر شعبية' : '✨ الخطة المرنة';
-
-    if (ctaEl) {
-      const base = isAnnual ? ctaEl.dataset.urlAnnual : ctaEl.dataset.urlMonthly;
-      const coupon = new URLSearchParams(window.location.search).get('coupon');
-      ctaEl.href = coupon ? base + '?coupon=' + encodeURIComponent(coupon) : base;
-      ctaEl.textContent = isAnnual ? 'اختر الخطة السنوية' : 'اختر الخطة الشهرية';
-    }
-  }
-
-  // Preserve coupon param on page load
-  (function () {
-    const coupon = new URLSearchParams(window.location.search).get('coupon');
-    if (!coupon) return;
-    const ctaEl = document.getElementById('pro-cta');
-    if (ctaEl) {
-      ctaEl.href = ctaEl.dataset.urlAnnual + '?coupon=' + encodeURIComponent(coupon);
-    }
-  })();
-</script>
-{% endblock %}
+{% include "core/landing/_scripts.html" %}
 {% endblock %}

@@ -1,0 +1,438 @@
+{# Shared behaviour for the landing page (English index.html + arabic_landing.html). #}
+<script>
+(function () {
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hasIO = 'IntersectionObserver' in window;
+
+  // Run fn once the element scrolls into view.
+  function onView(el, fn, margin) {
+    if (!el) return;
+    if (!hasIO) { fn(); return; }
+    var io = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) { io.disconnect(); fn(); }
+    }, { rootMargin: margin || '0px 0px -12% 0px' });
+    io.observe(el);
+  }
+
+  // ── Reveal on scroll ───────────────────────────────────
+  document.querySelectorAll('.lp-reveal').forEach(function (el) {
+    onView(el, function () { el.classList.add('is-in'); });
+  });
+
+  // ── Count-up numbers ───────────────────────────────────
+  document.querySelectorAll('[data-count]').forEach(function (el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    if (isNaN(target)) return;
+    var suffix = el.getAttribute('data-suffix') || '';
+    function fmt(n) { return n.toLocaleString('en-US') + suffix; }
+    if (reduceMotion || target < 10) { el.textContent = fmt(target); return; }
+    el.textContent = fmt(0);
+    onView(el, function () {
+      var start = null, dur = 1400;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        el.textContent = fmt(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  });
+
+  // ── URL claim boxes: clean the handle as it's typed, check it live ──
+  (function () {
+    var t = {};
+    try { t = JSON.parse(document.getElementById('lp-claim-i18n').textContent); } catch (e) { t = {}; }
+
+    // Same rules as the server's _clean_handle. Only the leading edge is trimmed
+    // while typing, so "ahmed-" can still become "ahmed-kamel"; submit trims both.
+    function clean(v) {
+      return v.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').replace(/-{2,}/g, '-')
+        .replace(/^[-_]+/, '').slice(0, 30);
+    }
+    function trimEdges(v) { return v.replace(/^[-_]+|[-_]+$/g, ''); }
+
+    document.querySelectorAll('[data-claim-wrap]').forEach(function (wrap) {
+      var form = wrap.querySelector('[data-claim]');
+      var input = form && form.querySelector('input[name="username"]');
+      var status = wrap.querySelector('[data-claim-status]');
+      if (!input || !status) return;
+      var defaultNote = status.textContent;
+      var checkUrl = form.getAttribute('data-check-url');
+      var composing = false, timer = null, hintTimer = null, controller = null;
+      var last = { handle: '', status: '' };   // latest server answer
+
+      function setState(state) {
+        form.classList.toggle('is-available', state === 'available');
+        form.classList.toggle('is-error', state === 'taken' || state === 'reserved' || state === 'short' || state === 'chars');
+      }
+      // Render a message; "{u}" becomes the handle and "{url}" the full link, each
+      // isolated left-to-right so they read correctly inside Arabic text.
+      function show(state, handle, suggestions) {
+        setState(state);
+        status.className = 'lp-claim-note' + (state ? ' is-' + state : '');
+        status.textContent = '';
+        if (!state) { status.textContent = defaultNote; return; }
+        (t[state] || '').split(/(\{u\}|\{url\})/).forEach(function (part) {
+          if (part === '{u}' || part === '{url}') {
+            var b = document.createElement('bdi');
+            b.dir = 'ltr';
+            b.textContent = (part === '{url}' ? 'skillifly.cloud/' : '') + handle;
+            status.appendChild(b);
+          } else if (part) {
+            status.appendChild(document.createTextNode(part));
+          }
+        });
+        (suggestions || []).forEach(function (s) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'lp-claim-sugg';
+          btn.textContent = s;
+          btn.addEventListener('click', function () {
+            input.value = s;
+            input.focus();
+            check(true);
+          });
+          status.appendChild(document.createTextNode(' '));
+          status.appendChild(btn);
+        });
+      }
+      function shake() {
+        form.classList.remove('is-shaking');
+        void form.offsetWidth;
+        form.classList.add('is-shaking');
+      }
+
+      function check(now) {
+        clearTimeout(timer);
+        var handle = trimEdges(input.value);
+        if (handle.length < 3) {
+          if (controller) controller.abort();
+          last = { handle: '', status: '' };
+          show('');
+          return;
+        }
+        if (handle === last.handle && last.status) { show(last.status, last.handle, last.suggestions); return; }
+        timer = setTimeout(function () {
+          if (!checkUrl || !window.fetch) return;
+          if (controller) controller.abort();
+          controller = window.AbortController ? new AbortController() : null;
+          show('checking', handle);
+          fetch(checkUrl + '?username=' + encodeURIComponent(handle), {
+            headers: { 'Accept': 'application/json' },
+            signal: controller ? controller.signal : undefined
+          })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+            .then(function (data) {
+              if (trimEdges(input.value) !== handle) return;   // typed on meanwhile
+              last = { handle: handle, status: data.status, suggestions: data.suggestions };
+              show(data.status, data.username, data.suggestions);
+            })
+            .catch(function (err) {
+              if (err && err.name === 'AbortError') return;
+              last = { handle: '', status: '' };   // can't tell: let signup decide
+              show('');
+            });
+        }, now ? 0 : 350);
+      }
+
+      function sanitize() {
+        var before = input.value;
+        var next = clean(before);
+        if (next === before) return;
+        var caret = clean(before.slice(0, input.selectionStart || 0)).length;
+        // Anything other than case or spaces was dropped: say why, briefly.
+        var dropped = /[^a-zA-Z0-9_\-\s]/.test(before);
+        input.value = next;
+        try { input.setSelectionRange(caret, caret); } catch (e) {}
+        if (dropped) {
+          clearTimeout(hintTimer);
+          show('chars');
+          hintTimer = setTimeout(function () { check(true); }, 2200);
+        }
+      }
+
+      input.addEventListener('compositionstart', function () { composing = true; });
+      input.addEventListener('compositionend', function () { composing = false; sanitize(); check(); });
+      input.addEventListener('input', function (e) {
+        if (composing || e.isComposing) return;
+        sanitize();
+        if (status.classList.contains('is-chars')) return;
+        check();
+      });
+      input.addEventListener('blur', function () {
+        var handle = trimEdges(input.value);
+        if (handle && handle.length < 3) show('short', handle);
+      });
+
+      form.addEventListener('submit', function (e) {
+        clearTimeout(timer);
+        var handle = trimEdges(clean(input.value));
+        input.value = handle;
+        // Nothing typed: go straight to the plain signup URL (no empty "?username=").
+        if (!handle) { e.preventDefault(); window.location.href = form.action; return; }
+        if (handle.length < 3) {
+          e.preventDefault(); show('short', handle); shake(); input.focus(); return;
+        }
+        if (handle === last.handle && (last.status === 'taken' || last.status === 'reserved')) {
+          e.preventDefault(); shake(); input.focus(); return;
+        }
+        // Available, still checking, or the check failed: the signup form validates anyway.
+        if (controller) controller.abort();
+      });
+
+      // Back button restores the page from cache: refresh the status for what's still typed.
+      window.addEventListener('pageshow', function (e) {
+        if (e.persisted && input.value) { last = { handle: '', status: '' }; check(true); }
+      });
+    });
+  })();
+
+  // ── Hero live theme showcase ───────────────────────────
+  (function () {
+    var iframe   = document.getElementById('hero-showcase-iframe');
+    var viewport = document.querySelector('[data-showcase-viewport]');
+    var openLink = document.querySelector('[data-showcase-open]');
+    var urlPill  = document.querySelector('[data-showcase-url]');
+    var tabTitle = document.querySelector('[data-showcase-tab-title]');
+    var hint     = document.querySelector('[data-showcase-hint]');
+    var chips    = Array.prototype.slice.call(document.querySelectorAll('[data-theme-slug]'));
+    if (!iframe || !viewport || !chips.length) return;
+
+    var liveUrls = {};
+    try {
+      var mapEl = document.getElementById('theme-live-urls');
+      if (mapEl) liveUrls = JSON.parse(mapEl.textContent);
+    } catch (e) { liveUrls = {}; }
+
+    var index = 0, userPinned = false, hovering = false, lastActivity = 0;
+    function markActivity() { lastActivity = Date.now(); }
+
+    // The parent page gets mouseleave as soon as the cursor enters the iframe,
+    // so hover/scroll detection is also bound inside the (same-origin) frame.
+    function bindFrame() {
+      var doc;
+      try { doc = iframe.contentDocument; } catch (e) { doc = null; }
+      if (!doc) return;
+      doc.documentElement.addEventListener('mouseenter', function () { hovering = true; });
+      doc.documentElement.addEventListener('mouseleave', function () { hovering = false; });
+      ['mousemove', 'wheel', 'scroll', 'touchmove'].forEach(function (evt) {
+        doc.addEventListener(evt, markActivity, { passive: true });
+      });
+      if (hint) doc.addEventListener('scroll', function () { hint.classList.add('is-hidden'); }, { passive: true });
+    }
+
+    function srcFor(slug) {
+      var u = liveUrls[slug];
+      // embed=1 keeps the hero frame from inflating the owner's visit stats
+      if (u) return u + (u.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
+      return '/preview/' + slug + '/';
+    }
+    function handleFor(slug) {
+      var u = liveUrls[slug];
+      return u ? u.replace(/^\/+|\/+$/g, '').split('?')[0] : '';
+    }
+
+    // Browser-zoom simulation (zoom set on the manage page): the portfolio is
+    // laid out at (100/zoom)% and scaled down so it always fills the window.
+    function applyZoom() {
+      var zoom = parseInt(iframe.getAttribute('data-zoom'), 10);
+      if (isNaN(zoom)) zoom = 50;
+      zoom = Math.min(100, Math.max(10, zoom));
+      var pct = 100 / (zoom / 100);
+      iframe.style.width = pct + '%';
+      iframe.style.height = pct + '%';
+      iframe.style.transform = 'scale(' + (zoom / 100) + ')';
+    }
+    applyZoom();
+
+    function activate(i) {
+      index = (i + chips.length) % chips.length;
+      var chip = chips[index];
+      chips.forEach(function (c) {
+        var on = c === chip;
+        c.classList.toggle('is-active', on);
+        c.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      var slug = chip.dataset.themeSlug;
+      var url = srcFor(slug);
+      var handle = handleFor(slug);
+      viewport.classList.remove('is-loaded');
+      iframe.src = url;
+      if (openLink) openLink.href = url;
+      if (urlPill) urlPill.textContent = 'skillifly.cloud/' + (handle || 'you');
+      if (tabTitle) tabTitle.textContent = (handle || chip.dataset.themeLabel || 'Portfolio') + ' — Skillifly';
+      iframe.onload = function () { viewport.classList.add('is-loaded'); bindFrame(); };
+    }
+
+    // Start once the page itself has loaded so the frame never competes with first paint.
+    function start() { onView(viewport, function () { activate(index); }, '200px'); }
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start);
+
+    chips.forEach(function (chip, i) {
+      chip.addEventListener('click', function () { userPinned = true; activate(i); });
+    });
+
+    var wrap = document.querySelector('[data-showcase]');
+    if (wrap) {
+      wrap.addEventListener('mouseenter', function () { hovering = true; });
+      wrap.addEventListener('mouseleave', function () { hovering = false; });
+    }
+
+    // Gentle auto-rotate until the visitor takes control; never while they are
+    // over/inside the frame or within 3s of interacting with it.
+    if (iframe.getAttribute('data-rotate') !== '0' && !reduceMotion) {
+      setInterval(function () {
+        var idle = Date.now() - lastActivity > 3000;
+        if (!userPinned && !hovering && idle && document.visibilityState === 'visible' && viewport.classList.contains('is-loaded')) {
+          activate(index + 1);
+        }
+      }, 7000);
+    }
+  })();
+
+  // ── How-it-works timeline playback ─────────────────────
+  (function () {
+    var tl = document.querySelector('[data-timeline]');
+    if (!tl) return;
+    var clips = Array.prototype.slice.call(tl.querySelectorAll('[data-clip]'));
+    var steps = Array.prototype.slice.call(document.querySelectorAll('[data-step]'));
+    var head  = tl.querySelector('[data-playhead]');
+    var tc    = document.querySelector('[data-timecode]');
+    var xpEl  = document.querySelector('[data-xp]');
+    var xps   = clips.map(function (c) { return parseInt(c.getAttribute('data-xp'), 10) || 0; });
+    var i = -1, timer = null;
+
+    function setActive(n) {
+      i = n;
+      clips.forEach(function (c, k) {
+        c.classList.toggle('is-active', k === n);
+        c.classList.toggle('is-done', k < n);
+      });
+      steps.forEach(function (s, k) { s.classList.toggle('is-active', k === n); });
+      // Move the playhead to the end of the active clip (its left edge on RTL pages).
+      if (head && clips[n]) {
+        var rtl = getComputedStyle(tl).direction === 'rtl';
+        var tlBox = tl.getBoundingClientRect();
+        var clipBox = clips[n].getBoundingClientRect();
+        var x = (rtl ? clipBox.left : clipBox.right) - tlBox.left;
+        head.style.transform = 'translateX(' + Math.max(0, x - 1) + 'px)';
+        head.style.opacity = '1';
+      }
+      var xp = xps.slice(0, n + 1).reduce(function (a, b) { return a + b; }, 0);
+      if (xpEl) xpEl.textContent = xp;
+      if (tc) {
+        var secs = Math.round((xp / 100) * 300); // the checklist takes about five minutes
+        var mm = ('0' + Math.floor(secs / 60)).slice(-2), ss = ('0' + (secs % 60)).slice(-2);
+        tc.textContent = '00:' + mm + ':' + ss + ':00';
+      }
+    }
+    function play() {
+      if (timer) return;
+      setActive(0);
+      timer = setInterval(function () {
+        if (document.visibilityState !== 'visible') return;
+        setActive(i + 1 >= clips.length ? 0 : i + 1);
+      }, 2200);
+    }
+    steps.forEach(function (s, k) {
+      s.addEventListener('mouseenter', function () { clearInterval(timer); timer = null; setActive(k); });
+    });
+    window.addEventListener('resize', function () { if (i >= 0) setActive(i); });
+    if (reduceMotion) { setActive(clips.length - 1); return; }
+    onView(tl, play);
+  })();
+
+  // ── AI chat demo ───────────────────────────────────────
+  (function () {
+    var chat = document.querySelector('[data-chat]');
+    if (!chat) return;
+    var items = Array.prototype.slice.call(chat.querySelectorAll('[data-chat-step]'));
+    var typing = chat.querySelector('[data-chat-typing]');
+    function showAll() { items.forEach(function (el) { el.classList.add('is-shown'); }); if (typing) typing.style.display = 'none'; }
+    if (reduceMotion) { showAll(); return; }
+    onView(chat, function () {
+      var delay = 300;
+      items.forEach(function (el) {
+        var isAi = el.hasAttribute('data-chat-ai');
+        if (isAi && typing) {
+          setTimeout(function () { el.parentNode.insertBefore(typing, el); typing.style.display = 'inline-flex'; typing.classList.add('is-shown'); }, delay);
+          delay += 1100;
+        }
+        setTimeout(function () { if (isAi && typing) typing.style.display = 'none'; el.classList.add('is-shown'); }, delay);
+        delay += isAi ? 900 : 700;
+      });
+    });
+  })();
+
+  // ── Featured review: tap to read the whole quote on phones ──
+  document.querySelectorAll('.lp-hero-quote').forEach(function (fig) {
+    fig.addEventListener('click', function () { fig.classList.add('is-open'); });
+  });
+
+  // ── FAQ: one open at a time ────────────────────────────
+  var faqs = document.querySelectorAll('.lp-faq details');
+  faqs.forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (d.open) faqs.forEach(function (o) { if (o !== d) o.open = false; });
+    });
+  });
+
+  // ── Sticky mobile CTA: after the hero, hidden over the final CTA ──
+  (function () {
+    var bar = document.querySelector('[data-sticky-cta]');
+    var hero = document.querySelector('[data-hero]');
+    var final = document.querySelector('[data-final-cta]');
+    if (!bar || !hero || !hasIO) return;
+    var pastHero = false, atFinal = false;
+    function sync() { bar.classList.toggle('is-visible', pastHero && !atFinal); }
+    new IntersectionObserver(function (e) { pastHero = !e[0].isIntersecting; sync(); }).observe(hero);
+    // Hidden from the final CTA onwards, so it never covers the footer links either.
+    if (final) new IntersectionObserver(function (e) {
+      atFinal = e[0].isIntersecting || e[0].boundingClientRect.top < 0;
+      sync();
+    }).observe(final);
+  })();
+
+  // Carry ?coupon= from the landing URL into the paid-plan checkout.
+  (function () {
+    var coupon = new URLSearchParams(window.location.search).get('coupon');
+    var cta = document.getElementById('pro-cta');
+    if (coupon && cta) cta.href = cta.dataset.urlAnnual + '?coupon=' + encodeURIComponent(coupon);
+  })();
+})();
+
+// ── Billing switch (called from the toggle buttons) ──────
+function selectLandingPlan(planKey) {
+  var isAnnual = planKey === 'annual';
+  var t = {};
+  try { t = JSON.parse(document.getElementById('lp-pricing-i18n').textContent); } catch (e) { t = {}; }
+  var plan = isAnnual ? (t.annual || {}) : (t.monthly || {});
+
+  ['monthly', 'annual'].forEach(function (k) {
+    var b = document.getElementById('switch-' + k);
+    if (b) b.setAttribute('aria-selected', String(k === planKey));
+  });
+
+  function set(id, text) { var el = document.getElementById(id); if (el && text !== undefined) el.textContent = text; }
+  set('pro-title', plan.title);
+  set('pro-price', plan.price);
+  set('pro-period', plan.period);
+  set('pro-strike', plan.strike);
+  set('pro-note', plan.note);
+  set('pro-badge', plan.badge);
+
+  var pill = document.getElementById('pro-savings-pill');
+  if (pill) pill.classList.toggle('hidden', !isAnnual);
+
+  var cta = document.getElementById('pro-cta');
+  if (cta) {
+    var base = isAnnual ? cta.dataset.urlAnnual : cta.dataset.urlMonthly;
+    var coupon = new URLSearchParams(window.location.search).get('coupon');
+    cta.href = coupon ? base + '?coupon=' + encodeURIComponent(coupon) : base;
+    var label = cta.querySelector('[data-cta-label]');
+    if (label && plan.cta) label.textContent = plan.cta;
+  }
+}
+</script>

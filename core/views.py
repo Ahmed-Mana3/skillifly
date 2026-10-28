@@ -19,7 +19,7 @@ from django.contrib import messages
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.http import JsonResponse, HttpResponseForbidden
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from .models import Theme, Category, Profile, PersonalInfo, Experience, Education, Skill, Project, Link, CustomUser, UserAccount, UserPayment, Review, ClientReview, Showcase, SEOSettings, ManualPayment, Creator, ProjectCategory, EmailOTP, School, SchoolStudent, SchoolVideoRating, SchoolVideoComment, SchoolStudentRating, SiteSettings, Video
 from .forms import RegisterForm, LoginForm, ReviewForm, ClientReviewForm, ReviewAvatarForm, SEOSettingsForm, ClientRegisterForm, SchoolAdminRegisterForm, ChooseSchoolForm
 import random
@@ -1015,6 +1015,34 @@ def _showcase_context():
     }
 
 
+def _featured_reviews():
+    """Featured platform reviews for the landing page, in the admin's order."""
+    return list(Review.objects.filter(is_featured=True)
+                .select_related('reviewer__profile').order_by('order', '-created_at')[:12])
+
+
+def _review_context(reviews):
+    """Split landing reviews into one hero quote and the rest, plus the rating summary.
+
+    The hero is the first review (by admin order) short enough to read at
+    large size; the rest scroll underneath. ``reviews`` may hold Review
+    objects or the Arabic page's placeholder dicts.
+    """
+    def field(review, name):
+        return review[name] if isinstance(review, dict) else getattr(review, name)
+
+    if not reviews:
+        return {'review_hero': None, 'review_rest': [], 'review_avg': None, 'review_count': 0}
+    hero = next((r for r in reviews if 60 <= len(field(r, 'content')) <= 320), reviews[0])
+    ratings = [field(r, 'rating') for r in reviews]
+    return {
+        'review_hero': hero,
+        'review_rest': [r for r in reviews if r is not hero],
+        'review_avg': '%.1f' % (sum(ratings) / len(ratings)),
+        'review_count': len(ratings),
+    }
+
+
 def index(request):
     """Render the home/landing page — redirect authenticated users to dashboard"""
     if request.user.is_authenticated:
@@ -1022,9 +1050,8 @@ def index(request):
     portfolios_count = Profile.objects.count()
     themes_count = Theme.objects.count()
     total_visits = Profile.objects.aggregate(Sum('visits'))['visits__sum'] or 0
-    
-    # Get featured reviews
-    reviews = Review.objects.filter(is_featured=True).order_by('order', '-created_at')[:6]
+
+    reviews = _featured_reviews()
 
     # Featured community portfolios (same source as the live examples page)
     showcases = Showcase.published().select_related(
@@ -1038,6 +1065,7 @@ def index(request):
         'reviews': reviews,
         'showcases': showcases,
     }
+    context.update(_review_context(reviews))
 
     # Hero live-theme showcase (shared with the Arabic landing).
     context.update(_showcase_context())
@@ -1052,7 +1080,7 @@ def arabic_landing_view(request):
     portfolios_count = Profile.objects.count()
     themes_count = Theme.objects.count()
     total_visits = Profile.objects.aggregate(Sum('visits'))['visits__sum'] or 0
-    reviews = list(Review.objects.filter(is_featured=True).order_by('order', '-created_at')[:6])
+    reviews = _featured_reviews()
     if not reviews:
         reviews = [
             {
@@ -1086,6 +1114,7 @@ def arabic_landing_view(request):
         'showcases': showcases,
         'is_arabic_page': True,
     }
+    context.update(_review_context(reviews))
 
     # Hero live-theme showcase (shared with the English landing).
     context.update(_showcase_context())
@@ -1210,6 +1239,58 @@ def _editor_signup(request, arabic):
     return redirect('verify_otp'), form, None
 
 
+def _clean_handle(raw):
+    """Normalise a portfolio handle typed on the landing page.
+
+    Mirrors the claim box's JS: lowercase, spaces become hyphens, only
+    ``a-z 0-9 _ -`` survive, no doubled or edge hyphens, at most 30 characters.
+    """
+    handle = re.sub(r'\s+', '-', (raw or '').strip().lower())
+    handle = re.sub(r'[^a-z0-9_-]', '', handle)
+    handle = re.sub(r'-{2,}', '-', handle)
+    return handle[:30].strip('-_')
+
+
+def _claimed_username(request):
+    """Initial form data for a handle claimed on the landing page (`?username=`)."""
+    handle = _clean_handle(request.GET.get('username', ''))
+    return {'username': handle} if handle else {}
+
+
+def _handle_suggestions(handle, limit=3):
+    """Free alternatives for a taken or reserved handle, best first."""
+    from django.db.models.functions import Lower
+    base = handle[:22].strip('-_') or 'editor'
+    candidates = [f'{base}-edits', f'{base}films', f'{base}-studio', f'the{base}',
+                  f'{base}{random.randint(10, 99)}', f'{base}-{random.randint(100, 999)}']
+    candidates = [c for c in candidates if c not in settings.RESERVED_USERNAMES]
+    taken = set(CustomUser.objects.annotate(lower=Lower('username'))
+                .filter(lower__in=candidates).values_list('lower', flat=True))
+    return [c for c in candidates if c not in taken][:limit]
+
+
+@require_GET
+def check_username(request):
+    """Live availability check for the landing page's "claim your link" box.
+
+    Usernames are public (they are portfolio URLs), so answering this leaks
+    nothing. Uniqueness is case-insensitive, like the signup form's.
+    """
+    handle = _clean_handle(request.GET.get('username', ''))
+    if len(handle) < 3:
+        status = 'short'
+    elif handle in settings.RESERVED_USERNAMES:
+        status = 'reserved'
+    elif CustomUser.objects.filter(username__iexact=handle).exists():
+        status = 'taken'
+    else:
+        status = 'available'
+    suggestions = _handle_suggestions(handle) if status in ('taken', 'reserved') else []
+    response = JsonResponse({'username': handle, 'status': status, 'suggestions': suggestions})
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
 def editor_signup_view(request):
     """Editor signup: full portfolio account — email verification via OTP."""
     if request.user.is_authenticated:
@@ -1224,7 +1305,7 @@ def editor_signup_view(request):
         if response is not None:
             return response
     else:
-        form = RegisterForm()
+        form = RegisterForm(initial=_claimed_username(request))
         message = None
 
     from core import onboarding
@@ -1252,7 +1333,7 @@ def arabic_editor_signup_view(request):
         if response is not None:
             return response
     else:
-        form = RegisterForm()
+        form = RegisterForm(initial=_claimed_username(request))
         message = None
 
     from core import onboarding

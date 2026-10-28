@@ -1,0 +1,9 @@
+{# One review in the scrolling strip; "dup" marks the copy that makes the loop seamless. #}
+<figure class="lp-rcard"{% if dup %} aria-hidden="true"{% else %} tabindex="0"{% endif %}>
+  <span class="lp-stars" aria-label="{{ r.rating }}/5">{% for i in "12345" %}{% if forloop.counter <= r.rating %}{% include "core/landing/_icon.html" with i="star" %}{% endif %}{% endfor %}</span>
+  <blockquote dir="auto">{{ r.content }}</blockquote>
+  <figcaption>
+    {% include "core/landing/_review_avatar.html" with size=80 %}
+    <div><b>{{ r.user_name }}</b>{% if r.user_title %}<small>{{ r.user_title }}</small>{% endif %}</div>
+  </figcaption>
+</figure>

@@ -1,0 +1,49 @@
+{# Testimonials: rating summary, one hero quote, the rest in a slow scrolling strip.
+   Text comes from the including page: t_eyebrow, t_title, t_rating_pre, t_rating_post, t_verified, t_strip. #}
+{% if review_hero %}
+<section class="lp-section lp-love">
+  <div class="lp-wrap">
+    <div class="lp-love-head">
+      <div class="lp-reveal">
+        <span class="lp-eyebrow">{{ t_eyebrow }}</span>
+        <h2 class="lp-h2">{{ t_title }}</h2>
+      </div>
+      <div class="lp-rating lp-reveal" data-delay="1">
+        <span class="lp-rating-num">{{ review_avg }}</span>
+        <div>
+          <span class="lp-stars" aria-label="{{ review_avg }}/5">{% for _ in "12345" %}{% include "core/landing/_icon.html" with i="star" %}{% endfor %}</span>
+          <small>{{ t_rating_pre }} {{ review_count }} {{ t_rating_post }}</small>
+        </div>
+        <span class="lp-rating-faces" aria-hidden="true">
+          {% for r in reviews|slice:":5" %}{% include "core/landing/_review_avatar.html" with size=64 %}{% endfor %}
+        </span>
+      </div>
+    </div>
+
+    {% with r=review_hero %}
+    <figure class="lp-hero-quote lp-reveal">
+      <svg class="lp-hero-quote-mark" viewBox="0 0 64 48" aria-hidden="true"><path fill="currentColor" d="M0 48V28.8C0 12.6 8.4 2.9 25.2 0l2.6 6.6C19 9 14.3 14.2 13.6 22.2H26V48H0zm36 0V28.8C36 12.6 44.4 2.9 61.2 0l2.6 6.6C55 9 50.3 14.2 49.6 22.2H62V48H36z"/></svg>
+      <blockquote dir="auto">{{ r.content }}</blockquote>
+      <figcaption>
+        {% include "core/landing/_review_avatar.html" with size=112 %}
+        <div class="lp-hero-quote-who">
+          <b>{{ r.user_name }}</b>
+          {% if r.user_title %}<small>{{ r.user_title }}</small>{% endif %}
+        </div>
+        {% if r.reviewer_id %}<span class="lp-verified">{% include "core/landing/_icon.html" with i="check" %}{{ t_verified }}</span>{% endif %}
+        <span class="lp-stars lp-hero-quote-stars" aria-label="{{ r.rating }}/5">{% for i in "12345" %}{% if forloop.counter <= r.rating %}{% include "core/landing/_icon.html" with i="star" %}{% endif %}{% endfor %}</span>
+      </figcaption>
+    </figure>
+    {% endwith %}
+  </div>
+
+  {% if review_rest %}
+  <div class="lp-marquee{% if review_rest|length < 3 %} is-static{% endif %}" role="region" aria-label="{{ t_strip }}">
+    <div class="lp-marquee-track" style="--dur: {% widthratio review_rest|length 1 9 %}s">
+      {% for r in review_rest %}{% include "core/landing/_review_card.html" %}{% endfor %}
+      {% if review_rest|length >= 3 %}{% for r in review_rest %}{% include "core/landing/_review_card.html" with dup=True %}{% endfor %}{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endif %}

@@ -1,0 +1,9 @@
+{# "Claim your link" box. Usage: with action=<signup url> label=<button text> aria=<input label>. Behaviour lives in _scripts.html. #}
+<form class="lp-claim" action="{{ action }}" method="get" data-claim data-check-url="{% url 'check_username' %}" novalidate>
+  <label class="lp-claim-field">
+    <span class="lp-claim-prefix">skillifly.cloud/</span>
+    <input type="text" name="username" placeholder="yourname" maxlength="30" aria-label="{{ aria }}"
+           autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" dir="ltr">
+  </label>
+  <button type="submit" class="lp-btn lp-btn--primary">{{ label }} {% include "core/landing/_icon.html" with i="arrow" %}</button>
+</form>

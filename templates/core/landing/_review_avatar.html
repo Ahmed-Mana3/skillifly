@@ -1,0 +1,2 @@
+{# Reviewer photo as a cached thumbnail (size = pixels requested), initials when there is none. #}
+{% if r.image_name %}<img class="lp-rava" src="{% url 'image_thumb' r.image_name size %}" alt="" loading="lazy">{% elif r.image_url %}<img class="lp-rava" src="{{ r.image_url }}" alt="" loading="lazy">{% else %}<span class="lp-rava lp-rava--initials">{{ r.initials }}</span>{% endif %}

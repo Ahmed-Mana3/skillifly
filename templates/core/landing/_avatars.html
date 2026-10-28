@@ -1,0 +1,4 @@
+{# Hero badge faces: real community portfolios, letter circles when none have a picture. Usage: with letters="ABC" #}
+<span class="lp-pill-avatars" aria-hidden="true">
+  {% for s in showcases|slice:":4" %}{% if s.profile.picture %}<img src="{% url 'image_thumb' s.profile.picture.name 64 %}" alt="" width="26" height="26">{% endif %}{% empty %}{% for l in letters %}<i>{{ l }}</i>{% endfor %}{% endfor %}
+</span>
