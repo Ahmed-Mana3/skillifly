@@ -314,16 +314,11 @@
   }
   .showcase-chip:hover { border-color: var(--brand); color: var(--brand); }
   .showcase-chip.is-active { background: var(--ink); border-color: var(--ink); color: #fff; }
-  /* Phones: show the top of a live portfolio as a non-interactive poster (no scroll trap) */
+  /* Phones: no live preview under the hero (it stays off-screen, so the iframe never loads there);
+     the "Made with Skillifly" row shows real portfolios further down. */
   @media (max-width: 767px) {
-    .lp-stage { margin-top: 48px; }
-    .showcase-viewport { aspect-ratio: 4 / 5; }
-    .showcase-viewport iframe { pointer-events: none !important; }
-    .showcase-hint, .showcase-nav-btn { display: none; }
-    .showcase-tab { max-width: 60%; }
-    .showcase-chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; margin-inline: -20px; padding-inline: 20px; }
-    .showcase-chips::-webkit-scrollbar { display: none; }
-    .showcase-chip { flex-shrink: 0; }
+    .lp-stage { display: none; }
+    .lp-hero { padding-bottom: 56px; }
   }
 
   /* ── Proof bar ──────────────────────────────────────── */
@@ -911,7 +906,6 @@
 
     /* Hero starts closer to the nav so more of the live preview is above the fold. */
     .lp-hero { padding-top: 44px; }
-    .lp-stage { margin-top: 44px; }
 
     /* Bento: one tile per row (overrides the tablet rule that widened the last tile). */
     .lp-bento .lp-tile, .lp-bento .lp-tile--wide, .lp-bento .lp-tile:last-child { grid-column: auto; }
