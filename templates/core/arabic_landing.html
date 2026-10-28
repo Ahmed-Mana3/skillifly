@@ -34,7 +34,7 @@
       "inLanguage": "ar",
       "mainEntity": [
         { "@type": "Question", "name": "هل Skillifly مجاني فعلًا؟", "acceptedAnswer": { "@type": "Answer", "text": "نعم. يمكنك بناء معرضك بالكامل وتخصيصه ومعاينته مجانًا وبدون بطاقة. تدفع فقط عندما تريد نشره على رابط عام." } },
-        { "@type": "Question", "name": "هل يمكنني رفع الفيديوهات أم الروابط فقط؟", "acceptedAnswer": { "@type": "Answer", "text": "الاثنان. الصق رابط YouTube أو Vimeo، أو ارفع ملفات الفيديو مباشرة إلى Skillifly." } },
+        { "@type": "Question", "name": "هل أرفع الفيديوهات أم أستخدم الروابط فقط؟", "acceptedAnswer": { "@type": "Answer", "text": "كلاهما. الصق رابط YouTube أو Vimeo، أو ارفع ملفات الفيديو مباشرة إلى Skillifly." } },
         { "@type": "Question", "name": "ماذا يحدث عند انتهاء اشتراكي؟", "acceptedAnswer": { "@type": "Answer", "text": "لا يُحذف شيء. يتحول معرضك إلى خاص حتى تجدد، ثم يعود على نفس الرابط." } },
         { "@type": "Question", "name": "هل يمكنني استخدام نطاقي الخاص؟", "acceptedAnswer": { "@type": "Answer", "text": "نعم، مع Pro يمكنك ربط نطاقك الخاص مع شهادة SSL." } }
       ]
@@ -64,7 +64,7 @@
   <div class="lp-wrap lp-hero-inner">
     <span class="lp-pill lp-reveal">
       {% include "core/landing/_avatars.html" with letters="أبج" %}
-      انضم إلى أكثر من {{ portfolios_count }} محترف
+      انضم إلى {{ portfolios_count }} محترفًا
     </span>
 
     <h1 class="lp-h1 lp-reveal" data-delay="1">
@@ -77,7 +77,7 @@
 
     <div class="lp-reveal" data-delay="3" data-claim-wrap>
       {% include "core/landing/_claim.html" with action=signup_url label="احجز رابطي" aria="اختر رابط معرضك" %}
-      <p class="lp-claim-note" data-claim-status aria-live="polite">مجاني للبناء · بدون بطاقة ائتمان</p>
+      <p class="lp-claim-note" data-claim-status aria-live="polite">البناء مجاني · بدون بطاقة ائتمان</p>
     </div>
 
     <!-- Live portfolio stage -->
@@ -138,7 +138,7 @@
     <div class="lp-problem-copy lp-reveal">
       <span class="lp-eyebrow">المشكلة</span>
       <h2 class="lp-h2">العملاء لا يفتحون مجلدات Drive.</h2>
-      <p class="lp-lead">تقضي أيامًا في إتقان كل قطع — ثم ترسله في رابط عشوائي. وهنا يخسر المحررون الجيدون عملاء رائعين بصمت.</p>
+      <p class="lp-lead">تقضي أيامًا في إتقان كل لقطة — ثم ترسل كل شيء في رابط فوضوي. وهنا يخسر المحررون الجيدون عملاء ممتازين دون أن يشعروا.</p>
       <ul class="lp-pains">
         <li><span class="lp-x">{% include "core/landing/_icon.html" with i="x" %}</span><span><b>مجلد Google Drive</b><span class="lp-m-hide"> — بلا صور مصغّرة ولا قصة، وطلبات وصول لا يوافق عليها أحد.</span></span></li>
         <li><span class="lp-x">{% include "core/landing/_icon.html" with i="x" %}</span><span><b>قناة YouTube</b><span class="lp-m-hide"> — أفضل أعمالك ضائعة بين فيديوهات شخصية واقتراحات لقنوات أخرى.</span></span></li>
@@ -176,7 +176,7 @@
     <div class="lp-head lp-reveal">
       <span class="lp-eyebrow">كيف يعمل</span>
       <h2 class="lp-h2">من التسجيل إلى معرض منشور <span class="lp-accent">في جلسة واحدة.</span></h2>
-      <p class="lp-lead">قائمة إطلاق موجّهة تأخذك عبر أهم أربعة أشياء يبحث عنها العملاء أولًا. اجمع 100 نقطة XP وستكون جاهزًا للمشاركة.</p>
+      <p class="lp-lead">قائمة إطلاق تأخذك خطوة بخطوة عبر الأشياء الأربعة التي يبحث عنها العملاء أولًا. اجمع 100 نقطة XP وتصبح جاهزًا للمشاركة.</p>
     </div>
 
     <div class="lp-tl-shell lp-reveal" data-delay="1">
@@ -207,7 +207,7 @@
       <div class="lp-step lp-reveal" data-step>
         <span class="lp-step-n">01</span>
         <h3>عرّف العملاء بنفسك</h3>
-        <p>اسمك ومسمّاك المهني ونبذة قصيرة. محتار في الكلمات؟ اكتبها بالذكاء الاصطناعي بنقرة.</p>
+        <p>اسمك ومسمّاك المهني ونبذة قصيرة. لا تجد الكلمات المناسبة؟ اكتبها بالذكاء الاصطناعي بنقرة واحدة.</p>
         <span class="lp-xp">+25 XP</span>
       </div>
       <div class="lp-step lp-reveal" data-delay="1" data-step>
@@ -218,7 +218,7 @@
       </div>
       <div class="lp-step lp-reveal" data-delay="2" data-step>
         <span class="lp-step-n">03</span>
-        <h3>اختر شكلك</h3>
+        <h3>اختر تصميمك</h3>
         <p>اختر تصميمًا وعاينه على أعمالك قبل أن تعتمده.</p>
         <span class="lp-xp">+15 XP</span>
       </div>
@@ -232,7 +232,7 @@
 
     <div class="lp-tl-cta">
       <a href="{% url 'arabic_signup' %}" class="lp-btn lp-btn--light">ابدأ قائمتي {% include "core/landing/_icon.html" with i="arrow" %}</a>
-      <p>مجاني للبناء. انشر وقتما تكون جاهزًا.</p>
+      <p>ابنِ مجانًا، وانشر حين تكون جاهزًا.</p>
     </div>
   </div>
 </section>
@@ -243,7 +243,7 @@
     <div class="lp-head lp-reveal">
       <span class="lp-eyebrow">المزايا</span>
       <h2 class="lp-h2">مصمَّم حول طريقة عمل المحررين <span class="lp-accent">فعلًا.</span></h2>
-      <p class="lp-lead">ليس منشئ مواقع عامًا أُضيف إليه مربع فيديو. كل جزء في Skillifly مصمَّم ليبيع الحركة.</p>
+      <p class="lp-lead">ليس منشئ مواقع عامًا أُضيف إليه مربع فيديو، بل منصة كل تفصيلة فيها مصممة لتعرض الفيديو كما يستحق.</p>
     </div>
 
     <!-- Spotlight: showcase -->
@@ -288,11 +288,11 @@
       <div class="lp-spot-copy lp-reveal">
         <span class="lp-eyebrow">التحليلات <span class="lp-tag lp-tag--pro">Pro</span></span>
         <h2 class="lp-h2">اعرف من شاهد — وما الذي جعله يبقى.</h2>
-        <p class="lp-lead">شاهد زوارك ومن أين أتوا وكيف وجدوك وأي الفيديوهات نقروا عليها. تابع العميل وهو مهتم، وقدّم ما ينجح أولًا.</p>
+        <p class="lp-lead">شاهد زوارك ومن أين أتوا وكيف وجدوك وأي الفيديوهات نقروا عليها. تابع العميل وهو ما زال مهتمًا، وقدّم ما ينجح أولًا.</p>
         <ul class="lp-bullets">
           <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>الزوار ومدة البقاء على الصفحة</b> خلال آخر 30 يومًا</span></li>
           <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>الدول والمدن ومصادر الزيارات</b> — Instagram و LinkedIn و WhatsApp وغيرها</span></li>
-          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>النقرات لكل فيديو</b> لتعرف أي مونتاج يقوم بالبيع</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>النقرات على كل فيديو</b> لتعرف أي عمل يُقنع العملاء</span></li>
         </ul>
       </div>
       <div class="lp-visual lp-reveal" data-delay="1" aria-hidden="true">
@@ -324,11 +324,11 @@
       <div class="lp-spot-copy lp-reveal">
         <span class="lp-eyebrow">اكسب العملاء</span>
         <h2 class="lp-h2">دع العملاء السعداء يُقنعون العميل التالي نيابةً عنك.</h2>
-        <p class="lp-lead">أرسل رابط التقييم بعد كل تسليم. يقيّمك العملاء ويكتبون رأيهم من حساباتهم كعملاء، فيظهر على معرضك كدليل على التزامك.</p>
+        <p class="lp-lead">أرسل رابط التقييم بعد كل تسليم. يقيّمك العملاء ويكتبون رأيهم من حساباتهم كعملاء، فيظهر على معرضك دليلًا على أنك تُسلّم ما تعد به.</p>
         <ul class="lp-bullets">
           <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>رابط تقييم شخصي</b> جاهز للإرسال على WhatsApp أو البريد</span></li>
           <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>تقييمات من حسابات عملاء حقيقية</b>، لذا لها وزن حقيقي</span></li>
-          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>كن مكتشَفًا</b> في دليل Skillifly حيث يتصفح العملاء المحررين حسب أعمالهم</span></li>
+          <li><span class="lp-tick">{% include "core/landing/_icon.html" with i="check" %}</span><span><b>اظهر في دليل Skillifly</b> حيث يتصفح العملاء المحررين حسب أعمالهم</span></li>
         </ul>
         <a href="{% url 'arabic_hire_editors' %}" class="lp-link">شاهد دليل التوظيف {% include "core/landing/_icon.html" with i="arrow" %}</a>
       </div>
@@ -447,13 +447,13 @@
         <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="palette" %}</span>
         <h3>{{ themes_count }} تصميمًا سينمائيًا</h3>
         <p>غيّر شكل معرضك بالكامل بنقرة — دون إعادة بناء. وكل تصميم يبدو مثاليًا على الهاتف الذي يفتح منه عميلك.</p>
-        <div class="lp-tile-chips">{% for chip in showcase_chips %}<span>{{ chip.label }}</span>{% endfor %}<span>+ والمزيد</span></div>
+        <div class="lp-tile-chips">{% for chip in showcase_chips %}<span>{{ chip.label }}</span>{% endfor %}<span>والمزيد</span></div>
       </div>
       <div class="lp-tile lp-tile--wide lp-reveal" data-delay="1">
         <span class="lp-tag lp-tag--pro">Pro</span>
         <span class="lp-tile-ic">{% include "core/landing/_icon.html" with i="globe" %}</span>
         <h3>نطاقك الخاص</h3>
-        <p>اربط yourname.com مع شهادة SSL. يرى العملاء علامتك أنت في الواجهة.</p>
+        <p>اربط yourname.com مع شهادة SSL، فيرى العملاء علامتك التجارية أولًا.</p>
         <div class="lp-domain">{% include "core/landing/_icon.html" with i="lock" %}https://yourname.com</div>
       </div>
       <div class="lp-tile lp-reveal">
@@ -482,7 +482,7 @@
     <span class="lp-eyebrow lp-reveal">رؤيتنا</span>
     <p class="lp-vision-quote lp-reveal" data-delay="1">
       الموهبة موجودة في كل مكان. <span class="lp-dim">لكن الظهور ليس كذلك.</span>
-      نبني المكان الذي يُحكم فيه على كل محرر — <em>من القاهرة إلى أي مكان</em> — بالشيء الوحيد المهم: العمل.
+      نبني المكان الذي يُحكم فيه على كل محرر — <em>من القاهرة إلى أي مكان</em> — بالشيء الوحيد الذي يهم: عمله.
     </p>
     <div class="lp-vision-sides lp-reveal">
       <span class="lp-eyebrow">منصة واحدة، ثلاثة أطراف</span>
@@ -492,7 +492,7 @@
       <div class="lp-eco-card lp-eco-card--main lp-reveal">
         <span class="lp-eco-who">للمحررين</span>
         <h3>ابنِ معرضًا يجلب لك الشغل</h3>
-        <p>بيت سينمائي للريلز والمشاريع الطويلة والتقييمات والتحليلات — في رابط واحد تفخر بإرساله.</p>
+        <p>مساحة سينمائية للريلز والمشاريع الطويلة والتقييمات والتحليلات — في رابط واحد تفخر بإرساله.</p>
         <a href="{% url 'arabic_signup' %}" class="lp-link">ابدأ مجانًا {% include "core/landing/_icon.html" with i="arrow" %}</a>
       </div>
       <div class="lp-eco-card lp-reveal" data-delay="1">
@@ -528,7 +528,7 @@
     </script>
     <div class="lp-billing" role="tablist" aria-label="مدة الاشتراك">
       <button type="button" id="switch-monthly" role="tab" aria-selected="false" onclick="selectLandingPlan('monthly')">شهري</button>
-      <button type="button" id="switch-annual" role="tab" aria-selected="true" onclick="selectLandingPlan('annual')">سنوي <em>وفّر 739 جنيه</em></button>
+      <button type="button" id="switch-annual" role="tab" aria-selected="true" onclick="selectLandingPlan('annual')">سنوي <em>وفّر 739 جنيهًا</em></button>
     </div>
 
     <div class="lp-plans">
@@ -558,7 +558,7 @@
         <div class="lp-price"><b id="pro-price">449</b><span id="pro-period">جنيه / سنة</span></div>
         <p class="lp-plan-sub"><s id="pro-strike">1,188 جنيه عند الدفع شهريًا</s></p>
         <p class="lp-plan-sub" id="pro-note" style="color:#E6E3F3;font-weight:700">أي حوالي 37 جنيهًا في الشهر</p>
-        <span class="lp-plan-save" id="pro-savings-pill">توفّر 739 جنيه</span>
+        <span class="lp-plan-save" id="pro-savings-pill">توفّر 739 جنيهًا</span>
         <hr>
         <ul class="lp-feats">
           <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>كل ما في الخطة المجانية</b>، بالإضافة إلى:</span></li>
@@ -609,8 +609,8 @@
         <div>معرضك المنشور على skillifly.cloud/you، وتحليلات الزوار، ونطاقك الخاص مع SSL، وإعدادات SEO، ومساعد Skillifly AI، ومساحة رفع أكبر، ووصول مبكر للتصاميم الجديدة، ودعم ذو أولوية.</div>
       </details>
       <details>
-        <summary>هل يمكنني رفع الفيديوهات أم الروابط فقط؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
-        <div>الاثنان. الصق رابط YouTube أو Vimeo، أو ارفع ملفات الفيديو مباشرة إلى Skillifly. وتحصل الريلز والفيديوهات الطويلة على صفحات خاصة بها.</div>
+        <summary>هل أرفع الفيديوهات أم أستخدم الروابط فقط؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
+        <div>كلاهما. الصق رابط YouTube أو Vimeo، أو ارفع ملفات الفيديو مباشرة إلى Skillifly. وتحصل الريلز والفيديوهات الطويلة على صفحات خاصة بها.</div>
       </details>
       <details>
         <summary>هل يمكنني تغيير التصميم لاحقًا؟<i>{% include "core/landing/_icon.html" with i="plus" %}</i></summary>
@@ -640,12 +640,12 @@
 <section class="lp-final" data-final-cta>
   <div class="lp-wrap">
     <div class="lp-final-card lp-reveal">
-      <span class="lp-eyebrow" style="color:#B79CFF">عميلك القادم على بُعد رابط</span>
+      <span class="lp-eyebrow" style="color:#B79CFF">عميلك القادم على بُعد رابط واحد</span>
       <h2 class="lp-h2">أفضل أعمالك تستحق <span class="lp-underline">أن تُرى.{% include "core/landing/_underline.html" %}</span></h2>
       <p class="lp-lead">احجز رابطك الآن. إنه مجاني — والأسماء الجيدة تُحجز بسرعة.</p>
       <div data-claim-wrap>
         {% include "core/landing/_claim.html" with action=signup_url label="احجز رابطي" aria="اختر رابط معرضك" %}
-        <p class="lp-claim-note" data-claim-status aria-live="polite">مجاني للبناء · بدون بطاقة ائتمان · عربي و English</p>
+        <p class="lp-claim-note" data-claim-status aria-live="polite">البناء مجاني · بدون بطاقة ائتمان · عربي و English</p>
       </div>
     </div>
   </div>
