@@ -1,0 +1,13 @@
+{% load static %}{# Focused header for auth pages: logo, the "other" auth page, language switch. Usage: with switch_url=... switch_q=... switch_label=... #}
+<header class="au-top">
+  <a class="au-logo" href="{{ MAIN_SITE_URL }}{% if is_arabic_page %}{% url 'arabic_landing' %}{% else %}{% url 'index' %}{% endif %}" aria-label="{% if is_arabic_page %}Skillifly — الصفحة الرئيسية{% else %}Skillifly home{% endif %}">
+    <img src="{% static 'img/logo.png' %}" alt="Skillifly" width="120" height="36">
+  </a>
+  <div class="au-top-end">
+    {% if switch_url %}<p class="au-top-link" style="margin:0"><span>{{ switch_q }} </span><a href="{{ switch_url }}">{{ switch_label }}</a></p>{% endif %}
+    <div class="language-switcher" role="group" aria-label="Language selector">
+      <button type="button" class="lang-btn" data-lang="en" aria-label="English" aria-pressed="false">En</button>
+      <button type="button" class="lang-btn" data-lang="ar" aria-label="Arabic" aria-pressed="false">Ar</button>
+    </div>
+  </div>
+</header>

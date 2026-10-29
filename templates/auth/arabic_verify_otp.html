@@ -1,227 +1,74 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}تأكيد البريد الإلكتروني — Skillifly{% endblock %}
-
-{% block meta_description %}أدخل رمز التحقق المكوّن من 6 أرقام الذي أرسلناه إلى بريدك الإلكتروني لتأكيد حسابك على Skillifly.{% endblock %}
-
-{% block meta_keywords %}تأكيد البريد, رمز تحقق skillifly, تفعيل حساب{% endblock %}
-
-{% block og_title %}تأكيد البريد الإلكتروني — Skillifly{% endblock %}
-{% block og_description %}أدخل رمز التحقق لتأكيد حسابك على Skillifly.{% endblock %}
-{% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
-{% block twitter_title %}تأكيد البريد الإلكتروني — Skillifly{% endblock %}
-{% block twitter_description %}أدخل رمز التحقق لتأكيد حسابك على Skillifly.{% endblock %}
-{% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
+{% block title %}أكّد بريدك الإلكتروني — Skillifly{% endblock %}
 
 {% block extra_head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
-<meta name="robots" content="index, follow, max-image-preview:large" />
-<meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#3b82f6" />
-
-<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signin' %}" />
-<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
-<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
-
-<style>
-  /* ===== Arabic Verify OTP — Brand Overrides (English palette) ===== */
-  body {
-    background-color: white !important;
-    color: #0F172A !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  .arabic-rtl h1 {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-    letter-spacing: 0 !important;
-  }
-
-  .arabic-rtl p,
-  .arabic-rtl li,
-  .arabic-rtl a,
-  .arabic-rtl span,
-  .arabic-rtl button,
-  .arabic-rtl label {
-    font-family: 'Tajawal', 'Cairo', sans-serif !important;
-  }
-
-  .arabic-rtl .tracking-widest,
-  .arabic-rtl .uppercase {
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-  }
-
-  .arabic-rtl .rtl-arrow {
-    transform: scaleX(-1);
-  }
-
-  .gradient-text {
-    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    color: transparent;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
-    border: none !important;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
-    box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
-  }
-
-  .gradient-border {
-    background: #ffffff !important;
-    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
-  }
-
-  .gradient-border::before {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
-  }
-
-  .nav-link {
-    color: #334155 !important;
-    font-weight: 600 !important;
-  }
-
-  .nav-link:hover {
-    color: #3B82F6 !important;
-  }
-
-  .logo-mark img {
-    filter: none;
-  }
-
-  .arabic-rtl .gradient-border img.animate-float {
-    filter: none;
-  }
-
-  .sf-input {
-    background: #F8FAFC !important;
-    border: 1px solid #E2E8F0 !important;
-    border-radius: 12px;
-    color: #0F172A !important;
-    font-family: 'Tajawal', sans-serif !important;
-  }
-
-  .sf-input:focus {
-    border-color: #3B82F6 !important;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
-  }
-
-  .sf-label {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-  }
-
-  .warm-lights {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(59, 130, 246, 0.09), transparent 60%),
-      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(139, 92, 246, 0.08), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(192, 38, 211, 0.07), transparent 60%),
-      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.06), transparent 60%);
-  }
-
-  a:focus-visible,
-  button:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
-    border-radius: 12px;
-  }
-</style>
+<meta name="robots" content="noindex" />
+{% include "auth/_styles.html" %}
 {% endblock %}
 
+{% block navbar %}{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+{% block main_class %}relative z-10{% endblock %}
+{% block messages %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden arabic-rtl">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 15%, rgba(59,130,246,0.08), transparent 45%), radial-gradient(circle at 20% 85%, rgba(139,92,246,0.08), transparent 45%);"></div>
+<script type="application/json" id="au-i18n">
+  { "digit": "الرقم {n} من 6", "resend_in": "أرسل رمزًا جديدًا بعد {s} ث" }
+</script>
 
-  <div class="w-full max-w-md relative z-10">
+<div class="au">
+  <div class="au-main">
+    {% include "auth/_topbar.html" %}
 
-    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
-
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <a href="{% url 'arabic_landing' %}" class="inline-flex items-center gap-2 mb-6">
-          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
-          <span class="text-xl font-bold gradient-text">Skillifly</span>
-        </a>
-        <h1 class="text-2xl font-bold mb-1 text-slate-900">تأكيد بريدك الإلكتروني</h1>
-        <p class="text-slate-500 text-sm">أرسلنا رمزًا مكوّنًا من 6 أرقام إلى <strong>{{ email }}</strong>. يرجى إدخاله أدناه.</p>
-      </div>
-
-      <!-- Messages -->
-      {% if messages %}
-        {% for message in messages %}
-          <div class="{% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %} mb-6 flex items-start gap-2">
-            <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clip-rule="evenodd" />
-            </svg>
-            <div>{{ message }}</div>
-          </div>
-        {% endfor %}
-      {% endif %}
-
-      <!-- OTP Form -->
-      <form method="POST" novalidate>
-        {% csrf_token %}
-
-        <div class="mb-6">
-          <label class="sf-label" for="otp">رمز التحقق (6 أرقام)</label>
-          <input type="text" id="otp" name="otp" class="form-control sf-input" placeholder="123456" maxlength="6" pattern="\d{6}" required>
+    <div class="au-body">
+      <div class="au-card">
+        <div class="au-head">
+          <span class="au-eyebrow">{% include "core/landing/_icon.html" with i="check" %} تم إنشاء حسابك</span>
+          <h1 class="au-h1">تحقّق من <span class="au-ul">بريدك{% include "core/landing/_underline.html" %}</span></h1>
+          <p class="au-sub">أرسلنا رمزًا مكوّنًا من 6 أرقام إلى <b dir="ltr">{{ email }}</b>. أدخله بالأسفل لتأكيد أنه أنت.</p>
         </div>
 
-        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl">
-          تأكيد البريد الإلكتروني
-          <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </button>
+        {% include "auth/_messages.html" %}
 
-      </form>
-
-      <div class="mt-6 text-center">
-        <form method="POST" action="{% url 'resend_otp' %}">
-            {% csrf_token %}
-            <p class="text-sm text-slate-600 font-medium">
-              لم تصلك رسالة التحقق؟
-              <button type="submit" class="text-blue-600 hover:text-blue-700 transition-colors font-bold bg-transparent border-none cursor-pointer">إعادة إرسال</button>
-            </p>
+        <form method="POST" novalidate data-au-form>
+          {% csrf_token %}
+          <div class="au-field">
+            <label class="au-label" for="otp">رمز التحقق</label>
+            <input type="text" id="otp" name="otp" class="au-otp-plain" inputmode="numeric" autocomplete="one-time-code"
+              maxlength="6" pattern="\d{6}" placeholder="••••••" data-autofocus>
+            <div class="au-otp" data-otp data-for="otp" hidden></div>
+          </div>
+          <button type="submit" class="au-btn au-btn--primary" data-submit data-loading="جارٍ التحقق من الرمز…">
+            تأكيد بريدي {% include "core/landing/_icon.html" with i="arrow" %}
+          </button>
         </form>
-      </div>
 
-      <div class="mt-4 text-center">
-          <p class="text-sm text-slate-600 font-medium">
-              <a href="{% url 'arabic_signin' %}" class="text-blue-600 hover:text-blue-700 transition-colors font-bold">العودة إلى تسجيل الدخول</a>
-          </p>
-      </div>
+        <div class="au-tips">
+          <b>لم تجده؟</b> تحقّق من مجلد الرسائل غير المرغوب فيها أو العروض الترويجية. الرمز صالح لمدة {{ lifetime_minutes }} دقيقة.
+        </div>
 
+        <form method="POST" action="{% url 'resend_otp' %}" class="au-switch">
+          {% csrf_token %}
+          لم يصلك شيء؟ <button type="submit" class="au-link-btn" data-resend="30">أرسل رمزًا جديدًا</button>
+        </form>
+        <p class="au-alt"><a href="{% url 'arabic_signin' %}">العودة إلى تسجيل الدخول</a></p>
+      </div>
     </div>
+
+    <footer class="au-foot">
+      <a href="{% url 'contact' %}">تحتاج مساعدة؟</a>
+      <a href="{% url 'terms' %}">الشروط</a>
+      <a href="{% url 'privacy' %}">الخصوصية</a>
+    </footer>
   </div>
+
+  {% include "auth/_panel.html" with variant="verify" name=pending_name initials=pending_initials handle=pending_handle %}
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
-    el.classList.add('sf-input');
-  });
-</script>
+{% include "auth/_scripts.html" %}
 {% endblock %}

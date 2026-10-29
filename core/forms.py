@@ -132,6 +132,13 @@ class RegisterForm(UserCreationForm):
             field = 'password1'
         super().add_error(field, error)
 
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip()
+        # Case-insensitive, and a friendly message instead of the model's "Custom user with this Email already exists."
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise ValidationError('An account with this email already exists.', code='exists')
+        return email
+
     def clean_username(self):
         from django.conf import settings
         username = super().clean_username()
@@ -310,25 +317,28 @@ class LoginForm(AuthenticationForm):
         password = self.cleaned_data.get('password')
 
         if username and password:
-            # Check if username is an email
-            if '@' in username:
-                try:
-                    user = User.objects.get(email=username)
-                    # Update username to the actual username so super().clean() can authenticate
-                    # AuthenticationForm expects the username field to contain the username
-                    # If we don't update this, it tries to authenticate with username="email@example.com"
-                    # which fails if the backend expects a username.
-                    # Note: We are modifying the dictionary that super().clean() reads from.
-                    # AuthenticationForm.clean() reads self.cleaned_data.get('username')
-                    
-                    # We need to ensure we update what AuthenticationForm uses.
-                    # AuthenticationForm uses `self.cleaned_data.get("username")`
-                    self.cleaned_data['username'] = user.username
-                except User.DoesNotExist:
-                    # If no user found with this email, let the default authentication fail
-                    pass
-        
+            # Signing in with an email: swap in the account's username, because
+            # AuthenticationForm.clean() authenticates with cleaned_data['username'].
+            user = user_for_login(username)
+            if user is not None:
+                self.cleaned_data['username'] = user.username
+
         return super().clean()
+
+
+def user_for_login(identifier):
+    """The account a sign-in identifier (username or email) points at, or None.
+
+    Emails match case-insensitively, but an exact match wins if two old accounts
+    differ only by case. Usernames match exactly, like the auth backend.
+    """
+    identifier = (identifier or '').strip()
+    if not identifier:
+        return None
+    if '@' in identifier:
+        return (User.objects.filter(email=identifier).first()
+                or User.objects.filter(email__iexact=identifier).order_by('pk').first())
+    return User.objects.filter(username=identifier).first()
 
 
 

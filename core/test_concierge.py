@@ -126,9 +126,9 @@ class ArabicSignupHelpTextTests(TestCase):
     def test_help_text_is_localised(self):
         site_settings()
         resp = self.client.get(reverse('arabic_signup'))
-        self.assertContains(resp, 'سيكون رابط معرضك')
-        self.assertNotContains(resp, 'Your portfolio will be at')
+        self.assertContains(resp, 'هذا هو الرابط الذي ستشاركه مع العملاء')
+        self.assertNotContains(resp, "the link you'll share")
         # (a fresh client: visiting /ar/ stored the Arabic language cookie on the first one)
         from django.test import Client
         self.assertContains(Client().get(reverse('signup')),
-                            'Your portfolio will be at: skillifly.cloud/yourusername')
+                            "This is the link you'll share with clients")

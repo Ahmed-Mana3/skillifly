@@ -1291,62 +1291,94 @@ def check_username(request):
     return response
 
 
-def editor_signup_view(request):
-    """Editor signup: full portfolio account — email verification via OTP."""
+def _auth_panel_context():
+    """Social proof for the showcase panel beside the sign-up / sign-in forms.
+
+    Real numbers only: the portfolio count, up to four community faces, and up
+    to three featured reviews short enough for the panel (none -> no quotes).
+    """
+    faces = [s for s in Showcase.published().select_related('profile')
+             .order_by('order', '-created_at')[:8] if s.profile.picture][:4]
+    featured = _featured_reviews()
+    reviews = [{
+        'content': r.content, 'user_name': r.user_name, 'user_title': r.user_title,
+        'rating': r.rating, 'stars': '★' * max(0, min(5, r.rating or 0)),
+    } for r in featured if 40 <= len(r.content) <= 240][:3]
+    ratings = [r.rating for r in featured if r.rating]
+    count = Profile.objects.count()
+    return {
+        'auth_count': count if count >= 50 else 0,   # "Join 3 professionals" undersells: show it once it means something
+        'auth_faces': faces,
+        'auth_reviews': reviews,
+        'auth_rating': '%.1f' % (sum(ratings) / len(ratings)) if ratings else None,
+        'auth_rating_count': len(ratings),
+    }
+
+
+# Arabic for this project's own form messages (Django's built-in ones are
+# translated by rendering the Arabic pages under translation.override('ar')).
+_ARABIC_FORM_ERRORS = {
+    'Please enter your name.': 'من فضلك اكتب اسمك.',
+    'This username is reserved. Please choose another.': 'هذا الرابط محجوز. اختر رابطًا آخر.',
+    'An account with this email already exists.': 'يوجد حساب بهذا البريد الإلكتروني بالفعل.',
+    'Too many signups from this network. Please try again in a little while.':
+        'محاولات تسجيل كثيرة من هذه الشبكة. حاول مرة أخرى بعد قليل.',
+}
+
+
+def _arabic_locale(arabic):
+    """Django's own messages (password rules, "This field is required.") in Arabic on Arabic pages."""
+    import contextlib
+    from django.utils import translation
+    return translation.override('ar') if arabic else contextlib.nullcontext()
+
+
+def _arabic_form_errors(form):
+    """Swap the project's English form messages for Arabic, in place."""
+    for field, errors in list(form.errors.items()):
+        form.errors[field] = form.error_class(
+            [_ARABIC_FORM_ERRORS.get(str(e), e) for e in errors],
+            error_class='nonfield' if field == '__all__' else None,
+        )
+
+
+def _signup_page(request, arabic):
+    """Editor signup (EN + AR): show the form, or create the account and move on."""
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('arabic_dashboard' if arabic else 'dashboard')
     request.session['signup_account_type'] = 'editor'
     _remember_campaign(request)
+    next_url = _next_url(request, 'arabic_dashboard' if arabic else 'dashboard')
 
-    next_url = _next_url(request, 'dashboard')
+    with _arabic_locale(arabic):
+        if request.method == "POST":
+            response, form, _message = _editor_signup(request, arabic=arabic)
+            if response is not None:
+                return response
+        else:
+            form = RegisterForm(initial=_claimed_username(request))
 
-    if request.method == "POST":
-        response, form, message = _editor_signup(request, arabic=False)
-        if response is not None:
-            return response
-    else:
-        form = RegisterForm(initial=_claimed_username(request))
-        message = None
+        email_taken = form.is_bound and form.has_error('email', 'exists')
+        if arabic and form.is_bound:
+            _arabic_form_errors(form)
+        context = {
+            'form': form,
+            'next': next_url,
+            'email_taken': email_taken,
+            'is_arabic_page': arabic,
+        }
+        context.update(_auth_panel_context())
+        return render(request, 'auth/arabic_signup.html' if arabic else 'auth/signup.html', context)
 
-    from core import onboarding
-    context = {
-        'message': message,
-        'form': form,
-        'next': next_url,
-        'is_arabic_page': False,
-        'short_signup': onboarding.onboarding_enabled(),
-    }
-    return render(request, 'auth/signup.html', context)
+
+def editor_signup_view(request):
+    """Editor signup: full portfolio account — email verification via OTP."""
+    return _signup_page(request, arabic=False)
 
 
 def arabic_editor_signup_view(request):
     """Arabic twin of the editor signup form."""
-    if request.user.is_authenticated:
-        return redirect('arabic_dashboard')
-    request.session['signup_account_type'] = 'editor'
-    _remember_campaign(request)
-
-    next_url = _next_url(request, 'arabic_dashboard')
-
-    if request.method == "POST":
-        response, form, message = _editor_signup(request, arabic=True)
-        if response is not None:
-            return response
-    else:
-        form = RegisterForm(initial=_claimed_username(request))
-        message = None
-
-    from core import onboarding
-    # The form's help text is English; localise it for this page.
-    form.fields['username'].help_text = 'سيكون رابط معرضك: skillifly.cloud/yourusername'
-    context = {
-        'message': message,
-        'form': form,
-        'next': next_url,
-        'is_arabic_page': True,
-        'short_signup': onboarding.onboarding_enabled(),
-    }
-    return render(request, 'auth/arabic_signup.html', context)
+    return _signup_page(request, arabic=True)
 
 
 def client_signup_view(request):
@@ -1638,77 +1670,60 @@ def arabic_school_admin_choose_school_view(request):
     return render(request, 'auth/arabic_school_admin_choose_school.html', context)
 
 
-def signin_view(request):
+def _signin_page(request, arabic):
+    """Sign-in (EN + AR) with email or username."""
+    from core.forms import user_for_login
+    dashboard = 'arabic_dashboard' if arabic else 'dashboard'
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect(dashboard)
     request.session.pop('signup_account_type', None)
-    
-    next_url = _next_url(request, 'dashboard')
+
+    # `next` comes from the query string: only follow it if it stays on this site.
+    next_url = _next_url(request, dashboard)
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = reverse(dashboard)
 
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
+        remember = bool(request.POST.get('remember'))
         if form.is_valid():
             login(request, form.get_user())
+            if not remember:
+                request.session.set_expiry(0)   # ends when the browser closes
             return redirect(next_url)
-        else:
-            username = request.POST.get('username')
-            try:
-                user = CustomUser.objects.get(Q(username=username) | Q(email=username))
-                if not user.is_active:
-                    request.session['verification_user_id'] = user.id
-                    request.session['next_url'] = next_url
-                    return redirect('verify_otp')
-            except CustomUser.DoesNotExist:
-                pass
-            message = form.errors
+        # Right password on an account that never confirmed its email: finish that
+        # instead of failing. (Only with the right password, so the verify page
+        # never shows a stranger someone else's email address.)
+        user = user_for_login(request.POST.get('username'))
+        if user is not None and not user.is_active and user.check_password(request.POST.get('password', '')):
+            otp = EmailOTP.objects.filter(user=user).first()
+            if otp is None or otp.is_expired() or otp.is_locked:
+                _send_otp_email(request, user)
+            request.session['verification_user_id'] = user.id
+            request.session['next_url'] = next_url
+            request.session['is_arabic_flow'] = arabic
+            return redirect('verify_otp')
     else:
-        form = LoginForm()
-        message = None
+        form = LoginForm(request, initial={'username': request.GET.get('login', '').strip()[:254]})
+        remember = True
 
     context = {
-        'message': message,
         'form': form,
-        'next': next_url
+        'next': next_url,
+        'remember': remember,
+        'is_arabic_page': arabic,
     }
-    return render(request, 'auth/signin.html', context)
+    context.update(_auth_panel_context())
+    return render(request, 'auth/arabic_signin.html' if arabic else 'auth/signin.html', context)
+
+
+def signin_view(request):
+    return _signin_page(request, arabic=False)
 
 
 def arabic_signin_view(request):
     """Render the Arabic sign-in page variant for the language toggle."""
-    if request.user.is_authenticated:
-        return redirect('arabic_dashboard')
-    request.session.pop('signup_account_type', None)
-
-    next_url = _next_url(request, 'arabic_dashboard')
-
-    if request.method == "POST":
-        form = LoginForm(request, data=request.POST)
-        if form.is_valid():
-            login(request, form.get_user())
-            return redirect(next_url)
-        else:
-            username = request.POST.get('username')
-            try:
-                user = CustomUser.objects.get(Q(username=username) | Q(email=username))
-                if not user.is_active:
-                    request.session['verification_user_id'] = user.id
-                    request.session['next_url'] = next_url
-                    request.session['is_arabic_flow'] = True
-                    return redirect('verify_otp')
-            except CustomUser.DoesNotExist:
-                pass
-            message = form.errors
-    else:
-        form = LoginForm()
-        message = None
-
-    context = {
-        'message': message,
-        'form': form,
-        'next': next_url,
-        'is_arabic_page': True,
-    }
-    return render(request, 'auth/arabic_signin.html', context)
+    return _signin_page(request, arabic=True)
 
 
 def _pending_verification_user(request):
@@ -1739,7 +1754,7 @@ def verify_otp_view(request):
         try:
             otp_record = EmailOTP.objects.get(user=user)
             if otp_record.is_expired():
-                messages.error(request, 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.' if is_arabic else 'OTP has expired. Please request a new one.')
+                messages.error(request, 'انتهت صلاحية هذا الرمز. اطلب رمزًا جديدًا بالأسفل.' if is_arabic else 'That code has expired. Send yourself a new one below.')
             elif otp_record.is_locked:
                 # Too many wrong guesses: even the right code is refused until a new one is sent.
                 messages.error(request, 'محاولات خاطئة كثيرة. اطلب رمزًا جديدًا.' if is_arabic else 'Too many wrong attempts. Please request a new code.')
@@ -1764,12 +1779,22 @@ def verify_otp_view(request):
                 return redirect(next_url)
             else:
                 EmailOTP.objects.filter(pk=otp_record.pk).update(attempts=F('attempts') + 1)
-                messages.error(request, 'رمز التحقق غير صحيح.' if is_arabic else 'Invalid OTP code.')
+                messages.error(request, 'هذا الرمز غير صحيح. راجع آخر رسالة وصلتك وحاول مرة أخرى.' if is_arabic else "That code isn't right. Check the latest email and try again.")
         except EmailOTP.DoesNotExist:
             messages.error(request, 'لم يتم العثور على رمز تحقق. يرجى إعادة الإرسال.' if is_arabic else 'No OTP found. Please resend.')
 
     template = 'auth/arabic_verify_otp.html' if is_arabic else 'auth/verify_otp.html'
-    return render(request, template, {'email': user.email, 'is_arabic_page': is_arabic})
+    name = user.get_full_name() or user.first_name
+    words = name.split()
+    return render(request, template, {
+        'email': user.email,
+        'is_arabic_page': is_arabic,
+        'lifetime_minutes': EmailOTP.LIFETIME_MINUTES,
+        # The side panel previews their portfolio with their own name and link.
+        'pending_name': name,
+        'pending_initials': ''.join(w[0] for w in words[:1] + words[1:][-1:]).upper(),
+        'pending_handle': user.username,
+    })
 
 
 def resend_otp_view(request):
@@ -1787,7 +1812,7 @@ def resend_otp_view(request):
 
     # _send_otp_email stores a fresh code (attempts reset to 0) and emails it.
     if _send_otp_email(request, user):
-        messages.success(request, 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.' if is_arabic else 'A new OTP has been sent to your email.')
+        messages.success(request, 'أرسلنا رمزًا جديدًا. تحقّق من بريدك.' if is_arabic else 'We sent you a new code. Check your inbox.')
     else:
         messages.error(request, 'تعذّر إرسال رمز التحقق. حاول مرة أخرى بعد قليل.' if is_arabic else "We couldn't send the code. Please try again in a moment.")
     return redirect('verify_otp')

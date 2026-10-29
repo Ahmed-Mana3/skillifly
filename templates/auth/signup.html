@@ -1,229 +1,153 @@
 {% extends "core/base.html" %}
 {% load static %}
-{% load socialaccount %}
 
-{% block title %}Create Your Editor Account — Skillifly{% endblock %}
+{% block title %}Create your portfolio — Skillifly{% endblock %}
+{% block meta_description %}Create your free Skillifly account and claim your portfolio link. Show your reels and long-form edits, collect client reviews and get hired. No credit card needed.{% endblock %}
+{% block og_title %}Create your portfolio — Skillifly{% endblock %}
+{% block og_description %}Claim your link and build a cinematic portfolio for your video edits. Free to build.{% endblock %}
+{% block twitter_title %}Create your portfolio — Skillifly{% endblock %}
+{% block twitter_description %}Claim your link and build a cinematic portfolio for your video edits. Free to build.{% endblock %}
 
-{% block meta_description %}Sign up as a video editor on Skillifly — build your professional portfolio, showcase your reels and get discovered by clients.{% endblock %}
+{% block extra_head %}
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}" />
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signup' %}" />
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}" />
+{% include "auth/_styles.html" %}
+{% endblock %}
 
+{% block navbar %}{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+{% block main_class %}relative z-10{% endblock %}
+{% block messages %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-20">
+{% url 'signin' as signin_url %}
+<script type="application/json" id="au-i18n">
+  {
+    "show": "Show",
+    "hide": "Hide",
+    "email_invalid": "That email doesn't look right. Check it and try again.",
+    "did_you_mean": "Did you mean",
+    "pw_short": "Too short",
+    "strength": ["", "Too weak", "Okay", "Good", "Strong"],
+    "link": {
+      "checking":  "Checking {url}…",
+      "available": "{url} is available. It's yours.",
+      "taken":     "{url} is taken. Try one of these:",
+      "reserved":  "“{u}” is reserved. Try one of these:",
+      "short":     "Use at least 3 characters.",
+      "chars":     "Links can only use English letters, numbers, - and _."
+    }
+  }
+</script>
 
-  <!-- Background decoration -->
-  <div class="absolute top-1/3 right-1/4 w-64 h-64 rounded-full opacity-[0.06]"
-    style="background: radial-gradient(circle, #3B82F6, transparent 70%); filter: blur(60px);"></div>
+<div class="au">
+  <div class="au-main">
+    {% include "auth/_topbar.html" with switch_url=signin_url switch_q="Already have an account?" switch_label="Sign in" %}
 
-  <div class="w-full max-w-md relative z-10">
+    <div class="au-body">
+      <div class="au-card">
+        <div class="au-head">
+          <span class="au-eyebrow">{% include "core/landing/_icon.html" with i="sparkle" %} Free to build · No credit card</span>
+          {% if form.initial.username and not form.is_bound %}
+          <h1 class="au-h1">Claim your <span class="au-ul">link{% include "core/landing/_underline.html" %}</span></h1>
+          <span class="au-claim" dir="ltr">skillifly.cloud/<b>{{ form.initial.username }}</b></span>
+          <p class="au-sub">Nice pick. Finish your account and it's yours.</p>
+          {% else %}
+          <h1 class="au-h1">Create your <span class="au-ul">portfolio{% include "core/landing/_underline.html" %}</span></h1>
+          <p class="au-sub">Your reels, long-form work and client reviews in one link. Takes about a minute.</p>
+          {% endif %}
+        </div>
 
-    <!-- Card -->
-    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+        {% include "auth/_messages.html" %}
+        {% include "auth/_google.html" with label="Sign up with Google" or_label="or sign up with email" %}
 
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <a href="{% url 'index' %}" class="inline-flex items-center gap-2 mb-6">
-          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
-          <span class="text-xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">Skillifly</span>
-        </a>
-        <h1 class="text-2xl font-bold mb-1" style="font-family: 'Syne', sans-serif;">Create your editor account</h1>
-        <p class="text-gray-500 text-sm">Build your professional portfolio and get discovered by clients.</p>
-      </div>
-
-      <!-- Error messages -->
-      {% if message %}
-      <div class="alert-error mb-6 flex items-start gap-2">
-        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd" />
-        </svg>
-        <div>{{ message }}</div>
-      </div>
-      {% endif %}
-
-      <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
-      {% if google_oauth_button_visible %}
-      <div class="mb-6">
-        {% if next %}
-        <form action="{% provider_login_url 'google' next=next %}" method="post">
-        {% else %}
-        <form action="{% provider_login_url 'google' %}" method="post">
-        {% endif %}
+        <form method="POST" novalidate data-au-form data-auth-method="email">
           {% csrf_token %}
-          <button type="submit"
-            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z" fill="#4285F4"/>
-              <path d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z" fill="#34A853"/>
-              <path d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z" fill="#FBBC05"/>
-              <path d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z" fill="#EA4335"/>
-            </svg>
-            <span>Continue with Google</span>
+          {# Honeypot: hidden from people, filled in by bots. #}
+          <div style="position:absolute;left:-9999px;" aria-hidden="true">
+            <label>Company website <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
+          </div>
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+          {% for e in form.non_field_errors %}
+          <div class="au-alert" role="alert"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg><div>{{ e }}</div></div>
+          {% endfor %}
+
+          <div class="au-field{% if form.full_name.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="full_name">Full name</label>
+            <input type="text" id="full_name" name="full_name" value="{{ form.full_name.value|default_if_none:'' }}"
+              placeholder="e.g. Sara Ali" autocomplete="name" maxlength="300"
+              data-required="Please enter your name." data-valid="name" data-autofocus>
+            {% include "auth/_errors.html" with errors=form.full_name.errors %}
+          </div>
+
+          <div class="au-field{% if form.email.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="email">Email</label>
+            <input type="email" id="email" name="email" value="{{ form.email.value|default_if_none:'' }}"
+              placeholder="you@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"
+              data-required="Please enter your email." data-check-email data-valid="email">
+            {% for e in form.email.errors %}
+            <p class="au-error"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg><span>{{ e }}{% if email_taken %} <a href="{{ signin_url }}?login={{ form.email.value|urlencode }}">Sign in instead</a>{% endif %}</span></p>
+            {% endfor %}
+          </div>
+
+          <div class="au-field{% if form.username.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="username">Your portfolio link</label>
+            <div class="au-link" data-link data-check-url="{% url 'check_username' %}">
+              <span class="au-link-prefix" aria-hidden="true">skillifly.cloud/</span>
+              <input type="text" id="username" name="username" value="{{ form.username.value|default_if_none:'' }}"
+                placeholder="your-name" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30"
+                data-required="Choose the link for your portfolio." aria-describedby="username-note">
+              <span class="au-link-state" aria-hidden="true">
+                <svg class="au-link-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3a9 9 0 109 9"/></svg>
+                <svg class="au-link-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                <svg class="au-link-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>
+              </span>
+            </div>
+            <p class="au-hint au-link-note" id="username-note" aria-live="polite">This is the link you'll share with clients. You can change it later.</p>
+            {% include "auth/_errors.html" with errors=form.username.errors %}
+          </div>
+
+          <div class="au-field{% if form.password1.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="password1">Password</label>
+            <div class="au-pw">
+              <input type="password" id="password1" name="password1" placeholder="At least 8 characters"
+                autocomplete="new-password" data-required="Please create a password." aria-describedby="password1-meter">
+              <button type="button" class="au-pw-toggle" id="toggle-password" data-pw-toggle aria-controls="password1" aria-pressed="false">Show</button>
+            </div>
+            <div class="au-meter" id="password1-meter" data-pw-meter data-for="password1" data-score="0">
+              <span class="au-meter-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span class="au-meter-label" aria-live="polite"></span>
+            </div>
+            {% include "auth/_errors.html" with errors=form.password1.errors %}
+          </div>
+
+          <button type="submit" class="au-btn au-btn--primary" data-submit data-loading="Creating your account…">
+            Create my portfolio {% include "core/landing/_icon.html" with i="arrow" %}
           </button>
+          <p class="au-trust">{% include "core/landing/_icon.html" with i="shield" %} Secure sign-up · We never share your email</p>
+          <p class="au-legal">By creating an account you agree to our <a href="{% url 'terms' %}">Terms</a> and <a href="{% url 'privacy' %}">Privacy Policy</a>.</p>
         </form>
-        <div class="relative flex items-center justify-center my-5">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-slate-200"></div>
-          </div>
-          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">Or create an account with email</div>
-        </div>
+
+        <p class="au-switch">Already have an account? <a href="{{ signin_url }}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Sign in</a></p>
+        <p class="au-alt">Hiring an editor? <a href="{% url 'client_signup' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Create a client account</a></p>
+        {% include "auth/_mproof.html" %}
       </div>
-      {% endif %}
-
-      <!-- Email / Password Form -->
-      <form method="POST" novalidate>
-        {% csrf_token %}
-        {# Honeypot: hidden from people, filled in by bots. #}
-        <div style="position:absolute;left:-9999px;" aria-hidden="true">
-          <label>Company website <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
-        </div>
-
-        {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
-
-        {% if short_signup %}
-        <div class="mb-4">
-          <label class="sf-label" for="full_name">Full name</label>
-          {{ form.full_name }}
-          {% for error in form.full_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-        </div>
-        {% else %}
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="sf-label">First name</label>
-            {{ form.first_name }}
-            {% if form.first_name.errors %}
-            {% for error in form.first_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-            {% endif %}
-          </div>
-          <div>
-            <label class="sf-label">Last name</label>
-            {{ form.last_name }}
-            {% if form.last_name.errors %}
-            {% for error in form.last_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-
-        <div class="mb-4">
-          <label class="sf-label">Username</label>
-          {{ form.username }}
-          {% if form.username.help_text %}
-          <p class="text-xs text-slate-500 mt-1.5">{{ form.username.help_text }}</p>
-          {% endif %}
-          {% if form.username.errors %}
-          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="mb-4">
-          <label class="sf-label">Email address</label>
-          {{ form.email }}
-          {% if form.email.errors %}
-          {% for error in form.email.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        {% if short_signup %}
-        <div class="mb-6">
-          <label class="sf-label" for="password1">Password</label>
-          <div class="relative">
-            {{ form.password1 }}
-            <button type="button" id="toggle-password" aria-controls="password1" aria-pressed="false"
-              class="absolute top-1/2 -translate-y-1/2 right-3 text-xs font-bold text-slate-600 hover:text-black bg-transparent border-0 cursor-pointer px-2 py-1">Show</button>
-          </div>
-          {% for error in form.password1.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-        </div>
-        {% else %}
-        <div class="mb-4">
-          <label class="sf-label">Password</label>
-          {{ form.password1 }}
-          {% if form.password1.errors %}
-          {% for error in form.password1.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="mb-6">
-          <label class="sf-label">Confirm password</label>
-          {{ form.password2 }}
-          {% if form.password2.errors %}
-          {% for error in form.password2.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-        {% endif %}
-
-        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
-          Create editor account
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </button>
-
-        <p class="text-center text-sm text-slate-600 mt-6 font-medium">
-          Already have an account?
-          <a href="{% url 'signin' %}" class="text-blue-600 hover:text-blue-700 transition-colors font-bold">Sign
-            in</a>
-        </p>
-
-      </form>
     </div>
 
-    <!-- Terms note -->
-    <p class="text-center text-xs text-slate-500 mt-6 px-4 leading-relaxed">
-      By creating an account, you agree to our <a href="#" class="underline">Terms of Service</a> and <a href="#"
-        class="underline">Privacy Policy</a>.
-    </p>
-
+    <footer class="au-foot">
+      <a href="{% url 'contact' %}">Need help?</a>
+      <a href="{% url 'terms' %}">Terms</a>
+      <a href="{% url 'privacy' %}">Privacy</a>
+    </footer>
   </div>
+
+  {% include "auth/_panel.html" with variant="signup" handle=form.username.value name=form.full_name.value %}
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-  // Add sf-input class to all form inputs dynamically
-  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
-    el.classList.add('sf-input');
-  });
-</script>
-{% if short_signup %}
-<script>
-  (function () {
-    var name = document.getElementById('full_name');
-    var user = document.getElementById('username');
-    var email = document.getElementById('email');
-    var pw = document.getElementById('password1');
-    var toggle = document.getElementById('toggle-password');
-    if (!name || !user || !pw) return;
-
-    // Show / hide password (replaces the confirm-password field).
-    pw.style.paddingRight = '4.5rem';
-    toggle.addEventListener('click', function () {
-      var show = pw.type === 'password';
-      pw.type = show ? 'text' : 'password';
-      toggle.textContent = show ? 'Hide' : 'Show';
-      toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
-    });
-
-    // Suggest a username from the name (or the email) until the user types their own.
-    var suggested = '';
-    function slug(text) {
-      return text.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-    }
-    function suggest() {
-      if (user.value && user.value !== suggested) return;   // user chose their own
-      var s = slug(name.value);
-      if (s.length < 3 && email && email.value.indexOf('@') > 0) s = slug(email.value.split('@')[0]);
-      if (s.length < 3) return;
-      suggested = s.slice(0, 20);
-      user.value = suggested;
-    }
-    name.addEventListener('input', suggest);
-    if (email) email.addEventListener('blur', suggest);
-  })();
-</script>
-{% endif %}
+{% include "auth/_scripts.html" %}
 {% endblock %}

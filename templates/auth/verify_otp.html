@@ -1,81 +1,74 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Verify Email — Skillifly{% endblock %}
+{% block title %}Confirm your email — Skillifly{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex" />
+{% include "auth/_styles.html" %}
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+{% block main_class %}relative z-10{% endblock %}
+{% block messages %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-20">
+<script type="application/json" id="au-i18n">
+  { "digit": "Digit {n} of 6", "resend_in": "Send a new code in {s}s" }
+</script>
 
-  <!-- Background decoration -->
-  <div class="absolute top-1/3 right-1/4 w-64 h-64 rounded-full opacity-[0.06]"
-    style="background: radial-gradient(circle, #3B82F6, transparent 70%); filter: blur(60px);"></div>
+<div class="au">
+  <div class="au-main">
+    {% include "auth/_topbar.html" %}
 
-  <div class="w-full max-w-md relative z-10">
-
-    <!-- Card -->
-    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
-
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <a href="{% url 'index' %}" class="inline-flex items-center gap-2 mb-6">
-          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
-          <span class="text-xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">Skillifly</span>
-        </a>
-        <h1 class="text-2xl font-bold mb-1" style="font-family: 'Syne', sans-serif;">Verify your email</h1>
-        <p class="text-gray-500 text-sm">We sent a 6-digit code to <strong>{{ email }}</strong>. Please enter it below.</p>
-      </div>
-
-      <!-- Messages -->
-      {% if messages %}
-        {% for message in messages %}
-          <div class="{% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %} mb-6 flex items-start gap-2">
-            <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clip-rule="evenodd" />
-            </svg>
-            <div>{{ message }}</div>
-          </div>
-        {% endfor %}
-      {% endif %}
-
-      <!-- OTP Form -->
-      <form method="POST" novalidate>
-        {% csrf_token %}
-
-        <div class="mb-6">
-          <label class="sf-label" for="otp">6-Digit Code</label>
-          <input type="text" id="otp" name="otp" class="form-control sf-input" placeholder="123456" maxlength="6" pattern="\d{6}" required>
+    <div class="au-body">
+      <div class="au-card">
+        <div class="au-head">
+          <span class="au-eyebrow">{% include "core/landing/_icon.html" with i="check" %} Account created</span>
+          <h1 class="au-h1">Check your <span class="au-ul">inbox{% include "core/landing/_underline.html" %}</span></h1>
+          <p class="au-sub">We sent a 6-digit code to <b dir="ltr">{{ email }}</b>. Enter it below to confirm it's you.</p>
         </div>
 
-        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
-          Verify Email
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </button>
+        {% include "auth/_messages.html" %}
 
-      </form>
-
-      <div class="mt-6 text-center">
-        <form method="POST" action="{% url 'resend_otp' %}">
-            {% csrf_token %}
-            <p class="text-sm text-slate-600 font-medium">
-              Didn't receive the code? 
-              <button type="submit" class="text-blue-600 hover:text-blue-700 transition-colors font-bold bg-transparent border-none cursor-pointer">Resend</button>
-            </p>
+        <form method="POST" novalidate data-au-form>
+          {% csrf_token %}
+          <div class="au-field">
+            <label class="au-label" for="otp">Verification code</label>
+            <input type="text" id="otp" name="otp" class="au-otp-plain" inputmode="numeric" autocomplete="one-time-code"
+              maxlength="6" pattern="\d{6}" placeholder="••••••" data-autofocus>
+            <div class="au-otp" data-otp data-for="otp" hidden></div>
+          </div>
+          <button type="submit" class="au-btn au-btn--primary" data-submit data-loading="Checking your code…">
+            Confirm my email {% include "core/landing/_icon.html" with i="arrow" %}
+          </button>
         </form>
-      </div>
-      
-      <div class="mt-4 text-center">
-          <p class="text-sm text-slate-600 font-medium">
-              <a href="{% url 'signin' %}" class="text-blue-600 hover:text-blue-700 transition-colors font-bold">Back to Sign In</a>
-          </p>
-      </div>
 
+        <div class="au-tips">
+          <b>Can't find it?</b> Check your spam or Promotions folder. The code works for {{ lifetime_minutes }} minutes.
+        </div>
+
+        <form method="POST" action="{% url 'resend_otp' %}" class="au-switch">
+          {% csrf_token %}
+          Still nothing? <button type="submit" class="au-link-btn" data-resend="30">Send a new code</button>
+        </form>
+        <p class="au-alt"><a href="{% url 'signin' %}">Back to sign in</a></p>
+      </div>
     </div>
+
+    <footer class="au-foot">
+      <a href="{% url 'contact' %}">Need help?</a>
+      <a href="{% url 'terms' %}">Terms</a>
+      <a href="{% url 'privacy' %}">Privacy</a>
+    </footer>
   </div>
+
+  {% include "auth/_panel.html" with variant="verify" name=pending_name initials=pending_initials handle=pending_handle %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include "auth/_scripts.html" %}
 {% endblock %}

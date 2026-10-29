@@ -342,7 +342,7 @@ class OnboardingBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         self.assertEqual(page.input_value('#username'), '')
         page.fill('#email', 'nour.hassan@example.com')
         page.press('#email', 'Tab')                   # blur -> suggestion from the email
-        self.assertEqual(page.input_value('#username'), 'nour_hassan')
+        self.assertEqual(page.input_value('#username'), 'nour-hassan')
         page.fill('#password1', 'Str0ng-pass-99')
         page.click('#toggle-password')
         self.assertEqual(page.get_attribute('#password1', 'type'), 'text')
@@ -359,7 +359,7 @@ class OnboardingBrowserTests(TempMediaMixin, StaticLiveServerTestCase):
         page.goto(f'{self.live_server_url}/signup/')
         self.assertEqual(page.locator('#password2').count(), 0)
         page.fill('#full_name', 'Nour Hassan')
-        self.assertEqual(page.input_value('#username'), 'nour_hassan', 'username is suggested')
+        self.assertEqual(page.input_value('#username'), 'nour-hassan', 'username is suggested')
         page.fill('#username', 'nour_h')
         page.fill('#full_name', 'Nour A. Hassan')
         self.assertEqual(page.input_value('#username'), 'nour_h', 'a typed username is never overwritten')

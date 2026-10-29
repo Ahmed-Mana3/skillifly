@@ -500,6 +500,7 @@
   {% endblock %}
 
   <!-- Navbar -->
+  {% block navbar %}
   <nav class="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/5 {% if is_arabic_page %}arabic-nav{% endif %}">
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <!-- Logo -->
@@ -626,10 +627,12 @@
       </div>
     </div>
   </nav>
+  {% endblock %}
 
   <!-- Main content -->
-  <main id="main-content" class="relative z-10 pt-16">
+  <main id="main-content" class="{% block main_class %}relative z-10 pt-16{% endblock %}">
     <!-- Django messages -->
+    {% block messages %}
     {% if messages %}
     <div class="max-w-7xl mx-auto px-6 pt-4 space-y-2">
       {% for message in messages %}
@@ -653,6 +656,7 @@
       {% endfor %}
     </div>
     {% endif %}
+    {% endblock %}
 
     {% block content %}{% endblock %}
   </main>

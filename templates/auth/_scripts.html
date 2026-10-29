@@ -1,0 +1,551 @@
+{# Shared behaviour for the auth pages. Each page provides its strings in <script type="application/json" id="au-i18n">. #}
+<script>
+(function () {
+  var t = {};
+  try { t = JSON.parse(document.getElementById('au-i18n').textContent); } catch (e) { t = {}; }
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function fieldOf(input) { return input && input.closest('.au-field'); }
+  var ERR_ICON = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>';
+
+  // ── Errors under fields (the server renders its own; these are client-side) ──
+  function clearError(input) {
+    var f = fieldOf(input);
+    if (!f) return;
+    $$('.au-error', f).forEach(function (e) { e.remove(); });
+    f.classList.remove('is-invalid');
+    input.removeAttribute('aria-invalid');
+    if (input.dataset.describedby) input.setAttribute('aria-describedby', input.dataset.describedby);
+    else input.removeAttribute('aria-describedby');
+  }
+  function setError(input, msg, extra) {
+    clearError(input);
+    var f = fieldOf(input);
+    if (!f || !msg) return;
+    var p = document.createElement('p');
+    p.className = 'au-error';
+    p.id = input.id + '-error';
+    p.setAttribute('role', 'alert');
+    p.innerHTML = ERR_ICON;
+    var s = document.createElement('span');
+    s.textContent = msg;
+    if (extra) { s.appendChild(document.createTextNode(' ')); s.appendChild(extra); }
+    p.appendChild(s);
+    f.appendChild(p);
+    f.classList.remove('is-valid');
+    f.classList.add('is-invalid');
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-describedby', p.id);
+  }
+  // Server-side errors: wire them to their inputs for screen readers.
+  $$('.au-field').forEach(function (f) {
+    var input = $('input:not([type="hidden"]):not([type="checkbox"])', f);
+    if (!input) return;
+    if (input.getAttribute('aria-describedby')) input.dataset.describedby = input.getAttribute('aria-describedby');
+    var err = $('.au-error', f);
+    if (err) {
+      if (!err.id) err.id = input.id + '-error';
+      input.setAttribute('aria-invalid', 'true');
+      input.setAttribute('aria-describedby', err.id);
+    }
+    // Typing fixes the problem: drop the stale message right away.
+    input.addEventListener('input', function () { if (f.classList.contains('is-invalid') && !input.hasAttribute('data-link-input')) clearError(input); });
+  });
+
+  // ── Email: format check + "did you mean …?" for common provider typos ──
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  var DOMAINS = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com', 'yahoo.co.uk', 'protonmail.com'];
+  function distance(a, b) {
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) d[i] = [i];
+    for (j = 0; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  function domainFix(email) {
+    var at = email.lastIndexOf('@');
+    if (at < 1) return null;
+    var dom = email.slice(at + 1).toLowerCase();
+    if (!dom || DOMAINS.indexOf(dom) > -1) return null;
+    var best = null, bestD = 3;
+    DOMAINS.forEach(function (c) { var dd = distance(dom, c); if (dd < bestD) { bestD = dd; best = c; } });
+    return best && bestD <= 2 ? email.slice(0, at + 1) + best : null;
+  }
+  $$('input[type="email"][data-check-email]').forEach(function (input) {
+    input.addEventListener('blur', function () {
+      var v = input.value.trim();
+      input.value = v;
+      if (!v) return;
+      if (!EMAIL_RE.test(v)) { setError(input, t.email_invalid); return; }
+      var fix = domainFix(v);
+      if (!fix) return;
+      var f = fieldOf(input);
+      $$('.au-hint[data-email-fix]', f).forEach(function (e) { e.remove(); });
+      var hint = document.createElement('p');
+      hint.className = 'au-hint';
+      hint.setAttribute('data-email-fix', '');
+      hint.appendChild(document.createTextNode(t.did_you_mean + ' '));
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'au-link-btn';
+      b.dir = 'ltr';
+      b.textContent = fix;
+      b.addEventListener('click', function () { input.value = fix; hint.remove(); input.dispatchEvent(new Event('input')); input.focus(); });
+      hint.appendChild(b);
+      hint.appendChild(document.createTextNode(document.documentElement.dir === 'rtl' ? '؟' : '?'));
+      f.appendChild(hint);
+    });
+    input.addEventListener('input', function () { $$('.au-hint[data-email-fix]', fieldOf(input)).forEach(function (e) { e.remove(); }); });
+  });
+
+  // ── Password: show / hide, strength meter ──
+  $$('[data-pw-toggle]').forEach(function (btn) {
+    var input = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!input) return;
+    btn.addEventListener('click', function () {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? t.hide : t.show;
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+      input.focus();
+      try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+    });
+  });
+  var COMMON = ['password', 'password1', '12345678', '123456789', '1234567890', 'qwertyui', 'qwerty123', '11111111', 'iloveyou', 'abcd1234', 'skillifly', '00000000', 'abc12345'];
+  function strength(v) {
+    if (!v) return 0;
+    if (v.length < 8 || /^\d+$/.test(v) || COMMON.indexOf(v.toLowerCase()) > -1 || /^(.)\1+$/.test(v)) return 1;
+    var kinds = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(function (r) { return r.test(v); }).length;
+    if (v.length >= 12 && kinds >= 3) return 4;
+    if (v.length >= 10 && kinds >= 2) return 3;
+    return 2;
+  }
+  $$('[data-pw-meter]').forEach(function (meter) {
+    var input = document.getElementById(meter.getAttribute('data-for'));
+    var label = $('.au-meter-label', meter);
+    if (!input) return;
+    function update() {
+      var v = input.value, s = strength(v);
+      meter.setAttribute('data-score', s);
+      label.textContent = !v ? '' : (v.length < 8 ? t.pw_short : (t.strength || [])[s] || '');
+    }
+    input.addEventListener('input', update);
+    update();
+  });
+
+  // ── Portfolio link: same rules as the landing claim box, checked live ──
+  function cleanHandle(v) {
+    return v.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').replace(/-{2,}/g, '-')
+      .replace(/^[-_]+/, '').slice(0, 30);
+  }
+  function trimEdges(v) { return v.replace(/^[-_]+|[-_]+$/g, ''); }
+  function slugFrom(text) {
+    var plain = (text || '').normalize ? text.normalize('NFKD').replace(/[̀-ͯ]/g, '') : (text || '');
+    return trimEdges(cleanHandle(plain.replace(/[._+]+/g, ' ').trim()));
+  }
+  function setPreview(attr, value) {
+    $$('[' + attr + ']').forEach(function (el) { el.textContent = value || el.getAttribute('data-default') || ''; });
+  }
+
+  var link = $('[data-link]');
+  var linkInput = link && $('input', link);
+  if (linkInput) {
+    var form = linkInput.form;
+    var note = document.getElementById('username-note');
+    var defaultNote = note ? note.innerHTML : '';
+    var checkUrl = link.getAttribute('data-check-url');
+    var timer = null, hintTimer = null, controller = null, composing = false;
+    var last = { handle: '', status: '' };
+    var userTyped = !!linkInput.value, suggested = '';
+    linkInput.setAttribute('data-link-input', '');
+
+    var show = function (state, handle, suggestions) {
+      link.setAttribute('data-state', state || '');
+      link.classList.toggle('is-available', state === 'available');
+      var f = fieldOf(linkInput);
+      var bad = state === 'taken' || state === 'reserved' || state === 'short' || state === 'chars';
+      if (state) $$('.au-error', f).forEach(function (e) { e.remove(); });   // the live note replaces a stale server error
+      f.classList.toggle('is-invalid', bad);
+      if (bad) linkInput.setAttribute('aria-invalid', 'true'); else linkInput.removeAttribute('aria-invalid');
+      if (!note) return;
+      note.className = 'au-hint au-link-note' + (state ? ' is-' + state : '');
+      if (!state) { note.innerHTML = defaultNote; return; }
+      note.textContent = '';
+      ((t.link || {})[state] || '').split(/(\{u\}|\{url\})/).forEach(function (part) {
+        if (part === '{u}' || part === '{url}') {
+          var b = document.createElement('bdi');
+          b.dir = 'ltr';
+          b.textContent = (part === '{url}' ? 'skillifly.cloud/' : '') + handle;
+          note.appendChild(b);
+        } else if (part) {
+          note.appendChild(document.createTextNode(part));
+        }
+      });
+      (suggestions || []).forEach(function (s) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'au-chip';
+        chip.textContent = s;
+        chip.addEventListener('click', function () {
+          linkInput.value = s;
+          userTyped = true;
+          setPreview('data-preview-handle', s);
+          linkInput.focus();
+          check(true);
+        });
+        note.appendChild(chip);
+      });
+    };
+
+    var check = function (now) {
+      clearTimeout(timer);
+      var handle = trimEdges(linkInput.value);
+      if (handle.length < 3) {
+        if (controller) controller.abort();
+        last = { handle: '', status: '' };
+        show('');
+        return;
+      }
+      if (handle === last.handle && last.status) { show(last.status, last.handle, last.suggestions); return; }
+      timer = setTimeout(function () {
+        if (!checkUrl || !window.fetch) return;
+        if (controller) controller.abort();
+        controller = window.AbortController ? new AbortController() : null;
+        show('checking', handle);
+        fetch(checkUrl + '?username=' + encodeURIComponent(handle), {
+          headers: { 'Accept': 'application/json' },
+          signal: controller ? controller.signal : undefined
+        })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+          .then(function (data) {
+            if (trimEdges(linkInput.value) !== handle) return;   // typed on meanwhile
+            last = { handle: handle, status: data.status, suggestions: data.suggestions };
+            show(data.status, data.username, data.suggestions);
+          })
+          .catch(function (err) {
+            if (err && err.name === 'AbortError') return;
+            last = { handle: '', status: '' };   // can't tell: the server decides on submit
+            show('');
+          });
+      }, now ? 0 : 350);
+    };
+
+    var sanitize = function () {
+      var before = linkInput.value;
+      var next = cleanHandle(before);
+      if (next === before) return false;
+      var caret = cleanHandle(before.slice(0, linkInput.selectionStart || 0)).length;
+      linkInput.value = next;
+      try { linkInput.setSelectionRange(caret, caret); } catch (e) {}
+      if (/[^a-zA-Z0-9_\-\s]/.test(before)) {   // something other than case/spaces was dropped: say why
+        clearTimeout(hintTimer);
+        show('chars');
+        hintTimer = setTimeout(function () { check(true); }, 2200);
+        return true;
+      }
+      return false;
+    };
+
+    linkInput.addEventListener('compositionstart', function () { composing = true; });
+    linkInput.addEventListener('compositionend', function () { composing = false; sanitize(); check(); });
+    linkInput.addEventListener('input', function (e) {
+      if (composing || e.isComposing) return;
+      userTyped = linkInput.value !== '';
+      var dropped = sanitize();
+      setPreview('data-preview-handle', trimEdges(linkInput.value));
+      if (!dropped) check();
+    });
+    linkInput.addEventListener('blur', function () {
+      var handle = trimEdges(linkInput.value);
+      if (handle && handle.length < 3) show('short', handle);
+    });
+
+    // Suggest a link from the name (or the email, for names in Arabic script) until the user types their own.
+    var suggest = function () {
+      if (userTyped && linkInput.value !== suggested) return;
+      var nameEl = document.getElementById('full_name'), emailEl = document.getElementById('email');
+      var s = slugFrom(nameEl ? nameEl.value : '');
+      if (s.length < 3 && emailEl && emailEl.value.indexOf('@') > 0) s = slugFrom(emailEl.value.split('@')[0]);
+      if (s.length < 3) return;
+      suggested = s;
+      userTyped = true;
+      linkInput.value = s;
+      setPreview('data-preview-handle', s);
+      check();
+    };
+    var nameEl = document.getElementById('full_name');
+    var emailEl = document.getElementById('email');
+    if (nameEl) nameEl.addEventListener('input', suggest);
+    if (emailEl) emailEl.addEventListener('blur', suggest);
+
+    // Submit guard: block only a link we know is unusable.
+    form.__linkBlocked = function () {
+      clearTimeout(timer);
+      var handle = trimEdges(cleanHandle(linkInput.value));
+      linkInput.value = handle;
+      if (!handle) return false;            // the required check reports it
+      if (handle.length < 3) { show('short', handle); return true; }
+      if (handle === last.handle && (last.status === 'taken' || last.status === 'reserved')) {
+        show(last.status, handle, last.suggestions);
+        return true;
+      }
+      if (controller) controller.abort();
+      return false;
+    };
+
+    if (linkInput.value) {
+      setPreview('data-preview-handle', linkInput.value);
+      check(true);
+    }
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && linkInput.value) { last = { handle: '', status: '' }; check(true); }
+    });
+  }
+
+  // ── Live preview: the name ──
+  var nameInput = document.getElementById('full_name');
+  if (nameInput && $('[data-preview-name]')) {
+    var paintName = function () {
+      var v = nameInput.value.trim().replace(/\s+/g, ' ');
+      var words = v.split(' ').filter(Boolean);
+      var initials = words.length ? (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase() : '';
+      setPreview('data-preview-name', v);
+      setPreview('data-preview-initials', initials);
+      setPreview('data-preview-brand', v ? v.toUpperCase().slice(0, 22) : '');
+    };
+    nameInput.addEventListener('input', paintName);
+    if (nameInput.value) paintName();
+  }
+
+  // ── Forms: required fields, then a loading state (and no double submit) ──
+  $$('form[data-au-form]').forEach(function (form) {
+    var btn = $('[data-submit]', form);
+    form.addEventListener('submit', function (e) {
+      if (e.defaultPrevented) return;
+      if (form.__submitting) { e.preventDefault(); return; }
+      var first = null;
+      $$('[data-required]', form).forEach(function (input) {
+        var v = input.value.trim(), msg = '';
+        if (!v) msg = input.getAttribute('data-required');
+        else if (input.type === 'email' && !EMAIL_RE.test(v)) msg = t.email_invalid;
+        if (msg) { setError(input, msg); first = first || input; }
+      });
+      if (form.__linkBlocked && form.__linkBlocked()) first = first || $('[data-link] input', form);
+      if (first) {
+        e.preventDefault();
+        first.focus();
+        return;
+      }
+      form.__submitting = true;
+      if (btn) { btn.classList.add('is-loading'); btn.setAttribute('aria-busy', 'true'); }
+    });
+  });
+  // Back button restores the page from cache: make the button usable again.
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    $$('form[data-au-form]').forEach(function (f) { f.__submitting = false; });
+    $$('[data-submit].is-loading').forEach(function (b) { b.classList.remove('is-loading'); b.removeAttribute('aria-busy'); });
+  });
+
+  // ── Verify: six boxes that feed one real input ──
+  $$('[data-otp]').forEach(function (wrap) {
+    var real = document.getElementById(wrap.getAttribute('data-for'));
+    if (!real) return;
+    var form = real.form;
+    var boxes = [];
+    for (var i = 0; i < 6; i++) {
+      var b = document.createElement('input');
+      b.type = 'text';
+      b.inputMode = 'numeric';
+      b.maxLength = 6;   // lets mobile autofill drop the whole code into one box
+      b.autocomplete = i === 0 ? 'one-time-code' : 'off';
+      b.setAttribute('aria-label', (t.digit || 'Digit {n} of 6').replace('{n}', i + 1));
+      b.className = 'au-otp-box';
+      b.id = real.id + '-' + (i + 1);
+      wrap.appendChild(b);
+      boxes.push(b);
+    }
+    real.hidden = true;
+    real.removeAttribute('data-autofocus');
+    wrap.hidden = false;
+    var label = $('label[for="' + real.id + '"]');
+    if (label) label.htmlFor = boxes[0].id;
+
+    function sync() {
+      real.value = boxes.map(function (b) { return b.value; }).join('');
+      wrap.classList.remove('is-invalid');
+      if (real.value.length === 6 && /^\d{6}$/.test(real.value)) {
+        setTimeout(function () {
+          if (form.requestSubmit) form.requestSubmit(); else $('[data-submit]', form).click();
+        }, 120);
+      }
+    }
+    function fill(from, digits) {
+      for (var j = 0; j < digits.length && from + j < 6; j++) boxes[from + j].value = digits[j];
+      var nextIdx = Math.min(from + digits.length, 5);
+      boxes[nextIdx].focus();
+      sync();
+    }
+    boxes.forEach(function (b, idx) {
+      b.addEventListener('input', function () {
+        var digits = b.value.replace(/\D/g, '');
+        b.value = '';
+        if (!digits) { sync(); return; }
+        fill(idx, digits.split(''));
+      });
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !b.value && idx > 0) { boxes[idx - 1].value = ''; boxes[idx - 1].focus(); sync(); e.preventDefault(); }
+        else if (e.key === 'ArrowLeft' && idx > 0) { boxes[idx - 1].focus(); e.preventDefault(); }
+        else if (e.key === 'ArrowRight' && idx < 5) { boxes[idx + 1].focus(); e.preventDefault(); }
+      });
+      b.addEventListener('paste', function (e) {
+        var text = (e.clipboardData || window.clipboardData).getData('text') || '';
+        var digits = text.replace(/\D/g, '').slice(0, 6);
+        if (!digits) return;
+        e.preventDefault();
+        fill(digits.length === 6 ? 0 : idx, digits.split(''));
+      });
+      b.addEventListener('focus', function () { b.select(); });
+    });
+    // A rejected code (the page came back with an error): shake, start again.
+    if ($('.au-card .au-alert:not(.au-alert--ok)')) {
+      wrap.classList.add('is-invalid', 'is-shaking');
+    }
+    boxes[0].focus();
+    // Required check for the hidden field: point at the boxes instead.
+    form.addEventListener('submit', function (e) {
+      if (real.value.length < 6) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        form.__submitting = false;   // in case the generic handler already ran
+        var sb = $('[data-submit]', form);
+        if (sb) { sb.classList.remove('is-loading'); sb.removeAttribute('aria-busy'); }
+        wrap.classList.remove('is-shaking'); void wrap.offsetWidth; wrap.classList.add('is-invalid', 'is-shaking');
+        boxes[Math.min(real.value.length, 5)].focus();
+      }
+    }, true);
+  });
+
+  // ── Resend: short cooldown so people wait for the email instead of hammering ──
+  $$('[data-resend]').forEach(function (btn) {
+    // No wait after an error (e.g. the first email failed to send): resend has to work right away.
+    var secs = $('.au-card .au-alert:not(.au-alert--ok)') ? 0 : (parseInt(btn.getAttribute('data-resend'), 10) || 0);
+    var label = btn.textContent;
+    (function tick() {
+      if (secs <= 0) { btn.disabled = false; btn.textContent = label; return; }
+      btn.disabled = true;
+      btn.textContent = (t.resend_in || '{s}s').replace('{s}', secs);
+      secs -= 1;
+      setTimeout(tick, 1000);
+    })();
+  });
+
+  // ── Caps Lock warning while typing a password ──
+  $$('input[data-caps]').forEach(function (input) {
+    var hint = document.getElementById(input.getAttribute('data-caps'));
+    if (!hint) return;
+    function check(e) { if (e.getModifierState) hint.hidden = !e.getModifierState('CapsLock'); }
+    input.addEventListener('keydown', check);
+    input.addEventListener('keyup', check);
+    input.addEventListener('blur', function () { hint.hidden = true; });
+  });
+
+  // ── Enter on the first field moves on to the next empty one instead of submitting half a form ──
+  $$('input[data-enter-next]').forEach(function (input) {
+    input.addEventListener('keydown', function (e) {
+      var next = document.getElementById(input.getAttribute('data-enter-next'));
+      if (e.key === 'Enter' && next && !next.value && input.value.trim()) { e.preventDefault(); next.focus(); }
+    });
+  });
+
+  // ── Valid fields: a quiet green tick once you leave a field that's right ──
+  var TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  $$('input[data-valid]').forEach(function (input) {
+    var f = fieldOf(input);
+    var wrap = document.createElement('span');
+    wrap.className = 'au-control';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    var tick = document.createElement('span');
+    tick.className = 'au-tick';
+    tick.setAttribute('aria-hidden', 'true');
+    tick.innerHTML = TICK;
+    wrap.appendChild(tick);
+    function ok() {
+      var v = input.value.trim();
+      return input.getAttribute('data-valid') === 'email' ? EMAIL_RE.test(v) : v.length >= 2;
+    }
+    function paint(force) {
+      if (f.classList.contains('is-invalid')) { f.classList.remove('is-valid'); return; }
+      if (force || f.classList.contains('is-valid')) f.classList.toggle('is-valid', ok());
+    }
+    input.addEventListener('blur', function () { setTimeout(function () { paint(true); }, 0); });
+    input.addEventListener('input', function () { paint(false); });
+    if (input.value && !f.classList.contains('is-invalid')) paint(true);
+  });
+
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── Panel: the preview cycles through three looks until someone picks one ──
+  var looks = $('[data-looks]'), site = $('[data-preview-site]');
+  if (looks && site) {
+    var names = $$('button', looks).map(function (b) { return b.getAttribute('data-look'); });
+    var current = 0, lookTimer = null;
+    var setLook = function (i) {
+      current = i;
+      site.setAttribute('data-look', names[i]);
+      $$('button', looks).forEach(function (b, j) {
+        b.classList.toggle('is-on', j === i);
+        b.setAttribute('aria-pressed', j === i ? 'true' : 'false');
+      });
+    };
+    $$('button', looks).forEach(function (b, i) {
+      b.addEventListener('click', function () { clearInterval(lookTimer); lookTimer = null; setLook(i); });
+    });
+    if (!still) lookTimer = setInterval(function () { if (!document.hidden) setLook((current + 1) % names.length); }, 4500);
+  }
+
+  // ── Panel: a running timecode beside the playhead (25 fps, synced to its 9 s loop) ──
+  var tc = $('[data-timecode]');
+  if (tc && !still) {
+    var start = Date.now();
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    setInterval(function () {
+      if (document.hidden) return;
+      var frames = Math.floor(((Date.now() - start) % 9000) / 40) + 12 * 25 + 4;
+      tc.textContent = '00:00:' + pad(Math.floor(frames / 25)) + ':' + pad(frames % 25);
+    }, 80);
+  }
+
+  // ── Panel: rotate the real reviews ──
+  var rot = $('[data-rotate]');
+  if (rot && !still) {
+    var quotes = $$('.au-quote', rot), dots = $$('.au-dots i', rot), qi = 0;
+    if (quotes.length > 1) setInterval(function () {
+      if (document.hidden) return;
+      quotes[qi].classList.remove('is-on'); if (dots[qi]) dots[qi].classList.remove('is-on');
+      qi = (qi + 1) % quotes.length;
+      quotes[qi].classList.add('is-on'); if (dots[qi]) dots[qi].classList.add('is-on');
+    }, 6500);
+  }
+
+  // ── "Last used" badge: remember how this browser signed in last time ──
+  var LAST_KEY = 'skillifly-last-auth';
+  var lastUsed = null;
+  try { lastUsed = localStorage.getItem(LAST_KEY); } catch (e) {}
+  $$('[data-last-for]').forEach(function (b) { b.hidden = b.getAttribute('data-last-for') !== lastUsed; });
+  $$('form[data-auth-method]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (e.defaultPrevented) return;
+      try { localStorage.setItem(LAST_KEY, form.getAttribute('data-auth-method')); } catch (err) {}
+    });
+  });
+
+  // ── Focus: the first field with a problem, else the first field (not on phones: it hides the page behind the keyboard) ──
+  var bad = $('.au-field.is-invalid input:not([type="hidden"])');
+  var auto = $('[data-autofocus]');
+  if (bad) bad.focus();
+  else if (auto && !auto.value && window.matchMedia && window.matchMedia('(min-width: 768px)').matches) auto.focus();
+})();
+</script>

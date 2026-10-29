@@ -224,7 +224,7 @@ class OtpHardeningTests(OnboardingTestCase):
 
     def test_wrong_codes_are_counted_and_the_sixth_attempt_is_locked_out(self):
         for _ in range(EmailOTP.MAX_ATTEMPTS):
-            self.assertContains(self.post_code('000000'), 'Invalid OTP code')
+            self.assertContains(self.post_code('000000'), 'Check the latest email and try again')
         self.assertEqual(EmailOTP.objects.get(user=self.pending).attempts, EmailOTP.MAX_ATTEMPTS)
         resp = self.post_code('123456')  # right code, but too late
         self.assertContains(resp, 'Too many wrong attempts')
@@ -249,7 +249,7 @@ class OtpHardeningTests(OnboardingTestCase):
 
     def test_code_expires_after_thirty_minutes(self):
         EmailOTP.objects.filter(user=self.pending).update(created_at=timezone.now() - timedelta(minutes=31))
-        self.assertContains(self.post_code('123456'), 'OTP has expired')
+        self.assertContains(self.post_code('123456'), 'That code has expired')
         self.pending.refresh_from_db()
         self.assertFalse(self.pending.is_active)
 

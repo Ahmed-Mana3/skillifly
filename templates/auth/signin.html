@@ -1,13 +1,9 @@
 {% extends "core/base.html" %}
 {% load static %}
-{% load socialaccount %}
 
-{% block title %}Sign In to Your Account — Skillifly{% endblock %}
-
+{% block title %}Sign in — Skillifly{% endblock %}
 {% block meta_description %}Sign in to your Skillifly account to manage your portfolio, customize themes, and track analytics.{% endblock %}
-
 {% block meta_keywords %}skillifly sign in, login skillifly, portfolio account login{% endblock %}
-
 {% block og_title %}Sign In — Skillifly Portfolio Builder{% endblock %}
 {% block og_description %}Sign in to your Skillifly account to build and manage your professional portfolio.{% endblock %}
 {% block twitter_title %}Sign In — Skillifly Portfolio Builder{% endblock %}
@@ -15,157 +11,102 @@
 
 {% block extra_head %}
 <meta name="robots" content="index, follow, max-image-preview:large" />
-
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signin' %}" />
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signin' %}" />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
   "name": "Sign In to Skillifly",
   "description": "Sign in to manage your professional portfolio on Skillifly.",
-  "url": "{{ request.build_absolute_uri }}",
-  "potentialAction": {
-    "@type": "EntryPoint",
-    "actionPlatform": [
-      "http://schema.org/DesktopWebPlatform",
-      "http://schema.org/MobileWebPlatform"
-    ],
-    "urlTemplate": "https://skillifly.cloud/signin/"
-  }
+  "url": "{{ request.build_absolute_uri }}"
 }
 </script>
+{% include "auth/_styles.html" %}
 {% endblock %}
 
+{% block navbar %}{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+{% block main_class %}relative z-10{% endblock %}
+{% block messages %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-20">
+{% url 'signup' as signup_url %}
+<script type="application/json" id="au-i18n">
+  { "show": "Show", "hide": "Hide", "email_invalid": "That email doesn't look right." }
+</script>
 
-  <div class="absolute top-1/3 left-1/4 w-72 h-72 rounded-full opacity-[0.05]"
-    style="background: radial-gradient(circle, #8B5CF6, transparent 70%); filter: blur(60px);"></div>
+<div class="au">
+  <div class="au-main">
+    {% include "auth/_topbar.html" %}
 
-  <div class="w-full max-w-md relative z-10">
+    <div class="au-body">
+      <div class="au-card">
+        <div class="au-head">
+          <h1 class="au-h1">Welcome <span class="au-ul">back{% include "core/landing/_underline.html" %}</span></h1>
+          <p class="au-sub">Sign in to keep building your portfolio.</p>
+        </div>
 
-    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+        {% include "auth/_messages.html" %}
+        {% include "auth/_google.html" with label="Continue with Google" or_label="or sign in with email" %}
 
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <a href="{% url 'index' %}" class="inline-flex items-center gap-2 mb-6">
-          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
-          <span class="text-xl font-bold gradient-text" style="font-family: 'Syne', sans-serif;">Skillifly</span>
-        </a>
-        <h1 class="text-2xl font-bold mb-1" style="font-family: 'Syne', sans-serif;">Welcome back</h1>
-        <p class="text-gray-500 text-sm">Sign in to continue building your portfolio.</p>
-      </div>
-
-      <!-- Error messages -->
-      {% if message %}
-      <div class="alert-error mb-6 flex items-start gap-2">
-        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd" />
-        </svg>
-        <div>{{ message }}</div>
-      </div>
-      {% endif %}
-
-      <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
-      {% if google_oauth_button_visible %}
-      <div class="mb-6">
-        {% if next %}
-        <form action="{% provider_login_url 'google' next=next %}" method="post">
-        {% else %}
-        <form action="{% provider_login_url 'google' %}" method="post">
-        {% endif %}
+        <form method="POST" novalidate data-au-form data-auth-method="email">
           {% csrf_token %}
-          <button type="submit"
-            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z"
-                fill="#4285F4" />
-              <path
-                d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z"
-                fill="#34A853" />
-              <path
-                d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z"
-                fill="#FBBC05" />
-              <path
-                d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z"
-                fill="#EA4335" />
-            </svg>
-            <span>Continue with Google</span>
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+          {% if form.non_field_errors %}
+          <div class="au-alert" role="alert"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+            <div>That email or username and password don't match. Try again or <a href="{% url 'account_reset_password' %}">reset your password</a>.</div>
+          </div>
+          {% endif %}
+
+          <div class="au-field{% if form.username.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="email"><span>Email or username<span class="au-last au-last--inline" data-last-for="email" hidden>Last used</span></span></label>
+            <input type="text" id="email" name="username" value="{{ form.username.value|default_if_none:'' }}"
+              placeholder="you@example.com" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254"
+              data-required="Enter your email or username." data-enter-next="password"{% if not form.username.value %} data-autofocus{% endif %}>
+            {% if form.username.errors %}<p class="au-error"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg><span>Enter your email or username.</span></p>{% endif %}
+          </div>
+
+          <div class="au-field{% if form.password.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="password">Password</label>
+            <div class="au-pw">
+              <input type="password" id="password" name="password" placeholder="Your password" autocomplete="current-password"
+                data-required="Enter your password." data-caps="password-caps"{% if form.username.value %} data-autofocus{% endif %}>
+              <button type="button" class="au-pw-toggle" id="toggle-password" data-pw-toggle aria-controls="password" aria-pressed="false">Show</button>
+            </div>
+            <p class="au-caps" id="password-caps" hidden role="status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l7 7h-4v5H9v-5H5l7-7zM9 20h6"/></svg> Caps Lock is on</p>
+            {% if form.password.errors %}<p class="au-error"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg><span>Enter your password.</span></p>{% endif %}
+          </div>
+
+          <div class="au-row">
+            <label class="au-check"><input type="checkbox" name="remember" value="on"{% if remember %} checked{% endif %}> Keep me signed in</label>
+            <a href="{% url 'account_reset_password' %}">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="au-btn au-btn--primary" data-submit data-loading="Signing in…">
+            Sign in {% include "core/landing/_icon.html" with i="arrow" %}
           </button>
         </form>
-        <div class="relative flex items-center justify-center my-5">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-slate-200"></div>
-          </div>
-          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">Or sign in with email</div>
-        </div>
+
+        <p class="au-switch">New to Skillifly? <a href="{{ signup_url }}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Create your free portfolio</a></p>
+        {% include "auth/_mproof.html" %}
       </div>
-      {% endif %}
-
-      <!-- Email / Password Form -->
-      <form method="POST" novalidate>
-        {% csrf_token %}
-
-        {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
-
-        <div class="mb-4">
-          <label class="sf-label">Email or Username</label>
-          {{ form.username }}
-          {% if form.username.errors %}
-          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="mb-3">
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="sf-label mb-0">Password</label>
-          </div>
-          {{ form.password }}
-          {% if form.password.errors %}
-          {% for error in form.password.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        <!-- Forgot password -->
-        <div class="mb-6">
-          <a href="{% url 'account_reset_password' %}"
-            class="text-sm text-blue-600 hover:text-blue-700 transition-colors">
-            Forgot password?
-          </a>
-        </div>
-
-        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl shadow-blue-500/10">
-          Sign in
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3 3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-          </svg>
-        </button>
-
-        <p class="text-center text-sm text-slate-600 mt-6 font-medium">
-          Don't have an account?
-          <a href="{% url 'signup' %}" class="text-blue-600 hover:text-blue-700 transition-colors font-bold">Create one
-            for free</a>
-        </p>
-
-
-      </form>
     </div>
 
+    <footer class="au-foot">
+      <a href="{% url 'contact' %}">Need help?</a>
+      <a href="{% url 'terms' %}">Terms</a>
+      <a href="{% url 'privacy' %}">Privacy</a>
+    </footer>
   </div>
+
+  {% include "auth/_panel.html" with variant="signin" %}
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
-    el.classList.add('sf-input');
-  });
-</script>
+{% include "auth/_scripts.html" %}
 {% endblock %}

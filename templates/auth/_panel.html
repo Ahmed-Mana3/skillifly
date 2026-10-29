@@ -1,0 +1,124 @@
+{# Desktop showcase panel beside the auth forms. Usage: with variant="signup"|"signin"|"verify" (optional: name="..." initials="..." handle="...") #}
+<aside class="au-panel" aria-label="{% if is_arabic_page %}معاينة معرضك{% else %}Portfolio preview{% endif %}">
+  <div class="au-panel-inner">
+
+    {# Style switcher: the preview cycles through three looks until someone picks one. #}
+    <div class="au-looks" role="group" aria-label="{% if is_arabic_page %}شكل المعاينة{% else %}Preview style{% endif %}" data-looks>
+      <button type="button" class="is-on" data-look="cinematic" aria-pressed="true">{% if is_arabic_page %}سينمائي{% else %}Cinematic{% endif %}</button>
+      <button type="button" data-look="editorial" aria-pressed="false">{% if is_arabic_page %}تحريري{% else %}Editorial{% endif %}</button>
+      <button type="button" data-look="neon" aria-pressed="false">{% if is_arabic_page %}نيون{% else %}Neon{% endif %}</button>
+    </div>
+
+    {# Live preview: the signup form fills in the name and link as you type. Decorative. #}
+    <div class="au-preview" aria-hidden="true">
+      <div class="au-preview-bar">
+        <span style="background:#F87171"></span><span style="background:#FBBF24"></span><span style="background:#34D399"></span>
+        <div class="au-preview-url">
+          {% include "core/landing/_icon.html" with i="lock" %}
+          <span>skillifly.cloud/</span><b data-preview-handle data-default="{% if variant == 'signin' %}you{% else %}your-name{% endif %}">{% if handle %}{{ handle }}{% elif variant == 'signin' %}you{% else %}your-name{% endif %}</b>
+        </div>
+      </div>
+      <div class="au-site" data-look="cinematic" data-preview-site>
+        <div class="au-site-nav"><b data-preview-brand data-default="PORTFOLIO">{% if name %}{{ name|upper|truncatechars:22 }}{% else %}PORTFOLIO{% endif %}</b><span>Work · Reels · Reviews · Contact</span></div>
+        <div class="au-site-hero">
+          <div class="au-site-avatar" data-preview-initials data-default="">{% if initials %}{{ initials }}{% elif name %}{{ name|slice:":1"|upper }}{% endif %}</div>
+          <div style="min-width:0">
+            <div class="au-site-name" dir="auto" data-preview-name data-default="{% if is_arabic_page %}اسمك هنا{% else %}Your name{% endif %}">{% if name %}{{ name }}{% elif is_arabic_page %}اسمك هنا{% else %}Your name{% endif %}</div>
+            <div class="au-site-role"><i></i>Video Editor · Available for work</div>
+          </div>
+          <div class="au-site-ctas"><span>Hire me</span><span>Showreel</span></div>
+        </div>
+        <div class="au-site-grid">
+          <div class="au-thumb au-t1"><b>Brand film · 2:14</b></div>
+          <div class="au-thumb au-thumb--reel au-t2"></div>
+          <div class="au-thumb au-thumb--reel au-t3"></div>
+        </div>
+      </div>
+      {# An editing timeline under the preview: the brand's NLE motif. #}
+      <div class="au-tl">
+        <span class="au-tl-tc"><i></i><span data-timecode>00:00:12:04</span></span>
+        <div class="au-tl-tracks">
+          <div class="au-tl-v"><b style="flex:3"></b><b style="flex:2"></b><b style="flex:4"></b><b style="flex:1.5"></b><b style="flex:2.5"></b></div>
+          <div class="au-tl-a"></div>
+          <span class="au-tl-head"></span>
+        </div>
+      </div>
+    </div>
+
+    {% if variant == "verify" %}
+      {% if is_arabic_page %}
+      <h2 class="au-panel-h">اقتربت. <em>خطوة واحدة</em> ونبدأ.</h2>
+      <ol class="au-steps">
+        <li class="is-done"><i>{% include "core/landing/_icon.html" with i="check" %}</i><span>تم إنشاء حسابك</span></li>
+        <li class="is-now"><i>2</i><span>أكّد بريدك الإلكتروني<small>أدخل الرمز المكوّن من 6 أرقام</small></span></li>
+        <li><i>3</i><span>ابنِ معرضك<small>نبذة عنك، أول فيديو، التصميم، المهارات</small></span></li>
+        <li><i>4</i><span>انشر رابطك<small>شاركه مع العملاء في كل مكان</small></span></li>
+      </ol>
+      {% else %}
+      <h2 class="au-panel-h">Almost there. <em>One step</em> to go.</h2>
+      <ol class="au-steps">
+        <li class="is-done"><i>{% include "core/landing/_icon.html" with i="check" %}</i><span>Account created</span></li>
+        <li class="is-now"><i>2</i><span>Confirm your email<small>Enter the 6-digit code we sent you</small></span></li>
+        <li><i>3</i><span>Build your portfolio<small>About you, first video, theme, skills</small></span></li>
+        <li><i>4</i><span>Go live<small>Share your link with clients anywhere</small></span></li>
+      </ol>
+      {% endif %}
+    {% else %}
+      {% if is_arabic_page %}
+        {% if variant == "signin" %}
+        <h2 class="au-panel-h">عميلك القادم على بُعد <em>رابط واحد</em>.</h2>
+        <ul class="au-points">
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>أكمل من حيث توقفت</b> في منشئ المعرض.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>اعرف من شاهد معرضك</b> وأي الفيديوهات أعجبتهم.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>شارك رابطك</b> مع عملاء جدد.</span></li>
+        </ul>
+        {% else %}
+        <h2 class="au-panel-h">هذا أنت، <em>على الإنترنت</em> خلال دقائق.</h2>
+        <ul class="au-points">
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>الريلز والفيديوهات الطويلة</b> في معرض سينمائي واحد.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>تقييمات العملاء والتحليلات</b> في رابط واحد.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>البناء مجاني.</b> وانشر حين تكون جاهزًا.</span></li>
+        </ul>
+        {% endif %}
+      {% else %}
+        {% if variant == "signin" %}
+        <h2 class="au-panel-h">Your next client is <em>one link</em> away.</h2>
+        <ul class="au-points">
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>Pick up where you left off</b> in the builder.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>See who viewed your portfolio</b> and what they watched.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>Share your link</b> with new clients.</span></li>
+        </ul>
+        {% else %}
+        <h2 class="au-panel-h">This is you, <em>live</em> in a few minutes.</h2>
+        <ul class="au-points">
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>Reels and long-form</b> in one cinematic portfolio.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>Client reviews and analytics</b> behind one link.</span></li>
+          <li>{% include "core/landing/_icon.html" with i="check" %}<span><b>Free to build.</b> Publish when you're ready.</span></li>
+        </ul>
+        {% endif %}
+      {% endif %}
+
+      {% if auth_reviews %}
+      <div class="au-reviews" data-rotate>
+        <div class="au-reviews-stack">
+          {% for r in auth_reviews %}
+          <blockquote class="au-quote{% if forloop.first %} is-on{% endif %}">
+            <span class="au-stars" aria-label="{{ r.rating }}/5">{{ r.stars }}</span>
+            <p dir="auto">“{{ r.content|truncatechars:170 }}”</p>
+            <footer><b dir="auto">{{ r.user_name }}</b>{% if r.user_title %} · <span dir="auto">{{ r.user_title }}</span>{% endif %}</footer>
+          </blockquote>
+          {% endfor %}
+        </div>
+        {% if auth_reviews|length > 1 %}<div class="au-dots" aria-hidden="true">{% for r in auth_reviews %}<i{% if forloop.first %} class="is-on"{% endif %}></i>{% endfor %}</div>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if auth_count %}
+      <div class="au-proof">
+        <span class="au-faces" aria-hidden="true">{% for s in auth_faces %}<img src="{% url 'image_thumb' s.profile.picture.name 64 %}" alt="" width="30" height="30">{% empty %}{% if is_arabic_page %}<i>أ</i><i>ب</i><i>ج</i>{% else %}<i>A</i><i>B</i><i>C</i>{% endif %}{% endfor %}</span>
+        <span>{% if is_arabic_page %}انضم إلى <b>{{ auth_count }}</b> محترفًا{% else %}Join <b>{{ auth_count }}</b> professionals getting hired{% endif %}{% if auth_rating %}<span class="au-proof-rate"> · <span class="au-stars">★</span> <b>{{ auth_rating }}</b> {% if is_arabic_page %}متوسط التقييم{% else %}average rating{% endif %}</span>{% endif %}</span>
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</aside>

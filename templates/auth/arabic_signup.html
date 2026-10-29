@@ -1,396 +1,157 @@
 {% extends "core/base.html" %}
 {% load static %}
-{% load socialaccount %}
 
-{% block title %}أنشئ حساب المونتير — Skillifly{% endblock %}
-
-{% block meta_description %}أنشئ حسابك كمونتير على Skillifly وابدأ في بناء ملفك المهني الاحترافي، اعرض شو ريلز خاصتك وليكتشفك العملاء.{% endblock %}
-
-{% block meta_keywords %}إنشاء حساب, تسجيل جديد, حساب مونتير, ملف مهني, شو ريل, skillifly{% endblock %}
-
-{% block og_title %}أنشئ حساب المونتير — Skillifly{% endblock %}
-{% block og_description %}أنشئ حسابك كمونتير على Skillifly وابدأ في بناء ملفك المهني الاحترافي.{% endblock %}
+{% block title %}أنشئ معرضك — Skillifly{% endblock %}
+{% block meta_description %}أنشئ حسابك المجاني على Skillifly واحجز رابط معرضك. اعرض الريلز والفيديوهات الطويلة، واجمع تقييمات العملاء، واحصل على شغل. بدون بطاقة ائتمان.{% endblock %}
+{% block meta_keywords %}إنشاء حساب, تسجيل جديد, حساب مونتير, معرض أعمال, شو ريل, skillifly{% endblock %}
+{% block og_title %}أنشئ معرضك — Skillifly{% endblock %}
+{% block og_description %}احجز رابطك وابنِ معرض أعمال سينمائيًا لمونتاجك. البناء مجاني.{% endblock %}
 {% block og_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
-{% block twitter_title %}أنشئ حساب المونتير{% endblock %}
-{% block twitter_description %}أنشئ حسابك كمونتير واعرض أعمالك للعملاء.{% endblock %}
+{% block twitter_title %}أنشئ معرضك — Skillifly{% endblock %}
+{% block twitter_description %}احجز رابطك وابنِ معرض أعمال سينمائيًا لمونتاجك. البناء مجاني.{% endblock %}
 {% block twitter_image %}{% static 'img/logo-arabic.png' %}{% endblock %}
 
 {% block extra_head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
-<meta name="robots" content="index, follow, max-image-preview:large" />
 <meta property="og:locale" content="ar_AR" />
-<meta name="theme-color" content="#3b82f6" />
-
-<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_editor_signup' %}" />
-<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'editor_signup' %}" />
-<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'editor_signup' %}" />
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "أنشئ حساب المونتير على Skillifly",
-  "description": "أنشئ حسابك كمونتير لبناء ملفك المهني الاحترافي.",
-  "inLanguage": "ar",
-  "url": "{{ request.build_absolute_uri }}",
-  "potentialAction": {
-    "@type": "EntryPoint",
-    "actionPlatform": [
-      "http://schema.org/DesktopWebPlatform",
-      "http://schema.org/MobileWebPlatform"
-    ],
-    "urlTemplate": "https://skillifly.cloud/ar/signup/editor/"
-  }
-}
-</script>
-
-<style>
-  /* ===== Arabic Signup — Brand Overrides (English palette) ===== */
-  body {
-    background-color: white !important;
-    color: #0F172A !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Typography: Cairo for headings, Tajawal for body */
-  .arabic-rtl h1 {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-    letter-spacing: 0 !important;
-  }
-
-  .arabic-rtl p,
-  .arabic-rtl li,
-  .arabic-rtl a,
-  .arabic-rtl span,
-  .arabic-rtl button,
-  .arabic-rtl label {
-    font-family: 'Tajawal', 'Cairo', sans-serif !important;
-  }
-
-  .arabic-rtl .rtl-arrow {
-    transform: scaleX(-1);
-  }
-
-  /* Gradient text — readable on white */
-  .gradient-text {
-    background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 50%, #BE185D 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    color: transparent;
-  }
-
-  /* Buttons */
-  .btn-primary {
-    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25) !important;
-    border: none !important;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #C026D3 100%) !important;
-    box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4) !important;
-  }
-
-  /* Cards */
-  .glass-card {
-    background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-
-  .gradient-border {
-    background: #ffffff !important;
-    box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.14) !important;
-  }
-
-  .gradient-border::before {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(192, 38, 211, 0.3)) !important;
-  }
-
-  .nav-link {
-    color: #334155 !important;
-    font-weight: 600 !important;
-  }
-
-  .nav-link:hover {
-    color: #3B82F6 !important;
-  }
-
-  .logo-mark img {
-    filter: none;
-  }
-
-  .arabic-rtl .gradient-border img.animate-float {
-    filter: none;
-  }
-
-  /* Form inputs */
-  .sf-input {
-    background: #F8FAFC !important;
-    border: 1px solid #E2E8F0 !important;
-    border-radius: 12px;
-    color: #0F172A !important;
-    font-family: 'Tajawal', sans-serif !important;
-  }
-
-  .sf-input:focus {
-    border-color: #3B82F6 !important;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
-  }
-
-  .sf-label {
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-  }
-
-  /* Background lights */
-  .warm-lights {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse 60% 50% at 85% 8%, rgba(59, 130, 246, 0.09), transparent 60%),
-      radial-gradient(ellipse 50% 45% at 10% 25%, rgba(139, 92, 246, 0.08), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 88% 80%, rgba(192, 38, 211, 0.07), transparent 60%),
-      radial-gradient(ellipse 45% 40% at 15% 90%, rgba(59, 130, 246, 0.06), transparent 60%);
-  }
-
-  /* Focus visibility */
-  a:focus-visible,
-  button:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
-    border-radius: 12px;
-  }
-</style>
+<link rel="alternate" hreflang="ar" href="{{ request.scheme }}://{{ request.get_host }}{% url 'arabic_signup' %}" />
+<link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}" />
+<link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}" />
+{% include "auth/_styles.html" %}
 {% endblock %}
 
+{% block navbar %}{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+{% block main_class %}relative z-10{% endblock %}
+{% block messages %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden arabic-rtl">
-  <div class="warm-lights" aria-hidden="true"></div>
-  <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 15%, rgba(59,130,246,0.08), transparent 45%), radial-gradient(circle at 20% 85%, rgba(139,92,246,0.08), transparent 45%);"></div>
+{% url 'arabic_signin' as signin_url %}
+<script type="application/json" id="au-i18n">
+  {
+    "show": "إظهار",
+    "hide": "إخفاء",
+    "email_invalid": "يبدو أن البريد الإلكتروني غير صحيح. راجعه وحاول مرة أخرى.",
+    "did_you_mean": "هل تقصد",
+    "pw_short": "قصيرة جدًا",
+    "strength": ["", "ضعيفة جدًا", "مقبولة", "جيدة", "قوية"],
+    "link": {
+      "checking":  "جارٍ التحقق من {url}…",
+      "available": "{url} متاح. إنه لك.",
+      "taken":     "{url} محجوز. جرّب أحد هذه:",
+      "reserved":  "«{u}» محجوز. جرّب أحد هذه:",
+      "short":     "استخدم 3 أحرف على الأقل.",
+      "chars":     "يمكن للرابط أن يحتوي على أحرف إنجليزية وأرقام و - و _ فقط."
+    }
+  }
+</script>
 
-  <div class="w-full max-w-md relative z-10">
+<div class="au">
+  <div class="au-main">
+    {% include "auth/_topbar.html" with switch_url=signin_url switch_q="لديك حساب بالفعل؟" switch_label="سجّل الدخول" %}
 
-    <!-- Card -->
-    <div class="gradient-border rounded-3xl p-8 md:p-10 animate-fadeInUp">
+    <div class="au-body">
+      <div class="au-card">
+        <div class="au-head">
+          <span class="au-eyebrow">{% include "core/landing/_icon.html" with i="sparkle" %} البناء مجاني · بدون بطاقة ائتمان</span>
+          {% if form.initial.username and not form.is_bound %}
+          <h1 class="au-h1">احجز <span class="au-ul">رابطك{% include "core/landing/_underline.html" %}</span></h1>
+          <span class="au-claim" dir="ltr">skillifly.cloud/<b>{{ form.initial.username }}</b></span>
+          <p class="au-sub">اختيار موفّق. أكمل حسابك ويصبح الرابط لك.</p>
+          {% else %}
+          <h1 class="au-h1">أنشئ <span class="au-ul">معرضك{% include "core/landing/_underline.html" %}</span></h1>
+          <p class="au-sub">الريلز والأعمال الطويلة وتقييمات العملاء في رابط واحد. يستغرق الأمر دقيقة تقريبًا.</p>
+          {% endif %}
+        </div>
 
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <a href="{% url 'arabic_landing' %}" class="inline-flex items-center gap-2 mb-6">
-          <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="h-9 w-9 object-contain animate-float">
-          <span class="text-xl font-bold gradient-text">Skillifly</span>
-        </a>
-        <h1 class="text-2xl font-bold mb-1 text-slate-900">أنشئ حساب المونتير</h1>
-        <p class="text-slate-500 text-sm">ابنِ ملفك المهني الاحترافي ودع العملاء يكتشفون أعمالك.</p>
-      </div>
+        {% include "auth/_messages.html" %}
+        {% include "auth/_google.html" with label="التسجيل عبر Google" or_label="أو سجّل بالبريد الإلكتروني" %}
 
-      <!-- Error messages -->
-      {% if message %}
-      <div class="alert-error mb-6 flex items-start gap-2">
-        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd" />
-        </svg>
-        <div>{{ message }}</div>
-      </div>
-      {% endif %}
-
-      <!-- Google OAuth (must be OUTSIDE the email form — browsers drop nested forms) -->
-      {% if google_oauth_button_visible %}
-      <div class="mb-6">
-        {% url 'arabic_dashboard' as arabic_dashboard_url %}
-        {% if next %}
-        <form action="{% provider_login_url 'google' next=next %}" method="post">
-        {% else %}
-        <form action="{% provider_login_url 'google' next=arabic_dashboard_url %}" method="post">
-        {% endif %}
+        <form method="POST" novalidate data-au-form data-auth-method="email">
           {% csrf_token %}
-          <button type="submit"
-            class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M23.49 12.27c0-.82-.07-1.43-.2-2.07H12.24v3.99h6.46c-.13 1.01-.83 2.53-2.38 3.55v2.6h3.72c2.18-2.02 3.45-4.99 3.45-8.07z" fill="#4285F4"/>
-              <path d="M12.24 24c3.24 0 5.96-1.06 7.95-2.89l-3.72-2.6c-1 .7-2.35 1.19-4.23 1.19-3.17 0-5.86-2.08-6.82-4.96H1.58v2.69C3.56 21.44 7.7 24 12.24 24z" fill="#34A853"/>
-              <path d="M5.42 14.74a7.7 7.7 0 0 1-.4-2.46c0-.86.14-1.7.4-2.46V7.13H1.58A12 12 0 0 0 0 12.28c0 1.94.46 3.78 1.58 5.15l3.84-2.69z" fill="#FBBC05"/>
-              <path d="M12.24 4.58c2.3 0 3.85.99 4.73 1.82l3.45-3.36C18.2 1.06 15.48 0 12.24 0 7.7 0 3.56 2.56 1.58 6.87l3.84 2.69c.96-2.88 3.65-4.98 6.82-4.98z" fill="#EA4335"/>
-            </svg>
-            <span>المتابعة عبر Google</span>
+          {# Honeypot: hidden from people, filled in by bots. #}
+          <div style="position:absolute;left:-9999px;" aria-hidden="true">
+            <label>Company website <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
+          </div>
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+          {% for e in form.non_field_errors %}
+          <div class="au-alert" role="alert"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg><div>{{ e }}</div></div>
+          {% endfor %}
+
+          <div class="au-field{% if form.full_name.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="full_name">الاسم الكامل</label>
+            <input type="text" id="full_name" name="full_name" value="{{ form.full_name.value|default_if_none:'' }}"
+              placeholder="مثال: سارة علي" autocomplete="name" maxlength="300"
+              data-required="من فضلك اكتب اسمك." data-valid="name" data-autofocus>
+            {% include "auth/_errors.html" with errors=form.full_name.errors %}
+          </div>
+
+          <div class="au-field{% if form.email.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="email">البريد الإلكتروني</label>
+            <input type="email" id="email" name="email" value="{{ form.email.value|default_if_none:'' }}"
+              placeholder="you@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"
+              data-required="من فضلك اكتب بريدك الإلكتروني." data-check-email data-valid="email">
+            {% for e in form.email.errors %}
+            <p class="au-error"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg><span>{{ e }}{% if email_taken %} <a href="{{ signin_url }}?login={{ form.email.value|urlencode }}">سجّل الدخول بدلًا من ذلك</a>{% endif %}</span></p>
+            {% endfor %}
+          </div>
+
+          <div class="au-field{% if form.username.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="username">رابط معرضك</label>
+            <div class="au-link" data-link data-check-url="{% url 'check_username' %}">
+              <span class="au-link-prefix" aria-hidden="true">skillifly.cloud/</span>
+              <input type="text" id="username" name="username" value="{{ form.username.value|default_if_none:'' }}"
+                placeholder="your-name" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30"
+                data-required="اختر رابط معرضك." aria-describedby="username-note">
+              <span class="au-link-state" aria-hidden="true">
+                <svg class="au-link-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3a9 9 0 109 9"/></svg>
+                <svg class="au-link-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                <svg class="au-link-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>
+              </span>
+            </div>
+            <p class="au-hint au-link-note" id="username-note" aria-live="polite">هذا هو الرابط الذي ستشاركه مع العملاء. يمكنك تغييره لاحقًا.</p>
+            {% include "auth/_errors.html" with errors=form.username.errors %}
+          </div>
+
+          <div class="au-field{% if form.password1.errors %} is-invalid{% endif %}">
+            <label class="au-label" for="password1">كلمة المرور</label>
+            <div class="au-pw">
+              <input type="password" id="password1" name="password1" placeholder="8 أحرف على الأقل"
+                autocomplete="new-password" data-required="من فضلك أنشئ كلمة مرور." aria-describedby="password1-meter">
+              <button type="button" class="au-pw-toggle" id="toggle-password" data-pw-toggle aria-controls="password1" aria-pressed="false">إظهار</button>
+            </div>
+            <div class="au-meter" id="password1-meter" data-pw-meter data-for="password1" data-score="0">
+              <span class="au-meter-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span class="au-meter-label" aria-live="polite"></span>
+            </div>
+            {% include "auth/_errors.html" with errors=form.password1.errors %}
+          </div>
+
+          <button type="submit" class="au-btn au-btn--primary" data-submit data-loading="جارٍ إنشاء حسابك…">
+            أنشئ معرضي {% include "core/landing/_icon.html" with i="arrow" %}
           </button>
+          <p class="au-trust">{% include "core/landing/_icon.html" with i="shield" %} تسجيل آمن · لن نشارك بريدك مع أحد</p>
+          <p class="au-legal">بإنشاء حساب فأنت توافق على <a href="{% url 'terms' %}">الشروط</a> و<a href="{% url 'privacy' %}">سياسة الخصوصية</a>.</p>
         </form>
-        <div class="relative flex items-center justify-center my-5">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-slate-200"></div>
-          </div>
-          <div class="relative px-4 bg-white text-sm text-slate-500 font-medium">أو أنشئ حسابًا بالبريد الإلكتروني</div>
-        </div>
+
+        <p class="au-switch">لديك حساب بالفعل؟ <a href="{{ signin_url }}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">سجّل الدخول</a></p>
+        <p class="au-alt">تبحث عن مونتير؟ <a href="{% url 'arabic_client_signup' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">أنشئ حساب عميل</a></p>
+        {% include "auth/_mproof.html" %}
       </div>
-      {% endif %}
-
-      <!-- Email / Password Form -->
-      <form method="POST" novalidate>
-        {% csrf_token %}
-        {# Honeypot: hidden from people, filled in by bots. #}
-        <div style="position:absolute;left:-9999px;" aria-hidden="true">
-          <label>Company website <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
-        </div>
-
-        {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
-
-        {% if short_signup %}
-        <div class="mb-4">
-          <label class="sf-label" for="full_name">الاسم الكامل</label>
-          {{ form.full_name }}
-          {% for error in form.full_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-        </div>
-        {% else %}
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="sf-label">الاسم الأول</label>
-            {{ form.first_name }}
-            {% if form.first_name.errors %}
-            {% for error in form.first_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-            {% endif %}
-          </div>
-          <div>
-            <label class="sf-label">اسم العائلة</label>
-            {{ form.last_name }}
-            {% if form.last_name.errors %}
-            {% for error in form.last_name.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-
-        <div class="mb-4">
-          <label class="sf-label">اسم المستخدم</label>
-          {{ form.username }}
-          {% if form.username.help_text %}
-          <p class="text-xs text-slate-500 mt-1.5">{{ form.username.help_text }}</p>
-          {% endif %}
-          {% if form.username.errors %}
-          {% for error in form.username.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="mb-4">
-          <label class="sf-label">البريد الإلكتروني</label>
-          {{ form.email }}
-          {% if form.email.errors %}
-          {% for error in form.email.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        {% if short_signup %}
-        <div class="mb-6">
-          <label class="sf-label" for="password1">كلمة المرور</label>
-          <div class="relative">
-            {{ form.password1 }}
-            <button type="button" id="toggle-password" aria-controls="password1" aria-pressed="false"
-              class="absolute top-1/2 -translate-y-1/2 end-3 text-xs font-bold text-slate-600 hover:text-black bg-transparent border-0 cursor-pointer px-2 py-1">إظهار</button>
-          </div>
-          {% for error in form.password1.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-        </div>
-        {% else %}
-        <div class="mb-4">
-          <label class="sf-label">كلمة المرور</label>
-          {{ form.password1 }}
-          {% if form.password1.errors %}
-          {% for error in form.password1.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="mb-6">
-          <label class="sf-label">تأكيد كلمة المرور</label>
-          {{ form.password2 }}
-          {% if form.password2.errors %}
-          {% for error in form.password2.errors %}<p class="error-msg">{{ error }}</p>{% endfor %}
-          {% endif %}
-        </div>
-        {% endif %}
-
-        <button type="submit" class="btn-primary w-full py-3.5 text-base shadow-xl">
-          إنشاء حساب المونتير
-          <svg class="rtl-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </button>
-
-        <p class="text-center text-sm text-slate-600 mt-6 font-medium">
-          لديك حساب بالفعل؟
-          <a href="{% url 'arabic_signin' %}" class="text-blue-600 hover:text-blue-700 transition-colors font-bold">سجّل
-            الدخول</a>
-        </p>
-
-      </form>
     </div>
 
-    <!-- Terms note -->
-    <p class="text-center text-xs text-slate-500 mt-6 px-4 leading-relaxed">
-      بإنشاء حساب، فأنت توافق على <a href="#" class="underline">شروط الخدمة</a> و<a href="#"
-        class="underline">سياسة الخصوصية</a>.
-    </p>
-
+    <footer class="au-foot">
+      <a href="{% url 'contact' %}">تحتاج مساعدة؟</a>
+      <a href="{% url 'terms' %}">الشروط</a>
+      <a href="{% url 'privacy' %}">الخصوصية</a>
+    </footer>
   </div>
+
+  {% include "auth/_panel.html" with variant="signup" handle=form.username.value name=form.full_name.value %}
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-  // Add sf-input class to all form inputs dynamically
-  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
-    el.classList.add('sf-input');
-  });
-</script>
-{% if short_signup %}
-<script>
-  (function () {
-    var name = document.getElementById('full_name');
-    var user = document.getElementById('username');
-    var email = document.getElementById('email');
-    var pw = document.getElementById('password1');
-    var toggle = document.getElementById('toggle-password');
-    if (!name || !user || !pw) return;
-
-    // إظهار / إخفاء كلمة المرور (بدل حقل التأكيد).
-    pw.style.paddingInlineEnd = '4.5rem';
-    toggle.addEventListener('click', function () {
-      var show = pw.type === 'password';
-      pw.type = show ? 'text' : 'password';
-      toggle.textContent = show ? 'إخفاء' : 'إظهار';
-      toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
-    });
-
-    // اقتراح اسم مستخدم من البريد الإلكتروني (الأسماء العربية لا تصلح كأسماء مستخدمين)،
-    // مع الاحتفاظ بما يكتبه المستخدم بنفسه.
-    var suggested = '';
-    function slug(text) {
-      return text.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-    }
-    function suggest() {
-      if (user.value && user.value !== suggested) return;
-      var s = slug(name.value);
-      if (s.length < 3 && email && email.value.indexOf('@') > 0) s = slug(email.value.split('@')[0]);
-      if (s.length < 3) return;
-      suggested = s.slice(0, 20);
-      user.value = suggested;
-    }
-    name.addEventListener('input', suggest);
-    if (email) email.addEventListener('blur', suggest);
-  })();
-</script>
-{% endif %}
+{% include "auth/_scripts.html" %}
 {% endblock %}

@@ -1,0 +1,7 @@
+{# Social proof under the form on phones and tablets (the showcase panel is desktop-only). #}
+{% if auth_count %}
+<div class="au-mproof">
+  <span class="au-faces" aria-hidden="true">{% for s in auth_faces|slice:":3" %}<img src="{% url 'image_thumb' s.profile.picture.name 64 %}" alt="" width="26" height="26">{% empty %}{% if is_arabic_page %}<i>أ</i><i>ب</i><i>ج</i>{% else %}<i>A</i><i>B</i><i>C</i>{% endif %}{% endfor %}</span>
+  <span>{% if is_arabic_page %}انضم إلى <b>{{ auth_count }}</b> محترفًا{% else %}Join <b>{{ auth_count }}</b> professionals{% endif %}{% if auth_rating %} · <span class="au-stars">★</span> <b>{{ auth_rating }}</b>{% endif %}</span>
+</div>
+{% endif %}

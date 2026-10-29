@@ -233,12 +233,13 @@ class ShortSignupTests(TestCase):
         self.assertContains(resp, 'id="toggle-password"')
         self.assertNotContains(resp, 'تأكيد كلمة المرور')
 
-    def test_classic_form_when_the_switch_is_off(self):
+    def test_short_form_also_when_the_switch_is_off(self):
+        # The rebuilt signup page always uses the short form; the switch no longer matters here.
         resp = self.client.get(reverse('signup'))
-        self.assertContains(resp, 'name="first_name"')
-        self.assertContains(resp, 'name="password2"')
-        self.assertNotContains(resp, 'name="full_name"')
-        self.assertNotContains(resp, 'toggle-password')
+        self.assertContains(resp, 'name="full_name"')
+        self.assertContains(resp, 'id="toggle-password"')
+        self.assertNotContains(resp, 'name="password2"')
+        self.assertNotContains(resp, 'name="first_name"')
 
     def test_short_post_creates_the_account(self):
         site_settings(onboarding_v2_enabled=True)
