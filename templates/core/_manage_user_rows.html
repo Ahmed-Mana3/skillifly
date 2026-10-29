@@ -1,0 +1,37 @@
+{% comment %}User rows for the lookup page. rows: dicts from core.user_journey._directory_rows. compact hides secondary columns.{% endcomment %}
+<div class="pr-scroll">
+<table class="pr-tbl">
+    <thead>
+        <tr>
+            <th scope="col">User</th>
+            <th scope="col">Last active</th>
+            <th scope="col">Plan</th>
+            {% if not compact %}<th scope="col" class="num">Videos</th><th scope="col" class="num">Paid (EGP)</th><th scope="col">Joined</th>{% endif %}
+            <th scope="col"><span class="sr-only">Open</span></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in rows %}
+        <tr class="ul-row" data-href="{% url 'manage_user_journey' p.id %}">
+            <td>
+                <div class="ul-who">
+                    <span class="pr-ava{% if p.plan_state == 'paying' %} is-pay{% endif %}" aria-hidden="true">{{ p.initials }}</span>
+                    <div>
+                        <a class="pr-name" href="{% url 'manage_user_journey' p.id %}">{{ p.name }}</a>
+                        <span class="pr-sub">@{{ p.username }}{% if not compact %} · {{ p.email }}{% endif %}</span>
+                    </div>
+                </div>
+            </td>
+            <td><span class="ua-fresh is-{{ p.recency }}"><i aria-hidden="true"></i>{{ p.last_active_ago }}</span><span class="pr-sub">{{ p.recency_label }}</span></td>
+            <td><span class="pr-pill {% if p.plan_state == 'paying' %}pr-pill-good{% elif p.plan_state == 'free_pass' %}pr-pill-brand{% elif p.plan_state == 'expired' %}pr-pill-bad{% else %}pr-pill-slate{% endif %}">{{ p.plan_state_label }}</span></td>
+            {% if not compact %}
+            <td class="num">{{ p.videos }}</td>
+            <td class="num">{{ p.spent }}</td>
+            <td style="white-space:nowrap">{{ p.joined|date:"j M Y" }}</td>
+            {% endif %}
+            <td class="num"><svg class="ul-go" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>

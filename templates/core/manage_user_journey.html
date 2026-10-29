@@ -1,0 +1,444 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ name }} · User Journey | Skillifly{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+
+{% comment %}
+One user's journey (core/user_journey.py). Top to bottom it answers: what should we do about
+this person (verdict, score, actions), how far did they get (milestones), how engaged are they
+(calendar), and what exactly happened (timeline). Category colours always sit next to a text label.
+{% endcomment %}
+
+{% block extra_head %}
+{% include "core/_manage_report_styles.html" %}
+<style>
+    .pr { --c-account: #2563eb; --c-portfolio: #6d28d9; --c-payments: #047857;
+          --c-ai: #c026d3; --c-emails: #b45309; --c-traction: #0d9488; }
+
+    .uj-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .uj-top .uj-search { flex: 0 1 24rem; }
+    .uj-top .uj-search input { font-size: .875rem; padding: .3125rem 0; }
+
+    /* Identity */
+    .uj-id { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    .uj-ava { width: 4.5rem; height: 4.5rem; font-size: 1.375rem; }
+    .uj-id-main { flex: 1 1 20rem; min-width: 0; }
+    .uj-id h1 { font-weight: 800; font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.25rem); line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+    .uj-id-meta { margin: .375rem 0 .625rem; font-size: .875rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .25rem .875rem; }
+    .uj-id-meta span { white-space: nowrap; }
+    .uj-badges { display: flex; flex-wrap: wrap; gap: .375rem; }
+    .uj-id-act { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+    /* Verdict */
+    .uj-verdict { display: grid; gap: 1.75rem; margin-top: 1.75rem; }
+    .uj-verdict-main { min-width: 0; }
+    .uj-seg { display: inline-flex; align-items: center; gap: .5rem; font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+              text-transform: uppercase; color: var(--muted); }
+    .uj-seg i { width: .625rem; height: .625rem; border-radius: 999px; background: #94a3b8; }
+    .uj-seg.is-good i { background: var(--good); } .uj-seg.is-risk i { background: var(--bad); }
+    .uj-seg.is-action i { background: var(--brand); }
+    .uj-verdict h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.015em; margin: .375rem 0 .5rem; }
+    .uj-verdict-body { font-size: .9375rem; color: var(--ink); line-height: 1.55; margin: 0 0 1.25rem; max-width: 46rem; }
+    .uj-story { margin: 0; padding: 1rem 1.125rem; border-radius: 14px; background: #f8fafc; border: 1px solid var(--line);
+                font-size: .875rem; line-height: 1.65; max-width: 46rem; }
+    .uj-story b { display: block; font-size: .6875rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .25rem; }
+
+    .uj-score { display: flex; gap: 1.25rem; align-items: center; }
+    .uj-ring { position: relative; width: 7.5rem; height: 7.5rem; flex-shrink: 0; }
+    .uj-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .uj-ring .track { stroke: var(--brand-soft); }
+    .uj-ring .val { stroke: var(--brand); stroke-linecap: round; transition: stroke-dasharray 1s cubic-bezier(.22,1,.36,1); }
+    .uj-ring.is-strong .val { stroke: var(--good); } .uj-ring.is-weak .val { stroke: var(--bad); }
+    .uj-ring-t { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .uj-ring-t strong { font-size: 2rem; font-weight: 800; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+    .uj-ring-t span { font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: .25rem; }
+    .uj-parts { flex: 1; display: grid; gap: .5rem; min-width: 0; }
+    .uj-part { display: grid; grid-template-columns: 1fr auto; gap: .125rem .75rem; font-size: .8125rem; }
+    .uj-part b { color: var(--ink); font-weight: 600; }
+    .uj-part em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .uj-part .bar { grid-column: 1 / -1; height: .3125rem; border-radius: 999px; background: var(--brand-soft); overflow: hidden; }
+    .uj-part .bar i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+    .uj-part small { grid-column: 1 / -1; font-size: .75rem; color: var(--muted); }
+    .uj-score-h { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 .875rem; }
+
+    .uj-actions-h { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+
+    /* Milestones */
+    .uj-ms { list-style: none; margin: 0; padding: 0; position: relative; }
+    .uj-ms li { position: relative; display: grid; grid-template-columns: 1.75rem 1fr auto; gap: .875rem; align-items: start; padding: 0 0 1.125rem; }
+    .uj-ms li:last-child { padding-bottom: 0; }
+    .uj-ms li::before { content: ''; position: absolute; left: .8125rem; top: 1.75rem; bottom: .125rem; width: 2px; background: var(--line); }
+    .uj-ms li:last-child::before { display: none; }
+    .uj-ms li.is-done::before { background: var(--brand-mid); }
+    .uj-dot { width: 1.75rem; height: 1.75rem; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+              border: 2px solid var(--line); background: #fff; color: #fff; position: relative; z-index: 1; }
+    .uj-ms li.is-done .uj-dot { background: var(--brand); border-color: var(--brand); }
+    .uj-ms li.is-next .uj-dot { border-color: var(--bad); border-style: dashed; }
+    .uj-dot svg { width: .875rem; height: .875rem; }
+    .uj-ms-l { font-size: .875rem; font-weight: 600; color: var(--ink); padding-top: .25rem; }
+    .uj-ms li:not(.is-done) .uj-ms-l { color: var(--muted); font-weight: 500; }
+    .uj-ms-l small { display: block; font-size: .75rem; color: var(--muted); font-weight: 500; margin-top: .125rem; }
+    .uj-ms-d { font-size: .75rem; color: var(--muted); text-align: right; padding-top: .3125rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    /* Calendar */
+    .uj-cal { display: grid; grid-template-columns: auto 1fr; gap: .375rem .5rem; }
+    .uj-cal-wd, .uj-cal-grid, .uj-cal-mo { display: grid; gap: 3px; }
+    .uj-cal-wd { grid-template-rows: repeat(7, 1fr); font-size: .625rem; color: var(--muted); line-height: 1; align-items: center; }
+    .uj-cal-grid { grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: minmax(.5rem, 1.625rem); }
+    .uj-cal-mo { grid-auto-flow: column; grid-auto-columns: minmax(.5rem, 1.625rem); font-size: .625rem; color: var(--muted); }
+    .uj-cal-mo span { white-space: nowrap; overflow: visible; }
+    .uj-cell { aspect-ratio: 1; border-radius: 3px; background: #f1f5f9; min-width: .5rem; }
+    .uj-l1 { background: var(--r5); box-shadow: inset 0 0 0 1px var(--r4); } .uj-l2 { background: var(--r3); }
+    .uj-l3 { background: var(--r2); } .uj-l4 { background: var(--r1); }
+    .uj-cell.is-future { background: transparent; box-shadow: inset 0 0 0 1px #f1f5f9; }
+    .uj-key { display: flex; align-items: center; gap: .25rem; font-size: .6875rem; color: var(--muted); margin-top: .75rem; justify-content: flex-end; }
+    .uj-key .uj-cell { width: .75rem; min-width: 0; }
+    .uj-calstats { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0 0 1.25rem; }
+    .uj-calstats div { font-size: .75rem; color: var(--muted); font-weight: 600; }
+    .uj-calstats strong { display: block; font-size: 1.375rem; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .uj-areas { display: grid; gap: .5rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+    .uj-area { display: grid; grid-template-columns: 8.5rem 1fr 2.5rem; gap: .75rem; align-items: center; font-size: .8125rem; text-decoration: none; color: var(--ink-2); border-radius: 6px; }
+    .uj-area:hover { color: var(--brand); }
+    .uj-area .bar { height: .5rem; border-radius: 999px; background: #f1f5f9; overflow: hidden; }
+    .uj-area .bar i { display: block; height: 100%; border-radius: 999px; }
+    .uj-area em { font-style: normal; text-align: right; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+    /* Category marks */
+    .uj-c { display: inline-flex; align-items: center; gap: .375rem; }
+    .uj-c::before { content: ''; width: .5rem; height: .5rem; border-radius: 2px; flex-shrink: 0; background: var(--c); }
+    .uj-cat-account { --c: var(--c-account); } .uj-cat-portfolio { --c: var(--c-portfolio); }
+    .uj-cat-payments { --c: var(--c-payments); } .uj-cat-ai { --c: var(--c-ai); }
+    .uj-cat-emails { --c: var(--c-emails); } .uj-cat-traction { --c: var(--c-traction); }
+    .uj-area .bar i { background: var(--c); }
+
+    /* Timeline */
+    .uj-filters { display: flex; flex-wrap: wrap; gap: .375rem; margin-bottom: 1rem; }
+    .uj-chip { display: inline-flex; align-items: center; gap: .4375rem; padding: .4375rem .75rem; border-radius: 999px; border: 1px solid var(--line);
+               background: #fff; font-size: .8125rem; font-weight: 600; color: var(--ink-2); text-decoration: none; transition: border-color .15s, color .15s, background .15s; }
+    .uj-chip:hover { border-color: #cbd5e1; color: var(--ink); }
+    .uj-chip b { font-size: .6875rem; padding: .0625rem .375rem; border-radius: 999px; background: #f1f5f9; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .uj-chip.is-on { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .uj-chip.is-on b { background: rgba(255,255,255,.18); color: #fff; }
+    .uj-chip.is-zero { opacity: .5; }
+    .uj-tl-tools { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .uj-switch { display: inline-flex; align-items: center; gap: .5rem; font-size: .8125rem; font-weight: 600; color: var(--ink-2); text-decoration: none; }
+    .uj-switch i { width: 1.875rem; height: 1.125rem; border-radius: 999px; background: #cbd5e1; position: relative; transition: background .15s; }
+    .uj-switch i::after { content: ''; position: absolute; top: .1875rem; left: .1875rem; width: .75rem; height: .75rem; border-radius: 999px; background: #fff; transition: transform .15s; }
+    .uj-switch.is-on i { background: var(--brand); }
+    .uj-switch.is-on i::after { transform: translateX(.75rem); }
+
+    .uj-day { margin-top: 1.25rem; }
+    .uj-day:first-of-type { margin-top: 0; }
+    .uj-day h3 { font-family: inherit !important; position: sticky; top: 0; z-index: 2; background: #fff; margin: 0; padding: .375rem 0;
+                 font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+                 display: flex; align-items: center; gap: .625rem; }
+    .uj-day h3::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+    .uj-day h3 span { font-weight: 600; letter-spacing: 0; text-transform: none; }
+    .uj-evs { list-style: none; margin: .25rem 0 0; padding: 0; }
+    .uj-ev { display: grid; grid-template-columns: 3.25rem 1.875rem minmax(0, 1fr) auto; gap: .75rem; align-items: start; padding: .5rem .5rem;
+             border-radius: 10px; }
+    .uj-ev:hover { background: #fafbfc; }
+    .uj-ev time { font-size: .75rem; color: var(--muted); padding-top: .4375rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .uj-ev-i { width: 1.875rem; height: 1.875rem; border-radius: .5rem; display: flex; align-items: center; justify-content: center;
+               color: var(--c); background: color-mix(in srgb, var(--c) 10%, #fff); }
+    .uj-ev-i svg { width: .9375rem; height: .9375rem; }
+    .uj-ev-t { font-size: .875rem; font-weight: 600; color: var(--ink); line-height: 1.4; padding-top: .3125rem; overflow-wrap: anywhere; }
+    .uj-ev-t em { font-style: normal; font-size: .6875rem; font-weight: 700; padding: .0625rem .375rem; margin-left: .25rem; border-radius: 999px; background: #f1f5f9; color: var(--ink-2); }
+    .uj-ev-t small { display: block; font-size: .8125rem; font-weight: 400; color: var(--muted); margin-top: .125rem; line-height: 1.45; }
+    .uj-ev.is-minor .uj-ev-t { font-weight: 500; color: var(--ink-2); }
+    .uj-ev.is-good .uj-ev-t > span::before, .uj-ev.is-bad .uj-ev-t > span::before, .uj-ev.is-warn .uj-ev-t > span::before {
+        content: ''; display: inline-block; width: .375rem; height: .375rem; border-radius: 999px; margin: 0 .4375rem .125rem 0; vertical-align: middle; }
+    .uj-ev.is-good .uj-ev-t > span::before { background: var(--good); }
+    .uj-ev.is-bad .uj-ev-t > span::before { background: var(--bad); }
+    .uj-ev.is-warn .uj-ev-t > span::before { background: var(--warn); }
+    .uj-ev-c { font-size: .75rem; color: var(--muted); padding-top: .4375rem; white-space: nowrap; }
+    .uj-more { margin-top: 1.25rem; text-align: center; }
+
+    /* Lower grid */
+    .uj-dl { display: grid; grid-template-columns: 1fr auto; gap: 0; margin: 0; font-size: .8125rem; }
+    .uj-dl dt, .uj-dl dd { padding: .5rem 0; border-bottom: 1px solid var(--line); margin: 0; }
+    .uj-dl dt { color: var(--muted); }
+    .uj-dl dd { color: var(--ink); font-weight: 600; text-align: right; }
+    .uj-dl dt:nth-last-child(2), .uj-dl dd:last-child { border-bottom: 0; }
+    .uj-mini-h { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 1.25rem 0 .375rem; }
+    .uj-mini-h:first-child { margin-top: 0; }
+
+    @media (min-width: 1024px) {
+        .uj-verdict { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+        .uj-verdict-side { border-left: 1px solid var(--line); padding-left: 1.75rem; }
+        .uj-g2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+        .uj-g3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .uj-g3 > .uj-wide { grid-column: 1 / -1; }
+    }
+    @media (max-width: 640px) {
+        .uj-ev { grid-template-columns: 2.75rem 1.875rem minmax(0, 1fr); }
+        .uj-ev-c { display: none; }
+        .uj-score { flex-direction: column; align-items: stretch; }
+        .uj-ring { margin: 0 auto; }
+        .uj-area { grid-template-columns: 7rem 1fr 2rem; }
+    }
+    @media print {
+        .uj-filters, .uj-tl-tools, .uj-more, .uj-top { display: none !important; }
+        .uj-day h3 { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pr">
+<div class="pr-shell">
+
+    <div class="uj-top">
+        <a href="{% url 'manage_user_lookup' %}" class="pr-back">&larr; User lookup</a>
+        <form method="get" action="{% url 'manage_user_lookup' %}" role="search" class="uj-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg>
+            <label for="uj-q" class="sr-only">Find another user</label>
+            <input id="uj-q" type="search" name="q" placeholder="Find another user" autocomplete="off">
+            <button type="submit" class="pr-btn">Search</button>
+        </form>
+    </div>
+
+    {# ── Identity + verdict ─────────────────────────────────────────────── #}
+    <section class="pr-card pr-in" aria-labelledby="uj-name">
+        <div class="uj-id">
+            <span class="pr-ava uj-ava{% if facts.plan_state == 'paying' %} is-pay{% endif %}" aria-hidden="true">{{ initials }}</span>
+            <div class="uj-id-main">
+                <h1 id="uj-name">{{ name }}</h1>
+                <div class="uj-id-meta">
+                    {% if title %}<span>{{ title }}</span>{% endif %}
+                    <span>@{{ subject.username }}</span>
+                    <span>{{ subject.email }}</span>
+                    {% if phone %}<span dir="ltr">{{ phone }}</span>{% endif %}
+                    <span>ID {{ subject.pk }}</span>
+                </div>
+                <div class="uj-badges">
+                    {% for label, tone in badges %}<span class="pr-pill pr-pill-{{ tone }}">{{ label }}</span>{% endfor %}
+                </div>
+            </div>
+            <div class="uj-id-act">
+                {% if mailto %}<a class="pr-btn pr-btn-primary" href="{{ mailto }}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email</a>{% endif %}
+                <a class="pr-btn" href="/{{ subject.username }}/" target="_blank" rel="noopener">Portfolio<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                <a class="pr-btn" href="{% url 'admin:core_customuser_change' subject.pk %}">Admin</a>
+                <a class="pr-btn" href="{{ export_href }}">Export CSV</a>
+                <button type="button" class="pr-btn" onclick="window.print()">Print</button>
+            </div>
+        </div>
+
+        <div class="uj-verdict">
+            <div class="uj-verdict-main">
+                <span class="uj-seg is-{{ segment.tone }}"><i aria-hidden="true"></i>Verdict</span>
+                <h2>{{ segment.title }}</h2>
+                <p class="uj-verdict-body">{{ segment.body }}</p>
+                <p class="uj-story"><b>The story so far</b>{% for s in story %}{{ s }} {% endfor %}</p>
+            </div>
+            <div class="uj-verdict-side">
+                <p class="uj-score-h">Health score</p>
+                <div class="uj-score">
+                    <div class="uj-ring is-{{ health.band }}" role="img" aria-label="Health score {{ health.score }} out of 100, {{ health.label }}">
+                        <svg viewBox="0 0 100 100" aria-hidden="true">
+                            <circle class="track" cx="50" cy="50" r="42" fill="none" stroke-width="9"/>
+                            <circle class="val" cx="50" cy="50" r="42" fill="none" stroke-width="9" stroke-dasharray="{% widthratio health.score 100 264 %} 264"/>
+                        </svg>
+                        <div class="uj-ring-t"><strong>{{ health.score }}</strong><span>{{ health.label }}</span></div>
+                    </div>
+                    <div class="uj-parts">
+                        {% for p in health.parts %}
+                        <div class="uj-part">
+                            <b>{{ p.label }}</b><em>{{ p.points }}/{{ p.max }}</em>
+                            <span class="bar" aria-hidden="true"><i style="width: {{ p.pct }}%"></i></span>
+                            <small>{{ p.note }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if actions %}
+        <p class="uj-actions-h">Recommended next steps</p>
+        <div class="pr-insights">
+            {% for a in actions %}
+            <div class="pr-ins {{ a.tone }}">
+                <span class="pr-ins-i" aria-hidden="true">
+                    {% if a.tone == 'risk' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+                    {% elif a.tone == 'action' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    {% else %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>{% endif %}
+                </span>
+                <div>
+                    <h3>{{ a.title }}</h3>
+                    <p>{{ a.body }}</p>
+                    {% if a.cta and a.href %}<a class="pr-btn{% if a.tone == 'action' %} pr-btn-primary{% endif %}" href="{{ a.href }}">{{ a.cta }}</a>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+
+    {# ── KPIs ────────────────────────────────────────────────────────────── #}
+    <section class="pr-kpis pr-section" aria-label="Key numbers">
+        {% for k in kpis %}
+        <div class="pr-card pr-kpi pr-in" style="animation-delay: {{ forloop.counter0 }}0ms">
+            <p class="pr-kpi-l">{{ k.label }}</p>
+            <div class="pr-kpi-v"><strong>{{ k.value }}</strong>{% if k.unit %}<span>{{ k.unit }}</span>{% endif %}{% if k.delta %}<span class="pr-delta {{ k.delta.dir }}" title="Change vs the 30 days before">{{ k.delta.label }}</span>{% endif %}</div>
+            <p class="pr-kpi-s">{{ k.sub }}</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    {# ── Journey + engagement ────────────────────────────────────────────── #}
+    <div class="pr-grid uj-g2 pr-section">
+        <section class="pr-card pr-in" aria-labelledby="uj-ms-h">
+            <div class="pr-card-h"><div><h2 id="uj-ms-h">Journey</h2><p>Each step from signup to renewal, and how long it took.</p></div></div>
+            <ol class="uj-ms">
+                {% for m in milestones %}
+                <li class="{% if m.done %}is-done{% endif %}{% if m.is_next %} is-next{% endif %}">
+                    <span class="uj-dot" aria-hidden="true">{% if m.done %}<svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{% endif %}</span>
+                    <span class="uj-ms-l">{{ m.label }}{% if m.is_next %} <span class="pr-pill pr-pill-bad">Stopped here</span>{% endif %}
+                        {% if m.after %}<small>{{ m.after }}</small>{% elif not m.done %}<small><span class="sr-only">Not reached</span></small>{% endif %}</span>
+                    <span class="uj-ms-d">{% if m.at %}{{ m.at|date:"j M Y" }}{% elif m.done %}Done{% else %}—{% endif %}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </section>
+
+        <section class="pr-card pr-in" aria-labelledby="uj-eng-h">
+            <div class="pr-card-h"><div><h2 id="uj-eng-h">Engagement</h2><p>Days they used Skillifly in the last 13 weeks. Darker means more actions that day.</p></div></div>
+            <div class="uj-calstats">
+                <div><strong>{{ calendar.active_days }}</strong>active days (90d)</div>
+                <div><strong>{{ calendar.actions }}</strong>actions (90d)</div>
+                <div><strong>{{ calendar.busiest }}</strong>on the busiest day</div>
+                <div><strong>{{ chats }}</strong>AI chats</div>
+            </div>
+            <div class="uj-cal" role="img" aria-label="Activity calendar: active on {{ calendar.active_days }} of the last 90 days">
+                <span></span>
+                <div class="uj-cal-mo" aria-hidden="true">{% for w in calendar.weeks %}<span>{{ w.label }}</span>{% endfor %}</div>
+                <div class="uj-cal-wd" aria-hidden="true">{% for d in weekday_labels %}<span>{{ d }}</span>{% endfor %}</div>
+                <div class="uj-cal-grid">
+                    {% for w in calendar.weeks %}{% for d in w.days %}<span class="uj-cell uj-l{{ d.level }}{% if d.future %} is-future{% endif %}" title="{{ d.date|date:'D j M' }}: {% if d.future %}upcoming{% else %}{{ d.n }} action{{ d.n|pluralize }}{% endif %}"></span>{% endfor %}{% endfor %}
+                </div>
+            </div>
+            <div class="uj-key" aria-hidden="true">Less <span class="uj-cell"></span><span class="uj-cell uj-l1"></span><span class="uj-cell uj-l2"></span><span class="uj-cell uj-l3"></span><span class="uj-cell uj-l4"></span> More</div>
+
+            <div class="uj-areas">
+                <p class="uj-mini-h" style="margin:0 0 .25rem">Everything recorded, by area</p>
+                {% for a in areas %}
+                <a class="uj-area uj-cat-{{ a.key }}" href="?cat={{ a.key }}#timeline">
+                    <span class="uj-c">{{ a.label }}</span>
+                    <span class="bar" aria-hidden="true"><i style="width: {{ a.pct }}%"></i></span>
+                    <em>{{ a.count }}</em>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    {# ── Timeline ────────────────────────────────────────────────────────── #}
+    <section id="timeline" class="pr-card pr-section pr-in" aria-labelledby="uj-tl-h">
+        <div class="pr-card-h">
+            <div><h2 id="uj-tl-h">Everything they did</h2><p>Newest first, in {{ time_zone }}. Back-to-back repeats on the same day are folded into one row.{% if not show_minor %} Routine actions (dashboard opens, autosaves) are hidden.{% endif %}</p></div>
+            <div class="uj-tl-tools">
+                <a class="uj-switch{% if show_minor %} is-on{% endif %}" href="{{ minor_toggle_href }}" role="switch" aria-checked="{% if show_minor %}true{% else %}false{% endif %}"><i aria-hidden="true"></i>Routine actions</a>
+                <a class="pr-btn" href="{{ export_href }}">Export CSV</a>
+            </div>
+        </div>
+        <nav class="uj-filters" aria-label="Filter by area">
+            {% for f in filters %}
+            <a class="uj-chip{% if f.on %} is-on{% endif %}{% if not f.count %} is-zero{% endif %}{% if f.key %} uj-cat-{{ f.key }}{% endif %}" href="{{ f.href }}"{% if f.on %} aria-current="true"{% endif %}>
+                {% if f.key %}<span class="uj-c">{{ f.label }}</span>{% else %}{{ f.label }}{% endif %}<b>{{ f.count }}</b>
+            </a>
+            {% endfor %}
+        </nav>
+
+        {% for g in timeline_groups %}
+        <div class="uj-day">
+            <h3>{{ g.label }} <span>{{ g.rows|length }} row{{ g.rows|length|pluralize }}</span></h3>
+            <ol class="uj-evs">
+                {% for e in g.rows %}
+                <li class="uj-ev uj-cat-{{ e.cat }}{% if e.minor %} is-minor{% endif %}{% if e.tone %} is-{{ e.tone }}{% endif %}">
+                    <time datetime="{{ e.at|date:'c' }}" title="{{ e.at|date:'j M Y, H:i' }}">{{ e.at|date:"H:i" }}</time>
+                    <span class="uj-ev-i" aria-hidden="true">
+                        {% if e.cat == 'account' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z"/></svg>
+                        {% elif e.cat == 'portfolio' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.55-2.28A1 1 0 0 1 21 8.62v6.76a1 1 0 0 1-1.45.9L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z"/></svg>
+                        {% elif e.cat == 'payments' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3Z"/></svg>
+                        {% elif e.cat == 'ai' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16 2.29 6.86L22 12l-6.71 2.14L13 21l-2.29-6.86L4 12l6.71-2.14L13 3Z"/></svg>
+                        {% elif e.cat == 'emails' %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
+                        {% else %}<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.46 12C3.73 7.94 7.52 5 12 5s8.27 2.94 9.54 7c-1.27 4.06-5.06 7-9.54 7s-8.27-2.94-9.54-7Z"/></svg>{% endif %}
+                    </span>
+                    <div class="uj-ev-t"><span>{{ e.title }}</span>{% if e.count > 1 %}<em title="Between {{ e.first_at|date:'H:i' }} and {{ e.at|date:'H:i' }}">×{{ e.count }}</em>{% endif %}{% if e.detail %}<small>{{ e.detail }}</small>{% endif %}</div>
+                    <span class="uj-ev-c uj-c">{{ e.cat_label }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% empty %}
+        <p class="pr-empty">Nothing recorded{% if f_cat %} in this area{% endif %} yet.</p>
+        {% endfor %}
+
+        {% if show_all_href %}
+        <div class="uj-more"><a class="pr-btn" href="{{ show_all_href }}">Show all {{ timeline_total }} rows</a>
+            <p class="pr-sub" style="margin-top:.5rem">Showing the latest {{ timeline_shown }}. The CSV always has everything.</p></div>
+        {% endif %}
+    </section>
+
+    {# ── Money, portfolio, visitors ──────────────────────────────────────── #}
+    <div class="pr-grid uj-g3 pr-section">
+        <section class="pr-card pr-in uj-wide" aria-labelledby="uj-pay-h">
+            <div class="pr-card-h"><div><h2 id="uj-pay-h">Payments</h2><p>Every payment, checkout and receipt, newest first.</p></div></div>
+            {% if ledger %}
+            <div class="pr-scroll">
+            <table class="pr-tbl">
+                <thead><tr><th scope="col">Date</th><th scope="col">What</th><th scope="col" class="num">EGP</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                {% for r in ledger %}
+                <tr>
+                    <td style="white-space:nowrap">{{ r.at|date:"j M Y" }}</td>
+                    <td><span class="pr-name">{{ r.what }}</span><span class="pr-sub">{{ r.method }}{% if r.note %} · {{ r.note }}{% endif %}{% if r.ends %} · until {{ r.ends|date:"j M Y" }}{% endif %}</span></td>
+                    <td class="num">{{ r.amount|floatformat:0 }}</td>
+                    <td>{% if r.href %}<a href="{{ r.href }}" class="pr-pill pr-pill-{{ r.tone }}" style="text-decoration:none">{{ r.status|capfirst }}</a>{% else %}<span class="pr-pill pr-pill-{{ r.tone }}">{{ r.status|capfirst }}</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+            <p class="pr-empty">No payments, checkouts or receipts.{% if facts.pricing_opens %} Opened pricing {{ facts.pricing_opens }} time{{ facts.pricing_opens|pluralize }}.{% endif %}</p>
+            {% endif %}
+        </section>
+
+        <section class="pr-card pr-in" aria-labelledby="uj-inv-h">
+            <div class="pr-card-h"><div><h2 id="uj-inv-h">Portfolio today</h2><p>What is on it right now.</p></div></div>
+            <dl class="uj-dl">
+                {% for label, value in inventory %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}
+            </dl>
+        </section>
+
+        <section class="pr-card pr-in" aria-labelledby="uj-vis-h">
+            <div class="pr-card-h"><div><h2 id="uj-vis-h">Visitors</h2><p>Who looks at their portfolio. Bots excluded.</p></div></div>
+            <p class="uj-mini-h">Top countries</p>
+            {% if traction.countries %}
+            <dl class="uj-dl">{% for c, n in traction.countries %}<dt>{{ c }}</dt><dd>{{ n }}</dd>{% endfor %}</dl>
+            {% else %}<p class="pr-sub">No visits yet.</p>{% endif %}
+            <p class="uj-mini-h">Where visitors came from</p>
+            {% if traction.referrers %}
+            <dl class="uj-dl">{% for host, n in traction.referrers %}<dt>{{ host }}</dt><dd>{{ n }}</dd>{% endfor %}</dl>
+            {% else %}<p class="pr-sub">No referring sites recorded (direct visits or shared links in apps).</p>{% endif %}
+            {% if traction.last_visit %}<p class="pr-sub" style="margin-top:1rem">Last visit {{ traction.last_visit|timesince }} ago.</p>{% endif %}
+        </section>
+    </div>
+
+    <ul class="pr-notes">
+        <li><b>Health score</b> adds recent activity (40), setup progress (25), plan (20) and portfolio visitors (15). It is a quick read, not a prediction.</li>
+        <li><b>Last active</b> is the latest of the last page they opened, their last sign-in and their last recorded action. Only the latest sign-in is stored, so earlier sign-ins are not in the timeline.</li>
+        <li><b>Not timestamped:</b> skills, work experience, education and links. They are counted under “Portfolio today” but cannot appear in the timeline.</li>
+        <li><b>Detailed tracking</b> (builder, launch checklist, nudges) started with onboarding v2. Older accounts show fewer of those rows. Pricing-page clicks made on the same browser before signing in are included and marked.</li>
+    </ul>
+
+    <div class="uj-noprint" style="margin-top:3rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+        <a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Back to manage</a>
+        <a href="{% url 'user_activity_report' %}" class="pr-back">All-users activity report &rarr;</a>
+    </div>
+</div>
+</div>
+{% endblock %}

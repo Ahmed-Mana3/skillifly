@@ -4006,6 +4006,84 @@ def manage_payment_tracking(request):
     return render(request, 'core/manage_payment_tracking.html', context)
 
 
+@user_passes_test(lambda u: u.is_superuser)
+def manage_user_lookup(request):
+    """Find any user by name, username, email, phone, custom domain or id, then open their journey."""
+    from core import user_journey as uj
+
+    q = request.GET.get('q', '').strip()[:100]
+    results = uj.search_users(q) if q else []
+    if len(results) == 1:
+        return redirect('manage_user_journey', user_id=results[0]['id'])
+    active, newest = ([], []) if q else uj.recent_users()
+    return render(request, 'core/manage_user_lookup.html', {
+        'q': q,
+        'results': results,
+        'result_limit': uj.SEARCH_LIMIT,
+        'recent_active': active,
+        'recent_signups': newest,
+    })
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def manage_user_journey(request, user_id):
+    """Everything one user did on Skillifly, with a verdict and the next best actions on top."""
+    from collections import Counter
+    from core import user_journey as uj
+
+    subject = get_object_or_404(CustomUser, pk=user_id)
+    journey = uj.build_journey(subject)
+    cat = request.GET.get('cat', '')
+    cat = cat if cat in uj.CATEGORY_LABELS else ''
+    show_minor = request.GET.get('minor') == '1'  # routine page opens and autosaves are off by default
+    show_all = request.GET.get('all') == '1'
+    rows = uj.timeline(journey['events'], cat, show_minor)
+    if request.GET.get('export') == 'csv':
+        return _journey_csv(subject, rows)
+    shown = rows if show_all else rows[:uj.TIMELINE_LIMIT]
+
+    def link(anchor='#timeline', **changes):
+        params = {'cat': cat, 'minor': '1' if show_minor else '', 'all': '1' if show_all else '', **changes}
+        return '?' + urlencode({k: v for k, v in params.items() if v}) + anchor
+
+    counts = Counter(e['cat'] for e in journey['events'] if show_minor or not e['minor'])
+    filters = [{'key': '', 'label': 'Everything', 'count': sum(counts.values()), 'href': link(cat=''), 'on': not cat}]
+    filters += [{'key': key, 'label': label, 'count': counts.get(key, 0), 'href': link(cat=key), 'on': cat == key}
+                for key, label in uj.CATEGORIES]
+    context = {
+        **journey,
+        'timeline_groups': uj.group_by_day(shown, journey['now']),
+        'timeline_total': len(rows),
+        'timeline_shown': len(shown),
+        'show_all_href': link(all='1') if len(rows) > len(shown) else None,
+        'filters': filters,
+        'f_cat': cat,
+        'show_minor': show_minor,
+        'minor_toggle_href': link(minor='' if show_minor else '1'),
+        'export_href': link('', export='csv'),
+        'time_zone': settings.TIME_ZONE,
+        'weekday_labels': ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'],
+    }
+    context.pop('events')
+    return render(request, 'core/manage_user_journey.html', context)
+
+
+def _journey_csv(subject, rows):
+    """CSV of one user's timeline, as currently filtered."""
+    import csv
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = (
+        f'attachment; filename="skillifly-user-{subject.pk}-activity-{timezone.now():%Y%m%d}.csv"')
+    response.write('﻿')  # Excel needs the BOM to read UTF-8 (Arabic names)
+    writer = csv.writer(response)
+    writer.writerow(['Time', 'Area', 'Action', 'Detail', 'Times'])
+    for r in rows:
+        writer.writerow([timezone.localtime(r['at']).strftime('%Y-%m-%d %H:%M'), r['cat_label'],
+                         r['title'], r['detail'], r['count']])
+    return response
+
+
 def _payment_report_csv(kind, report):
     """CSV download of the report's leads, payments or raw events for the selected period."""
     import csv

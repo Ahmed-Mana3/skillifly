@@ -1,0 +1,92 @@
+{% extends "core/base.html" %}
+
+{% block title %}User Lookup | Skillifly{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+
+{% block extra_head %}
+{% include "core/_manage_report_styles.html" %}
+<style>
+    .ul-hero { max-width: 46rem; }
+    .ul-search { margin-top: 1.75rem; padding: .4375rem .4375rem .4375rem 1.25rem;
+                 box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 18px 40px -26px rgba(76,29,149,.45); }
+    .ul-search input { font-size: 1.0625rem; padding: .625rem 0; }
+    .ul-hint { margin: .75rem 0 0; font-size: .8125rem; color: var(--muted); }
+    .ul-hint b { color: var(--ink-2); font-weight: 600; }
+    .ul-who { display: flex; align-items: center; gap: .75rem; min-width: 11rem; }
+    .ul-who > div { min-width: 0; }
+    .ul-row { cursor: pointer; }
+    .ul-row a.pr-name { text-decoration: none; }
+    .ul-row:hover a.pr-name { color: var(--brand); text-decoration: underline; }
+    .ul-go { color: #cbd5e1; transition: color .15s, transform .15s; }
+    .ul-row:hover .ul-go { color: var(--brand); transform: translateX(2px); }
+    .ul-count { font-size: .8125rem; color: var(--muted); margin: 0 0 .75rem; }
+    .ul-count b { color: var(--ink); }
+    .ul-lists { margin-top: 2rem; }
+    @media (min-width: 1200px) { .ul-lists { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pr">
+<div class="pr-shell">
+    <a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Manage</a>
+
+    <header class="ul-hero pr-in" style="margin-top:1.5rem">
+        <p class="pr-eyebrow">Customer intelligence</p>
+        <h1 class="pr-h1">User <em>lookup</em></h1>
+        <p class="pr-lede">Find anyone and see everything they did on Skillifly: how they found us, how far they got,
+            what they paid, where they got stuck, and what to do next.</p>
+
+        <form method="get" action="{% url 'manage_user_lookup' %}" role="search" class="uj-search ul-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg>
+            <label for="ul-q" class="sr-only">Search users</label>
+            <input id="ul-q" type="search" name="q" value="{{ q }}" placeholder="Name, username, email, phone or domain" autocomplete="off" {% if not q %}autofocus{% endif %}>
+            <button type="submit" class="pr-btn pr-btn-primary">Search</button>
+        </form>
+        <p class="ul-hint">Tip: <b>@username</b>, part of an email, a phone number, a custom domain or a user ID all work. A single match opens directly.</p>
+    </header>
+
+    {% if q %}
+    <section class="pr-card pr-section pr-in" style="margin-top:2rem" aria-labelledby="ul-results-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="ul-results-h">Results for “{{ q }}”</h2>
+                <p>Most recently active first. Click anyone to open their full journey.</p>
+            </div>
+        </div>
+        {% if results %}
+        <p class="ul-count"><b>{{ results|length }}</b> match{{ results|length|pluralize:"es" }}{% if results|length >= result_limit %} (showing the first {{ result_limit }}; narrow the search to see others){% endif %}</p>
+        {% include "core/_manage_user_rows.html" with rows=results %}
+        {% else %}
+        <p class="pr-empty">Nobody matches “{{ q }}”. Try part of the email or the username without spaces.</p>
+        {% endif %}
+    </section>
+    {% else %}
+    <div class="pr-grid ul-lists">
+        <section class="pr-card pr-in" aria-labelledby="ul-active-h">
+            <div class="pr-card-h"><div><h2 id="ul-active-h">Recently active</h2><p>The last people who opened Skillifly while signed in.</p></div></div>
+            {% if recent_active %}{% include "core/_manage_user_rows.html" with rows=recent_active compact=True %}{% else %}<p class="pr-empty">No activity recorded yet.</p>{% endif %}
+        </section>
+        <section class="pr-card pr-in" aria-labelledby="ul-new-h">
+            <div class="pr-card-h"><div><h2 id="ul-new-h">Newest signups</h2><p>Check how the first hours went for new accounts.</p></div></div>
+            {% if recent_signups %}{% include "core/_manage_user_rows.html" with rows=recent_signups compact=True %}{% else %}<p class="pr-empty">No signups yet.</p>{% endif %}
+        </section>
+    </div>
+    {% endif %}
+
+    <div class="uj-noprint" style="margin-top:3rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+        <a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Back to manage</a>
+        <a href="{% url 'user_activity_report' %}" class="pr-back">All-users activity report &rarr;</a>
+    </div>
+</div>
+</div>
+<script>
+// Whole row opens the journey; the name stays a real link for keyboard and middle-click.
+document.querySelectorAll('.ul-row[data-href]').forEach(function (row) {
+    row.addEventListener('click', function (e) {
+        if (e.target.closest('a')) return;
+        window.location = row.dataset.href;
+    });
+});
+</script>
+{% endblock %}
