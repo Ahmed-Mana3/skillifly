@@ -1,393 +1,708 @@
 {% extends "core/base.html" %}
-{% load static %}
 
-{% block title %}Admin Dashboard | Skillifly{% endblock %}
+{% block title %}Executive Overview | Skillifly Admin{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+
+{% comment %}
+Executive overview (core/growth_report.py). Top to bottom: the short version, the eight numbers
+that matter (growth, then money), what needs a decision, what signups turn into, the editor base
+today, where the editors who pay come from, week by week, and the newest signups. Every money
+number is Revenue insights' own; every people number is User activity's own.
+Colours: one violet ramp for ordered things (signup outcome, how recently active, dark = better);
+plan mix reuses the Revenue page's slots (violet paying, teal free pass, orange expired, grey never
+paid). Colour always sits next to a text label, and every chart has a table.
+{% endcomment %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% include "core/_manage_report_styles.html" %}
 <style>
-    :root {
-        --bg-dark: #FFFFFF;
-        --bg-card: #FFFFFF;
-        --text-primary: #0F172A;
-        --text-muted: #64748B;
-        --border-subtle: rgba(0, 0, 0, 0.08);
+    .gr { --c-1: #6d28d9; --c-2: #0d9488; --c-3: #eb6834; --c-rest: #cbd5e1;
+          --o-paid: #4c1d95; --o-built: #7c3aed; --o-new: #b39cf7;
+          --a-today: #3b0f80; --a-week: #5b21b6; --a-month: #7c3aed; --a-lapsed: #9f7aea; --a-one_day: #b39cf7; }
+    .gr h2, .gr h3 { font-family: inherit; }
+    .gr h1 { font-family: 'Syne', sans-serif; }
+
+    /* Filters (same as Revenue insights) */
+    .pr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .625rem; margin: 1.75rem 0 .625rem; }
+    .pr-seg { display: inline-flex; gap: .25rem; padding: .25rem; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+    .pr-seg a { padding: .4375rem .9375rem; border-radius: 999px; font-size: .8125rem; font-weight: 600;
+                color: var(--muted); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap; }
+    .pr-seg a:hover { color: var(--ink); background: #f1f5f9; }
+    .pr-seg a.is-on { background: var(--ink); color: #fff; }
+    .pr-chip { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .875rem; border-radius: 999px;
+               background: #fff; border: 1px solid var(--line); font-size: .8125rem; font-weight: 600; font-family: inherit;
+               color: var(--ink-2); text-decoration: none; transition: border-color .15s, color .15s; cursor: pointer; }
+    .pr-chip:hover { border-color: #cbd5e1; color: var(--ink); }
+    .pr-chip.is-on { border-color: var(--ink); color: var(--ink); }
+    .pr-chip svg { width: .875rem; height: .875rem; }
+    .pr-chip .pr-box { width: .875rem; height: .875rem; border-radius: .25rem; border: 1.5px solid #94a3b8;
+                       display: inline-flex; align-items: center; justify-content: center; }
+    .pr-chip.is-on .pr-box { background: var(--brand); border-color: var(--brand); }
+    .pr-chip.is-on .pr-box::after { content: ''; width: .4rem; height: .22rem; border: solid #fff;
+                                    border-width: 0 0 2px 2px; transform: rotate(-45deg) translateY(-1px); }
+    .gr-range { position: relative; }
+    .gr-range summary { list-style: none; }
+    .gr-range summary::-webkit-details-marker { display: none; }
+    .gr-range form { position: absolute; left: 0; top: calc(100% + .375rem); z-index: 20; background: #fff; border: 1px solid var(--line);
+                     border-radius: .875rem; padding: .875rem; box-shadow: 0 12px 32px -12px rgba(15,23,42,.25);
+                     display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; width: 19rem; }
+    .gr-range label { font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: grid; gap: .25rem; }
+    .gr-range input { font: inherit; font-size: .875rem; color: var(--ink); border: 1px solid var(--line); border-radius: .5rem; padding: .4375rem .5rem; text-transform: none; letter-spacing: 0; }
+    .gr-range .pr-btn { grid-column: 1 / -1; justify-content: center; padding: .5625rem; }
+    .gr-tools { display: inline-flex; gap: .5rem; margin-left: auto; }
+    .pr-meta { font-size: .8125rem; color: var(--muted); margin: 0 0 1.75rem; line-height: 1.6; }
+    .pr-meta b { color: var(--ink-2); font-weight: 600; }
+    .pr-meta .warn { color: var(--warn); font-weight: 600; }
+
+    /* The short version */
+    .gr-hero { display: grid; gap: 2rem; }
+    .gr-hero-l, .gr-hero-r { min-width: 0; }
+    .gr-tag { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 1rem; }
+    .gr-story { list-style: none; margin: 0; padding: 0; display: grid; gap: .875rem; }
+    .gr-story li { position: relative; padding-left: 1.25rem; font-size: 1.0625rem; line-height: 1.55; color: var(--ink); }
+    .gr-story li::before { content: ''; position: absolute; left: 0; top: .6875rem; width: .4375rem; height: .4375rem; border-radius: 999px; background: var(--brand-mid); }
+    .gr-hero-cta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+
+    /* KPI groups */
+    .gr-group-h { display: flex; align-items: baseline; gap: .75rem; margin: 1.75rem 0 .75rem; }
+    .gr-group-h h2 { font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+    .gr-group-h a { font-size: .8125rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+    .gr-group-h a:hover { text-decoration: underline; }
+    .gr-kpis { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+    .gr-kpis > * { min-width: 0; }
+    .gr-kpi { padding: 1.25rem 1.375rem 1.125rem; display: flex; flex-direction: column; }
+    .gr-kpi .pr-kpi-v strong { font-size: 1.875rem; }
+    .gr-kpi .pr-kpi-s { margin-top: .5rem; }
+    .gr-spark { display: block; width: 100%; height: 34px; margin-top: auto; padding-top: .75rem; overflow: visible; }
+    .gr-kpis .pr-kpi-v strong { color: var(--ink) !important; }
+
+    /* Charts */
+    .gr-legend { display: flex; flex-wrap: wrap; gap: .375rem 1rem; font-size: .8125rem; color: var(--ink-2); margin: 0; padding: 0; list-style: none; }
+    .gr-legend li { display: inline-flex; align-items: center; gap: .4375rem; white-space: nowrap; }
+    .gr-legend b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .gr-key { width: .75rem; height: .75rem; border-radius: 3px; flex-shrink: 0; background: var(--c); }
+    .gr-chart { position: relative; }
+    .gr-chart svg { display: block; width: 100%; overflow: visible; }
+    .gr-chart .grid { stroke: var(--grid); stroke-width: 1; }
+    .gr-chart .base { stroke: #cbd5e1; stroke-width: 1; }
+    .gr-chart .tick { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+    .gr-chart .hair { stroke: #94a3b8; stroke-width: 1; }
+    .gr-chart .hit { fill: transparent; cursor: crosshair; outline: none; }
+    .gr-chart .hit:focus-visible { stroke: var(--brand); stroke-width: 2; }
+    .gr-chart .col.is-dim { opacity: .4; }
+    .gr-chart-empty { padding: 3rem 1rem; text-align: center; font-size: .875rem; color: var(--muted); }
+    .pr-tip { position: fixed; z-index: 50; pointer-events: none; background: #0f172a; color: #e2e8f0; border-radius: 10px;
+              padding: .625rem .75rem; font-size: .75rem; min-width: 12rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,.4);
+              opacity: 0; transition: opacity .1s; }
+    .pr-tip.on { opacity: 1; }
+    .pr-tip-h { font-weight: 700; color: #fff; margin-bottom: .375rem; }
+    .pr-tip-r { display: flex; align-items: center; gap: .5rem; padding: .125rem 0; }
+    .pr-tip-r i { width: .625rem; height: .625rem; border-radius: 2px; flex-shrink: 0; }
+    .pr-tip-r b { color: #fff; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 1rem; }
+    .pr-details summary { cursor: pointer; font-size: .8125rem; font-weight: 600; color: var(--brand); margin-top: 1rem; width: fit-content; }
+    .pr-details[open] summary { margin-bottom: .75rem; }
+
+    /* Decisions */
+    .gr-h2 { font-size: 1.0625rem; font-weight: 700; color: var(--ink); margin: 1.75rem 0 .875rem; }
+    .gr-h2 small { font-size: .8125rem; font-weight: 500; color: var(--muted); margin-left: .5rem; }
+    .pr-ins-tag { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .pr-ins a { display: inline-block; margin-top: .5rem; font-size: .8125rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+    .pr-ins a:hover { text-decoration: underline; }
+    .gr .pr-insights { grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
+    .gr-calm { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.25rem; border-radius: 14px; border: 1px solid var(--line);
+               background: #fff; font-size: .875rem; color: var(--ink-2); }
+    .gr-calm svg { width: 1.125rem; height: 1.125rem; color: var(--good); flex-shrink: 0; }
+
+    /* Funnel */
+    .gr-funnel { display: grid; gap: .875rem; }
+    .gr-step { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .375rem .75rem; align-items: baseline; }
+    .gr-step span { font-size: .875rem; font-weight: 600; color: var(--ink); }
+    .gr-step em { font-style: normal; font-size: .875rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .gr-step em b { color: var(--ink); font-size: 1rem; margin-right: .25rem; }
+    .gr-step .bar { grid-column: 1 / -1; height: 1.75rem; border-radius: 6px; background: #f4f2fb; overflow: hidden; }
+    .gr-step .bar i { display: block; height: 100%; border-radius: 0 6px 6px 0; background: var(--c-1); min-width: 3px; }
+    .gr-step.is-after { padding-top: .875rem; border-top: 1px dashed var(--line); }
+    .gr-step.is-after .bar i { background: var(--c-2); }
+    .gr-step.is-paid .bar i { background: var(--o-paid); }
+    .gr-mini { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 1.25rem; }
+    .gr-stat { padding: .875rem 1rem; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); min-width: 0; }
+    .gr-stat p { margin: 0; font-size: .75rem; font-weight: 600; color: var(--muted); }
+    .gr-stat strong { display: block; font-size: 1.25rem; font-weight: 700; color: var(--ink); letter-spacing: -.01em; margin: .25rem 0 .125rem; font-variant-numeric: tabular-nums; }
+    .gr-stat span { font-size: .75rem; color: var(--muted); }
+
+    /* 100% bars (base health) */
+    .gr-mix + .gr-mix { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+    .gr-mix h3 { font-size: .875rem; font-weight: 700; color: var(--ink); margin: 0 0 .625rem; }
+    .gr-stack { display: flex; gap: 2px; height: 1.25rem; border-radius: 6px; overflow: hidden; margin-bottom: .875rem; background: #f1f5f9; }
+    .gr-stack i { display: block; background: var(--c); min-width: 2px; }
+    .gr-mix-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .4375rem; font-size: .8125rem; }
+    .gr-mix-list li { display: grid; grid-template-columns: .75rem minmax(0, 1fr) auto 3.25rem; gap: .5rem; align-items: center; }
+    .gr-mix-list .gr-key { width: .75rem; }
+    .gr-mix-list span { color: var(--ink); font-weight: 600; min-width: 0; }
+    .gr-mix-list span small { color: var(--muted); font-weight: 500; margin-left: .375rem; }
+    .gr-mix-list b { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
+    .gr-mix-list em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+    /* Acquisition */
+    .gr-seg h3 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 .5rem; }
+    .gr-seg .pr-tbl td { padding-top: .625rem; padding-bottom: .625rem; }
+    .gr-seg tr.is-muted td { color: var(--muted); }
+    .gr-seg tr.is-muted .pr-name { color: var(--muted); font-weight: 500; }
+    .gr-share { display: inline-flex; align-items: center; gap: .5rem; justify-content: flex-end; }
+    .gr-share i { display: inline-block; width: 3rem; height: .375rem; border-radius: 999px; background: var(--brand-soft); overflow: hidden; position: relative; }
+    .gr-share i b { position: absolute; inset: 0 auto 0 0; background: var(--c-1); border-radius: 999px; }
+    .gr-small { color: var(--muted); font-size: .6875rem; font-weight: 600; margin-left: .25rem; }
+    .gr-tight th, .gr-tight td { padding-left: .5rem; padding-right: .5rem; }
+    .gr-tight th:first-child, .gr-tight td:first-child { padding-left: 0; }
+    .gr-tight th:last-child, .gr-tight td:last-child { padding-right: 0; }
+
+    /* Scorecard */
+    .gr-cell-bar { display: flex; align-items: center; justify-content: flex-end; gap: .625rem; }
+    .gr-cell-bar i { display: inline-block; width: 4.5rem; height: .4375rem; border-radius: 999px; background: #f1f5f9; overflow: hidden; position: relative; flex-shrink: 0; }
+    .gr-cell-bar i b { position: absolute; inset: 0 auto 0 0; background: var(--c-1); border-radius: 999px; }
+    .gr-cell-bar.is-money i b { background: var(--c-2); }
+    .gr-score tr.is-current td { background: #faf8ff; }
+    .gr-score td:first-child { white-space: nowrap; }
+
+    /* Directory */
+    .gr-link { color: var(--ink); font-weight: 600; text-decoration: none; }
+    .gr-link:hover { color: var(--brand); text-decoration: underline; }
+    .gr-xp { display: flex; align-items: center; gap: .5rem; }
+    .gr-xp i { display: inline-block; width: 3.5rem; height: .375rem; border-radius: 999px; background: #f1f5f9; overflow: hidden; position: relative; flex-shrink: 0; }
+    .gr-xp i b { position: absolute; inset: 0 auto 0 0; background: var(--c-1); border-radius: 999px; }
+    .gr-xp span { font-size: .8125rem; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .gr-person { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+
+    /* Go deeper */
+    .gr-deeper { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+    .gr-deep { display: block; padding: 1rem 1.125rem; border-radius: 14px; border: 1px solid var(--line); background: #fff;
+               text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+    .gr-deep:hover { border-color: var(--brand-mid); box-shadow: 0 8px 24px -16px rgba(109,40,217,.5); }
+    .gr-deep b { display: block; color: var(--ink); font-size: .9375rem; margin-bottom: .25rem; }
+    .gr-deep span { font-size: .8125rem; color: var(--muted); line-height: 1.5; }
+
+    @media (min-width: 1024px) {
+        .gr-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); align-items: center; }
+        .gr-hero-r { border-left: 1px solid var(--line); padding-left: 2rem; }
+        .gr-g2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .gr-g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
-    body { background-color: white !important; color: #0F172A !important; }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: 1px solid rgba(0, 0, 0, 0.08) !important;
-        box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08), 0 5px 15px -5px rgba(0,0,0,0.04) !important;
-        backdrop-filter: blur(20px) !important;
+    @media (max-width: 640px) {
+        .gr-tools { margin-left: 0; }
+        .pr-seg a { padding: .4375rem .6875rem; }
+        .gr-range form { width: min(19rem, calc(100vw - 2rem)); }
+        .pr-card { padding: 1.25rem; }
+        .gr-story li { font-size: 1rem; }
+        .gr-mini { grid-template-columns: 1fr; }
+        .gr-cell-bar i { display: none; }
     }
-    .gradient-border {
-        background: white !important;
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08) !important;
-        border: 1px solid rgba(124, 58, 237, 0.14) !important;
-    }
-    .gradient-border::before {
-        background: rgba(124, 58, 237, 0.14) !important;
-    }
-    .gradient-text {
-        background: none !important;
-        -webkit-background-clip: initial !important;
-        background-clip: initial !important;
-        -webkit-text-fill-color: #7C3AED !important;
-        color: #7C3AED !important;
-    }
-    .btn-primary {
-        background: #7C3AED !important;
-        background-image: none !important;
-        box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
-    }
-    .btn-primary:hover {
-        background: #6D28D9 !important;
-        background-image: none !important;
-        box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.45) !important;
-    }
-    .btn-primary:active { background: #5B21B6 !important; }
-    .orb, .orb-blue, .orb-purple { display: none !important; }
-    .stat-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px -15px rgba(124, 58, 237, 0.15) !important;
-    }
-    .user-row:hover {
-        background-color: #F5F3FF;
-    }
-    .animate-fadeInUp {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-    }
-    @keyframes fadeInUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+    @media print {
+        .pr-filters, .pr-details summary, .pr-ins a, .gr-hero-cta, .gr-deeper-wrap { display: none !important; }
+        .pr { padding-top: 0; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-12">
-    <!-- Header & Filters -->
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10 animate-fadeInUp">
-        <div>
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-purple-500/10 text-sm mb-6">
-                <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
-                <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Admin Exclusive</span>
-            </div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-3 text-slate-900" style="font-family: 'Syne', sans-serif;">
-                Admin <span class="gradient-text">Dashboard</span>
-                <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain ml-2">
-            </h1>
-            <p class="text-slate-600 font-medium text-lg">Viewing growth from {{ start_date|date:"M d" }} to {{ end_date|date:"M d, Y" }}.</p>
-        </div>
+<div class="pr gr">
+<div class="pr-shell">
 
-        <form method="GET" class="flex flex-wrap items-end gap-4 glass-card p-4 rounded-2xl">
-            <div class="flex flex-col gap-1.5">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Start Date</span>
-                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="sf-input px-3 py-2.5 text-sm">
-            </div>
-            <div class="flex flex-col gap-1.5">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2 tracking-widest">End Date</span>
-                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" class="sf-input px-3 py-2.5 text-sm">
-            </div>
-            <div class="flex flex-col gap-1.5">
-                <span class="text-[9px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Group By</span>
-                <select name="period" class="sf-input px-3 py-2.5 text-sm bg-white">
-                    <option value="day" {% if period == 'day' %}selected{% endif %}>Days</option>
-                    <option value="week" {% if period == 'week' %}selected{% endif %}>Weeks</option>
-                </select>
-            </div>
-            <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold">
-                Apply Filters
-            </button>
-        </form>
-    </div>
+    <header class="pr-in">
+        <p style="margin:0 0 1.25rem"><a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Manage</a></p>
+        <p class="pr-eyebrow">Executive overview</p>
+        <h1 class="pr-h1">How Skillifly is <em>doing</em></h1>
+        <p class="pr-lede">Growth, what new signups turn into, the money it brings, and what needs a decision, on one page.
+            Each section links to the report with the full detail.</p>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 animate-fadeInUp" style="animation-delay: 0.1s">
-        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Total Users</p>
-            <p class="text-4xl font-bold text-slate-900" style="font-family: 'Syne', sans-serif;">{{ total_users }}</p>
-            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(59,130,246,0.08);"></div>
-            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(59,130,246,0.08);">
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            </div>
+        <div class="pr-filters">
+            <nav class="pr-seg" aria-label="Reporting period">
+                {% for label, href, on in period_links %}
+                <a href="{{ href }}" class="{% if on %}is-on{% endif %}" {% if on %}aria-current="true"{% endif %}>{{ label }}</a>
+                {% endfor %}
+            </nav>
+            <details class="gr-range">
+                <summary class="pr-chip {% if is_custom %}is-on{% endif %}">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M16 3v4M8 3v4M3 11h18"/></svg>
+                    {% if is_custom %}{{ period.label }}{% else %}Custom dates{% endif %}
+                </summary>
+                <form method="get">
+                    <label>From <input type="date" name="start" value="{{ range_start|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required></label>
+                    <label>To <input type="date" name="end" value="{{ range_end|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required></label>
+                    {% if include_team %}<input type="hidden" name="team" value="1">{% endif %}
+                    <button type="submit" class="pr-btn pr-btn-primary">Show this range</button>
+                </form>
+            </details>
+            <a href="?{{ team_toggle_query }}" class="pr-chip {% if include_team %}is-on{% endif %}" role="switch" aria-checked="{% if include_team %}true{% else %}false{% endif %}"
+               title="Staff and admin accounts are left out by default so test signups and payments don't count.">
+                <span class="pr-box" aria-hidden="true"></span> Include team accounts
+            </a>
+            <span class="gr-tools">
+                <a href="?{{ export_query }}" class="pr-chip" title="Everyone who signed up in this period, with email and phone">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                    Signups CSV
+                </a>
+                <button type="button" class="pr-chip" onclick="window.print()">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a1 1 0 01-1-1v-6a2 2 0 012-2h14a2 2 0 012 2v6a1 1 0 01-1 1h-2M6 14h12v7H6z"/></svg>
+                    Print / PDF
+                </button>
+            </span>
         </div>
-        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Paid Users</p>
-            <p class="text-4xl font-bold" style="color: #10b981; font-family: 'Syne', sans-serif;">{{ total_paid_users|default:0 }}</p>
-            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(16,185,129,0.08);"></div>
-            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.08);">
-                <svg class="w-5 h-5" style="color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-        </div>
-        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Conversion Rate</p>
-            <p class="text-4xl font-bold" style="color: #8B5CF6; font-family: 'Syne', sans-serif;">{{ conversion_rate }}%</p>
-            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(139,92,246,0.08);"></div>
-            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(139,92,246,0.08);">
-                <svg class="w-5 h-5" style="color: #8B5CF6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-            </div>
-        </div>
-        <div class="stat-card gradient-border rounded-2xl p-6 relative overflow-hidden group">
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Revenue</p>
-            <p class="text-4xl font-bold" style="color: #F59E0B; font-family: 'Syne', sans-serif;">EGP {{ total_revenue|floatformat:0 }}</p>
-            <div class="absolute -bottom-3 -right-3 w-20 h-20 rounded-full blur-2xl" style="background: rgba(245,158,11,0.08);"></div>
-            <div class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.08);">
-                <svg class="w-5 h-5" style="color: #F59E0B;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-        </div>
-    </div>
+        <p class="pr-meta">
+            <b>{{ period.label }}</b>{% if compare_label %} · changes compare with the {{ compare_label }}{% elif period.key != 'all' %} · no comparison: the previous period would start before {{ min_date|date:"j M Y" }}{% endif %}
+            {% if not include_team and team_excluded %} · {{ team_excluded }} team account{{ team_excluded|pluralize }} left out{% endif %}
+            · editors only · amounts in EGP · times in {{ time_zone }}
+            {% if small_sample %}<br><span class="warn">Small sample:</span> only {{ signups }} signup{{ signups|pluralize }} in this period, so one person moves the percentages a lot. Use 90 days or longer for trends.{% endif %}
+        </p>
+    </header>
 
-    <!-- Growth Chart -->
-    <div class="gradient-border rounded-2xl p-8 mb-10 animate-fadeInUp" style="animation-delay: 0.2s">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-            <h3 class="text-lg font-bold text-slate-900" style="font-family: 'Syne', sans-serif;">User Growth Trend</h3>
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background: #7C3AED;"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {% if period == 'week' %}Weekly{% else %}Daily{% endif %} Signups
-                    </span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background: #10b981;"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {% if period == 'week' %}Weekly{% else %}Daily{% endif %} Payments
-                    </span>
+    {% if not has_data %}
+    <section class="pr-card pr-in" style="text-align:center;padding:4rem 2rem;">
+        <h2 style="font-size:1.25rem;margin:0 0 .75rem;">Nothing to show yet</h2>
+        <p style="max-width:30rem;margin:0 auto;line-height:1.7;">This page fills in as soon as editors sign up after {{ min_date|date:"j M Y" }}.</p>
+    </section>
+    {% else %}
+
+    <!-- The short version -->
+    <section class="pr-card pr-in" aria-labelledby="gr-sum-h">
+        <div class="gr-hero">
+            <div class="gr-hero-l">
+                <p class="gr-tag" id="gr-sum-h">The short version · {{ period.label }}</p>
+                <ul class="gr-story">
+                    {% for line in summary %}<li>{{ line }}</li>{% endfor %}
+                </ul>
+                <div class="gr-hero-cta">
+                    <a href="{{ revenue_url }}" class="pr-btn">Revenue insights →</a>
+                    <a href="{{ activity_url }}" class="pr-btn">User activity →</a>
                 </div>
             </div>
+            <div class="gr-hero-r">
+                <div class="pr-card-h" style="margin-bottom:.75rem">
+                    <div>
+                        <h2>Signups, and what became of them</h2>
+                        <p>Each column is the editors who signed up that {{ trend.unit }}, split by how far they have got today. Hover a column for the numbers.</p>
+                    </div>
+                </div>
+                <ul class="gr-legend" aria-label="Legend" style="margin-bottom:.75rem">
+                    {% for o in outcomes %}
+                    <li><span class="gr-key" style="--c:var(--o-{{ o.key }})"></span>{{ o.label }} <b>{{ o.count }}</b></li>
+                    {% endfor %}
+                </ul>
+                {% if signups %}
+                <div class="gr-chart"><svg id="grSignups" role="img" aria-label="Signups per {{ trend.unit }}, split into paid, added a video and no video yet"></svg></div>
+                <details class="pr-details">
+                    <summary>Show as table</summary>
+                    <div class="pr-scroll" style="max-height:20rem;overflow-y:auto;">
+                        <table class="pr-tbl">
+                            <thead><tr><th scope="col">{{ trend.unit|capfirst }}</th><th scope="col" class="num">Signups</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Added a video, not paid</th><th scope="col" class="num">No video yet</th></tr></thead>
+                            <tbody>
+                                {% for p in trend.points %}
+                                <tr><td>{{ p.label }}</td><td class="num"><b>{{ p.signups }}</b></td><td class="num">{{ p.paid }}</td><td class="num">{{ p.built }}</td><td class="num">{{ p.new }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+                {% else %}
+                <p class="gr-chart-empty">No editor signed up in this period.</p>
+                {% endif %}
+            </div>
         </div>
-        <div class="h-[350px] w-full">
-            <canvas id="signupChart"></canvas>
+    </section>
+
+    <!-- The eight numbers -->
+    <section class="pr-in" style="animation-delay:.05s" aria-labelledby="gr-k1">
+        <div class="gr-group-h"><h2 id="gr-k1">Growth</h2><a href="{{ activity_url }}">User activity →</a></div>
+        <div class="gr-kpis">
+            {% for k in growth_kpis %}{% include "core/_growth_kpi.html" %}{% endfor %}
         </div>
+    </section>
+    <section class="pr-in" style="animation-delay:.08s" aria-labelledby="gr-k2">
+        <div class="gr-group-h"><h2 id="gr-k2">Money</h2><a href="{{ revenue_url }}">Revenue insights →</a></div>
+        <div class="gr-kpis">
+            {% for k in money_kpis %}{% include "core/_growth_kpi.html" %}{% endfor %}
+        </div>
+    </section>
+
+    <!-- Decisions -->
+    <section class="pr-in" style="animation-delay:.1s" aria-labelledby="gr-ins-h">
+        <h2 class="gr-h2" id="gr-ins-h">Needs a decision{% if insights %}<small>{{ insights|length }} item{{ insights|length|pluralize }}, most urgent first</small>{% endif %}</h2>
+        {% if insights %}
+        <div class="pr-insights">
+            {% for i in insights %}
+            <article class="pr-ins {{ i.tone }}">
+                <span class="pr-ins-i" aria-hidden="true">
+                    {% if i.tone == 'action' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% elif i.tone == 'risk' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                    {% else %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </span>
+                <div>
+                    <span class="pr-ins-tag">{% if i.tone == 'action' %}Do this{% elif i.tone == 'risk' %}Watch out{% else %}Worth knowing{% endif %}</span>
+                    <h3>{{ i.title }}</h3>
+                    <p>{{ i.body }}</p>
+                    {% if i.href %}<a href="{{ i.href }}">{{ i.link_label|default:"Details" }} →</a>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="gr-calm"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Nothing urgent: no renewals to chase, no receipts waiting and no step that stands out as broken.</p>
+        {% endif %}
+    </section>
+
+    <!-- Funnel + base -->
+    <div class="pr-grid gr-g2 pr-section" style="margin-top:1.75rem">
+        <section class="pr-card pr-in" style="animation-delay:.15s" aria-labelledby="gr-fun-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="gr-fun-h">From signup to paying customer</h2>
+                    <p>The {{ signups }} editor{{ signups|pluralize }} who signed up in this period, and how many reached each step by today. Paying doesn't need finished setup, so a step can be bigger than the one above it.</p>
+                </div>
+            </div>
+            {% if signups %}
+            <div class="gr-funnel">
+                {% for s in funnel %}
+                <div class="gr-step {% if s.after %}is-after{% endif %}{% if s.key == 'subscribed' %} is-paid{% endif %}">
+                    <span>{{ s.label }}</span>
+                    <em><b>{{ s.count }}</b>{% if not forloop.first %} · {{ s.pct|floatformat:"-1" }}%{% endif %}</em>
+                    <span class="bar" aria-hidden="true"><i style="width:{{ s.pct|default:0|floatformat:'1' }}%"></i></span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="gr-mini">
+                <div class="gr-stat"><p>Came back after day one</p><strong>{% if return_rate is not None %}{{ return_rate|floatformat:"-1" }}%{% else %}—{% endif %}</strong><span>of signups older than a day</span></div>
+                <div class="gr-stat"><p>Typical signup → first payment</p><strong>{% if days_to_pay is None %}—{% elif days_to_pay < 1 %}Same day{% else %}{{ days_to_pay|floatformat:"0" }} day{{ days_to_pay|floatformat:"0"|pluralize }}{% endif %}</strong><span>median, every paying customer</span></div>
+            </div>
+            {% else %}<p class="pr-empty">No editor signed up in this period.</p>{% endif %}
+        </section>
+
+        <section class="pr-card pr-in" style="animation-delay:.17s" aria-labelledby="gr-base-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="gr-base-h">The editor base today</h2>
+                    <p>All {{ base.total }} editor{{ base.total|pluralize }} who signed up since {{ min_date|date:"j M Y" }}, whatever the period above.</p>
+                </div>
+            </div>
+            <div class="gr-mix">
+                <h3>Last active</h3>
+                <div class="gr-stack" role="img" aria-label="Editors by last activity: {% for r in base.recency %}{{ r.label }} {{ r.count }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                    {% for r in base.recency %}{% if r.count %}<i style="--c:var(--a-{{ r.key }});flex:{{ r.count }}"></i>{% endif %}{% endfor %}
+                </div>
+                <ul class="gr-mix-list">
+                    {% for r in base.recency %}
+                    <li><span class="gr-key" style="--c:var(--a-{{ r.key }})"></span><span>{{ r.label }}<small>{{ r.hint }}</small></span><b>{{ r.count }}</b><em>{{ r.pct|default:0|floatformat:"0" }}%</em></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="gr-mix">
+                <h3>Plan</h3>
+                <div class="gr-stack" role="img" aria-label="Editors by plan: {% for r in base.plans %}{{ r.label }} {{ r.count }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                    {% for r in base.plans %}{% if r.count %}<i style="--c:var({% if r.key == 'paying' %}--c-1{% elif r.key == 'free_pass' %}--c-2{% elif r.key == 'expired' %}--c-3{% else %}--c-rest{% endif %});flex:{{ r.count }}"></i>{% endif %}{% endfor %}
+                </div>
+                <ul class="gr-mix-list">
+                    {% for r in base.plans %}
+                    <li><span class="gr-key" style="--c:var({% if r.key == 'paying' %}--c-1{% elif r.key == 'free_pass' %}--c-2{% elif r.key == 'expired' %}--c-3{% else %}--c-rest{% endif %})"></span><span>{{ r.label }}</span><b>{{ r.count }}</b><em>{{ r.pct|default:0|floatformat:"0" }}%</em></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="gr-mini">
+                <div class="gr-stat"><p>Live portfolios</p><strong>{{ base.live }}</strong><span>{% if base.live_no_visits %}{{ base.live_no_visits }} had no visitors this period{% else %}public and on a plan{% endif %}</span></div>
+                <div class="gr-stat"><p>Portfolio visits</p><strong>{{ base.visits }}{% if base.visits_delta and base.visits_delta.value is not None %} <span class="pr-delta {% if base.visits_delta.dir == 'up' %}good{% elif base.visits_delta.dir == 'down' %}bad{% else %}flat{% endif %}">{{ base.visits_delta.label }}</span>{% endif %}</strong><span>by people, not bots, in this period</span></div>
+            </div>
+        </section>
     </div>
 
-    <!-- Users Table -->
-    <div class="gradient-border rounded-2xl overflow-hidden animate-fadeInUp" style="animation-delay: 0.3s">
-        <div class="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style="background: rgba(124,58,237,0.03);">
-            <h3 class="text-lg font-bold text-slate-900" style="font-family: 'Syne', sans-serif;">Users Directory</h3>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: {{ users_list.count }} users</span>
+    <!-- Acquisition -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.2s" aria-labelledby="gr-acq-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="gr-acq-h">Where the editors who pay come from</h2>
+                <p>This period's signups split three ways, with how many added a video and how many paid. Groups under {{ min_sample }} people are marked small: read them as a hint.</p>
+            </div>
+            <a href="{% url 'manage_heard_about' %}" class="pr-btn">All answers →</a>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">User Details</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">Contact Info</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">Financials</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest" style="background: #FAFAFC;">Engagement</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for u in users_list %}
-                    <tr class="user-row transition-colors">
-                        <td class="px-8 py-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-lg" style="background: linear-gradient(135deg, #7C3AED, #6D28D9); box-shadow: 0 8px 16px -6px rgba(124,58,237,0.35);">
-                                    {{ u.username|slice:":2"|upper }}
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <p class="text-sm font-bold text-slate-900">{{ u.username }}</p>
-                                        <a href="/{{ u.username }}/" target="_blank" class="text-slate-400 hover:text-purple-600 transition-colors" title="View Portfolio">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                        </a>
-                                    </div>
-                                    <p class="text-[11px] text-slate-400 font-medium">@{{ u.username }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-5">
-                            <div class="flex flex-col gap-1.5">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    <span class="text-xs font-medium text-slate-600">{{ u.email }}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    <span class="text-xs font-bold" style="color: #7C3AED;">
-                                        {% if u.profile.phone_number %}
-                                            {{ u.profile.phone_number }}
-                                        {% elif u.personal_info.phone %}
-                                            {{ u.personal_info.phone }}
-                                        {% else %}
-                                            <span class="text-slate-300 font-normal">No Phone</span>
-                                        {% endif %}
-                                    </span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-5">
-                            <div class="flex flex-col gap-1.5 items-start">
-                                {% if u.id in paid_user_ids %}
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background: rgba(16,185,129,0.08); color: #10b981;">
-                                        Paid
-                                    </span>
-                                {% else %}
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background: rgba(100,116,139,0.08); color: #94A3B8;">
-                                        Free
-                                    </span>
-                                {% endif %}
-                                <span class="text-xs font-bold text-slate-700">
-                                    Total: EGP {{ u.total_spent|default:"0.00"|floatformat:2 }}
-                                </span>
-                            </div>
-                        </td>
-                        <td class="px-8 py-5">
-                            <div class="flex flex-col gap-1.5">
-                                <div>
-                                    <p class="text-xs text-slate-500 font-medium">Joined: {{ u.date_joined|date:"M d, Y" }}</p>
-                                    <p class="text-[10px] text-slate-400 font-medium">{{ u.date_joined|timesince }} ago</p>
-                                </div>
-                                {% if u.profile.last_seen %}
-                                <div>
-                                    <p class="text-[10px] font-bold {% if u.profile.is_online %}text-emerald-500{% else %}text-slate-400{% endif %}">
-                                        {% if u.profile.is_online %}
-                                            <span class="inline-flex items-center gap-1">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                Online Now
-                                            </span>
-                                        {% else %}
-                                            Seen: {{ u.profile.last_seen|timesince }} ago
-                                        {% endif %}
-                                    </p>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="px-8 py-12 text-center text-slate-400 font-medium italic">
-                            No users found in the system.
-                        </td>
+        {% if signups %}
+        <div class="pr-grid gr-g3">
+            {% for g in segments.groups %}
+            <div class="gr-seg">
+                <h3>{{ g.label }}</h3>
+                {% if g.rows %}
+                <div class="pr-scroll">
+                <table class="pr-tbl gr-tight">
+                    <thead><tr><th scope="col">Group</th><th scope="col" class="num">Signups</th><th scope="col" class="num">Video</th><th scope="col" class="num">Paid</th></tr></thead>
+                    <tbody>
+                        {% for r in g.rows %}
+                        <tr class="{% if r.muted %}is-muted{% endif %}">
+                            <td><span class="pr-name">{{ r.label }}</span>{% if r.small and not r.muted %}<span class="gr-small">small</span>{% endif %}</td>
+                            <td class="num"><span class="gr-share">{{ r.signups }}<i aria-hidden="true"><b style="width:{{ r.share|default:0|floatformat:'1' }}%"></b></i></span></td>
+                            <td class="num">{{ r.built_pct|default:0|floatformat:"0" }}%</td>
+                            <td class="num"><b style="color:var(--ink)">{{ r.paid_pct|default:0|floatformat:"0" }}%</b><span class="pr-sub">{{ r.paid }} paid</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% if g.key == 'source' %}<p class="pr-kpi-s">{{ segments.answered }} of {{ signups }} answered “how did you hear about us”.</p>{% endif %}
+                {% else %}<p class="pr-empty">No data.</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}<p class="pr-empty">No editor signed up in this period.</p>{% endif %}
+    </section>
+
+    <!-- Week by week -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.25s" aria-labelledby="gr-wk-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="gr-wk-h">Week by week</h2>
+                <p>The last {{ scorecard|length }} weeks, Monday to Sunday, newest first, whatever the period above. "New paying" is customers making their first payment that week.</p>
+            </div>
+        </div>
+        <div class="pr-scroll">
+            <table class="pr-tbl gr-score" style="min-width:46rem">
+                <thead><tr><th scope="col">Week of</th><th scope="col" class="num">Signups</th><th scope="col" class="num">Added a video</th><th scope="col" class="num">New paying</th><th scope="col" class="num">Revenue (EGP)</th><th scope="col" class="num">MRR at week end</th><th scope="col" class="num">Paying customers</th></tr></thead>
+                <tbody>
+                    {% for w in scorecard %}
+                    <tr class="{% if w.current %}is-current{% endif %}">
+                        <td><span class="pr-name">{{ w.label }}</span>{% if w.current %} <span class="pr-pill pr-pill-brand">So far</span>{% endif %}</td>
+                        <td class="num"><span class="gr-cell-bar">{{ w.signups }}<i aria-hidden="true"><b style="width:{{ w.signups_w }}%"></b></i></span></td>
+                        <td class="num">{% if w.built_pct is not None %}{{ w.built_pct|floatformat:"0" }}%<span class="pr-sub">{{ w.built }} of {{ w.signups }}</span>{% else %}<span style="color:var(--muted)">—</span>{% endif %}</td>
+                        <td class="num">{{ w.new_paying }}</td>
+                        <td class="num"><span class="gr-cell-bar is-money">{{ w.revenue_label }}<i aria-hidden="true"><b style="width:{{ w.revenue_w }}%"></b></i></span></td>
+                        <td class="num">{{ w.mrr_label }}</td>
+                        <td class="num">{{ w.paying }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
+
+    <!-- Newest signups -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.3s" aria-labelledby="gr-new-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="gr-new-h">Newest signups</h2>
+                <p>{% if signups > recent|length %}The latest {{ recent|length }} of {{ signups }} in this period; the CSV has all of them.{% else %}Everyone who signed up in this period, newest first.{% endif %} Click a name for their full journey.</p>
+            </div>
+            <span style="display:inline-flex;gap:.5rem;flex-wrap:wrap">
+                <a href="?{{ export_query }}" class="pr-btn">Signups CSV</a>
+                <a href="{{ activity_url }}#directory" class="pr-btn">All editors →</a>
+            </span>
+        </div>
+        {% if recent %}
+        <div class="pr-scroll">
+            <table class="pr-tbl" style="min-width:60rem">
+                <thead><tr><th scope="col">Editor</th><th scope="col">Contact</th><th scope="col">Signed up</th><th scope="col">Setup</th><th scope="col">Plan</th><th scope="col">Last active</th></tr></thead>
+                <tbody>
+                    {% for p in recent %}
+                    <tr>
+                        <td>
+                            <div class="gr-person">
+                                <span class="pr-ava {% if p.plan_state == 'paying' %}is-pay{% endif %}" aria-hidden="true">{{ p.initials }}</span>
+                                <span style="min-width:0"><a class="gr-link" href="{% url 'manage_user_journey' p.id %}">{{ p.name }}</a><span class="pr-sub">@{{ p.username }}{% if p.live %} · <a href="/{{ p.username }}/" target="_blank" rel="noopener" style="color:var(--brand)">portfolio ↗</a>{% endif %}</span></span>
+                            </div>
+                        </td>
+                        <td><span style="color:var(--ink)">{{ p.email }}</span><span class="pr-sub">{{ p.phone|default:"No phone" }}</span></td>
+                        <td class="pr-num" style="white-space:nowrap">{{ p.joined|date:"j M Y" }}<span class="pr-sub">{{ p.method }}{% if p.source %} · {{ p.source }}{% endif %}</span></td>
+                        <td><span class="gr-xp"><i aria-hidden="true"><b style="width:{{ p.xp }}%"></b></i><span>{{ p.xp }} XP</span></span><span class="pr-sub">{{ p.videos }} video{{ p.videos|pluralize }}</span></td>
+                        <td><span class="pr-pill {% if p.plan_state == 'paying' %}pr-pill-good{% elif p.plan_state == 'free_pass' %}pr-pill-brand{% elif p.plan_state == 'expired' %}pr-pill-warn{% else %}pr-pill-slate{% endif %}">{{ p.plan_state_label }}</span>{% if p.ever_paid %}<span class="pr-sub">EGP {{ p.spent_label }} paid</span>{% endif %}</td>
+                        <td style="white-space:nowrap"><span class="ua-fresh is-{{ p.recency }}"><i aria-hidden="true"></i>{{ p.last_active_ago }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}<p class="pr-empty">No editor signed up in this period.</p>{% endif %}
+    </section>
+
+    <!-- Go deeper -->
+    <section class="pr-section pr-in gr-deeper-wrap" style="animation-delay:.35s" aria-labelledby="gr-deep-h">
+        <h2 class="gr-h2" id="gr-deep-h">Go deeper</h2>
+        <nav class="gr-deeper">
+            <a class="gr-deep" href="{{ revenue_url }}"><b>Revenue insights</b><span>Revenue pace, MRR and what moved it, renewals due, discounts, top customers.</span></a>
+            <a class="gr-deep" href="{{ activity_url }}"><b>User activity</b><span>Setup steps, retention by cohort, and who to contact today.</span></a>
+            <a class="gr-deep" href="{% url 'manage_payment_tracking' %}"><b>Payment tracking</b><span>Where buyers drop out between pricing and payment.</span></a>
+            <a class="gr-deep" href="{% url 'manage_heard_about' %}"><b>How they heard</b><span>Every acquisition answer, and which creators send people.</span></a>
+            <a class="gr-deep" href="{% url 'manage_user_lookup' %}"><b>User lookup</b><span>One editor's full journey, payments and next best action.</span></a>
+        </nav>
+    </section>
+
+    <section class="pr-card pr-section pr-in" style="animation-delay:.38s" aria-label="How the numbers are counted">
+        <ul class="pr-notes" style="margin:0;padding:0;border:0">
+            <li><b>Signups</b> are editor accounts (not clients, school admins or the demo account) created in the period. What became of them is measured today, so recent periods look lower until people have had time to build and pay.</li>
+            <li><b>Added a first video</b> is the moment a portfolio becomes worth sharing. <b>Finished setup</b> means all four launch-checklist steps (name and title, a video, a theme, skills).</li>
+            <li><b>Money</b> numbers are the same as on Revenue insights: revenue is confirmed payments above zero; MRR spreads each running paid plan over 30 days; renewed means paid again within 14 days of the plan ending.</li>
+            <li><b>Active</b> is the latest of last seen, last login and signup. Only the latest visit is stored, so active users have no comparison with an earlier period.</li>
+            <li><b>Only data from {{ min_date|date:"j M Y" }} on</b>; earlier accounts and payments are launch-era test data. Team accounts are left out unless you include them.</li>
+        </ul>
+    </section>
+
+    {% endif %}
+</div>
 </div>
 
+<div class="pr-tip" id="grTip" role="status" aria-live="polite"></div>
+{{ chart_data|json_script:"gr-data" }}
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('signupChart').getContext('2d');
-        const labels = {{ signup_labels|safe }};
-        const signupValues = {{ signup_values|safe }};
-        const paidValues = {{ paid_values|safe }};
+(function () {
+    var dataEl = document.getElementById('gr-data');
+    if (!dataEl || !document.querySelector('.gr')) return;
+    var data = JSON.parse(dataEl.textContent);
+    var NS = 'http://www.w3.org/2000/svg';
+    var tip = document.getElementById('grTip');
+    var css = getComputedStyle(document.querySelector('.gr'));
+    var C = {};
+    ['c-1', 'c-2', 'o-paid', 'o-built', 'o-new'].forEach(function (k) { C[k] = css.getPropertyValue('--' + k).trim(); });
+    var AXIS = 24, TOP = 14, GUTTER = 36;
 
-        const signupGradient = ctx.createLinearGradient(0, 0, 0, 350);
-        signupGradient.addColorStop(0, 'rgba(124, 58, 237, 0.15)');
-        signupGradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var nice = function (max) {
+        if (max <= 0) return 1;
+        var p = Math.pow(10, Math.floor(Math.log10(max))), m = max / p;
+        var steps = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+        for (var i = 0; i < steps.length; i++) if (m <= steps[i]) return steps[i] * p;
+        return 10 * p;
+    };
+    function el(name, attrs, parent) {
+        var n = document.createElementNS(NS, name);
+        for (var k in attrs) n.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(n);
+        return n;
+    }
+    // Column with a 4px rounded data end and a square base.
+    function colPath(x, y, w, h, round) {
+        if (h <= 0) return '';
+        var r = round ? Math.min(4, w / 2, h) : 0;
+        return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y +
+               'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+    }
+    function showTip(title, rows, x, y) {
+        tip.textContent = '';
+        var h = document.createElement('div'); h.className = 'pr-tip-h'; h.textContent = title; tip.appendChild(h);
+        rows.forEach(function (r) {
+            var row = document.createElement('div'); row.className = 'pr-tip-r';
+            var key = document.createElement('i'); key.style.background = r[0] || 'transparent'; row.appendChild(key);
+            row.appendChild(document.createTextNode(r[1]));
+            var b = document.createElement('b'); b.textContent = r[2]; row.appendChild(b);
+            tip.appendChild(row);
+        });
+        tip.classList.add('on');
+        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        var left = x + 14; if (left + tw > window.innerWidth - 8) left = x - tw - 14;
+        var top = y - th - 12; if (top < 8) top = y + 16;
+        tip.style.left = Math.max(8, left) + 'px'; tip.style.top = top + 'px';
+    }
+    function hideTip() { tip.classList.remove('on'); }
 
-        const paidGradient = ctx.createLinearGradient(0, 0, 0, 350);
-        paidGradient.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
-        paidGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '{% if period == "week" %}Weekly{% else %}Daily{% endif %} Signups',
-                        data: signupValues,
-                        borderColor: '#7C3AED',
-                        borderWidth: 3,
-                        backgroundColor: signupGradient,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#7C3AED',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 6,
-                        pointHoverBackgroundColor: '#7C3AED',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 2
-                    },
-                    {
-                        label: '{% if period == "week" %}Weekly{% else %}Daily{% endif %} Payments',
-                        data: paidValues,
-                        borderColor: '#10b981',
-                        borderWidth: 3,
-                        backgroundColor: paidGradient,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#10b981',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 6,
-                        pointHoverBackgroundColor: '#10b981',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: '#fff',
-                        titleColor: '#0F172A',
-                        bodyColor: '#64748B',
-                        borderColor: 'rgba(124, 58, 237, 0.14)',
-                        borderWidth: 1,
-                        padding: 12,
-                        displayColors: true,
-                        titleFont: { family: "'Syne', sans-serif", weight: '700' },
-                        bodyFont: { family: "'DM Sans', sans-serif", weight: '500' }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#94a3b8', font: { family: "'DM Sans', sans-serif", size: 10, weight: 'bold' } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(124, 58, 237, 0.06)' },
-                        ticks: { 
-                            precision: 0,
-                            color: '#94a3b8', 
-                            font: { family: "'DM Sans', sans-serif", size: 10, weight: 'bold' }
-                        }
-                    }
-                }
+    // Stacked columns with hairline grid at 0 / half / max and thinned x labels.
+    function columnChart(svg, cfg) {
+        var pts = cfg.points, n = pts.length;
+        if (!n) return;
+        var totals = pts.map(function (p) { return cfg.stack.reduce(function (a, s) { return a + p[s.key]; }, 0); });
+        var max = nice(Math.max.apply(null, totals.concat([1])));
+        var W = svg.getBoundingClientRect().width || 600, H = cfg.height;
+        svg.textContent = '';
+        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+        svg.setAttribute('height', H);
+        var plotH = H - TOP - AXIS, base = TOP + plotH;
+        var y = function (v) { return TOP + plotH - (v / max) * plotH; };
+        [0, max / 2, max].forEach(function (v, j) {
+            el('line', { x1: GUTTER, x2: W, y1: y(v), y2: y(v), 'class': j ? 'grid' : 'base' }, svg);
+            el('text', { x: GUTTER - 8, y: y(v) + 4, 'text-anchor': 'end', 'class': 'tick' }, svg).textContent = fmt(v);
+        });
+        var plotW = W - GUTTER - 8, band = plotW / n;
+        var bw = Math.max(3, Math.min(28, band * .62));
+        var xAt = function (i) { return GUTTER + 8 + band * i + band / 2; };
+        var every = Math.max(1, Math.ceil(64 / band));
+        pts.forEach(function (p, i) {
+            if (i % every) return;
+            el('text', { x: xAt(i), y: H - 6, 'text-anchor': 'middle', 'class': 'tick' }, svg).textContent = p.short;
+        });
+        var cols = [];
+        pts.forEach(function (p, i) {
+            var grp = el('g', { 'class': 'col' }, svg);
+            var top = base, filled = cfg.stack.filter(function (s) { return p[s.key] > 0; });
+            filled.forEach(function (s, j) {
+                var h = (p[s.key] / max) * plotH;
+                if (j) { top -= 2; h = Math.max(0, h - 2); }  // 2px surface gap between stacked segments
+                top -= h;
+                el('path', { d: colPath(xAt(i) - bw / 2, top, bw, h, j === filled.length - 1), fill: s.color }, grp);
+            });
+            cols.push(grp);
+        });
+        var hit = el('rect', { x: GUTTER, y: 0, width: Math.max(0, W - GUTTER), height: base, 'class': 'hit', tabindex: 0 }, svg);
+        var current = n - 1;
+        function show(i, evt) {
+            current = i;
+            cols.forEach(function (c, j) { c.classList.toggle('is-dim', j !== i); });
+            var r = svg.getBoundingClientRect(), scale = r.width / W;
+            var t = cfg.tip(pts[i]);
+            var x = evt ? evt.clientX : r.left + xAt(i) * scale;
+            var yy = evt ? evt.clientY : r.top + y(totals[i]) * scale;
+            showTip(t.title, t.rows, x, yy);
+        }
+        function clear() { cols.forEach(function (c) { c.classList.remove('is-dim'); }); hideTip(); }
+        hit.addEventListener('pointermove', function (e) {
+            var r = svg.getBoundingClientRect();
+            var x = (e.clientX - r.left) * W / r.width;
+            show(Math.max(0, Math.min(n - 1, Math.floor((x - GUTTER - 8) / band))), e);
+        });
+        hit.addEventListener('pointerleave', clear);
+        hit.addEventListener('focus', function () { show(current); });
+        hit.addEventListener('blur', clear);
+        hit.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                show(Math.min(n - 1, Math.max(0, current + (e.key === 'ArrowRight' ? 1 : -1))));
             }
         });
-    });
-</script>
+    }
 
-<style>
-    .sf-input {
-        width: 100%;
-        background: #F8FAFC !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 12px;
-        padding: 12px 16px;
-        color: #0F172A !important;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        outline: none;
+    // Tile sparkline: one 2px line, a faint area and a dot on the latest value. The tile states the number.
+    function spark(svg, values) {
+        if (!values.length) return;
+        var W = svg.getBoundingClientRect().width || 200, H = 34, pad = 4;
+        svg.textContent = '';
+        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+        var max = Math.max.apply(null, values.concat([0])), min = Math.min.apply(null, values.concat([0]));
+        var span = max - min || 1, n = values.length;
+        var x = function (i) { return n === 1 ? W / 2 : pad + (W - pad * 2) * i / (n - 1); };
+        var y = function (v) { return pad + (H - pad * 2) * (1 - (v - min) / span); };
+        var d = values.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join('');
+        el('path', { d: d + 'L' + x(n - 1) + ',' + H + 'L' + x(0) + ',' + H + 'Z', fill: C['c-1'], 'fill-opacity': .08 }, svg);
+        el('path', { d: d, fill: 'none', stroke: C['c-1'], 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+        el('circle', { cx: x(n - 1), cy: y(values[n - 1]), r: 3.5, fill: C['c-1'], stroke: '#fff', 'stroke-width': 2 }, svg);
     }
-    .sf-input:focus {
-        border-color: #7C3AED !important;
-        background: #FFFFFF !important;
-        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1) !important;
+
+    function draw() {
+        var signups = document.getElementById('grSignups');
+        if (signups) columnChart(signups, {
+            points: data.signups, height: 240,
+            stack: [{ key: 'paid', color: C['o-paid'] }, { key: 'built', color: C['o-built'] }, { key: 'new', color: C['o-new'] }],
+            tip: function (p) {
+                return { title: p.label, rows: [[null, 'Signups', p.signups], [C['o-paid'], 'Paid', p.paid],
+                                                [C['o-built'], 'Added a video, not paid', p.built], [C['o-new'], 'No video yet', p['new']]] };
+            }
+        });
+        var src = { signups: data.signups, revenue: data.money, mrr: data.money, customers: data.money };
+        document.querySelectorAll('.gr-spark').forEach(function (svg) {
+            var key = svg.getAttribute('data-key');
+            spark(svg, (src[key] || []).map(function (p) { return key === 'signups' ? p.signups : p[key]; }));
+        });
     }
-    .sf-input::placeholder {
-        color: #64748B;
-    }
-</style>
+
+    draw();
+    var t, lastW = window.innerWidth;
+    window.addEventListener('resize', function () {
+        if (window.innerWidth === lastW) return;
+        lastW = window.innerWidth; clearTimeout(t); t = setTimeout(draw, 120);
+    });
+    window.addEventListener('beforeprint', draw);
+})();
+</script>
 {% endblock %}

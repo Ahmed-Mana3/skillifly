@@ -1,782 +1,880 @@
 {% extends "core/base.html" %}
-{% load static %}
 
 {% block title %}Revenue Insights | Skillifly Admin{% endblock %}
+{% block ambient_orbs %}{% endblock %}
+
+{% comment %}
+Revenue insights (core/revenue_report.py). Top to bottom it answers: how much came in and is it
+growing (summary + pace), how much repeats (MRR and what moved it), will it last (renewals and
+what is due), where it comes from and what it costs (plan, method, discounts, customers), and
+the ledger behind every number. Colours always sit next to a text label; every chart has a table.
+Chart colours: violet = this period / new customers, teal = renewals / money due, grey = previous period.
+{% endcomment %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% include "core/_manage_report_styles.html" %}
 <style>
-  /* ── Base ── */
-  .rr-page {
-    min-height: 100vh;
-    background: radial-gradient(circle at top left, #f8fafc 0%, #f1f5f9 100%);
-    font-family: 'Inter', sans-serif;
-    padding: 2.5rem 1.5rem 5rem;
-    position: relative;
-  }
-  .rr-wrap { max-width: 1280px; margin: 0 auto; z-index: 10; position: relative; }
+    .rv { --c-1: #6d28d9; --c-2: #0d9488; --c-3: #eb6834; --c-prev: #94a3b8; }
+    /* Card titles in the system sans: easier to read at this size than the display face. */
+    .rv h2, .rv h3 { font-family: inherit; }
+    .rv h1 { font-family: 'Syne', sans-serif; }
 
-  /* ── Header ── */
-  .rr-header { margin-bottom: 2.5rem; }
-  .rr-badge {
-    display: inline-flex; align-items: center; gap: .4rem;
-    padding: .35rem .85rem; border-radius: 100px;
-    background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25);
-    color: #4f46e5; font-size: .7rem; font-weight: 800;
-    letter-spacing: .08em; text-transform: uppercase; margin-bottom: .75rem;
-  }
-  .rr-title {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(2rem, 6vw, 3.2rem);
-    font-weight: 800; color: #0f172a; line-height: 1.05; margin-bottom: .5rem;
-    letter-spacing: -0.02em;
-  }
-  .rr-title .accent { background: linear-gradient(135deg,#3b82f6 0%,#8b5cf6 50%,#ec4899 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .rr-subtitle { color: #475569; font-size: .9rem; font-weight: 600; }
+    /* Filters */
+    .pr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .625rem; margin: 1.75rem 0 .625rem; }
+    .pr-seg { display: inline-flex; gap: .25rem; padding: .25rem; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+    .pr-seg a { padding: .4375rem .9375rem; border-radius: 999px; font-size: .8125rem; font-weight: 600;
+                color: var(--muted); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap; }
+    .pr-seg a:hover { color: var(--ink); background: #f1f5f9; }
+    .pr-seg a.is-on { background: var(--ink); color: #fff; }
+    .pr-chip { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .875rem; border-radius: 999px;
+               background: #fff; border: 1px solid var(--line); font-size: .8125rem; font-weight: 600; font-family: inherit;
+               color: var(--ink-2); text-decoration: none; transition: border-color .15s, color .15s; cursor: pointer; }
+    .pr-chip:hover { border-color: #cbd5e1; color: var(--ink); }
+    .pr-chip.is-on { border-color: var(--ink); color: var(--ink); }
+    .pr-chip svg { width: .875rem; height: .875rem; }
+    .pr-chip .pr-box { width: .875rem; height: .875rem; border-radius: .25rem; border: 1.5px solid #94a3b8;
+                       display: inline-flex; align-items: center; justify-content: center; }
+    .pr-chip.is-on .pr-box { background: var(--brand); border-color: var(--brand); }
+    .pr-chip.is-on .pr-box::after { content: ''; width: .4rem; height: .22rem; border: solid #fff;
+                                    border-width: 0 0 2px 2px; transform: rotate(-45deg) translateY(-1px); }
+    .rv-range { position: relative; }
+    .rv-range summary { list-style: none; }
+    .rv-range summary::-webkit-details-marker { display: none; }
+    .rv-range form { position: absolute; left: 0; top: calc(100% + .375rem); z-index: 20; background: #fff; border: 1px solid var(--line);
+                     border-radius: .875rem; padding: .875rem; box-shadow: 0 12px 32px -12px rgba(15,23,42,.25);
+                     display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; width: 19rem; }
+    .rv-range label { font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: grid; gap: .25rem; }
+    .rv-range input { font: inherit; font-size: .875rem; color: var(--ink); border: 1px solid var(--line); border-radius: .5rem; padding: .4375rem .5rem; text-transform: none; letter-spacing: 0; }
+    .rv-range .pr-btn { grid-column: 1 / -1; justify-content: center; padding: .5625rem; }
+    .rv-tools { display: inline-flex; gap: .5rem; margin-left: auto; }
+    .pr-meta { font-size: .8125rem; color: var(--muted); margin: 0 0 1.75rem; line-height: 1.6; }
+    .pr-meta b { color: var(--ink-2); font-weight: 600; }
+    .pr-meta .warn { color: var(--warn); font-weight: 600; }
 
-  /* ── Filter Form ── */
-  .rr-filter {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 10px 35px -10px rgba(0,0,0,0.03);
-    border-radius: 1.5rem; padding: 1.25rem 1.5rem; margin-bottom: 2.5rem;
-    align-items: flex-end;
-  }
-  .rr-filter-group { display: flex; flex-direction: column; gap: .4rem; }
-  .rr-filter-label { font-size: .68rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: .08em; }
-  .rr-date-input {
-    background: rgba(248, 250, 252, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: .75rem; padding: .65rem 1rem;
-    font-size: .88rem; font-weight: 700; color: #0f172a;
-    outline: none; transition: all .2s ease;
-  }
-  .rr-date-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.12); background: #ffffff; }
-  .rr-filter-btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
-    color: #fff; border: none; border-radius: .75rem;
-    padding: .75rem 1.75rem; font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 800;
-    cursor: pointer; white-space: nowrap; transition: all .25s ease; box-shadow: 0 8px 20px -5px rgba(59,130,246,0.3);
-    text-align: center;
-  }
-  .rr-filter-btn:hover { opacity: .95; transform: translateY(-1px); box-shadow: 0 12px 25px -5px rgba(139,92,246,0.45); }
+    /* Summary */
+    .rv-hero { display: grid; gap: 2rem; }
+    .rv-hero-l { min-width: 0; }
+    .rv-tag { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 .5rem; }
+    .rv-num { display: flex; align-items: baseline; flex-wrap: wrap; gap: .5rem .75rem; margin: 0 0 1.25rem; }
+    .rv-num strong { font-size: clamp(2.75rem, 2rem + 3vw, 3.75rem); font-weight: 750; color: var(--ink); letter-spacing: -.035em; line-height: 1; }
+    .rv-num small { font-size: 1rem; font-weight: 600; color: var(--muted); }
+    .rv-num .pr-delta { font-size: .8125rem; padding: .25rem .625rem; }
+    .rv-story { list-style: none; margin: 0; padding: 0; display: grid; gap: .625rem; }
+    .rv-story li { position: relative; padding-left: 1.125rem; font-size: .9375rem; line-height: 1.6; color: var(--ink); }
+    .rv-story li::before { content: ''; position: absolute; left: 0; top: .6875rem; width: .375rem; height: .375rem; border-radius: 999px; background: var(--brand-mid); }
 
-  /* ── Stat Cards ── */
-  .rr-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
-  @media (min-width: 640px)  { .rr-stats { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 900px)  { .rr-stats { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1100px) { .rr-stats { grid-template-columns: repeat(6, 1fr); } }
+    /* Legends */
+    .rv-legend { display: flex; flex-wrap: wrap; gap: .375rem 1rem; font-size: .8125rem; color: var(--ink-2); margin: 0; padding: 0; list-style: none; }
+    .rv-legend li { display: inline-flex; align-items: center; gap: .4375rem; white-space: nowrap; }
+    .rv-legend b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .rv-key { width: .75rem; height: .75rem; border-radius: 3px; flex-shrink: 0; background: var(--c); }
+    .rv-key.line { height: 3px; border-radius: 2px; width: 1rem; }
 
-  .rr-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    border-radius: 1.5rem; padding: 1.5rem 1.25rem;
-    position: relative; overflow: hidden;
-    display: flex; flex-direction: column; justify-content: space-between; min-height: 140px;
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .rr-card:hover { transform: translateY(-4px); border-color: rgba(99, 102, 241, 0.25); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08); }
-  
-  .rr-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-  .rr-card-label {
-    font-size: .68rem; font-weight: 800; text-transform: uppercase;
-    letter-spacing: .08em; color: #475569;
-  }
-  .rr-card-icon {
-    width: 32px; height: 32px; border-radius: .5rem;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.03); color: #475569;
-  }
-  .rr-card-value {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(1.3rem, 3.5vw, 1.8rem);
-    font-weight: 800; color: #0f172a; line-height: 1.1;
-  }
-  .rr-card-sub { font-size: .75rem; color: #64748b; font-weight: 600; margin-top: .4rem; }
+    /* Charts */
+    .rv-chart { position: relative; }
+    .rv-chart svg { display: block; width: 100%; overflow: visible; }
+    .rv-chart .grid { stroke: var(--grid); stroke-width: 1; }
+    .rv-chart .base { stroke: #cbd5e1; stroke-width: 1; }
+    .rv-chart .tick { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+    .rv-chart .end-l { font-size: 12px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+    .rv-chart .hair { stroke: #94a3b8; stroke-width: 1; }
+    .rv-chart .hit { fill: transparent; cursor: crosshair; outline: none; }
+    .rv-chart .hit:focus-visible { stroke: var(--brand); stroke-width: 2; }
+    .rv-chart .col.is-dim { opacity: .45; }
+    .rv-chart-empty { padding: 3rem 1rem; text-align: center; font-size: .875rem; color: var(--muted); }
+    .pr-tip { position: fixed; z-index: 50; pointer-events: none; background: #0f172a; color: #e2e8f0; border-radius: 10px;
+              padding: .625rem .75rem; font-size: .75rem; min-width: 12rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,.4);
+              opacity: 0; transition: opacity .1s; }
+    .pr-tip.on { opacity: 1; }
+    .pr-tip-h { font-weight: 700; color: #fff; margin-bottom: .375rem; }
+    .pr-tip-r { display: flex; align-items: center; gap: .5rem; padding: .125rem 0; }
+    .pr-tip-r i { width: .625rem; height: .625rem; border-radius: 2px; flex-shrink: 0; }
+    .pr-tip-r b { color: #fff; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 1rem; }
+    .pr-details summary { cursor: pointer; font-size: .8125rem; font-weight: 600; color: var(--brand); margin-top: 1rem; width: fit-content; }
+    .pr-details[open] summary { margin-bottom: .75rem; }
 
-  /* Card Color Schemes */
-  .c-green { border-left: 4px solid #10b981; }
-  .c-green .rr-card-icon { background: rgba(16, 185, 129, 0.08); color: #059669; }
-  .c-green .rr-card-value { color: #059669; }
+    /* Insights */
+    .pr-ins-tag { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .pr-ins a { display: inline-block; margin-top: .5rem; font-size: .8125rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+    .pr-ins a:hover { text-decoration: underline; }
+    .rv-h2 { font-size: 1.0625rem; font-weight: 700; color: var(--ink); margin: 0 0 .875rem; }
 
-  .c-blue { border-left: 4px solid #3b82f6; }
-  .c-blue .rr-card-icon { background: rgba(59, 130, 246, 0.08); color: #2563eb; }
-  .c-blue .rr-card-value { color: #2563eb; }
+    /* MRR bridge */
+    .rv-bridge { display: grid; gap: .625rem; }
+    .rv-br { display: grid; grid-template-columns: minmax(8rem, 11rem) 1fr 6.5rem; gap: .875rem; align-items: center; font-size: .8125rem; }
+    .rv-br-l { color: var(--ink); font-weight: 600; line-height: 1.3; }
+    .rv-br-l small { display: block; color: var(--muted); font-weight: 500; font-size: .75rem; }
+    .rv-br-bar { height: .875rem; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+    .rv-br-bar i { display: block; height: 100%; border-radius: 0 4px 4px 0; background: #475569; min-width: 2px; }
+    .rv-br.up .rv-br-bar i { background: var(--good); }
+    .rv-br.down .rv-br-bar i { background: var(--bad); }
+    .rv-br.total { padding-top: .625rem; border-top: 1px solid var(--line); }
+    .rv-br.total .rv-br-bar i { background: var(--c-1); }
+    .rv-br b { text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  .c-purple { border-left: 4px solid #8b5cf6; }
-  .c-purple .rr-card-icon { background: rgba(139, 92, 246, 0.08); color: #7c3aed; }
-  .c-purple .rr-card-value { color: #7c3aed; }
+    /* Meters (renewals, methods) */
+    .rv-meters { display: grid; gap: 1rem; }
+    .rv-meter { display: grid; grid-template-columns: 1fr auto; gap: .375rem .75rem; font-size: .8125rem; }
+    .rv-meter span { color: var(--ink); font-weight: 600; }
+    .rv-meter span small { color: var(--muted); font-weight: 500; margin-left: .25rem; }
+    .rv-meter em { font-style: normal; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .rv-meter .bar { grid-column: 1 / -1; height: .5rem; border-radius: 999px; background: var(--brand-soft); overflow: hidden; }
+    .rv-meter .bar i { display: block; height: 100%; border-radius: 999px; background: var(--c-1); }
+    .rv-meter.is-teal .bar { background: #ccfbf1; } .rv-meter.is-teal .bar i { background: var(--c-2); }
+    .rv-meter.is-na em { color: var(--muted); font-weight: 600; }
 
-  .c-rose { border-left: 4px solid #f43f5e; }
-  .c-rose .rr-card-icon { background: rgba(244, 63, 94, 0.08); color: #e11d48; }
-  .c-rose .rr-card-value { color: #e11d48; }
+    .rv-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+    .rv-stat { padding: .875rem 1rem; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); }
+    .rv-stat p { margin: 0; font-size: .75rem; font-weight: 600; color: var(--muted); }
+    .rv-stat strong { display: block; font-size: 1.25rem; font-weight: 700; color: var(--ink); letter-spacing: -.01em; margin: .25rem 0 .125rem; }
+    .rv-stat span { font-size: .75rem; color: var(--muted); }
 
-  .c-teal { border-left: 4px solid #14b8a6; }
-  .c-teal .rr-card-icon { background: rgba(20, 184, 166, 0.08); color: #0d9488; }
-  .c-teal .rr-card-value { color: #0d9488; }
+    /* Plan split bar */
+    .rv-split { display: flex; gap: 2px; height: 2.25rem; border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
+    .rv-split i { display: flex; align-items: center; justify-content: center; background: var(--c); color: #fff;
+                  font-size: .75rem; font-weight: 700; font-style: normal; min-width: 2px; }
+    .rv-swatch { display: inline-flex; align-items: center; gap: .4375rem; }
+    .rv-swatch::before { content: ''; width: .625rem; height: .625rem; border-radius: 2px; background: var(--c); flex-shrink: 0; }
 
-  .c-amber { border-left: 4px solid #f59e0b; }
-  .c-amber .rr-card-icon { background: rgba(245, 158, 11, 0.08); color: #d97706; }
-  .c-amber .rr-card-value { color: #d97706; }
+    .rv-share { display: inline-flex; align-items: center; gap: .5rem; justify-content: flex-end; }
+    .rv-share i { display: inline-block; width: 3.5rem; height: .375rem; border-radius: 999px; background: var(--brand-soft); overflow: hidden; position: relative; }
+    .rv-share i b { position: absolute; inset: 0 auto 0 0; background: var(--c-1); border-radius: 999px; }
+    .rv-tight th, .rv-tight td { padding-left: .5rem; padding-right: .5rem; }
+    .rv-tight th:first-child, .rv-tight td:first-child { padding-left: 0; }
+    .rv-tight th:last-child, .rv-tight td:last-child { padding-right: 0; }
+    .rv-dl { display: grid; grid-template-columns: 1fr auto; margin: 0; font-size: .875rem; }
+    .rv-dl dt, .rv-dl dd { padding: .6875rem 0; border-bottom: 1px solid var(--line); margin: 0; }
+    .rv-dl dt { color: var(--ink-2); }
+    .rv-dl dd { color: var(--ink); font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; padding-left: 1rem; }
+    .rv-dl dt:nth-last-child(2), .rv-dl dd:last-child { border-bottom: 0; }
+    .rv-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8125rem; color: var(--ink); }
+    .rv-tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }
+    .rv-tbl-link:hover { color: var(--brand); text-decoration: underline; }
 
-  /* ── Charts Row ── */
-  .rr-charts { display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-bottom: 2rem; }
-  @media (min-width: 900px) { .rr-charts { grid-template-columns: 2fr 1fr; } }
-
-  .rr-chart-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
-    border-radius: 1.5rem; padding: 1.75rem;
-  }
-  .rr-chart-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
-  .rr-chart-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.15rem; letter-spacing: -0.01em; }
-  .rr-chart-legend { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-  .rr-legend-item { display: flex; align-items: center; gap: .4rem; font-size: .68rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: .08em; }
-  .rr-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-  .rr-canvas-wrap { position: relative; height: 260px; }
-  .rr-donut-wrap  { position: relative; height: 210px; display: flex; align-items: center; justify-content: center; }
-
-  /* Donut centre label */
-  .donut-center {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    pointer-events: none;
-  }
-  .donut-center-pct { font-family:'Syne',sans-serif; font-size: 1.85rem; font-weight: 800; color: #0f172a; line-height: 1.1; }
-  .donut-center-lbl { font-size: .65rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .1em; margin-top: .15rem; }
-
-  /* ── Plan Breakdown ── */
-  .rr-plans {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
-    border-radius: 1.5rem; padding: 1.5rem;
-  }
-  .rr-plan-row { display: flex; align-items: center; gap: .85rem; margin-bottom: 1rem; }
-  .rr-plan-row:last-child { margin-bottom: 0; }
-  .rr-plan-bar-bg { flex: 1; height: 10px; background: rgba(0,0,0,0.05); border-radius: 99px; overflow: hidden; }
-  .rr-plan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#3b82f6,#8b5cf6); transition: width .8s cubic-bezier(.4,0,.2,1); }
-  .rr-plan-name { font-size: .82rem; font-weight: 700; color: #334155; min-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rr-plan-count { font-size: .82rem; font-weight: 800; color: #0f172a; min-width: 28px; text-align: right; }
-  .rr-plan-revenue { font-size: .8rem; color: #059669; font-weight: 700; min-width: 80px; text-align: right; white-space: nowrap; }
-
-  /* ── Dual Chart (revenue line + bar) ── */
-  .rr-dual-wrap { position: relative; height: 260px; }
-
-  /* ── Transactions Table ── */
-  .rr-table-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
-    border-radius: 1.5rem; overflow: hidden;
-  }
-  .rr-table-header {
-    padding: 1.5rem 1.75rem; border-bottom: 1px solid rgba(0,0,0,0.06);
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
-  }
-  .rr-table-title { font-family:'Syne',sans-serif; font-weight: 800; color: #0f172a; font-size: 1.15rem; letter-spacing: -0.01em; }
-  .rr-table-sub   { font-size: .68rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .08em; }
-
-  .rr-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .rr-table { width: 100%; border-collapse: collapse; min-width: 700px; }
-  .rr-table thead tr { background: rgba(0,0,0,0.02); }
-  .rr-table th {
-    padding: 1rem 1.5rem; text-align: left;
-    font-size: .68rem; font-weight: 800; color: #475569;
-    text-transform: uppercase; letter-spacing: .08em; white-space: nowrap;
-  }
-  .rr-table tbody tr { border-top: 1px solid rgba(0,0,0,0.04); transition: all .2s; }
-  .rr-table tbody tr:hover { background: rgba(99, 102, 241, 0.02); }
-  .rr-table td { padding: 1rem 1.5rem; vertical-align: middle; }
-
-  /* Avatar */
-  .rr-avatar {
-    width: 36px; height: 36px; border-radius: .6rem; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .78rem; font-weight: 800; color: #fff;
-    background: linear-gradient(135deg,#3b82f6,#8b5cf6,#d946ef);
-    box-shadow: 0 4px 10px -2px rgba(139,92,246,0.3);
-  }
-
-  /* Badges */
-  .rr-badge-paid {
-    display: inline-flex; align-items: center; gap: .35rem;
-    padding: .3rem .8rem; border-radius: 100px;
-    background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2);
-    color: #059669; font-size: .68rem; font-weight: 800;
-  }
-  .rr-badge-free {
-    display: inline-flex; align-items: center; gap: .35rem;
-    padding: .3rem .8rem; border-radius: 100px;
-    background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);
-    color: #d97706; font-size: .68rem; font-weight: 800;
-  }
-
-  /* Empty state */
-  .rr-empty { padding: 4rem 2rem; text-align: center; color: #475569; }
-  .rr-empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-
-  /* Animations */
-  .fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp .6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-  .d1 { animation-delay: .05s; }
-  .d2 { animation-delay: .15s; }
-  .d3 { animation-delay: .25s; }
-  .d4 { animation-delay: .35s; }
-  .d5 { animation-delay: .45s; }
-
-  /* ── Mobile & Responsive Design ── */
-  @media (max-width: 1100px) {
-    .rr-stats { grid-template-columns: repeat(3, 1fr); }
-  }
-  
-  @media (max-width: 768px) {
-    .rr-stats { grid-template-columns: repeat(2, 1fr); }
-    .rr-filter { grid-template-columns: 1fr; gap: 1rem; padding: 1.25rem; }
-    .rr-filter-btn { width: 100%; }
-    
-    /* Responsive Table to Cards toggle */
-    .rr-table-scroll { display: none !important; }
-    .rr-mobile-records { display: block; }
-  }
-
-  @media (max-width: 480px) {
-    .rr-stats { grid-template-columns: 1fr; }
-    .rr-card { padding: 1.25rem 1rem; min-height: 120px; }
-    .rr-card-value { font-size: 1.4rem; }
-    .rr-page { padding: 1.5rem 1rem 3rem; }
-    .rr-header { margin-bottom: 1.5rem; }
-    .rr-title { font-size: 1.85rem; }
-  }
-
-  /* Mobile Record Elements styling */
-  .rr-mobile-records { display: none; padding: 0; }
-  .rr-mobile-record-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 1.25rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 8px 20px -5px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .rr-mobile-record-card:hover { transform: translateY(-3px); border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 12px 25px -5px rgba(0,0,0,0.06); }
-  .rr-mobile-record-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .rr-mobile-record-user { display: flex; align-items: center; gap: 0.85rem; overflow: hidden; }
-  .rr-mobile-user-info { display: flex; flex-direction: column; overflow: hidden; }
-  .rr-mobile-user-name { font-size: .9rem; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
-  .rr-mobile-user-email { font-size: .75rem; color: #475569; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rr-mobile-record-amount { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800; text-align: right; flex-shrink: 0; }
-  .rr-mobile-record-details { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
-  .rr-mobile-plan-badge { font-size: .75rem; font-weight: 800; color: #334155; background: rgba(0,0,0,0.04); padding: .25rem .65rem; border-radius: .4rem; }
-  .rr-mobile-discount-badge { font-size: .75rem; font-weight: 800; color: #7c3aed; letter-spacing: .05em; background: rgba(124,58,237,0.08); padding: .25rem .65rem; border-radius: .4rem; }
-  .rr-mobile-record-meta {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.75rem; color: #64748b; font-weight: 600;
-    border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 0.85rem; margin-top: 0.25rem;
-  }
+    @media (min-width: 1024px) {
+        .rv-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; }
+        .rv-hero-r { border-left: 1px solid var(--line); padding-left: 2rem; }
+        .rv-g2 { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+        .rv-g2e { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .rv-g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .rv-gr { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+    }
+    @media (max-width: 640px) {
+        .rv-tools { margin-left: 0; }
+        .pr-seg a { padding: .4375rem .6875rem; }
+        .rv-br { grid-template-columns: 7.5rem 1fr 5.5rem; gap: .5rem; }
+        .rv-stats { grid-template-columns: 1fr; }
+        .rv-range form { width: min(19rem, calc(100vw - 2rem)); }
+        .pr-card { padding: 1.25rem; }
+    }
+    @media print {
+        .pr-filters, .pr-details summary, .pr-ins a { display: none !important; }
+        .pr { padding-top: 0; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="rr-page">
-<div class="rr-wrap">
+<div class="pr rv">
+<div class="pr-shell">
 
-  <!-- ── Header ── -->
-  <div class="rr-header fade-up d1">
-    <div class="rr-badge">⬡ Internal Reports</div>
-    <h1 class="rr-title">Revenue <span class="accent">Insights</span> <img src="{% static 'img/bird.png' %}" alt="Skillifly" class="inline-block h-[1em] w-[1em] object-contain"></h1>
-    <p class="rr-subtitle">
-      {{ start_date|date:"M d" }} → {{ end_date|date:"M d, Y" }} &nbsp;·&nbsp;
-      {{ total_transactions }} activation{{ total_transactions|pluralize }}
-    </p>
-  </div>
+    <header class="pr-in">
+        <p style="margin:0 0 1.25rem"><a href="{% url 'manage_dashboard' %}" class="pr-back">&larr; Manage</a></p>
+        <p class="pr-eyebrow">Finance</p>
+        <h1 class="pr-h1">Revenue <em>insights</em></h1>
+        <p class="pr-lede">What came in, how much of it repeats every month, what is due next, and where the money comes from.
+            Every number is a confirmed payment; free passes are counted but never added to revenue.</p>
 
-  <!-- ── Filter ── -->
-  <form method="GET" class="rr-filter fade-up d1">
-    <div class="rr-filter-group">
-      <span class="rr-filter-label">Start Date</span>
-      <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}"
-             min="{{ min_date|date:'Y-m-d' }}" class="rr-date-input">
-    </div>
-    <div class="rr-filter-group">
-      <span class="rr-filter-label">End Date</span>
-      <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}"
-             min="{{ min_date|date:'Y-m-d' }}" class="rr-date-input">
-    </div>
-    <button type="submit" class="rr-filter-btn">Apply Filter</button>
-  </form>
-
-  <!-- ── Stat Cards ── -->
-  <div class="rr-stats fade-up d2">
-
-    <!-- Card 1 -->
-    <div class="rr-card c-green">
-      <div class="rr-card-top">
-        <span class="rr-card-label">Total Revenue</span>
-        <div class="rr-card-icon">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div class="pr-filters">
+            <nav class="pr-seg" aria-label="Reporting period">
+                {% for label, href, on in period_links %}
+                <a href="{{ href }}" class="{% if on %}is-on{% endif %}" {% if on %}aria-current="true"{% endif %}>{{ label }}</a>
+                {% endfor %}
+            </nav>
+            <details class="rv-range">
+                <summary class="pr-chip {% if is_custom %}is-on{% endif %}">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M16 3v4M8 3v4M3 11h18"/></svg>
+                    {% if is_custom %}{{ period.label }}{% else %}Custom dates{% endif %}
+                </summary>
+                <form method="get">
+                    <label>From <input type="date" name="start" value="{{ range_start|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required></label>
+                    <label>To <input type="date" name="end" value="{{ range_end|date:'Y-m-d' }}" min="{{ min_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required></label>
+                    {% if include_team %}<input type="hidden" name="team" value="1">{% endif %}
+                    <button type="submit" class="pr-btn pr-btn-primary">Show this range</button>
+                </form>
+            </details>
+            <a href="?{{ team_toggle_query }}" class="pr-chip {% if include_team %}is-on{% endif %}" role="switch" aria-checked="{% if include_team %}true{% else %}false{% endif %}"
+               title="Staff and admin accounts are left out by default so test payments don't count.">
+                <span class="pr-box" aria-hidden="true"></span> Include team accounts
+            </a>
+            <span class="rv-tools">
+                <a href="?{{ export_query }}" class="pr-chip">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export CSV
+                </a>
+                <button type="button" class="pr-chip" onclick="window.print()">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a1 1 0 01-1-1v-6a2 2 0 012-2h14a2 2 0 012 2v6a1 1 0 01-1 1h-2M6 14h12v7H6z"/></svg>
+                    Print / PDF
+                </button>
+            </span>
         </div>
-      </div>
-      <div>
-        <p class="rr-card-value">EGP {{ total_revenue|floatformat:0 }}</p>
-        <p class="rr-card-sub">from paid users only</p>
-      </div>
-    </div>
+        <p class="pr-meta">
+            <b>{{ period.label }}</b>{% if compare_label %} · changes compare with the {{ compare_label }}{% elif period.key != 'all' %} · no comparison: the previous period would start before {{ min_date|date:"j M Y" }}{% endif %}
+            {% if not include_team and team_excluded %} · {{ team_excluded }} team account{{ team_excluded|pluralize }} left out{% endif %}
+            · amounts in EGP · times in {{ time_zone }}
+            {% if small_sample %}<br><span class="warn">Small sample:</span> only {{ orders }} paid order{{ orders|pluralize }} in this period, so one payment moves the percentages a lot. Use 12 months or all time for trends.{% endif %}
+        </p>
+    </header>
 
-    <!-- Card 2 -->
-    <div class="rr-card c-blue">
-      <div class="rr-card-top">
-        <span class="rr-card-label">Paid Users</span>
-        <div class="rr-card-icon">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-        </div>
-      </div>
-      <div>
-        <p class="rr-card-value">{{ unique_paid_users }}</p>
-        <p class="rr-card-sub">unique paying customers</p>
-      </div>
-    </div>
+    {% if not has_data %}
+    <section class="pr-card pr-in" style="text-align:center;padding:4rem 2rem;">
+        <h2 style="font-size:1.25rem;margin:0 0 .75rem;">No payments yet</h2>
+        <p style="max-width:30rem;margin:0 auto;line-height:1.7;">This page fills in as soon as the first payment is confirmed.</p>
+    </section>
+    {% else %}
 
-    <!-- Card 3 -->
-    <div class="rr-card c-purple">
-      <div class="rr-card-top">
-        <span class="rr-card-label">Conversion Rate</span>
-        <div class="rr-card-icon">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-        </div>
-      </div>
-      <div>
-        <p class="rr-card-value">{{ conversion_rate }}%</p>
-        <p class="rr-card-sub">paying ÷ total signups</p>
-      </div>
-    </div>
-
-    <!-- Card 4 -->
-    <div class="rr-card c-rose">
-      <div class="rr-card-top">
-        <span class="rr-card-label">Monthly / Annual</span>
-        <div class="rr-card-icon">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-        </div>
-      </div>
-      <div>
-        <p class="rr-card-value">{{ monthly_paid_count }} : {{ annual_paid_count }}</p>
-        <p class="rr-card-sub">split: {{ monthly_pct|floatformat:0 }}% / {{ annual_pct|floatformat:0 }}%</p>
-      </div>
-    </div>
-
-    <!-- Card 5 -->
-    <div class="rr-card c-teal">
-      <div class="rr-card-top">
-        <span class="rr-card-label">Avg Ticket</span>
-        <div class="rr-card-icon">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M6 20h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-        </div>
-      </div>
-      <div>
-        <p class="rr-card-value">EGP {{ avg_payment|floatformat:0 }}</p>
-        <p class="rr-card-sub">paid only</p>
-      </div>
-    </div>
-
-    <!-- Card 6 -->
-    <div class="rr-card c-amber">
-      <div class="rr-card-top">
-        <span class="rr-card-label">Free Codes</span>
-        <div class="rr-card-icon">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
-        </div>
-      </div>
-      <div>
-        <p class="rr-card-value">{{ free_count }}</p>
-        <p class="rr-card-sub">100% coupon used</p>
-      </div>
-    </div>
-
-  </div><!-- /stats -->
-
-  <!-- ── Charts Row ── -->
-  <div class="rr-charts fade-up d3">
-
-    <!-- Dual Chart: Revenue line + Paid/Free bars -->
-    <div class="rr-chart-card">
-      <div class="rr-chart-header">
-        <span class="rr-chart-title">Daily Activity</span>
-        <div class="rr-chart-legend">
-          <span class="rr-legend-item"><span class="rr-legend-dot" style="background:#10b981"></span>Revenue (EGP)</span>
-          <span class="rr-legend-item"><span class="rr-legend-dot" style="background:#3b82f6"></span>Paid</span>
-          <span class="rr-legend-item"><span class="rr-legend-dot" style="background:#f59e0b"></span>Free</span>
-        </div>
-      </div>
-      <div class="rr-dual-wrap">
-        <canvas id="dualChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Donut + Plan Breakdown column -->
-    <div style="display:flex;flex-direction:column;gap:1rem;">
-
-      <!-- Donut -->
-      <div class="rr-chart-card">
-        <div class="rr-chart-header">
-          <span class="rr-chart-title">Plan Split</span>
-        </div>
-        <div class="rr-donut-wrap">
-          <canvas id="donutChart"></canvas>
-          <div class="donut-center">
-            <span class="donut-center-pct">{{ total_paid_subs }}</span>
-            <span class="donut-center-lbl">Paid Subs</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Plan Breakdown -->
-      {% if plan_breakdown %}
-      <div class="rr-plans">
-        <p class="rr-chart-title" style="margin-bottom:1rem;">Plans</p>
-        {% for plan in plan_breakdown %}
-        {% with max_count=plan_breakdown.0.count %}
-        <div class="rr-plan-row">
-          <span class="rr-plan-name">{{ plan.subscription__name|default:"—" }}</span>
-          <div class="rr-plan-bar-bg">
-            <div class="rr-plan-bar-fill"
-                 style="width:{% widthratio plan.count max_count 100 %}%"></div>
-          </div>
-          <span class="rr-plan-count">{{ plan.count }}</span>
-          <span class="rr-plan-revenue">EGP {{ plan.revenue|floatformat:0 }}</span>
-        </div>
-        {% endwith %}
-        {% endfor %}
-      </div>
-      {% endif %}
-
-    </div><!-- /right column -->
-  </div><!-- /charts row -->
-
-  <!-- ── Transactions Table ── -->
-  <div class="rr-table-card fade-up d4">
-    <div class="rr-table-header">
-      <span class="rr-table-title">All Activations</span>
-      <span class="rr-table-sub">{{ total_transactions }} record{{ total_transactions|pluralize }}</span>
-    </div>
-    <div class="rr-table-scroll">
-      <table class="rr-table">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Type</th>
-            <th>Code</th>
-            <th>Amount</th>
-            <th>Plan</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in payments %}
-          <tr>
-            <!-- User -->
-            <td>
-              <div style="display:flex;align-items:center;gap:.625rem;">
-                <div class="rr-avatar">{{ p.user.username|slice:":2"|upper }}</div>
-                <div>
-                  <p style="font-size:.85rem;font-weight:800;color:#0f172a;white-space:nowrap;">{{ p.user.username }}</p>
-                  <p style="font-size:.7rem;color:#475569;font-weight:600;white-space:nowrap;">{{ p.user.email }}</p>
+    <!-- The short version -->
+    <section class="pr-card pr-in" aria-labelledby="rv-sum-h">
+        <div class="rv-hero">
+            <div class="rv-hero-l">
+                <p class="rv-tag" id="rv-sum-h">Revenue · {{ period.label }}</p>
+                <div class="rv-num">
+                    <strong>{{ revenue_label }}</strong><small>EGP</small>
+                    {% if rev_delta %}
+                    <span class="pr-delta {% if rev_delta.dir == 'flat' %}flat{% elif rev_delta.dir == 'up' %}good{% else %}bad{% endif %}" title="Compared with the {{ compare_label }}">
+                        <span aria-hidden="true">{% if rev_delta.dir == 'up' %}▲{% elif rev_delta.dir == 'down' %}▼{% else %}■{% endif %}</span>
+                        <span class="sr-only">{% if rev_delta.dir == 'up' %}Up{% elif rev_delta.dir == 'down' %}Down{% else %}No change{% endif %}</span>
+                        {{ rev_delta.label }} vs {{ compare_label }}
+                    </span>
+                    {% endif %}
                 </div>
-              </div>
-            </td>
-
-            <!-- Paid / Free badge -->
-            <td>
-              {% if p.amount > 0 %}
-              <span class="rr-badge-paid">✓ Paid</span>
-              {% else %}
-              <span class="rr-badge-free">◈ Free</span>
-              {% endif %}
-            </td>
-
-            <!-- Discount code -->
-            <td>
-              {% if p.discount_code_used %}
-              <span style="font-size:.75rem;font-weight:800;color:#7c3aed;letter-spacing:.04em;">
-                {{ p.discount_code_used|upper }}
-              </span>
-              {% else %}
-              <span style="font-size:.75rem;font-weight:800;color:#94a3b8;">—</span>
-              {% endif %}
-            </td>
-
-            <!-- Amount -->
-            <td>
-              {% if p.amount > 0 %}
-              <span style="font-size:.9rem;font-weight:800;color:#059669;">EGP {{ p.amount|floatformat:2 }}</span>
-              {% else %}
-              <span style="font-size:.9rem;font-weight:800;color:#d97706;">EGP 0.00</span>
-              {% endif %}
-            </td>
-
-            <!-- Plan -->
-            <td>
-              <span style="font-size:.8rem;font-weight:700;color:#334155;">{{ p.subscription.name|default:"Pro Plan" }}</span>
-            </td>
-
-            <!-- Date -->
-            <td>
-              <span style="font-size:.75rem;font-weight:600;color:#1e293b;white-space:nowrap;">{{ p.date|date:"M d, Y" }}</span><br>
-              <span style="font-size:.65rem;font-weight:600;color:#64748b;">{{ p.date|date:"H:i" }}</span>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" class="rr-empty">
-              <div class="rr-empty-icon">📭</div>
-              <p style="font-weight:700;color:#475569;">No activations in this period.</p>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Mobile Records List (Visible on mobile viewports only) -->
-    <div class="rr-mobile-records">
-      {% for p in payments %}
-      <div class="rr-mobile-record-card">
-        <div class="rr-mobile-record-header">
-          <div class="rr-mobile-record-user">
-            <div class="rr-avatar">{{ p.user.username|slice:":2"|upper }}</div>
-            <div class="rr-mobile-user-info">
-              <p class="rr-mobile-user-name">{{ p.user.username }}</p>
-              <p class="rr-mobile-user-email">{{ p.user.email }}</p>
+                <ul class="rv-story">
+                    {% for line in summary %}<li>{{ line }}</li>{% endfor %}
+                </ul>
             </div>
-          </div>
-          <div class="rr-mobile-record-amount">
-            {% if p.amount > 0 %}
-            <span style="color:#059669;">EGP {{ p.amount|floatformat:0 }}</span>
+            <div class="rv-hero-r">
+                <div class="pr-card-h" style="margin-bottom:.75rem">
+                    <div>
+                        <h2>Revenue pace</h2>
+                        <p>Running total, day by day.{% if compare_label %} The grey line is the {{ compare_label }} on the same day count.{% else %} There is no earlier period to compare with.{% endif %}</p>
+                    </div>
+                    <ul class="rv-legend" aria-label="Legend">
+                        <li><span class="rv-key line" style="--c:var(--c-1)"></span>This period <b>{{ revenue_label }}</b></li>
+                        {% if compare_label %}<li><span class="rv-key line" style="--c:var(--c-prev)"></span>{{ compare_label|capfirst }} <b>{{ prev_revenue_label }}</b></li>{% endif %}
+                    </ul>
+                </div>
+                <div class="rv-chart"><svg id="rvPace" role="img" aria-label="Running total of revenue through the period{% if compare_label %}, compared with the {{ compare_label }}{% endif %}"></svg></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- KPI tiles -->
+    <section class="pr-kpis pr-section pr-in" style="animation-delay:.05s" aria-label="Headline numbers">
+        {% for k in kpis %}
+        <div class="pr-card pr-kpi">
+            <p class="pr-kpi-l">{{ k.label }}</p>
+            <div class="pr-kpi-v">
+                <strong>{{ k.value }}</strong>{% if k.unit %}<span>{{ k.unit }}</span>{% endif %}
+                {% if k.delta %}
+                <span class="pr-delta {% if k.delta.dir == 'flat' %}flat{% elif k.delta.dir == 'up' and not k.up_is_bad or k.delta.dir == 'down' and k.up_is_bad %}good{% else %}bad{% endif %}"
+                      title="Compared with the {{ k.vs }}">
+                    <span aria-hidden="true">{% if k.delta.dir == 'up' %}▲{% elif k.delta.dir == 'down' %}▼{% else %}■{% endif %}</span>
+                    <span class="sr-only">{% if k.delta.dir == 'up' %}Up{% elif k.delta.dir == 'down' %}Down{% else %}No change{% endif %} compared with the {{ k.vs }}</span>
+                    {{ k.delta.label }}
+                </span>
+                {% endif %}
+            </div>
+            <p class="pr-kpi-s">{{ k.sub }}</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    <!-- Decisions -->
+    {% if insights %}
+    <section class="pr-section pr-in" style="animation-delay:.1s" aria-labelledby="rv-ins-h">
+        <h2 class="rv-h2" id="rv-ins-h" style="margin-top:1.75rem">What to do about it</h2>
+        <div class="pr-insights">
+            {% for i in insights %}
+            <article class="pr-ins {{ i.tone }}">
+                <span class="pr-ins-i" aria-hidden="true">
+                    {% if i.tone == 'action' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% elif i.tone == 'risk' %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                    {% else %}
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </span>
+                <div>
+                    <span class="pr-ins-tag">{% if i.tone == 'action' %}Do this{% elif i.tone == 'risk' %}Watch out{% else %}Worth knowing{% endif %}</span>
+                    <h3>{{ i.title }}</h3>
+                    <p>{{ i.body }}</p>
+                    {% if i.href %}<a href="{{ i.href }}">{{ i.link_label }} →</a>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Revenue over time -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.15s;margin-top:1.75rem" aria-labelledby="rv-trend-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="rv-trend-h">Revenue by {{ trend.unit }}</h2>
+                <p>Split into first payments from new customers and repeat payments from existing ones. Hover a column for the numbers.</p>
+            </div>
+            <ul class="rv-legend" aria-label="Legend">
+                <li><span class="rv-key" style="--c:var(--c-1)"></span>New customers <b>{{ new_revenue_label }}</b></li>
+                <li><span class="rv-key" style="--c:var(--c-2)"></span>Renewals <b>{{ repeat_revenue_label }}</b></li>
+            </ul>
+        </div>
+        {% if trend.points %}
+        <div class="rv-chart"><svg id="rvTrend" role="img" aria-label="Revenue per {{ trend.unit }}, new customers and renewals stacked"></svg></div>
+        <details class="pr-details">
+            <summary>Show as table</summary>
+            <div class="pr-scroll" style="max-height:22rem;overflow-y:auto;">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">{{ trend.unit|capfirst }}</th><th scope="col" class="num">New customers</th><th scope="col" class="num">Renewals</th><th scope="col" class="num">Total</th><th scope="col" class="num">Paid orders</th><th scope="col" class="num">Free passes</th><th scope="col" class="num">MRR at close</th></tr></thead>
+                    <tbody>
+                        {% for p in trend.points %}
+                        <tr><td>{{ p.label }}</td><td class="num">{{ p.new|floatformat:"0g" }}</td><td class="num">{{ p.repeat|floatformat:"0g" }}</td><td class="num"><b>{{ p.revenue|floatformat:"0g" }}</b></td><td class="num">{{ p.orders }}</td><td class="num">{{ p.passes }}</td><td class="num">{{ p.mrr|floatformat:"0g" }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+        {% else %}
+        <p class="rv-chart-empty">No payments in this period.</p>
+        {% endif %}
+    </section>
+
+    <!-- Recurring revenue -->
+    <div class="pr-grid rv-g2 pr-section">
+        <section class="pr-card pr-in" style="animation-delay:.2s" aria-labelledby="rv-mrr-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="rv-mrr-h">Monthly recurring revenue</h2>
+                    <p>What running paid plans are worth per month, at the close of each {{ trend.unit }}. Annual plans count as a twelfth of their price.</p>
+                </div>
+            </div>
+            {% if trend.points %}
+            <div class="rv-chart"><svg id="rvMrr" role="img" aria-label="Monthly recurring revenue at the close of each {{ trend.unit }}"></svg></div>
             {% else %}
-            <span style="color:#d97706;">EGP 0</span>
+            <p class="rv-chart-empty">No data in this period.</p>
             {% endif %}
-          </div>
-        </div>
+        </section>
 
-        <div class="rr-mobile-record-details">
-          {% if p.amount > 0 %}
-          <span class="rr-badge-paid">✓ Paid</span>
-          {% else %}
-          <span class="rr-badge-free">◈ Free</span>
-          {% endif %}
-          
-          <span class="rr-mobile-plan-badge">
-            {{ p.subscription.name|default:"Pro Plan" }}
-          </span>
-
-          {% if p.discount_code_used %}
-          <span class="rr-mobile-discount-badge">
-            {{ p.discount_code_used|upper }}
-          </span>
-          {% endif %}
-        </div>
-
-        <div class="rr-mobile-record-meta">
-          <span>Activated Plan</span>
-          <span>{{ p.date|date:"M d, Y" }} &nbsp;·&nbsp; {{ p.date|date:"H:i" }}</span>
-        </div>
-      </div>
-      {% empty %}
-      <div class="rr-empty">
-        <div class="rr-empty-icon">📭</div>
-        <p style="font-weight:700;color:#475569;">No activations in this period.</p>
-      </div>
-      {% endfor %}
+        <section class="pr-card pr-in" style="animation-delay:.22s" aria-labelledby="rv-move-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="rv-move-h">What moved MRR</h2>
+                    <p>From the start of the period to {% if period.key == 'custom' %}its end{% else %}today{% endif %}, measured week by week. Each row is EGP a month.</p>
+                </div>
+            </div>
+            <div class="rv-bridge">
+                {% for r in movement.rows %}
+                <div class="rv-br {% if r.sign > 0 %}up{% elif r.sign < 0 %}down{% else %}total{% endif %}{% if forloop.first %} first{% endif %}" {% if forloop.first %}style="border-top:0;padding-top:0"{% endif %}>
+                    <span class="rv-br-l">{{ r.label }}<small>{{ r.count }} customer{{ r.count|pluralize }}</small></span>
+                    <span class="rv-br-bar" aria-hidden="true"><i style="width:{{ r.pct|floatformat:'1' }}%"></i></span>
+                    <b>{% if r.sign > 0 %}+{% elif r.sign < 0 %}−{% endif %}{{ r.value_label }}</b>
+                </div>
+                {% endfor %}
+            </div>
+            {% if not movement.amounts %}<p class="pr-kpi-s">Nothing changed in this period.</p>{% endif %}
+        </section>
     </div>
-  </div><!-- /table -->
 
-</div><!-- /wrap -->
-</div><!-- /page -->
+    <!-- Renewals -->
+    <section class="pr-section pr-in" style="animation-delay:.25s;scroll-margin-top:1rem" id="renewals" aria-labelledby="rv-ren-h">
+        <h2 class="rv-h2" id="rv-ren-h" style="margin-top:1.75rem">Renewals: will the revenue last?</h2>
+        <div class="pr-grid rv-gr">
+            <div class="pr-card">
+                <div class="pr-card-h"><div><h2>Renewal rate</h2><p>Share of ended plans where the customer paid again within {{ grace_days }} days of the end. Plans still inside that window are left out.</p></div></div>
+                <div class="rv-meters">
+                    {% with r=renewals.period %}
+                    <div class="rv-meter {% if r.rate is None %}is-na{% endif %}">
+                        <span>This period<small>{{ r.renewed }} of {{ r.decided }}</small></span>
+                        <em>{% if r.rate is not None %}{{ r.rate|floatformat:"-1" }}%{% else %}no plans ended{% endif %}</em>
+                        <span class="bar" aria-hidden="true"><i style="width:{{ r.rate|default:0|floatformat:'1' }}%"></i></span>
+                    </div>
+                    {% endwith %}
+                    {% with r=renewals.all_time %}
+                    <div class="rv-meter {% if r.rate is None %}is-na{% endif %}">
+                        <span>All time<small>{{ r.renewed }} of {{ r.decided }}</small></span>
+                        <em>{% if r.rate is not None %}{{ r.rate|floatformat:"-1" }}%{% else %}no plans ended yet{% endif %}</em>
+                        <span class="bar" aria-hidden="true"><i style="width:{{ r.rate|default:0|floatformat:'1' }}%"></i></span>
+                    </div>
+                    {% endwith %}
+                    {% with r=renewals.monthly %}
+                    <div class="rv-meter is-teal {% if r.rate is None %}is-na{% endif %}">
+                        <span>Monthly plans<small>{{ r.renewed }} of {{ r.decided }}, all time</small></span>
+                        <em>{% if r.rate is not None %}{{ r.rate|floatformat:"-1" }}%{% else %}—{% endif %}</em>
+                        <span class="bar" aria-hidden="true"><i style="width:{{ r.rate|default:0|floatformat:'1' }}%"></i></span>
+                    </div>
+                    {% endwith %}
+                    {% with r=renewals.annual %}
+                    <div class="rv-meter is-teal {% if r.rate is None %}is-na{% endif %}">
+                        <span>Annual plans<small>{{ r.renewed }} of {{ r.decided }}, all time</small></span>
+                        <em>{% if r.rate is not None %}{{ r.rate|floatformat:"-1" }}%{% else %}none ended yet{% endif %}</em>
+                        <span class="bar" aria-hidden="true"><i style="width:{{ r.rate|default:0|floatformat:'1' }}%"></i></span>
+                    </div>
+                    {% endwith %}
+                    {% with r=renewals.free_passes %}
+                    <div class="rv-meter {% if r.rate is None %}is-na{% endif %}">
+                        <span>Free pass → paid<small>{{ r.renewed }} of {{ r.decided }} ended in the period</small></span>
+                        <em>{% if r.rate is not None %}{{ r.rate|floatformat:"-1" }}%{% else %}—{% endif %}</em>
+                        <span class="bar" aria-hidden="true"><i style="width:{{ r.rate|default:0|floatformat:'1' }}%"></i></span>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="pr-card">
+                <div class="pr-card-h">
+                    <div>
+                        <h2>Renewals due</h2>
+                        <p>Customers paying today, by the week their paid-up time runs out, at the price they last paid. Hover a column for the numbers.</p>
+                    </div>
+                </div>
+                <div class="rv-stats">
+                    <div class="rv-stat"><p>Next 30 days</p><strong>EGP {{ upcoming.next30.value_label }}</strong><span>{{ upcoming.next30.count }} customer{{ upcoming.next30.count|pluralize }}{% if upcoming.expected30_label and upcoming.next30.count %} · expect ≈ {{ upcoming.expected30_label }}{% endif %}</span></div>
+                    <div class="rv-stat"><p>Next 60 days</p><strong>EGP {{ upcoming.next60.value_label }}</strong><span>{{ upcoming.next60.count }} customer{{ upcoming.next60.count|pluralize }}</span></div>
+                    <div class="rv-stat"><p>Next 90 days</p><strong>EGP {{ upcoming.next90.value_label }}</strong><span>{{ upcoming.next90.count }} customer{{ upcoming.next90.count|pluralize }}</span></div>
+                </div>
+                {% if upcoming.weeks_due %}
+                <div class="rv-chart"><svg id="rvForecast" role="img" aria-label="Renewal value due per week for the next 12 weeks"></svg></div>
+                {% else %}
+                <p class="rv-chart-empty" style="padding:1.5rem 1rem">No paid plan runs out in the next 12 weeks.</p>
+                {% endif %}
+                {% if upcoming.later_count %}<p class="pr-kpi-s">Plus {{ upcoming.later_count }} customer{{ upcoming.later_count|pluralize }} (EGP {{ upcoming.later_value_label }}) due after the next 12 weeks, mostly annual plans.</p>{% endif %}
+
+                {% if upcoming.rows %}
+                <details class="pr-details" {% if upcoming.next30.count %}open{% endif %}>
+                    <summary>Who is due ({{ upcoming.rows|length }})</summary>
+                    <div class="pr-scroll" style="max-height:24rem;overflow-y:auto;">
+                        <table class="pr-tbl">
+                            <thead><tr><th scope="col">Customer</th><th scope="col">Plan</th><th scope="col">Paid up until</th><th scope="col">Last seen</th><th scope="col" class="num">Last paid</th></tr></thead>
+                            <tbody>
+                                {% for r in upcoming.rows %}
+                                <tr>
+                                    <td>{% if r.user_id %}<a class="rv-tbl-link" href="{% url 'manage_user_journey' r.user_id %}">{{ r.name }}</a>{% else %}<span class="pr-name">{{ r.name }}</span>{% endif %}<span class="pr-sub">{{ r.email }}</span></td>
+                                    <td>{{ r.plan }}</td>
+                                    <td class="pr-num">{{ r.due|date:"j M Y" }}<span class="pr-sub">in {{ r.days_left }} day{{ r.days_left|pluralize }}</span></td>
+                                    <td>{% if r.quiet %}<span class="pr-pill pr-pill-warn">Quiet {{ quiet_days }}+ days</span>{% elif r.last_seen %}{{ r.last_seen|timesince }} ago{% else %}—{% endif %}</td>
+                                    <td class="num">{{ r.value_label }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Where it comes from -->
+    <section class="pr-section pr-in" style="animation-delay:.3s" aria-labelledby="rv-mix-h">
+        <h2 class="rv-h2" id="rv-mix-h" style="margin-top:1.75rem">Where the money comes from</h2>
+        <div class="pr-grid rv-g3">
+            <div class="pr-card">
+                <div class="pr-card-h"><div><h2>By plan</h2><p>Revenue in the period, and each plan's share of MRR today.</p></div></div>
+                {% if plan_rows %}
+                <div class="rv-split" role="img" aria-label="Revenue split by plan: {% for p in plan_rows %}{{ p.label }} {{ p.share|default:0 }}%{% if not forloop.last %}, {% endif %}{% endfor %}">
+                    {% for p in plan_rows %}{% if p.share %}<i style="--c:var(--c-{% if p.key == 'monthly' %}1{% elif p.key == 'annual' %}2{% else %}3{% endif %});flex:{{ p.share|floatformat:'1' }}">{% if p.share >= 18 %}{{ p.share|floatformat:"0" }}%{% endif %}</i>{% endif %}{% endfor %}
+                </div>
+                <div class="pr-scroll">
+                <table class="pr-tbl rv-tight">
+                    <thead><tr><th scope="col">Plan</th><th scope="col" class="num">Orders</th><th scope="col" class="num">Revenue</th><th scope="col" class="num" title="Share of today's monthly recurring revenue">Of MRR</th></tr></thead>
+                    <tbody>
+                        {% for p in plan_rows %}
+                        <tr><td><span class="rv-swatch" style="--c:var(--c-{% if p.key == 'monthly' %}1{% elif p.key == 'annual' %}2{% else %}3{% endif %})">{{ p.label }}</span><span class="pr-sub">avg EGP {{ p.avg_label }}</span></td><td class="num">{{ p.orders }}</td><td class="num">{{ p.revenue_label }}</td><td class="num">{% if p.mrr_share is not None %}{{ p.mrr_share|floatformat:"0" }}%{% else %}—{% endif %}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                <p class="pr-kpi-s">List prices today: Monthly EGP {{ prices.monthly }}, Annual EGP {{ prices.annual }}.</p>
+                {% else %}<p class="pr-empty">No paid orders in this period.</p>{% endif %}
+            </div>
+
+            <div class="pr-card">
+                <div class="pr-card-h"><div><h2>By payment method</h2><p>How paid orders in the period were paid.</p></div></div>
+                {% if method_rows %}
+                <div class="rv-meters">
+                    {% for m in method_rows %}
+                    <div class="rv-meter">
+                        <span>{{ m.label }}<small>{{ m.orders }} order{{ m.orders|pluralize }}</small></span>
+                        <em>EGP {{ m.revenue_label }}</em>
+                        <span class="bar" aria-hidden="true"><i style="width:{{ m.share|floatformat:'1' }}%"></i></span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}<p class="pr-empty">No paid orders in this period.</p>{% endif %}
+                {% if receipts.count %}
+                <p class="pr-kpi-s" style="margin-top:1.25rem"><span class="pr-pill pr-pill-warn">{{ receipts.count }} waiting</span> receipt{{ receipts.count|pluralize }} worth EGP {{ receipts.value_label }} still need{{ receipts.count|pluralize:"s," }} a manual check (not counted above).</p>
+                {% endif %}
+            </div>
+
+            <div class="pr-card">
+                <div class="pr-card-h"><div><h2>What discounts cost</h2><p>List price minus what was paid, and the list value of free passes, by code.</p></div></div>
+                <div class="rv-stats" style="grid-template-columns:1fr 1fr">
+                    <div class="rv-stat"><p>Off paid orders</p><strong>EGP {{ discounts.given_label }}</strong><span>{% if discounts.share is not None %}{{ discounts.share|floatformat:"-1" }}% of list · {% endif %}{{ discounts.discounted_orders }} of {{ discounts.orders }} orders</span></div>
+                    <div class="rv-stat"><p>Free passes</p><strong>EGP {{ discounts.free_value_label }}</strong><span>{{ discounts.free_count }} pass{{ discounts.free_count|pluralize:"es" }} at list price</span></div>
+                </div>
+                {% if discounts.codes %}
+                <div class="pr-scroll">
+                    <table class="pr-tbl">
+                        <thead><tr><th scope="col">Code</th><th scope="col" class="num">Uses</th><th scope="col" class="num">Revenue</th><th scope="col" class="num">Cost</th></tr></thead>
+                        <tbody>
+                            {% for c in discounts.codes|slice:":6" %}
+                            <tr><td><span class="rv-mono">{{ c.code }}</span>{% if c.free %}<span class="pr-sub">{{ c.free }} free</span>{% endif %}</td><td class="num">{{ c.uses }}</td><td class="num">{{ c.revenue_label }}</td><td class="num">{{ c.cost_label }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if discounts.codes|length > 6 %}<p class="pr-kpi-s">{{ discounts.codes|length|add:"-6" }} more code{{ discounts.codes|length|add:"-6"|pluralize }} in the CSV.</p>{% endif %}
+                {% else %}<p class="pr-empty">No codes used in this period.</p>{% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Customers -->
+    <div class="pr-grid rv-g2 pr-section">
+        <section class="pr-card pr-in" style="animation-delay:.35s" aria-labelledby="rv-top-h">
+            <div class="pr-card-h">
+                <div>
+                    <h2 id="rv-top-h">Top customers</h2>
+                    <p>By everything they have paid since {{ min_date|date:"j M Y" }}, not just this period.</p>
+                </div>
+            </div>
+            {% if customers.top %}
+            <div class="pr-scroll">
+                <table class="pr-tbl">
+                    <thead><tr><th scope="col">Customer</th><th scope="col">Plan</th><th scope="col" class="num">Orders</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Share</th></tr></thead>
+                    <tbody>
+                        {% for c in customers.top %}
+                        <tr>
+                            <td>{% if c.user_id %}<a class="rv-tbl-link" href="{% url 'manage_user_journey' c.user_id %}">{{ c.name }}</a>{% else %}<span class="pr-name">{{ c.name }}</span>{% endif %}<span class="pr-sub">since {{ c.since|date:"j M Y" }}</span></td>
+                            <td>{{ c.plan }} {% if c.active %}<span class="pr-pill pr-pill-good">Paying</span>{% else %}<span class="pr-pill pr-pill-slate">Ended</span>{% endif %}</td>
+                            <td class="num">{{ c.orders }}</td>
+                            <td class="num">{{ c.revenue_label }}</td>
+                            <td class="num"><span class="rv-share">{{ c.share|floatformat:"0" }}%<i aria-hidden="true"><b style="width:{{ c.share|floatformat:'1' }}%"></b></i></span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="pr-empty">No paying customers yet.</p>{% endif %}
+        </section>
+
+        <section class="pr-card pr-in" style="animation-delay:.37s" aria-labelledby="rv-econ-h">
+            <div class="pr-card-h"><div><h2 id="rv-econ-h">Customer economics</h2><p>All time unless it says otherwise.</p></div></div>
+            <dl class="rv-dl">
+                <dt>Customers who ever paid</dt><dd>{{ customers.count }}</dd>
+                <dt>Paid more than once</dt><dd>{{ customers.repeat_count }}</dd>
+                <dt>Average paid per customer so far</dt><dd>EGP {{ customers.ltv_label }}</dd>
+                <dt>Top 3 customers' share of revenue</dt><dd>{% if customers.top3_share is not None %}{{ customers.top3_share|floatformat:"-1" }}%{% else %}—{% endif %}</dd>
+                <dt>Typical time from signup to first payment</dt><dd>{% if customers.days_to_pay is None %}—{% elif customers.days_to_pay < 1 %}Same day{% else %}{{ customers.days_to_pay|floatformat:"0" }} day{{ customers.days_to_pay|floatformat:"0"|pluralize }}{% endif %}</dd>
+                <dt>Signups in this period who paid</dt><dd>{{ conversion.paid }} of {{ conversion.signups }}{% if conversion.rate is not None %} ({{ conversion.rate|floatformat:"-1" }}%){% endif %}</dd>
+                <dt>New paying customers in this period</dt><dd>{{ new_customers }}</dd>
+            </dl>
+        </section>
+    </div>
+
+    <!-- Ledger -->
+    <section class="pr-card pr-section pr-in" style="animation-delay:.4s" aria-labelledby="rv-led-h">
+        <div class="pr-card-h">
+            <div>
+                <h2 id="rv-led-h">Every payment in the period</h2>
+                <p>{{ ledger_total }} payment{{ ledger_total|pluralize }}, newest first, free passes included.{% if ledger_total > ledger|length %} Showing the latest {{ ledger|length }}; the CSV has all of them.{% endif %}</p>
+            </div>
+            <a href="?{{ export_query }}" class="pr-btn">Export CSV</a>
+        </div>
+        {% if ledger %}
+        <div class="pr-scroll">
+            <table class="pr-tbl" style="min-width:52rem">
+                <thead><tr><th scope="col">Date</th><th scope="col">Customer</th><th scope="col">Type</th><th scope="col">Plan</th><th scope="col">Method</th><th scope="col">Code</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Discount</th></tr></thead>
+                <tbody>
+                    {% for r in ledger %}
+                    <tr>
+                        <td class="pr-num" style="white-space:nowrap">{{ r.date|date:"j M Y" }}<span class="pr-sub">{{ r.date|date:"H:i" }}</span></td>
+                        <td>{% if r.user_id %}<a class="rv-tbl-link" href="{% url 'manage_user_journey' r.user_id %}">{{ r.name }}</a>{% else %}<span class="pr-name">{{ r.name }}</span>{% endif %}<span class="pr-sub">{{ r.email }}</span></td>
+                        <td><span class="pr-pill {% if r.kind == 'new' %}pr-pill-brand{% elif r.kind == 'repeat' %}pr-pill-good{% else %}pr-pill-slate{% endif %}">{{ r.kind_label }}</span></td>
+                        <td>{{ r.plan }}</td>
+                        <td>{{ r.method }}</td>
+                        <td>{% if r.code %}<span class="rv-mono">{{ r.code }}</span>{% else %}<span style="color:var(--muted)">—</span>{% endif %}</td>
+                        <td class="num"><b style="color:var(--ink)">{{ r.amount_label }}</b></td>
+                        <td class="num">{{ r.discount_label|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}<p class="pr-empty">No payments in this period.</p>{% endif %}
+
+        <ul class="pr-notes">
+            <li><b>Revenue</b> is confirmed payments above zero. Free passes (100% coupons, school codes, admin grants) are counted separately and never add to revenue. Receipts still waiting for a check are not included.</li>
+            <li><b>MRR</b> spreads what each customer paid for their running plan over its length, per 30 days. When someone renews early, only their newest paid plan counts, so nobody is counted twice. ARR is MRR × 12.</li>
+            <li><b>Renewed</b> means the customer paid again before the plan ended or within {{ grace_days }} days after. Plans that ended less than {{ grace_days }} days ago without a payment are undecided and left out of the rate.</li>
+            <li><b>Renewals due</b> use the price each customer last paid, so the forecast is conservative. "Expect" applies the all-time renewal rate once at least 5 plans have ended.</li>
+            <li><b>Discounts</b> compare against today's list prices (Monthly EGP {{ prices.monthly }}, Annual EGP {{ prices.annual }}). Older payments made at a different list price show as discounted.</li>
+            <li><b>Signups who paid</b> counts editor accounts created in the period that have paid by now, so recent periods look lower until people have had time to decide.</li>
+            <li><b>Only data from {{ min_date|date:"j M Y" }} on.</b> Earlier payments are launch-era test data. A comparison is only shown when the whole previous period falls after this date. The checkout funnel is on <a href="{% url 'manage_payment_tracking' %}">Payment performance</a>.</li>
+        </ul>
+    </section>
+
+    {% endif %}
+</div>
+</div>
+
+<div class="pr-tip" id="rvTip" role="status" aria-live="polite"></div>
+{{ chart_data|json_script:"rv-data" }}
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
+    var dataEl = document.getElementById('rv-data');
+    if (!dataEl) return;
+    var data = JSON.parse(dataEl.textContent);
+    var NS = 'http://www.w3.org/2000/svg';
+    var tip = document.getElementById('rvTip');
+    var css = getComputedStyle(document.querySelector('.rv'));
+    var C = { one: css.getPropertyValue('--c-1').trim(), two: css.getPropertyValue('--c-2').trim(),
+              prev: css.getPropertyValue('--c-prev').trim() };
+    var AXIS = 24, TOP = 14, GUTTER = 44;
 
-  const labels    = {{ chart_labels|safe }};
-  const revenue   = {{ chart_revenue|safe }};
-  const paidCnt   = {{ chart_paid_cnt|safe }};
-  const freeCnt   = {{ chart_free_cnt|safe }};
-  const paidTotal = {{ paid_count }};
-  const freeTotal = {{ free_count }};
-  const monthlyTotal = {{ monthly_paid_count }};
-  const sixMonthTotal = {{ six_month_paid_count }};
-  const annualTotal = {{ annual_paid_count }};
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var compact = function (n) {
+        if (n >= 1000) return (Math.round(n / 100) / 10).toString().replace(/\.0$/, '') + 'K';
+        return fmt(n);
+    };
+    var nice = function (max) {
+        if (max <= 0) return 1;
+        var p = Math.pow(10, Math.floor(Math.log10(max))), m = max / p;
+        var steps = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+        for (var i = 0; i < steps.length; i++) if (m <= steps[i]) return steps[i] * p;
+        return 10 * p;
+    };
+    function el(name, attrs, parent) {
+        var n = document.createElementNS(NS, name);
+        for (var k in attrs) n.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(n);
+        return n;
+    }
+    // Column with a 4px rounded data end and a square base.
+    function colPath(x, y, w, h, round) {
+        if (h <= 0) return '';
+        var r = round ? Math.min(4, w / 2, h) : 0;
+        return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y +
+               'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+    }
 
-  /* ── Dual Chart ── */
-  const dualCtx = document.getElementById('dualChart').getContext('2d');
+    function showTip(title, rows, x, y) {
+        tip.textContent = '';
+        var h = document.createElement('div'); h.className = 'pr-tip-h'; h.textContent = title; tip.appendChild(h);
+        rows.forEach(function (r) {
+            var row = document.createElement('div'); row.className = 'pr-tip-r';
+            var key = document.createElement('i'); key.style.background = r[0] || 'transparent'; row.appendChild(key);
+            row.appendChild(document.createTextNode(r[1]));
+            var b = document.createElement('b'); b.textContent = r[2]; row.appendChild(b);
+            tip.appendChild(row);
+        });
+        tip.classList.add('on');
+        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        var left = x + 14; if (left + tw > window.innerWidth - 8) left = x - tw - 14;
+        var top = y - th - 12; if (top < 8) top = y + 16;
+        tip.style.left = Math.max(8, left) + 'px'; tip.style.top = top + 'px';
+    }
+    function hideTip() { tip.classList.remove('on'); }
 
-  const revGrad = dualCtx.createLinearGradient(0, 0, 0, 260);
-  revGrad.addColorStop(0, 'rgba(16,185,129,0.25)');
-  revGrad.addColorStop(1, 'rgba(16,185,129,0)');
-
-  new Chart(dualCtx, {
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          type: 'line',
-          label: 'Revenue (EGP)',
-          data: revenue,
-          borderColor: '#10b981',
-          borderWidth: 3,
-          backgroundColor: revGrad,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#10b981',
-          pointBorderWidth: 2,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#10b981',
-          pointHoverBorderColor: '#ffffff',
-          pointHoverBorderWidth: 2,
-          yAxisID: 'yRevenue',
-          order: 1,
-        },
-        {
-          type: 'bar',
-          label: 'Paid',
-          data: paidCnt,
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-          hoverBackgroundColor: '#2563eb',
-          borderRadius: 6,
-          yAxisID: 'yCnt',
-          order: 2,
-          barPercentage: 0.6,
-          categoryPercentage: 0.5,
-        },
-        {
-          type: 'bar',
-          label: 'Free',
-          data: freeCnt,
-          backgroundColor: 'rgba(245, 158, 11, 0.8)',
-          hoverBackgroundColor: '#d97706',
-          borderRadius: 6,
-          yAxisID: 'yCnt',
-          order: 3,
-          barPercentage: 0.6,
-          categoryPercentage: 0.5,
-        },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          titleColor: '#0f172a',
-          bodyColor: '#475569',
-          titleFont: { family: 'Syne', size: 12, weight: 'bold' },
-          bodyFont: { family: 'Inter', size: 12 },
-          borderColor: 'rgba(0,0,0,0.08)',
-          borderWidth: 1,
-          padding: 12,
-          boxPadding: 6,
-          usePointStyle: true,
-          callbacks: {
-            label: ctx => {
-              if (ctx.dataset.label === 'Revenue (EGP)')
-                return ' Revenue: EGP ' + ctx.parsed.y.toLocaleString();
-              return ' ' + ctx.dataset.label + ' Activations: ' + ctx.parsed.y;
+    // Shared frame: hairline grid at 0 / half / max, y ticks on the left, thinned x labels below.
+    function frame(svg, height, max, labels, xAt) {
+        var W = svg.getBoundingClientRect().width || 600;
+        svg.textContent = '';
+        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + height);
+        svg.setAttribute('height', height);
+        var plotH = height - TOP - AXIS;
+        [0, max / 2, max].forEach(function (v, j) {
+            var y = TOP + plotH - (v / max) * plotH;
+            el('line', { x1: GUTTER, x2: W, y1: y, y2: y, 'class': j ? 'grid' : 'base' }, svg);
+            el('text', { x: GUTTER - 8, y: y + 4, 'text-anchor': 'end', 'class': 'tick' }, svg).textContent = compact(v);
+        });
+        return { W: W, plotH: plotH, y: function (v) { return TOP + plotH - (v / max) * plotH; }, base: TOP + plotH };
+    }
+    function xLabels(svg, labels, xAt, spacing, height) {
+        var every = Math.max(1, Math.ceil(64 / spacing));
+        var last = labels.length - 1;
+        labels.forEach(function (label, i) {
+            var lastFits = i === last && (last % every === 0 || last % every >= every / 2);
+            if (i % every && !lastFits) return;
+            if (i !== last && last - i < every / 2 && last % every >= every / 2) return;
+            el('text', { x: xAt(i), y: height - 6, 'text-anchor': 'middle', 'class': 'tick' }, svg).textContent = label;
+        });
+    }
+    // One focusable layer per chart: pointer picks the nearest index, arrow keys step through.
+    function hoverLayer(svg, g, n, indexAt, onShow) {
+        var hit = el('rect', { x: GUTTER, y: 0, width: Math.max(0, g.W - GUTTER), height: g.base, 'class': 'hit', tabindex: 0 }, svg);
+        var current = n - 1;
+        function show(i, evt) {
+            current = i;
+            var r = svg.getBoundingClientRect(), scale = r.width / g.W;
+            var pos = onShow(i);
+            var x = evt && evt.clientX != null ? evt.clientX : r.left + pos.x * scale;
+            var y = evt && evt.clientY != null ? evt.clientY : r.top + pos.y * scale;
+            showTip(pos.title, pos.rows, x, y);
+        }
+        hit.addEventListener('pointermove', function (e) {
+            var r = svg.getBoundingClientRect();
+            show(indexAt((e.clientX - r.left) * g.W / r.width), e);
+        });
+        hit.addEventListener('pointerleave', function () { onShow(-1); hideTip(); });
+        hit.addEventListener('focus', function () { show(current); });
+        hit.addEventListener('blur', function () { onShow(-1); hideTip(); });
+        hit.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                show(Math.min(n - 1, Math.max(0, current + (e.key === 'ArrowRight' ? 1 : -1))));
             }
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { color: 'rgba(0,0,0,0.03)' },
-          ticks: { color: '#64748b', font: { family: 'Inter', size: 10, weight: '600' } }
-        },
-        yRevenue: {
-          position: 'left',
-          grid: { color: 'rgba(0,0,0,0.03)' },
-          ticks: {
-            color: '#059669', font: { family: 'Inter', size: 10, weight: '700' },
-            callback: v => 'EGP ' + v
-          }
-        },
-        yCnt: {
-          position: 'right',
-          grid: { display: false },
-          ticks: { color: '#64748b', font: { family: 'Inter', size: 10, weight: '700' } },
-          beginAtZero: true,
-          stepSize: 1,
-        }
-      }
+        });
     }
-  });
 
-  /* ── Donut Chart (Plan Split) ── */
-  const donutCtx = document.getElementById('donutChart').getContext('2d');
-  const hasPlanData = (monthlyTotal + annualTotal) > 0;
+    function lineChart(svg, cfg) {
+        var pts = cfg.points, n = pts.length;
+        if (!n) return;
+        var values = [];
+        cfg.series.forEach(function (s) { pts.forEach(function (p) { if (p[s.key] != null) values.push(p[s.key]); }); });
+        var max = nice(Math.max.apply(null, values.concat([0])));
+        var g = frame(svg, cfg.height, max);
+        var right = cfg.endLabel ? 56 : 8;
+        var plotW = g.W - GUTTER - right - 8;
+        var xAt = function (i) { return GUTTER + 8 + (n === 1 ? plotW / 2 : plotW * i / (n - 1)); };
+        xLabels(svg, pts.map(function (p) { return p.short; }), xAt, n > 1 ? plotW / (n - 1) : plotW, cfg.height);
 
-  new Chart(donutCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Monthly', 'Annual'],
-      datasets: [{
-        data: hasPlanData ? [monthlyTotal, annualTotal] : [1, 0],
-        backgroundColor: ['#3b82f6', '#10b981'],
-        borderColor: '#ffffff',
-        borderWidth: 3,
-        hoverOffset: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '76%',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          titleColor: '#0f172a',
-          bodyColor: '#475569',
-          titleFont: { family: 'Syne', size: 12, weight: 'bold' },
-          bodyFont: { family: 'Inter', size: 12 },
-          borderColor: 'rgba(0,0,0,0.08)',
-          borderWidth: 1,
-          padding: 10,
-          boxPadding: 6,
-          usePointStyle: true,
-          callbacks: {
-            label: ctx => ' ' + ctx.label + ': ' + ctx.raw + ' plans'
-          }
-        }
-      }
+        var hair = el('line', { y1: TOP - 4, y2: g.base, 'class': 'hair', style: 'display:none' }, svg);
+        var dots = [];
+        cfg.series.slice().reverse().forEach(function (s) {
+            var d = '', area = '', started = false, lastI = -1;
+            pts.forEach(function (p, i) {
+                if (p[s.key] == null) return;
+                d += (started ? 'L' : 'M') + xAt(i) + ',' + g.y(p[s.key]);
+                started = true; lastI = i;
+            });
+            if (!started) return;
+            if (s.area) {
+                area = d + 'L' + xAt(lastI) + ',' + g.base + 'L' + xAt(0) + ',' + g.base + 'Z';
+                el('path', { d: area, fill: s.color, 'fill-opacity': .1, stroke: 'none' }, svg);
+            }
+            el('path', { d: d, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+            if (s.endDot) {
+                el('circle', { cx: xAt(lastI), cy: g.y(pts[lastI][s.key]), r: 4, fill: s.color, stroke: '#fff', 'stroke-width': 2 }, svg);
+                if (cfg.endLabel) {
+                    el('text', { x: xAt(lastI) + 9, y: g.y(pts[lastI][s.key]) + 4, 'class': 'end-l' }, svg).textContent = compact(pts[lastI][s.key]);
+                }
+            }
+            var dot = el('circle', { r: 4, fill: s.color, stroke: '#fff', 'stroke-width': 2, style: 'display:none' }, svg);
+            dots.push({ dot: dot, key: s.key });
+        });
+        hoverLayer(svg, g, n, function (x) {
+            return Math.max(0, Math.min(n - 1, Math.round((x - GUTTER - 8) / (n === 1 ? 1 : plotW / (n - 1)))));
+        }, function (i) {
+            if (i < 0) { hair.style.display = 'none'; dots.forEach(function (d) { d.dot.style.display = 'none'; }); return {}; }
+            var x = xAt(i);
+            hair.setAttribute('x1', x); hair.setAttribute('x2', x); hair.style.display = '';
+            var topY = g.base;
+            dots.forEach(function (d) {
+                var v = pts[i][d.key];
+                if (v == null) { d.dot.style.display = 'none'; return; }
+                d.dot.setAttribute('cx', x); d.dot.setAttribute('cy', g.y(v)); d.dot.style.display = '';
+                topY = Math.min(topY, g.y(v));
+            });
+            var t = cfg.tip(pts[i]);
+            return { x: x, y: topY, title: t.title, rows: t.rows };
+        });
     }
-  });
 
-});
+    function columnChart(svg, cfg) {
+        var pts = cfg.points, n = pts.length;
+        if (!n) return;
+        var totals = pts.map(function (p) { return cfg.stack.reduce(function (a, s) { return a + p[s.key]; }, 0); });
+        var max = nice(Math.max.apply(null, totals.concat([0])));
+        var g = frame(svg, cfg.height, max);
+        var plotW = g.W - GUTTER - 8;
+        var band = plotW / n;
+        var bw = Math.max(3, Math.min(24, band * .62));
+        var xAt = function (i) { return GUTTER + 8 + band * i + band / 2; };
+        xLabels(svg, pts.map(function (p) { return p.short; }), xAt, band, cfg.height);
+
+        var cols = [];
+        pts.forEach(function (p, i) {
+            var grp = el('g', { 'class': 'col' }, svg);
+            var y = g.base, filled = cfg.stack.filter(function (s) { return p[s.key] > 0; });
+            filled.forEach(function (s, j) {
+                var h = (p[s.key] / max) * g.plotH;
+                if (j) { y -= 2; h = Math.max(0, h - 2); }  // 2px surface gap between stacked segments
+                y -= h;
+                el('path', { d: colPath(xAt(i) - bw / 2, y, bw, h, j === filled.length - 1), fill: s.color }, grp);
+            });
+            cols.push(grp);
+        });
+        var hair = el('line', { y1: TOP - 4, y2: g.base, 'class': 'hair', style: 'display:none' }, svg);
+        hoverLayer(svg, g, n, function (x) {
+            return Math.max(0, Math.min(n - 1, Math.floor((x - GUTTER - 8) / band)));
+        }, function (i) {
+            cols.forEach(function (c, j) { c.classList.toggle('is-dim', i >= 0 && j !== i); });
+            if (i < 0) return {};
+            var t = cfg.tip(pts[i]);
+            return { x: xAt(i), y: g.y(totals[i]), title: t.title, rows: t.rows };
+        });
+    }
+
+    var money = function (v) { return 'EGP ' + fmt(v); };
+    function draw() {
+        var pace = document.getElementById('rvPace');
+        if (pace) lineChart(pace, {
+            points: data.pace, height: 220, endLabel: true,
+            series: [{ key: 'cur', color: C.one, area: true, endDot: true }, { key: 'prev', color: C.prev }],
+            tip: function (p) {
+                var rows = [[C.one, 'This period', money(p.cur)]];
+                if (p.prev != null) rows.push([C.prev, data.previousLabel.charAt(0).toUpperCase() + data.previousLabel.slice(1), money(p.prev)]);
+                return { title: 'Day ' + p.day + ' · ' + p.label, rows: rows };
+            }
+        });
+        var trend = document.getElementById('rvTrend');
+        if (trend) columnChart(trend, {
+            points: data.trend.points, height: 260,
+            stack: [{ key: 'new', color: C.one }, { key: 'repeat', color: C.two }],
+            tip: function (p) {
+                var rows = [[C.one, 'New customers', money(p.new)], [C.two, 'Renewals', money(p.repeat)],
+                            [null, 'Total', money(p.revenue)], [null, 'Paid orders', p.orders]];
+                if (p.passes) rows.push([null, 'Free passes', p.passes]);
+                return { title: p.label, rows: rows };
+            }
+        });
+        var mrr = document.getElementById('rvMrr');
+        if (mrr) lineChart(mrr, {
+            points: data.trend.points, height: 240, endLabel: true,
+            series: [{ key: 'mrr', color: C.one, area: true, endDot: true }],
+            tip: function (p) {
+                return { title: p.label, rows: [[C.one, 'MRR', money(p.mrr) + ' / mo'], [null, 'Paying customers', p.customers]] };
+            }
+        });
+        var fc = document.getElementById('rvForecast');
+        if (fc) columnChart(fc, {
+            points: data.forecast, height: 200,
+            stack: [{ key: 'value', color: C.two }],
+            tip: function (p) {
+                return { title: p.label, rows: [[C.two, 'Due', money(p.value)], [null, 'Customers', p.count]] };
+            }
+        });
+    }
+
+    draw();
+    var t, lastW = window.innerWidth;
+    window.addEventListener('resize', function () {
+        if (window.innerWidth === lastW) return;
+        lastW = window.innerWidth; clearTimeout(t); t = setTimeout(draw, 120);
+    });
+    window.addEventListener('beforeprint', draw);
+})();
 </script>
 {% endblock %}

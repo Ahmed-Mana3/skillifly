@@ -106,32 +106,14 @@ class AdminDashboardTests(TestCase):
             'period': 'day'
         })
         self.assertEqual(response.status_code, 200)
-        
-        # Context checks
-        self.assertEqual(response.context['total_users'], 2)
-        self.assertEqual(response.context['total_paid_users'], 1)
-        self.assertEqual(response.context['total_revenue'], 150.00)
-        
-        # Verify users list annotation (total_spent)
-        users = list(response.context['users_list'])
-        user1_obj = next(u for u in users if u.username == 'user1')
-        user2_obj = next(u for u in users if u.username == 'user2')
-        
-        # User 1 spent 150 (the pending payment is excluded)
-        self.assertEqual(user1_obj.total_spent, 150.00)
-        # User 2 spent 0 / None
-        self.assertEqual(user2_obj.total_spent, None)
 
-        # Check chart values JSON
-        signup_values = json.loads(response.context['signup_values'])
-        paid_values = json.loads(response.context['paid_values'])
-        
-        # June 1 should show 1 signup
-        # June 15 should show 1 signup
-        # June 5 should show 1 payment
-        # June 6 should show 0 payments (since payment2 is pending)
-        self.assertEqual(sum(signup_values), 2)
-        self.assertEqual(sum(paid_values), 1)
+        # Both June signups count; only user1 paid (the pending payment is not money).
+        self.assertEqual(response.context['signups'], 2)
+        self.assertEqual({o['key']: o['count'] for o in response.context['outcomes']}, {'paid': 1, 'built': 0, 'new': 1})
+        self.assertEqual(response.context['revenue_label'], '150')
+        spent = {p['username']: p['spent_label'] for p in response.context['recent']}
+        self.assertEqual(spent, {'user1': '150', 'user2': '0'})
+        self.assertEqual(sum(p['signups'] for p in response.context['chart_data']['signups']), 2)
 
 
 class ClientReviewImageFallbackTests(TestCase):

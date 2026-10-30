@@ -1,0 +1,17 @@
+{% comment %}One headline tile on the executive overview (admin_dashboard.html). Expects `k` from growth_report.{% endcomment %}
+<div class="pr-card gr-kpi">
+    <p class="pr-kpi-l">{{ k.label }}</p>
+    <div class="pr-kpi-v">
+        <strong>{{ k.value }}</strong>{% if k.unit %}<span>{{ k.unit }}</span>{% endif %}
+        {% if k.delta %}
+        <span class="pr-delta {% if k.delta.dir == 'flat' %}flat{% elif k.delta.dir == 'up' and not k.up_is_bad or k.delta.dir == 'down' and k.up_is_bad %}good{% else %}bad{% endif %}"
+              title="Compared with the {{ k.vs }}">
+            <span aria-hidden="true">{% if k.delta.dir == 'up' %}▲{% elif k.delta.dir == 'down' %}▼{% else %}■{% endif %}</span>
+            <span class="sr-only">{% if k.delta.dir == 'up' %}Up{% elif k.delta.dir == 'down' %}Down{% else %}No change{% endif %} compared with the {{ k.vs }}</span>
+            {{ k.delta.label }}
+        </span>
+        {% endif %}
+    </div>
+    <p class="pr-kpi-s">{{ k.sub }}</p>
+    {% if k.spark %}<svg class="gr-spark" data-key="{{ k.spark }}" aria-hidden="true"></svg>{% endif %}
+</div>

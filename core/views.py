@@ -3564,273 +3564,162 @@ def contact_view(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def revenue_report(request):
-    """Hidden admin-only revenue report with date filtering and graphs."""
-    from django.db.models import Sum, Count
-    platform_launch_date = timezone.datetime(2026, 5, 1, tzinfo=timezone.get_current_timezone()).date()
-    today = timezone.now().date()
+    """Revenue insights for owners: money in, recurring revenue, renewals, mix and forecast."""
+    from core import revenue_report as rr
 
-    # Date range inputs
-    start_str = request.GET.get('start_date')
-    end_str   = request.GET.get('end_date')
+    include_team = request.GET.get('team') == '1'
+    # start_date / end_date are the old page's parameters; keep bookmarked links working.
+    start = request.GET.get('start') or request.GET.get('start_date')
+    end = request.GET.get('end') or request.GET.get('end_date')
+    report = rr.build_report(request.GET.get('days', rr.DEFAULT_PERIOD), start=start, end=end,
+                             include_team=include_team)
+    period = report['period']
+    if request.GET.get('export') == 'csv':
+        return _revenue_csv(report)
 
-    if start_str:
-        try:
-            start_date = timezone.datetime.strptime(start_str, '%Y-%m-%d').date()
-            if start_date < platform_launch_date:
-                start_date = platform_launch_date
-        except ValueError:
-            start_date = platform_launch_date
-    else:
-        start_date = platform_launch_date
-
-    if end_str:
-        try:
-            end_date = timezone.datetime.strptime(end_str, '%Y-%m-%d').date()
-        except ValueError:
-            end_date = today
-    else:
-        end_date = today
-
-    # Convert to datetime for filtering (inclusive)
-    start_dt = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))
-    end_dt   = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
-
-    # Fetch UserPayments
-    payments = UserPayment.objects.filter(
-        status='paid',
-        date__range=(start_dt, end_dt)
-    ).select_related('user', 'subscription').order_by('-date')
-
-    # --- Split: paid (amount > 0) vs free-code (amount = 0) ---
-    paid_payments = payments.filter(amount__gt=0)
-    free_payments = payments.filter(amount=0)
-
-    paid_count         = paid_payments.count()
-    free_count         = free_payments.count()
-    total_transactions = payments.count()
-
-    # Revenue only from real payments
-    total_revenue = paid_payments.aggregate(total=Sum('amount'))['total'] or 0
-    avg_payment   = total_revenue / paid_count if paid_count > 0 else 0
-    
-    # Calculate conversion metrics
-    from .models import CustomUser
-    total_signups = CustomUser.objects.filter(date_joined__range=(start_dt, end_dt)).count()
-    unique_paid_users = paid_payments.values('user').distinct().count()
-    conversion_rate = round((unique_paid_users / total_signups * 100), 1) if total_signups > 0 else 0
-
-    # Calculate Monthly vs Annual plan breakdown
-    monthly_paid_count = paid_payments.filter(subscription__days=30).count()
-    six_month_paid_count = paid_payments.filter(subscription__days=180).count()
-    annual_paid_count = paid_payments.filter(subscription__days=365).count()
-    total_paid_subs = monthly_paid_count + annual_paid_count
-    
-    total_monthly_annual = monthly_paid_count + annual_paid_count
-    monthly_pct = (monthly_paid_count / total_monthly_annual * 100) if total_monthly_annual > 0 else 0
-    annual_pct = (annual_paid_count / total_monthly_annual * 100) if total_monthly_annual > 0 else 0
-
-    # --- Plan breakdown ---
-    plan_breakdown = list(
-        paid_payments.values('subscription__name')
-        .annotate(count=Count('id'), revenue=Sum('amount'))
-        .order_by('-count')
-    )
-
-    # --- Daily chart data ---
-    chart_labels   = []
-    chart_revenue  = []
-    chart_paid_cnt = []
-    chart_free_cnt = []
-
-    current_day = start_date
-    while current_day <= end_date:
-        day_paid = paid_payments.filter(date__date=current_day)
-        day_free = free_payments.filter(date__date=current_day)
-
-        chart_labels.append(current_day.strftime('%b %d'))
-        chart_revenue.append(float(day_paid.aggregate(total=Sum('amount'))['total'] or 0))
-        chart_paid_cnt.append(day_paid.count())
-        chart_free_cnt.append(day_free.count())
-        current_day += timedelta(days=1)
+    scope = ({'start': timezone.localtime(period.start).date().isoformat(),
+              'end': (timezone.localtime(period.end) - timedelta(seconds=1)).date().isoformat()}
+             if period.key == 'custom' else {'days': period.key})
+    team = {'team': '1'} if include_team else {}
+    links = {
+        '#renewals': '#renewals',
+        'review': reverse('admin:core_manualpayment_changelist') + '?status__exact=needs_review',
+        'winback': reverse('user_activity_report') + '#contact',
+        'funnel': reverse('manage_payment_tracking') + f'?days={period.key if period.key in ("30", "90") else "all"}',
+        'codes': reverse('admin:core_discountcode_changelist'),
+    }
+    for item in report['insights']:
+        item['href'] = links.get(item.get('link'))
 
     context = {
-        'payments':          payments,
-        'total_revenue':     total_revenue,
-        'paid_count':        paid_count,
-        'free_count':        free_count,
-        'total_transactions': total_transactions,
-        'avg_payment':       avg_payment,
-        'total_signups':     total_signups,
-        'unique_paid_users': unique_paid_users,
-        'conversion_rate':   conversion_rate,
-        'monthly_paid_count': monthly_paid_count,
-        'six_month_paid_count': six_month_paid_count,
-        'annual_paid_count':  annual_paid_count,
-        'total_paid_subs':    total_paid_subs,
-        'monthly_pct':        monthly_pct,
-        'annual_pct':         annual_pct,
-        'plan_breakdown':    plan_breakdown,
-        'start_date':        start_date,
-        'end_date':          end_date,
-        'min_date':          platform_launch_date,
-        'chart_labels':      json.dumps(chart_labels),
-        'chart_revenue':     json.dumps(chart_revenue),
-        'chart_paid_cnt':    json.dumps(chart_paid_cnt),
-        'chart_free_cnt':    json.dumps(chart_free_cnt),
+        **report,
+        'period_links': [(label, '?' + urlencode({'days': key, **team}), period.key == key)
+                         for key, label in rr.PERIOD_LABELS.items()],
+        'is_custom': period.key == 'custom',
+        'range_start': timezone.localtime(period.start).date(),
+        'range_end': (timezone.localtime(period.end) - timedelta(seconds=1)).date(),
+        'min_date': rr.REPORT_START_DATE,
+        'today': timezone.localdate(),
+        'compare_label': period.previous.label if period.previous else None,
+        'team_toggle_query': urlencode({**scope, **({} if include_team else {'team': '1'})}),
+        'export_query': urlencode({**scope, **team, 'export': 'csv'}),
+        'time_zone': settings.TIME_ZONE,
+        'chart_data': {
+            'pace': report['pace'],
+            'trend': report['trend'],
+            'forecast': report['upcoming']['weeks'],
+            'previousLabel': period.previous.label if period.previous else '',
+        },
     }
-
+    context.pop('ledger_all')
     return render(request, 'core/revenue_report.html', context)
+
+
+def _revenue_csv(report):
+    """Every payment in the selected period (paid and free passes), newest first."""
+    import csv
+
+    period = report['period']
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = (
+        f'attachment; filename="skillifly-revenue-{period.key}-{timezone.now():%Y%m%d}.csv"')
+    response.write('﻿')  # Excel needs the BOM to read UTF-8 (Arabic names)
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Customer', 'Email', 'Type', 'Plan', 'Method', 'Coupon',
+                     'List price (EGP)', 'Paid (EGP)', 'Discount (EGP)', 'Paid up until'])
+
+    def stamp(dt):
+        return timezone.localtime(dt).strftime('%Y-%m-%d %H:%M') if dt else ''
+
+    for r in report['ledger_all']:
+        writer.writerow([stamp(r['date']), r['name'], r['email'], r['kind_label'], r['plan'], r['method'],
+                         r['code'], r['list'] if r['list'] is not None else '', r['amount'], r['discount'],
+                         stamp(r['end'])])
+    return response
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
-    """Hidden admin-only dashboard with user stats, growth charts, and user list."""
-    # Absolute minimum date allowed
-    min_date = timezone.datetime(2026, 4, 16, tzinfo=timezone.get_current_timezone()).date()
-    
-    try:
-        today = timezone.localdate()
-    except Exception:
-        today = timezone.now().date()
-    
-    # 1. Date Filtering Logic
-    start_str = request.GET.get('start_date')
-    end_str = request.GET.get('end_date')
-    period = request.GET.get('period', 'day') # 'day' or 'week'
-    
-    if start_str:
-        try:
-            start_date = timezone.datetime.strptime(start_str, '%Y-%m-%d').date()
-            if start_date < min_date:
-                start_date = min_date
-        except ValueError:
-            start_date = today.replace(day=1)
-            if start_date < min_date:
-                start_date = min_date
-    else:
-        # Default to the first of the current month
-        start_date = today.replace(day=1)
-        if start_date < min_date:
-            start_date = min_date
-        
-    if end_str:
-        try:
-            end_date = timezone.datetime.strptime(end_str, '%Y-%m-%d').date()
-        except ValueError:
-            end_date = today
-    else:
-        end_date = today
+    """Executive overview: growth, what signups become, money, acquisition and the user base."""
+    from core import growth_report as gr
 
-    if start_date > end_date:
-        start_date = end_date
+    include_team = request.GET.get('team') == '1'
+    # start_date / end_date are the old page's parameters; keep bookmarked links working.
+    start = request.GET.get('start') or request.GET.get('start_date')
+    end = request.GET.get('end') or request.GET.get('end_date')
+    report = gr.build_report(request.GET.get('days', gr.DEFAULT_PERIOD), start=start, end=end,
+                             include_team=include_team)
+    period = report['period']
+    if request.GET.get('export') == 'csv':
+        return _signups_csv(report)
 
-    # Convert to aware datetimes for index-friendly filtering
-    start_dt = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))
-    end_dt   = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.max.time()))
-
-    # 2. High-level Stats (Now filtered by range)
-    # Total Users = New signups in this period
-    total_users = CustomUser.objects.filter(date_joined__range=(start_dt, end_dt)).count()
-    
-    # Paid users = unique users who made a successful payment in this period
-    paid_user_ids_in_period = UserPayment.objects.filter(
-        status='paid', 
-        amount__gt=0,
-        date__range=(start_dt, end_dt)
-    ).values_list('user_id', flat=True).distinct()
-    
-    total_paid_users = len(paid_user_ids_in_period)
-    conversion_rate = (total_paid_users / total_users * 100) if total_users > 0 else 0
-    
-    # Global paid user IDs for the table 'Paid' badge (unfiltered)
-    # Check if a user has a payment with status 'paid' that is still active
-    all_payments = UserPayment.objects.filter(status='paid', amount__gt=0).select_related('subscription')
-    active_paid_user_ids = {p.user_id for p in all_payments if p.is_active}
-    
-    # Total revenue in period
-    total_revenue = UserPayment.objects.filter(
-        status='paid',
-        date__range=(start_dt, end_dt)
-    ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    # 3. Growth Chart Data (Filtered by range and period)
-    signup_labels = []
-    signup_values = []
-    paid_values = [] # Track count of payments made in each interval
-    
-    if period == 'week':
-        # Grouping by 7-day intervals starting from start_date
-        current_dt = start_date
-        while current_dt <= end_date:
-            next_dt = current_dt + timedelta(days=7)
-            if next_dt > end_date + timedelta(days=1):
-                next_dt = end_date + timedelta(days=1)
-            
-            interval_start_dt = timezone.make_aware(timezone.datetime.combine(current_dt, timezone.datetime.min.time()))
-            interval_end_dt = timezone.make_aware(timezone.datetime.combine(next_dt - timedelta(days=1), timezone.datetime.max.time()))
-            
-            # 1. New Signups in interval
-            signup_count = CustomUser.objects.filter(
-                date_joined__range=(interval_start_dt, interval_end_dt)
-            ).count()
-            
-            # 2. Payments in interval
-            paid_count = UserPayment.objects.filter(
-                status='paid',
-                amount__gt=0,
-                date__range=(interval_start_dt, interval_end_dt)
-            ).count()
-            
-            signup_labels.append(f"Wk: {current_dt.strftime('%b %d')}")
-            signup_values.append(signup_count)
-            paid_values.append(paid_count)
-            current_dt = next_dt
-    else:
-        # Default: Daily grouping
-        current_dt = start_date
-        while current_dt <= end_date:
-            day_start_dt = timezone.make_aware(timezone.datetime.combine(current_dt, timezone.datetime.min.time()))
-            day_end_dt = timezone.make_aware(timezone.datetime.combine(current_dt, timezone.datetime.max.time()))
-            
-            # 1. New Signups
-            signup_count = CustomUser.objects.filter(date_joined__range=(day_start_dt, day_end_dt)).count()
-            
-            # 2. Payments
-            paid_count = UserPayment.objects.filter(
-                status='paid',
-                amount__gt=0,
-                date__range=(day_start_dt, day_end_dt)
-            ).count()
-            
-            signup_labels.append(current_dt.strftime('%b %d'))
-            signup_values.append(signup_count)
-            paid_values.append(paid_count)
-            current_dt += timedelta(days=1)
-        
-    # 4. Users Table Data (NOW FILTERED BY RANGE)
-    users_list = CustomUser.objects.filter(
-        date_joined__range=(start_dt, end_dt)
-    ).select_related('profile', 'personal_info').annotate(
-        total_spent=Sum('userpayment__amount', filter=Q(userpayment__status='paid'))
-    ).order_by('-date_joined')
-    
-    context = {
-        'total_users': total_users,
-        'total_paid_users': total_paid_users,
-        'paid_user_ids': list(active_paid_user_ids), # Convert to list for template 'in' check
-        'conversion_rate': round(conversion_rate, 1),
-        'total_revenue': total_revenue,
-        'signup_labels': json.dumps(signup_labels),
-        'signup_values': json.dumps(signup_values),
-        'paid_values': json.dumps(paid_values),
-        'users_list': users_list,
-        'start_date': start_date,
-        'end_date': end_date,
-        'min_date': min_date,
-        'period': period,
+    scope = ({'start': timezone.localtime(period.start).date().isoformat(),
+              'end': (timezone.localtime(period.end) - timedelta(seconds=1)).date().isoformat()}
+             if period.key == 'custom' else {'days': period.key})
+    team = {'team': '1'} if include_team else {}
+    revenue_url = reverse('revenue_report') + '?' + urlencode({**scope, **team})
+    activity_url = reverse('user_activity_report') + '?' + urlencode(
+        {'days': period.key if period.key in ('30', '90', 'all') else 'all', **team})
+    links = {
+        '#renewals': revenue_url + '#renewals',
+        'review': reverse('admin:core_manualpayment_changelist') + '?status__exact=needs_review',
+        'winback': activity_url + '#contact',
+        'funnel': reverse('manage_payment_tracking') + f'?days={period.key if period.key in ("30", "90") else "all"}',
+        'codes': reverse('admin:core_discountcode_changelist'),
+        'activity_contact': activity_url + '#contact',
+        'activity_setup': activity_url + '#setup',
+        'activity_cohorts': activity_url + '#cohorts',
+        'heard': reverse('manage_heard_about'),
     }
-    
+    for item in report['insights']:
+        item['href'] = links.get(item.get('link'))
+
+    context = {
+        **report,
+        'period_links': [(label, '?' + urlencode({'days': key, **team}), period.key == key)
+                         for key, label in gr.PERIOD_LABELS.items()],
+        'is_custom': period.key == 'custom',
+        'range_start': timezone.localtime(period.start).date(),
+        'range_end': (timezone.localtime(period.end) - timedelta(seconds=1)).date(),
+        'min_date': gr.rr.REPORT_START_DATE,
+        'today': timezone.localdate(),
+        'compare_label': period.previous.label if period.previous else None,
+        'team_toggle_query': urlencode({**scope, **({} if include_team else {'team': '1'})}),
+        'export_query': urlencode({**scope, **team, 'export': 'csv'}),
+        'revenue_url': revenue_url,
+        'activity_url': activity_url,
+        'time_zone': settings.TIME_ZONE,
+        'chart_data': {
+            'signups': report['trend']['points'],
+            'money': report['money_trend']['points'],
+        },
+    }
+    context.pop('members')
     return render(request, 'core/admin_dashboard.html', context)
+
+
+def _signups_csv(report):
+    """Everyone who signed up in the selected period, newest first, with how to reach them."""
+    import csv
+    from core import growth_report as gr
+
+    period = report['period']
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = (
+        f'attachment; filename="skillifly-signups-{period.key}-{timezone.now():%Y%m%d}.csv"')
+    response.write('﻿')  # Excel needs the BOM to read UTF-8 (Arabic names)
+    writer = csv.writer(response)
+    writer.writerow(['Signed up', 'Name', 'Username', 'Email', 'Phone', 'Signed up with', 'Heard about us on',
+                     'Setup XP', 'Videos', 'Plan', 'Paid (EGP)', 'Portfolio live', 'Last active'])
+
+    def stamp(dt):
+        return timezone.localtime(dt).strftime('%Y-%m-%d %H:%M') if dt else ''
+
+    for p in gr.signup_rows(report['members']):
+        writer.writerow([stamp(p['joined']), p['name'], p['username'], p['email'], p['phone'], p['method'],
+                         p['source'], p['xp'], p['videos'], p['plan_state_label'], p['spent_label'],
+                         'Yes' if p['live'] else 'No', stamp(p['last_active'])])
+    return response
 
 
 @user_passes_test(lambda u: u.is_superuser)
